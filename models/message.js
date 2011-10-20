@@ -33,6 +33,9 @@ var Message = Backbone.Model.extend({
         if (this.attributes.created_at === 0) {
             this.attributes.created_at = new Date().getTime();
         }
+        // create container for similar messages
+        this.messages = new Backbone.Collection();
+        this.messages.add(this); // add ourselves
         return this;
     },
     /* Returns the state of the message
@@ -175,6 +178,9 @@ var Message = Backbone.Model.extend({
         else {
             return "...";
         }
+    },
+    faviconUrl: function () {
+        return "http://g.etfv.co/" + this.source_link() + "?defaulticon=lightpng";
     }
 });
 
