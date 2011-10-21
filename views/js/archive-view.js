@@ -9,7 +9,13 @@ var ArchiveView = Backbone.View.extend({
         _.bindAll(this, 'delete_from_feed', 'show_new', 'complete_page', 'load_next');
         $(document).scroll(this.complete_page);
         
-        $('#container').isotope();
+        $('#container').isotope({
+            itemSelector: '.message',
+            filter: '.brick-2 .brick-3 .brick-4',
+            masonry: {
+                columnWidth: 10,
+            }
+        });
         
         this.collection.bind("add", this.show_new);
         this.load_next();
