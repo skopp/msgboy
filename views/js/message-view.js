@@ -52,7 +52,6 @@ var MessageView = Backbone.View.extend({
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4");
         el.addClass(this.getBrickClass());
-        el.addClass(this.getBoxColor());
         
         // render our compiled template
         if (isGroup) {
@@ -180,15 +179,6 @@ var MessageView = Backbone.View.extend({
         }
     },
     
-    
-    // Util methods
-    getBoxColor: function () {
-        var sum = 1;
-        // _.each(this.model.attributes.source.title.split(""), function (c) {
-        //     sum += c.charCodeAt(0);
-        // });
-        return "color" + sum % 7;
-    },
     getBrickClass: function () {
         var res,
             state = this.model.get('state');

@@ -25,6 +25,7 @@
 }
 
 .message {
+    background-color: #11232c;
     border-radius: 2px;
     background: #fff;
     padding: 0px;
@@ -225,32 +226,4 @@
     width: 420px;
     height: 73px;    /*padding is 10*/
     line-height: 26px;
-}
-
-.grey, .color0, .color0 p.darkened {
-    background-color: #6c6b6b;
-}
-
-.purple, .color1, .color1 p.darkened {
-    background-color: #11232c;
-}
-
-.blue, .color2, .color2 p.darkened {
-    background-color: #358dc2;
-}
-
-.green, .color3, .color3 p.darkened {
-    background-color: #7d9100;
-}
-
-.yellow, .color4, .color4 p.darkened {
-    background-color: #333;
-}
-
-.orange, .color5, .color5 p.darkened {
-    background-color: #e17103;
-}
-
-.red, .color6, .color6 p.darkened {
-    background-color: #a40637;
 }
