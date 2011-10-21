@@ -34,7 +34,7 @@ var MessageView = Backbone.View.extend({
     ].join('')),
     initialize: function () {
         this.model.view = this; // store reference to view on model
-        this.model.bind("change", this.render.bind(this));
+        this.model.bind("change", this.render.bind(this)); 
         this.model.messages.bind('add', this.render.bind(this));
         this.render();
     },
@@ -182,12 +182,11 @@ var MessageView = Backbone.View.extend({
     
     
     // Util methods
-    
     getBoxColor: function () {
-        var sum = 0;
-        _.each(this.model.attributes.source.title.split(""), function (c) {
-            sum += c.charCodeAt(0);
-        });
+        var sum = 1;
+        // _.each(this.model.attributes.source.title.split(""), function (c) {
+        //     sum += c.charCodeAt(0);
+        // });
         return "color" + sum % 7;
     },
     getBrickClass: function () {
