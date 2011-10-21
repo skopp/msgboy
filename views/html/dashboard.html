@@ -55,24 +55,12 @@
         
         <script type="text/javascript">
             Msgboy.bind("loaded", function () {
-                $('#container').isotope({
-                    masonry: {
-                        columnWidth: 10
-                    }
-                });
-
                 var archive = new Archive();
 
                 // When a message was voted-up
                 archive.bind("up-ed", function (message) {
                     BayesianFilter.train_with_message(message);
                 });
-
-                // When a message was changed
-                /*archive.bind("change", function (message) {
-                    $('#container').isotope('reLayout');
-                });
-                */
                 
                 archive.bind("down-ed", function (message) {
                     BayesianFilter.train_with_message(message)

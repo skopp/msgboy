@@ -3,18 +3,14 @@ var ArchiveView = Backbone.View.extend({
     lower_bound: 0,
     loaded: 20,
     to_load: 20,
-    latest: null,
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'render', 'delete_from_feed', 'show_new', 'complete_page', 'load_next');
+        _.bindAll(this, 'delete_from_feed', 'show_new', 'complete_page', 'load_next');
         $(document).scroll(this.complete_page);
         
         $('#container').isotope();
         
-        window.collection = this.collection;
-        
-        Msgboy.archiveView = this; // store a global reference
         this.collection.bind("add", this.show_new);
         this.load_next();
     },
@@ -35,34 +31,25 @@ var ArchiveView = Backbone.View.extend({
             });
         }
     },
-    render: function () {
-        //$(".message").remove(); // Cleanup
-    },
     show_new: function (message) {
+        this.upper_bound = message.attributes.created_at;
+        this.loaded++;
         if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate')) {
             this.lastRendered.messages.add(message);
         } else {
-            this.upper_bound = message.attributes.created_at;
-            this.loaded++;
             var view = new MessageView({
                 model: message
             });
-            
-            view.render();
-            
             $(view.el).hide();
             $("#container").append(view.el); // Adds the view in the document.
-            //this.complete_page();
             $('#container').isotope('appended', $(view.el), function () {
                 $(view.el).show();
+                this.complete_page();
+                $('#container').isotope('reLayout');
             }.bind(this));
-            //view.render(); // builds the HTML
             this.lastRendered = message; // store reference to last rendered
-            
-            $('#container').isotope('reLayout');
-            
+            view.render();
         }
-        this.latest = message;
     },
     delete_from_feed: function (feed) {
         _.each(this.collection.models, function (model) {
@@ -75,8 +62,6 @@ var ArchiveView = Backbone.View.extend({
                 });
             }
         });
-        //$('#container').isotope('reLayout');
-        //
     }
 });
 
