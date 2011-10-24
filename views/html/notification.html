@@ -45,11 +45,11 @@
             var notification =  new Msgboy.Notification();
 
             $("body").mouseover(function () {
-                notification.mouse_over = true;
+                notification.mouseOver = true;
             });
 
             $("body").mouseout(function () {
-                notification.mouse_over = false;
+                notification.mouseOver = false;
             });
 
             $(document).ready(function () {
@@ -70,7 +70,7 @@
                             notification.messages.push(message);
                             if (!notification.started) {
                                 notification.started = true // Initiate the loop.
-                                notification.show_next_message();
+                                notification.showNextMessage();
                             }
                         }
                     }

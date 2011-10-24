@@ -9,21 +9,21 @@ Msgboy.Notification = function () {
 Msgboy.Notification.prototype = {
     messages: [],
     started: false,
-    mouse_over: false,
+    mouseOver: false,
     period: 8000,
     rotate: function () {
         setTimeout(function () {
-            if (!this.mouse_over) {
+            if (!this.mouseOver) {
                 if (this.messages[0]) {
                     this.messages[0].view.remove();
                 }
-                this.messages.pop();
-                this.show_next_message();
+                this.messages.shift();
+                this.showNextMessage();
             }
             this.rotate();
         }.bind(this), this.period);
     },
-    show_next_message: function () {
+    showNextMessage: function () {
         var message = this.messages[0];
         if (!this.messages[0]) {
             chrome.extension.sendRequest({
@@ -37,24 +37,25 @@ Msgboy.Notification.prototype = {
             this.messages[0].view = new MessageView({
                 model: this.messages[0]
             });
-
+            $("body").append(this.messages[0].view.el); // Adds the view in the document.
+            
             this.messages[0].bind("up-ed", function () {
                 this.messages[0].view.remove();
                 this.go_to_message(this.messages[0]);
-                this.messages.pop();
-                this.show_next_message();
+                this.messages.shift();
+                this.showNextMessage();
             }.bind(this));
 
             this.messages[0].bind("down-ed", function () {
                 this.messages[0].view.remove();
-                this.messages.pop();
-                this.show_next_message();
+                this.messages.shift();
+                this.showNextMessage();
             }.bind(this));
 
             this.messages[0].view.bind("clicked", function () {
                 this.messages[0].view.remove();
-                this.messages.pop();
-                this.show_next_message();
+                this.messages.shift();
+                this.showNextMessage();
             }.bind(this));
 
             this.messages[0].view.bind("rendered", function () {
