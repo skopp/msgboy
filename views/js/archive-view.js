@@ -40,21 +40,23 @@ var ArchiveView = Backbone.View.extend({
     show_new: function (message) {
         this.upper_bound = message.attributes.created_at;
         this.loaded++;
-        if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate')) {
-            this.lastRendered.messages.add(message);
-        } else {
-            var view = new MessageView({
-                model: message
-            });
-            $(view.el).hide();
-            $("#container").append(view.el); // Adds the view in the document.
-            $('#container').isotope('appended', $(view.el), function () {
-                $(view.el).show();
-                this.complete_page();
-                $('#container').isotope('reLayout');
-            }.bind(this));
-            this.lastRendered = message; // store reference to last rendered
-            view.render();
+        if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
+            if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate')) {
+                this.lastRendered.messages.add(message);
+            } else {
+                var view = new MessageView({
+                    model: message
+                });
+                $(view.el).hide();
+                $("#container").append(view.el); // Adds the view in the document.
+                $('#container').isotope('appended', $(view.el), function () {
+                    $(view.el).show();
+                    this.complete_page();
+                    $('#container').isotope('reLayout');
+                }.bind(this));
+                this.lastRendered = message; // store reference to last rendered
+                view.render();
+            }
         }
     },
     delete_from_feed: function (feed) {

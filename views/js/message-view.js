@@ -20,16 +20,13 @@ var MessageView = Backbone.View.extend({
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
-    // TODO: get actual group styling html, (this is just a placeholder)
     groupTemplate: _.template([
-        // '<div class="stories">',
-            '<% model.messages.each(function(story, i) { %>',
-            '<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) %>deg);">',
-            '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
-            '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
-            '</div>',
-            '<% }); %>',
-        // '</div>'
+        '<% model.messages.each(function(story, i) { %>',
+        '<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) %>deg);">',
+        '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
+        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
+        '</div>',
+        '<% }); %>',
     ].join('')),
     initialize: function () {
         this.model.view = this; // store reference to view on model
@@ -62,7 +59,6 @@ var MessageView = Backbone.View.extend({
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
     },
-    
     
     // Browser event handlers
     handleClick: function (evt) {
@@ -170,7 +166,7 @@ var MessageView = Backbone.View.extend({
     getBrickClass: function () {
         var res,
             state = this.model.get('state');
-        
+            
         if (state === 'down-ed') {
             res = 1;
         } else if (state === 'up-ed') {
