@@ -38,9 +38,6 @@ var MessageView = Backbone.View.extend({
         this.model.messages.bind('add', this.render.bind(this));
     },
     render: function () {
-        
-        console.log(this.model.id)
-        
         var el = $(this.el),
             isGroup = this.model.messages.length > 1;
             
@@ -96,8 +93,7 @@ var MessageView = Backbone.View.extend({
     },
     handleUpClick: function () {
         this.model.vote_up();
-
-
+        
         // added by eric. self-reminder.
         $('#container').isotope('reLayout');
 
@@ -138,23 +134,22 @@ var MessageView = Backbone.View.extend({
         e.stopImmediatePropagation(); // Do not trigger next events. We actually do not event to use a click, but just and hover event.
         
         this.model.messages.each(function (message) {
-            var view = new MessageView({
-                model: message
-            });
-            $(view.el).hide();
-            
-            $(this.el).after($(view.el)); // Adds the view in the document.
-            $('#container').isotope('appended', $(view.el), function () {
-                $(view.el).show();
-                $('#container').isotope('reLayout');
-            }.bind(this));
-            view.render();
+                var view = new MessageView({
+                    model: message
+                });
+                $(view.el).hide();
+
+                $(this.el).after($(view.el)); // Adds the view in the document.
+                $('#container').isotope('appended', $(view.el), function () {
+                    $(view.el).show();
+                    $('#container').isotope('reLayout');
+                }.bind(this));
+                // empty all the contained models
+                message.messages.reset();
+                view.render();
         }.bind(this));
         
-        // empty all the contained models
-        this.model.messages.reset();
-        
-        // re-draw self
+        // removes the group.
         this.remove();
         
         return false;
