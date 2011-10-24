@@ -18,7 +18,7 @@ var MessageView = Backbone.View.extend({
             '</button>',
         '</span>',
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
-        '<p><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
+        '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
     // TODO: get actual group styling html, (this is just a placeholder)
@@ -60,16 +60,6 @@ var MessageView = Backbone.View.extend({
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
-
-
-        // adding for initial load attention-getting shimmer. not sure if this is the right spot for this. -eric
-        $('.controls').fadeIn();
-        $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
-
-        $('.shimmer').bind('webkitAnimationEnd', function(){
-            $('.controls').fadeOut('slow');
-            $(this).removeClass('shimmer');
-        });
     },
     
     

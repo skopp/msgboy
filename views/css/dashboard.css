@@ -227,3 +227,7 @@
     height: 73px;    /*padding is 10*/
     line-height: 26px;
 }
+
+p.darkened {
+    background-color: #11232C;
+}
