@@ -51,13 +51,13 @@ var ArchiveView = Backbone.View.extend({
                 $("#container").append(view.el); // Adds the view in the document.
                 $('#container').isotope('appended', $(view.el), function () {
                     $(view.el).show();
-                    this.complete_page();
                     $('#container').isotope('reLayout');
                 }.bind(this));
                 this.lastRendered = message; // store reference to last rendered
                 view.render();
             }
         }
+        this.complete_page();
     },
     delete_from_feed: function (feed) {
         _.each(this.collection.models, function (model) {
