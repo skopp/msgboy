@@ -36,12 +36,14 @@ var MessageView = Backbone.View.extend({
         this.model.view = this; // store reference to view on model
         this.model.bind("change", this.render.bind(this)); 
         this.model.messages.bind('add', this.render.bind(this));
-        this.render();
     },
     render: function () {
+        
+        console.log(this.model.id)
+        
         var el = $(this.el),
             isGroup = this.model.messages.length > 1;
-        
+            
         // set some attributes on the container div
         $(this.el).attr({
             'data-msgboy-relevance': this.model.get('relevance'),
@@ -61,7 +63,6 @@ var MessageView = Backbone.View.extend({
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
-
 
 
         // adding for initial load attention-getting shimmer. not sure if this is the right spot for this. -eric
@@ -132,33 +133,29 @@ var MessageView = Backbone.View.extend({
             $(this).removeClass('shimmer');
         });
     },
+    
     handleExpandClick: function (e) {
-        e.stopImmediatePropagation();
-        
-        var self = this,
-            newViews = $();
+        e.stopImmediatePropagation(); // Do not trigger next events. We actually do not event to use a click, but just and hover event.
         
         this.model.messages.each(function (message) {
             var view = new MessageView({
-                    model: message
-                });
-            if (message !== self.model) {
-                newViews = newViews.after(view.el);
-                view.render();
-            }
-        });
-        
-        // append them at the right spot
-        $(self.el).after(newViews);
+                model: message
+            });
+            $(view.el).hide();
+            
+            $(this.el).after($(view.el)); // Adds the view in the document.
+            $('#container').isotope('appended', $(view.el), function () {
+                $(view.el).show();
+                $('#container').isotope('reLayout');
+            }.bind(this));
+            view.render();
+        }.bind(this));
         
         // empty all the contained models
         this.model.messages.reset();
         
         // re-draw self
-        this.render();
-        
-        // reload existing items, relayout, 
-        $('#container').isotope('reloadItems').isotope('reLayout').isotope({sortBy:'originalOrder'});
+        this.remove();
         
         return false;
     },
