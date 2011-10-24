@@ -1,10 +1,9 @@
 var MessageView = Backbone.View.extend({
     tagName: "div",
-    className: "message text",
+    className: "message",
     events: {
         "click .up": "handleUpClick",
         "click .down": "handleDownClick",
-        "click .expand": "handleExpandClick",
         "click": "handleClick"
     },
     // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
@@ -23,14 +22,14 @@ var MessageView = Backbone.View.extend({
     ].join('')),
     // TODO: get actual group styling html, (this is just a placeholder)
     groupTemplate: _.template([
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)">GROUP: <%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>',
-        '<button class="expand"><br><br>EXPAND!<br><br><br></button>',
-        '<div class="stories">',
-            '<% model.messages.each(function(story) { %>',
-            '<img class="main" style="display: none"/><span><%= story.get("title")%></span>',
+        // '<div class="stories">',
+            '<% model.messages.each(function(story, i) { %>',
+            '<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) %>deg);">',
+            '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
+            '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
+            '</div>',
             '<% }); %>',
-        '</div>',
-        '<div>Contains: <%= model.messages.length %></div>'
+        // '</div>'
     ].join('')),
     initialize: function () {
         this.model.view = this; // store reference to view on model
@@ -49,14 +48,16 @@ var MessageView = Backbone.View.extend({
         });
         
         // remove all the brick classes, add new one
-        el.removeClass("brick-1 brick-2 brick-3 brick-4");
+        el.removeClass("brick-1 brick-2 brick-3 brick-4 group text");
         el.addClass(this.getBrickClass());
         
         // render our compiled template
         if (isGroup) {
             el.html(this.groupTemplate({model: this.model}));
+            el.addClass("group");
         } else {
             el.html(this.template({model: this.model}));
+            el.addClass("text");
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
@@ -64,20 +65,27 @@ var MessageView = Backbone.View.extend({
     
     
     // Browser event handlers
-    
     handleClick: function (evt) {
-        if (!$(evt.target).hasClass("vote")) {
-            if (evt.shiftKey) {
-                chrome.extension.sendRequest({
-                    signature: "notify",
-                    params: this.model.toJSON()
-                });
-            } else {
-                chrome.extension.sendRequest({
-                    signature: "tab",
-                    params: {url: this.model.main_link(), selected: false}
-                });
-                this.trigger("clicked");
+        var el = $(this.el),
+            isGroup = this.model.messages.length > 1;
+        
+        if (isGroup) {
+            this.handleExpand();
+        }
+        else {
+            if (!$(evt.target).hasClass("vote")) {
+                if (evt.shiftKey) {
+                    chrome.extension.sendRequest({
+                        signature: "notify",
+                        params: this.model.toJSON()
+                    });
+                } else {
+                    chrome.extension.sendRequest({
+                        signature: "tab",
+                        params: {url: this.model.main_link(), selected: false}
+                    });
+                    this.trigger("clicked");
+                }
             }
         }
     },
@@ -120,9 +128,7 @@ var MessageView = Backbone.View.extend({
         });
     },
     
-    handleExpandClick: function (e) {
-        e.stopImmediatePropagation(); // Do not trigger next events. We actually do not event to use a click, but just and hover event.
-        
+    handleExpand: function (e) {
         this.model.messages.each(function (message) {
                 var view = new MessageView({
                     model: message
