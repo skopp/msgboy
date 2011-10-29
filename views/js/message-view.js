@@ -22,7 +22,8 @@ var MessageView = Backbone.View.extend({
     ].join('')),
     groupTemplate: _.template([
         '<% model.messages.each(function(story, i) { %>',
-        '<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) +5 %>deg);">',
+        //'<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) +5 %>deg);">',
+        '<div class="message" style="border:1px solid white;-webkit-transform: rotate(<%= Math.random()*(-i)*(20/model.messages.length) +5 %>deg);">',    // another take on generating the transform.
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
         '</div>',
@@ -52,6 +53,7 @@ var MessageView = Backbone.View.extend({
         if (isGroup) {
             el.html(this.groupTemplate({model: this.model}));
             el.addClass("group");
+            el.addClass("stack"); // added to help with CSS specificity for stack effects.
         } else {
             el.html(this.template({model: this.model}));
             el.addClass("text");
