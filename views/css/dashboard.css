@@ -92,7 +92,7 @@ header a.help {
     border-radius: 2px;
     background-color: #11232c;
     padding: 0px;
-    margin: 20px;
+    margin: 10px;
     overflow: hidden;
     min-height: 50px;
 }
@@ -209,19 +209,19 @@ header a.help {
 .brick-2, .brick-2 .message  {
     font-size:0.8em;
     width: 100px;
-    height: 220px;
+    height: 210px;
 }
 
 .brick-3, .brick-3 .message  {
     font-size:1.0em;
-    width: 220px;
-    height: 220px;
+    width: 210px;
+    height: 210px;
 }
 
 .brick-4, .brick-4 .message  {
     font-size:1.2em;
-    width: 480px;
-    height: 480px;
+    width: 440px;
+    height: 440px;
 }
 
 .isotope, .isotope .isotope-item {
@@ -319,4 +319,31 @@ p.darkened {
 .stack {
     overflow: visible;
     box-shadow: none !important;
+}
+
+.stack .message {
+    width: 196px;
+    height: 196px;
+    margin: 7px;
+}
+
+
+.isotope.no-transition,
+.isotope.no-transition .isotope-item,
+.isotope .isotope-item.no-transition {
+  -webkit-transition-duration: 0;
+}
+
+.isotope,
+.isotope .isotope-item {
+  /* change duration value to whatever you like */
+  -webkit-transition-duration: 0.4s;
+}
+
+.isotope {
+  -webkit-transition-property: height, width, top, left, right;
+}
+
+.isotope .isotope-item {
+  -webkit-transition-property: -webkit-transform, opacity;
 }

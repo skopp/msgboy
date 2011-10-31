@@ -22,7 +22,6 @@ var MessageView = Backbone.View.extend({
     ].join('')),
     groupTemplate: _.template([
         '<% model.messages.each(function(story, i) { %>',
-        //'<div class="message" style="-webkit-transform: rotate(<%=i*(20/model.messages.length) +5 %>deg);">',
         '<div class="message" style="-webkit-transform: rotate(<%= Math.random()*(-i)*(15/model.messages.length) +5 %>deg);">',    // another take on generating the transform.
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
@@ -134,17 +133,19 @@ var MessageView = Backbone.View.extend({
                 $(view.el).hide();
 
                 $(this.el).after($(view.el)); // Adds the view in the document.
+
                 $('#container').isotope('appended', $(view.el), function () {
-                    $(view.el).show();
+                    $(view.el).fadeIn(300);
                     $('#container').isotope('reLayout');
                 }.bind(this));
+
                 // empty all the contained models
                 message.messages.reset();
                 view.render();
         }.bind(this));
-        
+
         // removes the group.
-        this.remove();
+        this.remove();        
         
         return false;
     },
