@@ -92,7 +92,7 @@ header a.help {
     border-radius: 2px;
     background-color: #11232c;
     padding: 0px;
-    margin: 10px;
+    margin: 20px;
     overflow: hidden;
     min-height: 50px;
 }
@@ -209,19 +209,19 @@ header a.help {
 .brick-2, .brick-2 .message  {
     font-size:0.8em;
     width: 100px;
-    height: 210px;
+    height: 220px;
 }
 
 .brick-3, .brick-3 .message  {
     font-size:1.0em;
-    width: 210px;
-    height: 210px;
+    width: 220px;
+    height: 220px;
 }
 
 .brick-4, .brick-4 .message  {
     font-size:1.2em;
-    width: 440px;
-    height: 440px;
+    width: 480px;
+    height: 480px;
 }
 
 .isotope, .isotope .isotope-item {
@@ -286,15 +286,15 @@ header a.help {
 
 .brick-3 p {
     font-size: 1em;
-    width: 190px;
-    height: 73px;    /*padding is 10*/
+    width: 200px;
+    height: 83px;    /*padding is 10*/
     line-height: 20px;
 }
 
 .brick-4 p {
     font-size: 1.4em;
-    width: 420px;
-    height: 73px;    /*padding is 10*/
+    width: 460px;
+    height: 93px;    /*padding is 10*/
     line-height: 26px;
 }
 
