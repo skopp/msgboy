@@ -35,6 +35,9 @@ var Message = Backbone.Model.extend({
         }
         // create container for similar messages
         this.messages = new Backbone.Collection();
+        this.messages.comparator = function(message) {
+            return -message.attributes.created_at;
+        }
         this.messages.add(this); // add ourselves
         return this;
     },
