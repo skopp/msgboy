@@ -304,12 +304,10 @@ p.darkened {
 
 .group {
     background-color: #fff;
-    
     padding: 0px;
 }
 
 .group .message {
-    box-shadow: 0 0 5px rgba(0,0,0,0.9);
     color: #E6E6E6;
     position: absolute;
     -webkit-transform-origin: 50% 50%;
