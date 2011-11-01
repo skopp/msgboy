@@ -135,12 +135,19 @@ header a.help {
     width: 100%;
 }
 
+.controls:nth-child(2) {
+    top: 46px;
+    right: -26%;
+    bottom: auto;
+    width: 50%;
+    display: none;
+    position: absolute;
+}
+
 .message:hover {
     box-shadow: 0 0 5px rgba(0,0,0,0.9);
     cursor: pointer;
 }
-
-
 
 .text:hover .controls {
     display:block;
@@ -171,6 +178,10 @@ header a.help {
 .controls button img {
     width: 24px !important;
     height: 24px !important;
+}
+
+.controls button img.share {
+    height: 18px !important;
 }
 
 .brick-2 .controls button {

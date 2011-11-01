@@ -16,6 +16,11 @@ var MessageView = Backbone.View.extend({
                 '<img class="vote up" src="../images/plus.png" />',
             '</button>',
         '</span>',
+        '<span class="controls">',
+            '<button class="share">',
+                '<img class="share" src="../images/share.png" />',
+            '</button>',
+        '</span>',
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
@@ -92,13 +97,13 @@ var MessageView = Backbone.View.extend({
         // added by eric. self-reminder.
         $('#container').isotope('reLayout');
 
-        $('.controls').fadeIn();
-        $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
+        // $('.controls').fadeIn();
+        // $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
 
-        $('.shimmer').bind('webkitAnimationEnd', function(){
-            $('.controls').fadeOut('slow');
-            $(this).removeClass('shimmer');
-        });
+        // $('.shimmer').bind('webkitAnimationEnd', function(){
+        //     $('.controls').fadeOut('slow');
+        //     $(this).removeClass('shimmer');
+        // });
     },
     handleDownClick: function () {
         this.model.vote_down(function (result) {
@@ -116,13 +121,13 @@ var MessageView = Backbone.View.extend({
         // added by eric. self-reminder.
         $('#container').isotope('reLayout');
 
-        $('.controls').fadeIn();
-        $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
+        // $('.controls').fadeIn();
+        // $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
 
-        $('.shimmer').bind('webkitAnimationEnd', function(){
-            $('.controls').fadeOut('slow');
-            $(this).removeClass('shimmer');
-        });
+        // $('.shimmer').bind('webkitAnimationEnd', function(){
+        //     $('.controls').fadeOut('slow');
+        //     $(this).removeClass('shimmer');
+        // });
     },
     
     handleExpand: function (e) {
