@@ -55,7 +55,7 @@ body {
     background-color: rgba(0,0,0,.65);
     border: none;
     outline: none;
-    width: 49.5%;
+    width: 32%;
     margin: 0;
     color: #fff;
     height: 44px;
@@ -72,11 +72,20 @@ body {
     left: 0;
     text-align: left;
 }
-
+.controls button:nth-child(2) {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    left: 34%;
+    text-align: center;
+}
 .controls button:last-child {
     border-top-left-radius: 4px;
     right: 0;
     text-align: right;
+}
+
+.controls button img.share {
+    height: 18px !important;
 }
 
 .controls button img {

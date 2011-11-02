@@ -135,15 +135,6 @@ header a.help {
     width: 100%;
 }
 
-.controls:nth-child(2) {
-    top: 46px;
-    right: -26%;
-    bottom: auto;
-    width: 50%;
-    display: none;
-    position: absolute;
-}
-
 .message:hover {
     box-shadow: 0 0 5px rgba(0,0,0,0.9);
     cursor: pointer;
@@ -163,7 +154,7 @@ header a.help {
     outline: none;
     height: 46px;
     line-height: 24px;
-    width: 49.5%;
+    width: 32%;
     margin: 0;
     color: #fff;
     padding: 0 10px !important;
@@ -182,6 +173,7 @@ header a.help {
 
 .controls button img.share {
     height: 18px !important;
+    margin-bottom: 3px;
 }
 
 .brick-2 .controls button {
@@ -198,6 +190,12 @@ header a.help {
     border-top-right-radius: 2px;
     left: 0;
     text-align: left;
+}
+.controls button:nth-child(2) {
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    left: 34.5%;
+    text-align: center;
 }
 .controls button:last-child {
     border-bottom-right-radius: 2px;
