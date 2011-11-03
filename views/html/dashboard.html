@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <title>Msgboy Dashboard</title>
         <meta name="application-name" content="Msgboy" />
-        <link rel="stylesheet" href="../css/style.css" />
         <link rel="stylesheet" href="../css/bootstrap.min.css" />
+        <link rel="stylesheet" href="../css/header.css" />
         <link rel="stylesheet" href="../css/dashboard.css" />
         
         <!-- Error Reporting Code -->
@@ -41,11 +41,18 @@
     
     <body>
         
-        <header>
-            <a href="dashboard.html"><h1>msgboy</h1></a>
-            <a href="options.html" class="options">Options</a><a href="help.html" class="help">Help</a>
+        <header class="topbar">
+            <div class="fill">
+                <div class="container">
+                    <a href="dashboard.html"><h1>Msgboy</h1></a>
+                    <ul class="nav">
+                        <li class="active"><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="options.html" class="options">Options</a></li>
+                        <li><a href="help.html" class="help">Help</a></li>
+                    </ul>
+                </div>
+            </div>
             <div id="new_messages"></div>
-            <h2>Dashboard</h2>
         </header>
         
         <div id="archive">

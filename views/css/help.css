@@ -1,166 +1,233 @@
-body.splash {
-    background-color: #0d1d23;
-    background: url(../images/page-bg.gif) top left repeat-x fixed;
+/* 
+html5doctor.com Reset Stylesheet
+v1.6.1
+Last Updated: 2010-09-17
+Author: Richard Clark - http://richclarkdesign.com
+Twitter: @rich_clark
+*/
+/*
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+    margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
 }
 
-#info {
-    background-color: #11232c;
-    box-shadow: 0 0 5px rgba(0,0,0,.8);
-    color: #eee;
-    font-weight: normal;
-    min-height: 100%;
+body {
+    line-height:1;
+}
+
+article,aside,details,figcaption,figure,
+footer,header,hgroup,menu,nav,section { 
+    display:block;
+}
+
+nav ul {
+    list-style:none;
+}
+
+blockquote, q {
+    quotes:none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content:'';
+    content:none;
+}
+
+a {
+    margin:0;
+    padding:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
+}
+
+ins {
+    background-color:#ff9;
+    color:#000;
+    text-decoration:none;
+}
+
+mark {
+    background-color:#ff9;
+    color:#000; 
+    font-style:italic;
+    font-weight:bold;
+}
+
+del {
+    text-decoration: line-through;
+}
+
+abbr[title], dfn[title] {
+    border-bottom:1px dotted;
+    cursor:help;
+}
+
+table {
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+hr {
+    display:block;
+    height:1px;
+    border:0;   
+    border-top:1px solid #cccccc;
+    margin:1em 0;
+    padding:0;
+}
+
+input, select {
+    vertical-align:middle;
+}
+
+
+
+
+html, body {
+    margin:0;
     padding: 0;
-    position: absolute;
-    left: 40px;
-    text-shadow: 0 1px 3px #333;
-    top: 80px;
-    width: 600px;
-    z-index: 10;
-    overflow: auto;
-    padding-bottom: 20px;
 }
 
-.pane:first-child {
-  border-top: 0px none;
+body {
+    padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
+    color: #191919;
 }
 
-.pane {
-    border-top: 1px solid #1c3541;
-    border-bottom: 1px solid #091419;
-    padding-bottom: 60px;
+a, a:visited {
+    color: #358dc2;
+    text-decoration: none;
 }
 
-#info h1 {
-    padding: 20px 20px 10px;
-    font-size: 1.8em;
+header {
 }
 
-#info h2 {
-    margin: 50px 20px 20px 20px;
-    font-size: 1.3em;
-}
-
-#info h3 {
-    margin: 30px 20px 10px 20px;
-    font-size: 1.1em;
-}
-
-
-#info p {
-    line-height: 20px;
-    margin: 20px;
-}
-
-#info ul {
-    line-height: 20px;
-    margin: 20px 20px 20px 40px;    
-}
-
-#info img {
-    float: right;
-    border: 4px solid #fff;
-    margin-left: 20px;    
-}
-
-#buildings, #clouds, #signal {
-    position: fixed;
-}
-
-#buildings {
-    bottom: 0;
-    left: 400px;
-    z-index: 1;
-}
-
-#clouds {
-    top: 0;
-    left: 300px;
-    z-index: 2; 
-}
-
-#signal {
-    top: 150px;
-    left: 550px;
-    z-index: 3;
-    -webkit-animation-name: signalOn;
-    -webkit-animation-iteration-count: 1;
-    -webkit-animation-duration: 2.5s;
-    -webkit-animation-timing-function: ease-out;
-    -webkit-animation-delay: .6s;
-}
-
-@-webkit-keyframes signalOn {
-    from {
-        opacity: 0;
-    }
-    5% {
-        opacity: .2;
-    }
-    7% {
-        opacity: 0;
-    }
-    17% {
-        opacity: .4;
-    }
-    19% {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-
-#privacy {
-  margin-bottom: 400px;
-}
-
-/*options page stuff*/
-
-#options {
-    margin: 20px;
-    text-align: left;
-}
-
-#options label {
+header h1 {
+    background-image: url(../icons/icon48.png);
+    background-position: top left;
+    text-indent: -9999em;
+    float: left;
     display: block;
+    margin-left: 10px;
+    position: relative;
+    z-index: 1000;
+}
+
+header h2 {
+    float: left;
+    margin: 3px 0 3px 10px;
+    font-weight: normal;
+    font-size: 14px;
+    position: relative;
+    z-index: 1000;
+    border-left: 1px solid rgba(255,255,255,.5);
+    border-width: 0 1px;
+    padding: 1px 10px;
     font-weight: bold;
-    margin-bottom: 10px;
-} 
-
-#option {
-    margin-bottom: 30px;
-    margin-top: 10px;
 }
 
-#relevance {
-    width: 300px;
-}
-
-.scale {
-    width: 310px;
-}
-
-.scale div {
-    float:left;
-    width: 147px;
-    color:rgba(255,255,255,0.7);
-}
-
-
-small {
-    margin-top: 10px;
+header a.options, header a.help {
     display: block;
-    font-size: .8em;
-    line-height: 140%;
+    float: left;
+    background-image: url(../images/gear-help.png);
+    background-position: top left;
+    background-repeat: no-repeat;
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+    text-indent: -999em;
+    position: relative;
+    z-index: 1000;
+    top: 3px;
 }
 
-.mini {
+header a.help {
+    background-position: -20px 0;
     margin-left: 5px;
-    text-align:left;
 }
 
-.maxi {
-    text-align: right;
-    margin-right:5px;
+#settings #saved {
+    display:none;
 }
+
+#loader_frame {
+    display: block;
+    height: 12px;
+}
+
+#loader {
+    margin-right: auto;
+    margin-left: auto;
+    display: block;
+}
+
+#progress-bar {
+    display: block;
+    margin-left:auto;
+    margin-right:auto;
+    width: 780px;
+}
+
+#progress-bar div {
+    float:left;
+}
+
+#progress-bar div.step {
+    margin: 0px;
+    padding:10px;
+    border:1px solid #CCC;
+    border-radius: 20px;
+    background-color: #FFF;
+}
+
+#progress-bar div.selected {
+    background-color: #999;
+    border:1px solid #666;
+}
+
+#progress-bar div.bar {
+    border-bottom: 1px #CCC solid;
+    height: 0px;
+    line-height:0px;
+    margin:0px;
+    margin-top: 20px;
+    padding:0px;
+    width: 200px;
+}
+
+#credentials {
+    display:none;
+}
+
+#alert {
+    margin-top:100px;
+    color: #FFF;
+    background-color: rgba(255,233,0,0.7);
+    -webkit-border-radius: 5px 5px 5px 5px;
+    text-align:center;
+    padding: 10px;
+    width: 20%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+*/
