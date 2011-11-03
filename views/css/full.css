@@ -131,9 +131,12 @@ html,body{
 }
 
 #options label {
+    margin-right:20px;
+    font-size: 1.2em;
     display: block;
     font-weight: bold;
     margin-bottom: 10px;
+    color: #EEE;
 } 
 
 #option {
@@ -141,20 +144,26 @@ html,body{
     margin-top: 10px;
 }
 
+#option label {
+    width:120px;
+    text-align:left;
+}
+
 #relevance {
     width: 300px;
 }
 
 .scale {
-    width: 310px;
+    padding:0px;
+    margin:0px;
 }
 
 .scale div {
-    float:left;
+    margin-top: -15px;
+    float: left;
     width: 147px;
     color:rgba(255,255,255,0.7);
 }
-
 
 small {
     margin-top: 10px;
