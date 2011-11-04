@@ -111,7 +111,7 @@
     height: 24px !important;
 }
 
-.controls button img.share {
+.controls button.share img{
     height: 18px !important;
     margin-bottom: 3px;
 }

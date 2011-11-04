@@ -4,19 +4,20 @@ var MessageView = Backbone.View.extend({
     events: {
         "click .up": "handleUpClick",
         "click .down": "handleDownClick",
+        "click .share": "handleShare",
         "click": "handleClick"
     },
     // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
     template: _.template([
         '<span class="controls">',
             '<button class="vote down">',
-                '<img class="vote down" src="../images/minus.png" />',
+                '<img src="../images/minus.png" />',
             '</button>',
             '<button class="share">',
-                '<img class="share" src="../images/share.png" />',
+                '<img src="../images/share.png" />',
             '</button>',
             '<button class="vote up">',
-                '<img class="vote up" src="../images/plus.png" />',
+                '<img src="../images/plus.png" />',
             '</button>',
         '</span>',
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
@@ -126,6 +127,13 @@ var MessageView = Backbone.View.extend({
         //     $('.controls').fadeOut('slow');
         //     $(this).removeClass('shimmer');
         // });
+    },
+    handleShare: function(e) {
+        $('#modal-share').modal({
+            keyboard: true,
+            backdrop: true,
+        });
+        $('#modal-share').modal('show');
     },
     
     handleExpand: function (e) {
