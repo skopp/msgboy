@@ -32,6 +32,7 @@ body {
     font-size: .6em;
     font-weight: normal;
     width: 210px;
+    height: 10px;
 }
 
 .page_nav {
@@ -51,11 +52,12 @@ body {
 
 .controls button {
     -webkit-appearance: none;
-    background: none;
     background-color: rgba(0,0,0,.65);
+    background-repeat: no-repeat;
+    background-position:center;
     border: none;
     outline: none;
-    width: 32%;
+    width: 49%;
     margin: 0;
     color: #fff;
     height: 44px;
@@ -75,7 +77,6 @@ body {
 .controls button:nth-child(2) {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    left: 34%;
     text-align: center;
 }
 .controls button:last-child {
@@ -119,4 +120,13 @@ body {
     top: 20px;
     background-color: rgba(0,0,0,0.7);
 }
-uh
+
+.down {
+    background-image: url('../images/minus.png');
+}
+.up {
+    background-image: url('../images/plus.png');
+}
+.share {
+    display:none;
+}

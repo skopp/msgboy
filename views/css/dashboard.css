@@ -52,7 +52,7 @@
     top: 0px;
     color: #e9e9e9;
     text-indent: 0;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: normal;
     overflow: hidden;
     width: 100%;
@@ -213,7 +213,7 @@
 }
 
 .brick-2 p, .brick-1 p {
-    font-size: 0.9em;
+    font-size: 1.0em;
     width: 80px;
     height: 73px;    /*padding is 10*/
     line-height: 14px;
@@ -225,15 +225,15 @@
 }*/
 
 .brick-3 p {
-    font-size: 1em;
+    font-size: 1.1em;
     width: 200px;
     height: 83px;    /*padding is 10*/
     line-height: 20px;
 }
 
 .brick-4 p {
-    font-size: 1.4em;
-    width: 460px;
+    font-size: 1.5em;
+    width: 100%;
     height: 93px;    /*padding is 10*/
     line-height: 26px;
 }
