@@ -84,7 +84,7 @@
                 $('#comment').keyup(updateCountdown);
                 $('.btn.share-ext').click(function(e) {
                     var url = encodeURI($('#modal-share').data('url'));
-                    var service = $(e.target).data('service');
+                    var service = $(e.target).parent().data('service');
                     var comment = encodeURI($('#comment').val());
                     chrome.extension.sendRequest({
                         signature: "tab",
