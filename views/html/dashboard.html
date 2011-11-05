@@ -12,7 +12,7 @@
         <!-- <script type="text/javascript" src="../../controllers/error_notifier.js"></script> -->
         
         <!-- Lib includes -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+        <script src="../../lib/jquery/jquery.js"></script>
         <script src="../../lib/underscore/underscore-min.js" type="text/javascript"></script> 
         <script src="../../lib/backbone/backbone-min.js" type="text/javascript"></script> 
         <script src="../../lib/backbone-indexeddb/backbone-indexeddb.js" type="text/javascript"></script> 
@@ -56,7 +56,7 @@
             <div id="new_messages"></div>
         </header>
         
-        <div id="modal-share" class="modal hide">
+        <div id="modal-share" class="modal backdrop fade">
             <div class="modal-header">
                 <a href="#" class="close">×</a>
                 <h3>Share</h3>
@@ -67,29 +67,6 @@
                 <span class="help-block" id="character-count">0 characters</span>
                 <a href="#" class="btn secondary share-ext twitter" data-service="twitter">Twitter</a>
                 <a href="#" class="btn secondary share-ext facebook" data-service="facebook">Facebook</a>
-                <script>
-                function updateCountdown() {
-                    var lngth = $("#comment").val().length;
-                    $("#character-count").text(lngth + " characters");
-                    if(lngth > 120) {
-                        $(".btn.twitter").addClass("disabled");
-                    }
-                }
-                $('#comment').change(updateCountdown);
-                $('#comment').keyup(updateCountdown);
-                $('.share-ext').click(function(e) {
-                    var url = encodeURI($('#modal-share').data('url'));
-                    var service = $(e.target).data('service');
-                    var comment = encodeURI($('#comment').val());
-                    chrome.extension.sendRequest({
-                        signature: "tab",
-                        params: {url: "http://msgboy.com/share/prepare?url=" + url + "&comment=" + comment + "&service=" + service, selected: true}
-                    });
-                    $('#modal-share').modal('hide');
-                });
-                $('.facebook').click(function() {
-                });
-                </script>
             </div>
             <div class="modal-footer">
             </div>
@@ -139,6 +116,29 @@
                         }
                     }
                 });
+                
+                var updateCountdown = function() {
+                    var lngth = $("#comment").val().length;
+                    $("#character-count").text(lngth + " characters");
+                    if(lngth > 120) {
+                        $(".btn.twitter").addClass("disabled");
+                    }
+                };
+                
+                $('#comment').change(updateCountdown);
+                $('#comment').keyup(updateCountdown);
+                
+                $('.share-ext').click(function(e) {
+                    var url = encodeURI($('#modal-share').data('url'));
+                    var service = $(e.target).data('service');
+                    var comment = encodeURI($('#comment').val());
+                    chrome.extension.sendRequest({
+                        signature: "tab",
+                        params: {url: "http://msgboy.com/share/prepare?url=" + url + "&comment=" + comment + "&service=" + service, selected: true}
+                    });
+                    $('#modal-share').modal('hide');
+                });
+                
             });
             Msgboy.run();            
         </script>

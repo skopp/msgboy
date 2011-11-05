@@ -102,10 +102,7 @@ var MessageView = Backbone.View.extend({
     },
     handleShare: function(e) {
         $('#modal-share').data('url', this.model.main_link())
-        $('#modal-share').modal({
-            keyboard: true,
-            backdrop: true,
-        });
+        $('#modal-share').modal('show');
     },
     handleExpand: function (e) {
         this.model.messages.each(function (message) {
