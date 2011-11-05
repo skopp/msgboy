@@ -56,11 +56,6 @@
             <div id="new_messages"></div>
         </header>
         
-        <div id="archive">
-            <div id="container" class="isotope">
-                <!-- Messages will be added here when loaded -->
-            </div>
-        </div>
         <div id="modal-share" class="modal hide fade">
             <div class="modal-header">
                 <a href="#" class="close">×</a>
@@ -70,8 +65,8 @@
                 <label for="comment">Comment</label>
                 <textarea class="xxlarge" id="comment" name="comment" rows="3"></textarea>
                 <span class="help-block" id="character-count">0 characters</span>
-                <a href="#" class="btn secondary share-ext" data-service="twitter"><span class="service twitter">Twitter</span></a>
-                <a href="#" class="btn secondary share-ext" data-service="facebook"><span class="service facebook">Facebook</span></a>
+                <a href="#" class="btn secondary share-ext twitter" data-service="twitter">Twitter</a>
+                <a href="#" class="btn secondary share-ext facebook" data-service="facebook">Facebook</a>
                 <script>
                 function updateCountdown() {
                     var lngth = $("#comment").val().length;
@@ -84,7 +79,7 @@
                 $('#comment').keyup(updateCountdown);
                 $('.btn.share-ext').click(function(e) {
                     var url = encodeURI($('#modal-share').data('url'));
-                    var service = $(e.target).parent().data('service');
+                    var service = $(e.target).data('service');
                     var comment = encodeURI($('#comment').val());
                     chrome.extension.sendRequest({
                         signature: "tab",
@@ -98,12 +93,14 @@
             <div class="modal-footer">
             </div>
         </div>
-
+        
+        <div id="archive">
+            <div id="container" class="isotope">
+                <!-- Messages will be added here when loaded -->
+            </div>
+        </div>
 
         <script type="text/javascript">
-            $('#share').modal({
-                 keyboard: true
-            });
             Msgboy.bind("loaded", function () {
                 var archive = new Archive();
 
@@ -142,9 +139,7 @@
                     }
                 });
             });
-            Msgboy.run();
-
-            
+            Msgboy.run();            
         </script>
     </body>
 </html>

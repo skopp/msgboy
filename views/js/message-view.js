@@ -10,12 +10,9 @@ var MessageView = Backbone.View.extend({
     // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
     template: _.template([
         '<span class="controls">',
-            '<button class="vote down">',
-            '</button>',
-            '<button class="share">',
-            '</button>',
-            '<button class="vote up">',
-            '</button>',
+            '<button class="vote down"></button>',
+            '<button class="share"></button>',
+            '<button class="vote up"></button>',
         '</span>',
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',

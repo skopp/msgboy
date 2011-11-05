@@ -317,20 +317,11 @@ p.darkened {
     margin-left: 70px;
 }
 
-.service {
-    margin:0px;
-    padding:5px;
-    width:100%;
-    height:100%;
-    padding-left: 18px;
-    background-repeat: no-repeat;
-    background-position: left center;
+.twitter:before {
+      content: url(https://twitter.com/favicon.ico);
 }
-.twitter {
-    background-image: url(https://twitter.com/favicon.ico);
-}
-.facebook {
-    background-image: url(http://facebook.com/favicon.ico);
+.facebook:before {
+    content: url(https://facebook.com/favicon.ico);
 }
 .down {
     background-image: url('../images/minus.png');
