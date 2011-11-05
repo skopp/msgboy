@@ -68,13 +68,12 @@ var MessageView = Backbone.View.extend({
     // Browser event handlers
     handleClick: function (evt) {
         var el = $(this.el),
-            isGroup = this.model.messages.length > 1;
-        
+        isGroup = this.model.messages.length > 1;
         if (isGroup) {
             this.handleExpand();
         }
         else {
-            if (!$(evt.target).hasClass("vote")) {
+            if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     chrome.extension.sendRequest({
                         signature: "notify",
@@ -92,17 +91,7 @@ var MessageView = Backbone.View.extend({
     },
     handleUpClick: function () {
         this.model.vote_up();
-        
-        // added by eric. self-reminder.
         $('#container').isotope('reLayout');
-
-        // $('.controls').fadeIn();
-        // $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
-
-        // $('.shimmer').bind('webkitAnimationEnd', function(){
-        //     $('.controls').fadeOut('slow');
-        //     $(this).removeClass('shimmer');
-        // });
     },
     handleDownClick: function () {
         this.model.vote_down(function (result) {
@@ -115,49 +104,37 @@ var MessageView = Backbone.View.extend({
                 Msgboy.delete_from_feed(this.model.attributes.feed);
             }
         }.bind(this));
-
-
-        // added by eric. self-reminder.
         $('#container').isotope('reLayout');
-
-        // $('.controls').fadeIn();
-        // $('.message:nth-child(3n+1) .controls button').addClass('shimmer');
-
-        // $('.shimmer').bind('webkitAnimationEnd', function(){
-        //     $('.controls').fadeOut('slow');
-        //     $(this).removeClass('shimmer');
-        // });
     },
     handleShare: function(e) {
         $('#modal-share').modal({
             keyboard: true,
             backdrop: true,
         });
+        $('#modal-share').data('url', this.model.main_link())
         $('#modal-share').modal('show');
     },
-    
     handleExpand: function (e) {
         this.model.messages.each(function (message) {
-                var view = new MessageView({
-                    model: message
-                });
-                $(view.el).hide();
+            var view = new MessageView({
+                model: message
+            });
+            $(view.el).hide();
 
-                $(this.el).after($(view.el)); // Adds the view in the document.
+            $(this.el).after($(view.el)); // Adds the view in the document.
 
-                $('#container').isotope('appended', $(view.el), function () {
-                    $(view.el).fadeIn(300);
-                    $('#container').isotope('reLayout');
-                }.bind(this));
+            $('#container').isotope('appended', $(view.el), function () {
+                $(view.el).fadeIn(300);
+                $('#container').isotope('reLayout');
+            }.bind(this));
 
-                // empty all the contained models
-                message.messages.reset();
-                view.render();
+            // empty all the contained models
+            message.messages.reset();
+            view.render();
         }.bind(this));
 
         // removes the group.
         this.remove();        
-        
         return false;
     },
     handleImageLoad: function (e) {
@@ -176,7 +153,6 @@ var MessageView = Backbone.View.extend({
             }
         }
     },
-    
     getBrickClass: function () {
         var res,
             state = this.model.get('state');

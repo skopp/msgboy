@@ -294,3 +294,46 @@ p.darkened {
 .isotope .isotope-item {
   -webkit-transition-property: -webkit-transform, opacity;
 }
+
+.btn img.icon {
+    vertical-align: middle;
+    margin: 3px;
+}
+
+#modal-share .btn {
+    margin: 5px;
+    float: right;
+}
+
+.modal-footer {
+    clear: both;
+}
+
+.xxlarge {
+    width: 460px;
+}
+
+#modal-share label {
+    width:60px;
+    margin-right: 10px;
+}
+
+#modal-share textarea {
+    width: 445px;
+}
+
+#modal-share .help-block {
+    margin-left: 70px;
+}
+
+.service {
+    padding-left: 18px;
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+.twitter {
+    background-image: url(https://twitter.com/favicon.ico);
+}
+.facebook {
+    background-image: url(http://facebook.com/favicon.ico);
+}

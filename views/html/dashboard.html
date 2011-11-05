@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="../css/dashboard.css" />
         
         <!-- Error Reporting Code -->
-        <script type="text/javascript" src="../../controllers/error_notifier.js"></script>
+        <!-- <script type="text/javascript" src="../../controllers/error_notifier.js"></script> -->
         
         <!-- Lib includes -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
@@ -61,21 +61,45 @@
                 <!-- Messages will be added here when loaded -->
             </div>
         </div>
-         <div id="modal-share" class="modal hide fade">
-                         <div class="modal-header">
-                           <a href="#" class="close">×</a>
-                           <h3>Modal Heading</h3>
-                         </div>
-                         <div class="modal-body">
-                           <p>One fine body…</p>
-                         </div>
-                         <div class="modal-footer">
-                           <a href="#" class="btn primary">Primary</a>
-                           <a href="#" class="btn secondary">Secondary</a>
-                         </div>
-                       </div>
-        
-        
+        <div id="modal-share" class="modal hide fade">
+            <div class="modal-header">
+                <a href="#" class="close">×</a>
+                <h3>Share</h3>
+            </div>
+            <div class="modal-body">
+                <label for="comment">Comment</label>
+                <textarea class="xxlarge" id="comment" name="comment" rows="3"></textarea>
+                <span class="help-block" id="character-count">0 characters</span>
+                <a href="#" class="btn secondary share" data-service="twitter"><span class="service twitter">Twitter</span></a>
+                <a href="#" class="btn secondary share" data-service="facebook"><span class="service facebook">Facebook</span></a>
+                <script>
+                function updateCountdown() {
+                    var lngth = $("#comment").val().length;
+                    $("#character-count").text(lngth + " characters");
+                    if(lngth > 120) {
+                        $(".btn.twitter").addClass("disabled");
+                    }
+                }
+                $('#comment').change(updateCountdown);
+                $('#comment').keyup(updateCountdown);
+                $('.btn.share').click(function(e) {
+                    var url = encodeURI($('#modal-share').data('url'));
+                    var service = $(e.target).data('service');
+                    var comment = encodeURI($('#comment').val());
+                    chrome.extension.sendRequest({
+                        signature: "tab",
+                        params: {url: "http://msgboy.com/share/prepare?url=" + url + "&comment=" + comment + "&service=" + service, selected: true}
+                    });
+                });
+                $('.facebook').click(function() {
+                });
+                </script>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+
+
         <script type="text/javascript">
             $('#share').modal({
                  keyboard: true
