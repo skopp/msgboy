@@ -10,7 +10,7 @@ Msgboy.Notification.prototype = {
     messages: [],
     started: false,
     mouseOver: false,
-    period: 80000000,
+    period: 8000,
     rotate: function () {
         setTimeout(function () {
             if (!this.mouseOver) {
