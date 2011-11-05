@@ -70,8 +70,8 @@
                 <label for="comment">Comment</label>
                 <textarea class="xxlarge" id="comment" name="comment" rows="3"></textarea>
                 <span class="help-block" id="character-count">0 characters</span>
-                <a href="#" class="btn secondary share" data-service="twitter"><span class="service twitter">Twitter</span></a>
-                <a href="#" class="btn secondary share" data-service="facebook"><span class="service facebook">Facebook</span></a>
+                <a href="#" class="btn secondary share-ext" data-service="twitter"><span class="service twitter">Twitter</span></a>
+                <a href="#" class="btn secondary share-ext" data-service="facebook"><span class="service facebook">Facebook</span></a>
                 <script>
                 function updateCountdown() {
                     var lngth = $("#comment").val().length;
@@ -82,7 +82,7 @@
                 }
                 $('#comment').change(updateCountdown);
                 $('#comment').keyup(updateCountdown);
-                $('.btn.share').click(function(e) {
+                $('.btn.share-ext').click(function(e) {
                     var url = encodeURI($('#modal-share').data('url'));
                     var service = $(e.target).data('service');
                     var comment = encodeURI($('#comment').val());

@@ -11,13 +11,10 @@ var MessageView = Backbone.View.extend({
     template: _.template([
         '<span class="controls">',
             '<button class="vote down">',
-                '<img src="../images/minus.png" />',
             '</button>',
             '<button class="share">',
-                '<img src="../images/share.png" />',
             '</button>',
             '<button class="vote up">',
-                '<img src="../images/plus.png" />',
             '</button>',
         '</span>',
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',

@@ -84,10 +84,6 @@ body {
     text-align: right;
 }
 
-.controls button img.share {
-    height: 18px !important;
-}
-
 .controls button img {
     position: absolute;
     top: 10px;

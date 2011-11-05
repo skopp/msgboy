@@ -87,8 +87,9 @@
 
 .controls button {
     -webkit-appearance: none;
-    background: none;
     background-color: rgba(0,0,0,.65);
+    background-repeat: no-repeat;
+    background-position:center;
     border: none;
     display: block;
     outline: none;
@@ -104,16 +105,6 @@
     cursor: pointer;
     position: absolute;
     bottom: 0;
-}
-
-.controls button img {
-    width: 24px !important;
-    height: 24px !important;
-}
-
-.controls button.share img{
-    height: 18px !important;
-    margin-bottom: 3px;
 }
 
 .brick-2 .controls button {
@@ -336,4 +327,13 @@ p.darkened {
 }
 .facebook {
     background-image: url(http://facebook.com/favicon.ico);
+}
+.down {
+    background-image: url('../images/minus.png');
+}
+.up {
+    background-image: url('../images/plus.png');
+}
+.share {
+    background-image: url('../images/share.png');
 }
