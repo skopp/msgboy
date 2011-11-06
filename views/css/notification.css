@@ -33,6 +33,7 @@ body {
     font-weight: normal;
     width: 210px;
     height: 10px;
+    line-height: 10px;
 }
 
 .page_nav {
