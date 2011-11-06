@@ -26,17 +26,22 @@ header h1 {
     z-index: 1000;
 }
 
-/*header a.options, header a.help {
-    background-color: red;
+header a.options, header a.help {
+    display: block;
+    float: left;
     background-image: url(../images/gear-help.png);
-    background-position: center middle;
+    background-position: top left;
     background-repeat: no-repeat;
-    width: 32px;
-    height: 32px;
-    margin:4px 10px 4px 10px;
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
     text-indent: -999em;
     position: relative;
-    float: left;
     z-index: 1000;
+    top: 3px;
 }
-*/
+
+header a.help {
+    background-position: -20px 0;
+    margin-left: 5px;
+}
