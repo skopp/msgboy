@@ -84,4 +84,11 @@ $(document).bind('reset_susbcriptions', function (element, object) {
 });
 
 
+// When reloading the inbox is needed (after a change in settings eg)
+$(document).bind('debug', function (element, object) {
+    Msgboy.log("Request : debug ");
+    console.log(object);
+});
+
+
 
