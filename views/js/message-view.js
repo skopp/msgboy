@@ -95,7 +95,6 @@ var MessageView = Backbone.View.extend({
                     params: this.model.attributes.feed
                 };
                 chrome.extension.sendRequest(request);
-                Msgboy.delete_from_feed(this.model.attributes.feed);
             }
         }.bind(this));
         $('#container').isotope('reLayout');
