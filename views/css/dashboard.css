@@ -105,10 +105,6 @@
     bottom: 0;
 }
 
-.brick-2 .controls button {
-    width: 48%;
-}
-
 .controls button:hover {
     background-color: rgba(0,0,0,.92);
     color: #3284b5;
@@ -147,7 +143,7 @@
 .brick-2, .brick-2 .message  {
     font-size:0.8em;
     width: 100px;
-    height: 210px;
+    height: 110px;
 }
 
 .brick-3, .brick-3 .message  {
