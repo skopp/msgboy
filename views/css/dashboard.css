@@ -13,19 +13,17 @@
     background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59A1CD), to(#3284b5));
     color: white;
     cursor: pointer;
-    font-weight: bold;
-    font-style: italic;
-    height: 10px;
-    line-height: 10px;
+    height: 13px;
+    line-height: 13px;
     margin: 0 auto;
     padding: 10px 0;
     position: absolute;
     text-align: center;
-    text-transform: lowercase;
-    top: -30px;
+    top: -36px;
     width: 100%;
     z-index: 500;
-    -webkit-transition: top 0.5s ease-out;
+    text-shadow: 0 1px 0 color;
+    -webkit-transition: top 0.3s ease-out;
 }
 
 .message {

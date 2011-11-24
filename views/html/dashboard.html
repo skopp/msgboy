@@ -51,9 +51,9 @@
                         <li><a href="options.html" class="options">Options</a></li>
                         <li><a href="help.html" class="help">Help</a></li>
                     </ul>
+                    <div id="new_messages" data-unread="0">Hello World</div>
                 </div>
             </div>
-            <div id="new_messages"></div>
         </header>
         
         <div id="modal-share" class="modal backdrop fade">
@@ -108,11 +108,11 @@
                         var count = parseInt($("#new_messages").attr("data-unread"));
                         if (count) {
                             $("#new_messages").attr("data-unread", count + 1);
-                            $("#new_messages").text("view " + (count + 1) + " new messages");
+                            $("#new_messages").text("View " + (count + 1) + " new messages");
                         } else {
                             $("#new_messages").css("top","0");
                             $("#new_messages").attr("data-unread", "1");
-                            $("#new_messages").text("view 1 new message");
+                            $("#new_messages").text("View 1 new message");
                         }
                     }
                 });

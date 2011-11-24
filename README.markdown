@@ -84,6 +84,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Show screenshot for large boxes if there is no image at all.
 * Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
 * Checking a feed status's upon notif and tkaing it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
+* Improve speed & memory footprint!
 
 
 ## Publishers
