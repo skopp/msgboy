@@ -7,7 +7,7 @@ $(document).bind('register', function (element, object) {
 
 $(document).bind('subscribe', function (element, object) {
     Msgboy.log("Request : subscribe " + object.request.params.url);
-    Msgboy.subscribe(object.request.params.url, function (result) {
+    Msgboy.subscribe(object.request.params.url, false, function (result) {
         // Nothing to do.
     });
 });
@@ -77,7 +77,7 @@ $(document).bind('reload', function (element, object) {
 $(document).bind('reset_susbcriptions', function (element, object) {
     Msgboy.log("Request : reset_susbcriptions ");
     Plugins.import_subscriptions(function (subs) {
-        Msgboy.subscribe(subs.url, function () {
+        Msgboy.subscribe(subs.url, false, function () {
             // Cool. Not much to do.
         });
     });
