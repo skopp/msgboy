@@ -33,6 +33,7 @@
     margin: 10px;
     overflow: hidden;
     min-height: 50px;
+    display:none;
 }
 
 .message h1 {
@@ -242,6 +243,7 @@ p.darkened {
 }
 
 .group .message {
+    display:block;
     color: #E6E6E6;
     position: absolute;
     -webkit-transform-origin: 50% 50%;

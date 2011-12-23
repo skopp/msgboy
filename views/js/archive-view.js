@@ -50,8 +50,8 @@ var ArchiveView = Backbone.View.extend({
                 $(view.el).hide();
                 $("#container").append(view.el); // Adds the view in the document.
                 $('#container').isotope('appended', $(view.el), function () {
-                    $(view.el).show();
                     $('#container').isotope('reLayout');
+                    $(view.el).show();
                 }.bind(this));
                 this.lastRendered = message; // store reference to last rendered
                 view.render();
