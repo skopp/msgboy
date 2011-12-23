@@ -140,7 +140,6 @@ Msgboy.notify = function (message) {
 Msgboy.subscribe = function (url, force, callback) {
     // First, let's check if we have a subscription for this.
     var subscription = new Subscription({id: url});
-    console.log(url)
     
     subscription.fetch_or_create(function () {
         // Looks like there is a subscription.
