@@ -242,6 +242,7 @@ var relevanceMath = {
 // Welcome messages
 var welcomeMessages = [{
     "title": "Welcome to msgboy!",
+    "ungroup": true,
     "atom_id": "welcome-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-1.png') + "' />",
     "content": null,
@@ -283,6 +284,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Bookmark sites you love.",
+    "ungroup": true,
     "atom_id": "vote-plus" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-2.png') + "' />",
     "content": null,
@@ -324,6 +326,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Newly posted stories appear in realtime.",
+    "ungroup": true,
     "atom_id": "vote-minus-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-3.png') + "' />",
     "content": null,
@@ -365,6 +368,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Train msgboy to give you what you want.",
+    "ungroup": true,
     "atom_id": "bookmark-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-5.png') + "' />",
     "content": null,
@@ -406,6 +410,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Click '+' for more like this.",
+    "ungroup": true,
     "atom_id": "bookmark-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-6.png') + "' />",
     "content": null,
@@ -447,6 +452,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Hit '-' if you're not interested.",
+    "ungroup": true,
     "atom_id": "bookmark-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-7.png') + "' />",
     "content": null,
@@ -488,6 +494,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "Follow and rate stories with notifications.",
+    "ungroup": true,
     "atom_id": "bookmark-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-8.png') + "' />",
     "content": null,
@@ -529,6 +536,7 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }, {
     "title": "You can throttle notifications in settings.",
+    "ungroup": true,
     "atom_id": "bookmark-" + new Date().getTime(),
     "summary": "<img src='" + chrome.extension.getURL('/views/images/msgboy-help-screen-9.png') + "' />",
     "content": null,
