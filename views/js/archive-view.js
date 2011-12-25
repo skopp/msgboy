@@ -6,8 +6,8 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'delete_from_feed', 'show_new', 'complete_page', 'load_next');
-        $(document).scroll(this.complete_page);
+        _.bindAll(this, 'delete_from_feed', 'show_new', 'completePage', 'load_next');
+        $(document).scroll(this.completePage);
         
         $('#container').isotope({
             itemSelector: '.message',
@@ -20,7 +20,7 @@ var ArchiveView = Backbone.View.extend({
         this.collection.bind("add", this.show_new);
         this.load_next();
     },
-    complete_page: function () {
+    completePage: function () {
         if ($("#container").height() < $(window).height()) {
             // We should also pre-emptively load more pages if the document is shorter than the page.
             this.load_next();
@@ -57,7 +57,7 @@ var ArchiveView = Backbone.View.extend({
                 view.render();
             }
         }
-        this.complete_page();
+        this.completePage();
     },
     delete_from_feed: function (feed) {
         _.each(this.collection.models, function (model) {
