@@ -15,6 +15,7 @@ var MessageView = Backbone.View.extend({
             '<button class="vote up"></button>',
         '</span>',
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
+        '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
     groupTemplate: _.template([
