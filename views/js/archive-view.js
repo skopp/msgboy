@@ -42,16 +42,12 @@ var ArchiveView = Backbone.View.extend({
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
-                console.log('A message was upped');
                 $('#container').isotope('reLayout');
-                
             });
             
             message.bind('down-ed', function() {
-                console.log('A message was downed')
                 $('#container').isotope('reLayout');
             })
-            
             
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
@@ -59,6 +55,23 @@ var ArchiveView = Backbone.View.extend({
                 var view = new MessageView({
                     model: message
                 });
+                
+                view.bind('expand', function() {
+                    message.messages.each(function (m) {
+                        var v = new MessageView({
+                            model: m
+                        });
+                        $(v.el).hide();
+                        $(view.el).after($(v.el)); // Adds the view in the document.
+                        $('#container').isotope('appended', $(v.el), function () {
+                            $('#container').isotope('reLayout');
+                            $(v.el).show();
+                        });
+                        m.messages.reset();
+                        v.render();
+                    });
+                });
+                
                 $(view.el).hide();
                 $("#container").append(view.el); // Adds the view in the document.
                 $('#container').isotope('appended', $(view.el), function () {

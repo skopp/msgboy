@@ -14,7 +14,6 @@ var MessageView = Backbone.View.extend({
             '<button class="share"></button>',
             '<button class="vote up"></button>',
         '</span>',
-        '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
@@ -101,24 +100,7 @@ var MessageView = Backbone.View.extend({
         this.model.trigger('share', this.model);
     },
     handleExpand: function (e) {
-        this.model.messages.each(function (message) {
-            var view = new MessageView({
-                model: message
-            });
-            $(view.el).hide();
-
-            $(this.el).after($(view.el)); // Adds the view in the document.
-
-            $('#container').isotope('appended', $(view.el), function () {
-                $(view.el).fadeIn(300);
-                $('#container').isotope('reLayout');
-            }.bind(this));
-
-            // empty all the contained models
-            message.messages.reset();
-            view.render();
-        }.bind(this));
-
+        this.trigger('expand');
         // removes the group.
         this.remove();        
         return false;

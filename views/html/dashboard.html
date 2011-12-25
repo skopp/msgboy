@@ -93,6 +93,7 @@
                 var modalShareView = new ModalShareView({
                     el: "#modal-share"
                 });
+                
                 // When a message was voted-up
                 archive.bind("up-ed", function (message) {
                     BayesianFilter.train_with_message(message);
