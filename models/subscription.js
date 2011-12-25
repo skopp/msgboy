@@ -39,7 +39,7 @@ var Subscription = Backbone.Model.extend({
         }
         return false;
     },
-    set_state: function (_state) {
+    setState: function (_state) {
         switch (_state) {
         case "subscribed":
             this.save({state: _state, subscribed_at: new Date().getTime()}, {

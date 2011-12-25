@@ -203,14 +203,14 @@
         });
     });
 
-    module("set_state");
+    module("setState");
     asyncTest("it should set the state", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
             var message = new Message({
                 id: "123"
             });
-            message.set_state("cool", function () {
+            message.setState("cool", function () {
                 start();
                 equals(message.state(), "cool");
             });

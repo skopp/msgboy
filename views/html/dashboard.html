@@ -64,7 +64,7 @@
             <div class="modal-body">
                 <label for="comment">Comment</label>
                 <textarea class="xxlarge" id="comment" name="comment" rows="3"></textarea>
-                <span class="help-block" id="character-count">0 characters</span>
+                <span class="help-block" id="character-count">0 character</span>
                 <a href="#" class="btn secondary share-ext twitter" data-service="twitter">Twitter</a>
                 <a href="#" class="btn secondary share-ext facebook" data-service="facebook">Facebook</a>
             </div>
@@ -87,12 +87,13 @@
                     BayesianFilter.train_with_message(message);
                 });
                 
+                // When a message was voted-down
                 archive.bind("down-ed", function (message) {
                     BayesianFilter.train_with_message(message)
                 });
 
+                // Refresh the page! Maybe it would actually be fancier to add the elements to the archive and then push them in front. TODO
                 $("#new_messages").click(function () {
-                    // Refresh the page! Maybe it would actually be fancier to add the elements to the archive and then push them in front. TODO
                     window.location.reload(true);
                 }) 
 

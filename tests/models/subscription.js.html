@@ -116,7 +116,7 @@
             ok(!subscription.needs_refresh());
         });
         
-        module("set_state");
+        module("setState");
         asyncTest("it should set the right state on the subscription", function () {
             var url = "http://blog.superfeedr.com/atom.xml"
             var subs = new Subscription({id: url});
@@ -124,7 +124,7 @@
                 start();
                 equals(subs.attributes.state, "done");
             });
-            subs.set_state("done");
+            subs.setState("done");
         });
 
         asyncTest("it should set the the subcribed_at attribute when the state is subscribed", function () {
@@ -136,7 +136,7 @@
                 ok(subs.attributes.subscribed_at >= new Date().getTime() - 1000);
                 ok(subs.attributes.subscribed_at <= new Date().getTime());
             });
-            subs.set_state("subscribed");
+            subs.setState("subscribed");
         });
 
         asyncTest("it should set the the unsubcribed_at attribute when the state is unsubscribed", function () {
@@ -148,7 +148,7 @@
                 ok(subs.attributes.unsubscribed_at >= new Date().getTime() - 1000);
                 ok(subs.attributes.unsubscribed_at <= new Date().getTime());
             });
-            subs.set_state("unsubscribed");
+            subs.setState("unsubscribed");
         });
         
         module("pending");
@@ -186,7 +186,7 @@
                 subscriptions.pending();
                 subscriptions.bind("add", function (s) {
                     i++;
-                    s.set_state("subscribed");
+                    s.setState("subscribed");
                     s.bind("subscribed", function () {
                         over2();
                     });

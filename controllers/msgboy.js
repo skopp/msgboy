@@ -144,12 +144,12 @@ Msgboy.subscribe = function (url, force, callback) {
     subscription.fetch_or_create(function () {
         // Looks like there is a subscription.
         if ((subscription.needs_refresh() && subscription.attributes.state === "unsubscribed") || force) {
-            subscription.set_state("subscribing");
+            subscription.setState("subscribing");
             subscription.bind("subscribing", function () {
                 Msgboy.log("subscribing to " + url);
                 Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
                     Msgboy.log("subscribed to " + url);
-                    subscription.set_state("subscribed");
+                    subscription.setState("subscribed");
                 });
             });
             subscription.bind("subscribed", function () {
@@ -167,12 +167,12 @@ Msgboy.subscribe = function (url, force, callback) {
 Msgboy.unsubscribe = function (url, callback) {
     var subscription = new Subscription({id: url});
     subscription.fetch_or_create(function () {
-        subscription.set_state("unsubscribing");
+        subscription.setState("unsubscribing");
         subscription.bind("unsubscribing", function () {
             Msgboy.log("unsubscribing from " + url);
             Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
                 Msgboy.log("Request : unsubscribed " + url);
-                subscription.set_state("unsubscribed");
+                subscription.setState("unsubscribed");
             });
         });
         subscription.bind("unsubscribed", function () {
@@ -188,7 +188,7 @@ Msgboy.resume_subscriptions = function () {
         Msgboy.log("subscribing to " + subs.id);
         Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
             Msgboy.log("subscribed to " + subs.id);
-            subs.set_state("subscribed");
+            subs.setState("subscribed");
         });
     });
     subscriptions.pending();

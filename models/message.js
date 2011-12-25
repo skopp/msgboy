@@ -52,11 +52,11 @@ var Message = Backbone.Model.extend({
     },
     /* Votes the message up */
     vote_up: function (callback) {
-        this.set_state("up-ed", callback);
+        this.setState("up-ed", callback);
     },
     /* Votes the message down */
     vote_down: function (callback) {
-        this.set_state("down-ed", function (result) {
+        this.setState("down-ed", function (result) {
             // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
             var brothers = new Archive();
             brothers.for_feed(this.attributes.feed, function () {
@@ -75,10 +75,10 @@ var Message = Backbone.Model.extend({
     },
     /* Skip the message */
     skip: function (callback) {
-        this.set_state("skipped", callback);
+        this.setState("skipped", callback);
     },
     /* Sets the state for the message */
-    set_state: function (_state, callback) {
+    setState: function (_state, callback) {
         this.save({
             state: _state
         }, {
