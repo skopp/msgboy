@@ -100,9 +100,7 @@ var MessageView = Backbone.View.extend({
         $('#container').isotope('reLayout');
     },
     handleShare: function(e) {
-        $('#modal-share').data('url', this.model.main_link());
-        $('#modal-share #comment').val(this.model.get('title') + " - " + this.model.get('source').title);
-        $('#modal-share').modal('show');
+        this.model.trigger('share', this.model);
     },
     handleExpand: function (e) {
         this.model.messages.each(function (message) {

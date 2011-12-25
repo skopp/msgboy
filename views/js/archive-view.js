@@ -41,6 +41,8 @@ var ArchiveView = Backbone.View.extend({
         this.upper_bound = message.attributes.created_at;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
+            // Binding the events on the message.
+            
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
             } else {

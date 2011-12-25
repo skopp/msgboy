@@ -39,6 +39,7 @@
         <!-- Views includes -->
         <script src="../../views/js/message-view.js" type="text/javascript"></script>
         <script src="../../views/js/archive-view.js" type="text/javascript"></script>
+        <script src="../../views/js/modal-share-view.js" type="text/javascript"></script>
     </head>
     
     <body>
@@ -81,7 +82,17 @@
         <script type="text/javascript">
             Msgboy.bind("loaded", function () {
                 var archive = new Archive();
+                
+                // The archiveView Object
+                var archiveView = new ArchiveView({
+                    el: "#archive",
+                    collection: archive,
+                });
 
+                // The modalShareView Object.
+                var modalShareView = new ModalShareView({
+                    el: "#modal-share"
+                });
                 // When a message was voted-up
                 archive.bind("up-ed", function (message) {
                     BayesianFilter.train_with_message(message);
@@ -92,16 +103,18 @@
                     BayesianFilter.train_with_message(message)
                 });
 
+                // When a message is shared
+                archive.bind("share", function (message) {
+                    modalShareView.showForMessage(message);
+                });
+
+                
                 // Refresh the page! Maybe it would actually be fancier to add the elements to the archive and then push them in front. TODO
                 $("#new_messages").click(function () {
                     window.location.reload(true);
                 }) 
 
-                var archiveView = new ArchiveView({
-                    el: "#archive",
-                    collection: archive,
-                });
-
+                // Listening to the events from the background page.
                 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
                     if (request.signature == "notify" && request.params) {
                         // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
@@ -117,32 +130,8 @@
                         }
                     }
                 });
-                
-                var updateCountdown = function() {
-                    var lngth = $("#comment").val().length;
-                    $("#character-count").text(lngth + " characters");
-                    if(lngth > 120) {
-                        $(".btn.twitter").addClass("disabled");
-                    }
-                };
-                
-                $('#modal-share').bind('show', updateCountdown);
-                $('#comment').change(updateCountdown);
-                $('#comment').keyup(updateCountdown);
-                
-                $('.share-ext').click(function(e) {
-                    var url = encodeURI($('#modal-share').data('url'));
-                    var service = $(e.target).data('service');
-                    var comment = encodeURI($('#comment').val());
-                    chrome.extension.sendRequest({
-                        signature: "tab",
-                        params: {url: "http://msgboy.com/share/prepare?url=" + url + "&comment=" + comment + "&service=" + service, selected: true}
-                    });
-                    $('#modal-share').modal('hide');
-                });
-                
             });
-            Msgboy.run();            
+            Msgboy.run();
         </script>
     </body>
 </html>
