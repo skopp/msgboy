@@ -314,10 +314,26 @@ p.darkened {
 }
 
 .twitter:before {
-      content: url('../icons/twitter.png');
+    content: "";
+    top: 1px;
+    float: left;
+    width: 16px;
+    height: 16px;
+    background-color:red;
+    background: url('../icons/twitter.png') no-repeat;
+    margin-right: 3px;
 }
+
 .facebook:before {
-    content: url('../icons/facebook.png');
+    content: "";
+    top: 1px;
+    float: left;
+    width: 16px;
+    height: 16px;
+    margin-right: 3px;
+    background-color:red;
+    background: url('../icons/facebook.png') no-repeat;
+    
 }
 .down {
     background-image: url('../images/minus.png');
