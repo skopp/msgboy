@@ -314,10 +314,10 @@ p.darkened {
 }
 
 .twitter:before {
-      content: url(https://twitter.com/favicon.ico);
+      content: url('../icons/twitter.png');
 }
 .facebook:before {
-    content: url(https://facebook.com/favicon.ico);
+    content: url('../icons/facebook.png');
 }
 .down {
     background-image: url('../images/minus.png');
