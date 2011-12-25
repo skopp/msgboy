@@ -100,7 +100,7 @@ var MessageView = Backbone.View.extend({
         this.model.trigger('share', this.model);
     },
     handleExpand: function (e) {
-        this.trigger('expand');
+        this.trigger('expand', this);
         // removes the group.
         this.remove();        
         return false;

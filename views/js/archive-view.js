@@ -51,25 +51,26 @@ var ArchiveView = Backbone.View.extend({
             
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
+                if(this.lastRendered.messages.length == 2) {
+                    this.lastRendered.view.bind('expand', function(view) {
+                        view.model.messages.each(function (m) {
+                            var v = new MessageView({
+                                model: m
+                            });
+                            $(v.el).hide();
+                            $(view.el).after($(v.el)); // Adds the view in the document.
+                            $('#container').isotope('appended', $(v.el), function () {
+                                $('#container').isotope('reLayout');
+                                $(v.el).show();
+                            });
+                            m.messages.reset();
+                            v.render();
+                        });
+                    }.bind(this));
+                }
             } else {
                 var view = new MessageView({
                     model: message
-                });
-                
-                view.bind('expand', function() {
-                    message.messages.each(function (m) {
-                        var v = new MessageView({
-                            model: m
-                        });
-                        $(v.el).hide();
-                        $(view.el).after($(v.el)); // Adds the view in the document.
-                        $('#container').isotope('appended', $(v.el), function () {
-                            $('#container').isotope('reLayout');
-                            $(v.el).show();
-                        });
-                        m.messages.reset();
-                        v.render();
-                    });
                 });
                 
                 $(view.el).hide();
