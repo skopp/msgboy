@@ -84,11 +84,11 @@ var MessageView = Backbone.View.extend({
         }
     },
     handleUpClick: function () {
-        this.model.vote_up();
+        this.model.voteUp();
         $('#container').isotope('reLayout');
     },
     handleDownClick: function () {
-        this.model.vote_down(function (result) {
+        this.model.voteDown(function (result) {
             if (result.unsubscribe) {
                 var request = {
                     signature: "unsubscribe",

@@ -161,28 +161,28 @@
         });
     });
 
-    module("vote_up");
+    module("voteUp");
     asyncTest("it should set the state", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
             var message = new Message({
                 id: "123"
             });
-            message.vote_up(function () {
+            message.voteUp(function () {
                 start();
                 equals(message.state(), "up-ed");
             });
         });
     });
 
-    module("vote_down");
+    module("voteDown");
     asyncTest("it should set the state", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
             var message = new Message({
                 id: "123"
             });
-            message.vote_down(function () {
+            message.voteDown(function () {
                 start();
                 equals(message.state(), "down-ed");
             });

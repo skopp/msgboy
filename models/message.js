@@ -51,11 +51,11 @@ var Message = Backbone.Model.extend({
         return this.attributes.state;
     },
     /* Votes the message up */
-    vote_up: function (callback) {
+    voteUp: function (callback) {
         this.setState("up-ed", callback);
     },
     /* Votes the message down */
-    vote_down: function (callback) {
+    voteDown: function (callback) {
         this.setState("down-ed", function (result) {
             // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
             var brothers = new Archive();
