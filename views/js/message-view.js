@@ -85,7 +85,6 @@ var MessageView = Backbone.View.extend({
     },
     handleUpClick: function () {
         this.model.voteUp();
-        $('#container').isotope('reLayout');
     },
     handleDownClick: function () {
         this.model.voteDown(function (result) {
@@ -97,7 +96,6 @@ var MessageView = Backbone.View.extend({
                 chrome.extension.sendRequest(request);
             }
         }.bind(this));
-        $('#container').isotope('reLayout');
     },
     handleShare: function(e) {
         this.model.trigger('share', this.model);
