@@ -6,7 +6,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'delete_from_feed', 'show_new', 'completePage', 'load_next');
+        _.bindAll(this, 'deleteFromFeed', 'showNew', 'completePage', 'loadNext');
         $(document).scroll(this.completePage);
         
         $('#container').isotope({
@@ -17,19 +17,19 @@ var ArchiveView = Backbone.View.extend({
             }
         });
         
-        this.collection.bind("add", this.show_new);
-        this.load_next();
+        this.collection.bind("add", this.showNew);
+        this.loadNext();
     },
     completePage: function () {
         if ($("#container").height() < $(window).height()) {
             // We should also pre-emptively load more pages if the document is shorter than the page.
-            this.load_next();
+            this.loadNext();
         } else if ($(window).scrollTop() > $(document).height() - $(window).height() - 300) {
             // We're close to the bottom. Let's load an additional page!
-            this.load_next();
+            this.loadNext();
         }
     },
-    load_next: function () {
+    loadNext: function () {
         if (this.loaded === this.to_load) {
             this.loaded = 0;
             this.collection.next(this.to_load, {
@@ -37,7 +37,7 @@ var ArchiveView = Backbone.View.extend({
             });
         }
     },
-    show_new: function (message) {
+    showNew: function (message) {
         this.upper_bound = message.attributes.created_at;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
@@ -61,7 +61,7 @@ var ArchiveView = Backbone.View.extend({
         }
         this.completePage();
     },
-    delete_from_feed: function (feed) {
+    deleteFromFeed: function (feed) {
         _.each(this.collection.models, function (model) {
             if (model.attributes.feed === feed) {
                 $('#container').isotope('remove', $(model.view.el));
