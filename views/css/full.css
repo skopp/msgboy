@@ -181,3 +181,16 @@ small {
     text-align: right;
     margin-right:5px;
 }
+
+.truncate {
+    max-width: 400px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+table {
+    width:85%;
+    margin-left: 20px;
+    margin-right: 20px;
+}
