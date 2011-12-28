@@ -18,6 +18,7 @@
     <script src="../../lib/brain-0.3.5.min.js" type="text/javascript" ></script>
     <script src="../../lib/stemmer.js" type="text/javascript" ></script>
     <script src="../../lib/bootstrap/bootstrap-modal.js" type="text/javascript" ></script>
+    <script src="../../lib/strophejs/base64.js" type="text/javascript"></script> 
 
     <!-- Controller includes -->
     <script src="../../controllers/msgboy.js" type="text/javascript"></script> 
@@ -51,6 +52,7 @@
     </header>
 
     <div id="info">
+        <span href="#" class="btn large primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
         <table id="subscriptions">
         </table>
@@ -67,7 +69,7 @@
 
     <script>
     Msgboy.bind("loaded", function () {
-        var view  = new SubscriptionsView({el: "#subscriptions"});
+        var view  = new SubscriptionsView({el: "#info"});
     });
     Msgboy.run();
     </script>

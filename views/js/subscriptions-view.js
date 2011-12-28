@@ -3,7 +3,6 @@ var SubscriptionView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        console.log(this.model.toJSON());
         this.template = _.template($('#subscription-template').html());
     },
     render: function() {
@@ -14,6 +13,7 @@ var SubscriptionView = Backbone.View.extend({
 
 var SubscriptionsView = Backbone.View.extend({
     events: {
+        "click #opml": "opmlExport"
     },
 
     initialize: function () {
@@ -30,6 +30,15 @@ var SubscriptionsView = Backbone.View.extend({
     
     render: function() {
         this.collection.each(this.showOne);
+    },
+    
+    opmlExport: function() {
+        var opml = '<?xml version="1.0" encoding="UTF-8"?><opml version="1.0"><head><title>Your Msgboy Subscriptions</title></head><body>';
+        this.collection.each(function(subscription) {
+            opml += '<outline xmlUrl="' + escape(subscription.id) + '" />';
+        });
+        opml += '</body></opml>'
+        window.location = "data:application/xml;base64," + Base64.encode(opml);
     }
     
 });
