@@ -54,7 +54,14 @@
     <div id="info">
         <span href="#" class="btn large primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
-        <table id="subscriptions">
+        <table id="subscriptions" class="border-free-table">
+            <thead>
+                <tr>
+                    <th>URL</th>
+                    <th>State</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
         </table>
     </div>
 
@@ -65,6 +72,7 @@
     <script type="text/template" id="subscription-template">
         <td class="truncate"><%= id %></td>
         <td><%= state %></td>
+        <td><button class="btn small action"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
     </script>
 
     <script>

@@ -7,15 +7,19 @@ $(document).bind('register', function (element, object) {
 
 $(document).bind('subscribe', function (element, object) {
     Msgboy.log("Request : subscribe " + object.request.params.url);
-    Msgboy.subscribe(object.request.params.url, false, function (result) {
-        // Nothing to do.
+    Msgboy.subscribe(object.request.params.url, object.request.params.force || false, function (result) {
+        object.sendResponse({
+            value: result
+        });
     });
 });
 
 $(document).bind('unsubscribe', function (element, object) {
-    Msgboy.log("Request : unsubscribe " + object.request.params);
-    Msgboy.unsubscribe(object.request.params, function (result) {
-        // Nothing to do.
+    Msgboy.log("Request : unsubscribe " + object.request.params.url);
+    Msgboy.unsubscribe(object.request.params.url, function (result) {
+        object.sendResponse({
+            value: result
+        });
     });
 });
 

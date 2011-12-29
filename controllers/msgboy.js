@@ -165,6 +165,7 @@ Msgboy.subscribe = function (url, force, callback) {
 
 // Unsubscribes from a feed.
 Msgboy.unsubscribe = function (url, callback) {
+    console.log("HEHRE");
     var subscription = new Subscription({id: url});
     subscription.fetch_or_create(function () {
         subscription.setState("unsubscribing");

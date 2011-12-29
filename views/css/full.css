@@ -183,14 +183,26 @@ small {
 }
 
 .truncate {
-    max-width: 400px;
+    max-width: 360px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 table {
+    border: 0 !important;
     width:85%;
     margin-left: 20px;
     margin-right: 20px;
+}
+
+td, tr {
+}
+
+.border-free-table td, th {
+    border: 0 !important;    
+}
+
+.btn.small.action {
+    padding: 3px 9px 3px;
 }

@@ -1,14 +1,52 @@
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
     events: {
+        "click .btn": "toggleSubscription"
     },
     initialize: function () {
         this.template = _.template($('#subscription-template').html());
+        this.model.bind('subscribing', this.subscribe, this);
+        this.model.bind('unsubscribing', this.unsubscribe, this);
+        this.model.bind('change', this.render, this);
     },
     render: function() {
         $(this.el).html(this.template(this.model.toJSON()));
         return this;
     },
+    toggleSubscription: function () {
+        var currentState = this.model.get('state');
+        if(currentState === "subscribed" || currentState === "subscribing") {
+            // Unsubscribe
+            this.model.setState("unsubscribing");
+        } else {
+            // Subscribe
+            this.model.setState("subscribing");
+        }
+    },
+    subscribe: function() {
+        chrome.extension.sendRequest({
+            signature: "subscribe",
+            params: {
+                title: "", // TODO : Add support for title 
+                url: this.model.get('id'),
+                force: true
+            }
+        }, function (response) {
+            this.model.setState("subscribed");
+        }.bind(this));
+    },
+    unsubscribe: function() {
+        chrome.extension.sendRequest({
+            signature: "unsubscribe",
+            params: {
+                title: "", // TODO : Add support for title 
+                url: this.model.get('id'),
+                force: true
+            }
+        }, function (response) {
+            this.model.setState("unsubscribed");
+        }.bind(this));
+    }
 });
 
 var SubscriptionsView = Backbone.View.extend({
@@ -19,7 +57,7 @@ var SubscriptionsView = Backbone.View.extend({
     initialize: function () {
         // Loading the subscriptions.
         this.collection = new Subscriptions();
-        this.collection.bind('all', this.render, this);
+        this.collection.bind('reset', this.render, this);
         this.collection.fetch();
     },
     
