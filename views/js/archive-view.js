@@ -47,6 +47,14 @@ var ArchiveView = Backbone.View.extend({
             
             message.bind('down-ed', function() {
                 $('#container').isotope('reLayout');
+            });
+            
+            message.bind('unsubscribed', function() {
+                this.deleteFromFeed(message.get('feed'))
+            }.bind(this));
+            
+            message.bind("destroy", function() {
+                $('#container').isotope('reLayout');
             })
             
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
@@ -88,12 +96,7 @@ var ArchiveView = Backbone.View.extend({
     deleteFromFeed: function (feed) {
         _.each(this.collection.models, function (model) {
             if (model.attributes.feed === feed) {
-                $('#container').isotope('remove', $(model.view.el));
-                model.view.remove();
-                model.destroy({
-                    success: function () {
-                    }
-                });
+                model.destroy();
             }
         });
     }

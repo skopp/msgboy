@@ -183,7 +183,7 @@ small {
 }
 
 .truncate {
-    max-width: 360px;
+    max-width: 355px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

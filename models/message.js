@@ -51,11 +51,11 @@ var Message = Backbone.Model.extend({
         return this.attributes.state;
     },
     /* Votes the message up */
-    voteUp: function (callback) {
-        this.setState("up-ed", callback);
+    voteUp: function () {
+        this.setState("up-ed");
     },
     /* Votes the message down */
-    voteDown: function (callback) {
+    voteDown: function () {
         this.setState("down-ed", function (result) {
             // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
             var brothers = new Archive();
@@ -65,12 +65,9 @@ var Message = Backbone.Model.extend({
                 });
                 var counts = relevanceMath.counts(brothers.pluck("state"));
                 if (brothers.length > 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] > 10)) {
-                    callback({unsubscribe: true});
+                    this.trigger('unsubscribe');
                 }
-                else {
-                    callback({unsubscribe: false});
-                }
-            });
+            }.bind(this));
         }.bind(this));
     },
     /* Skip the message */

@@ -29,7 +29,33 @@ var MessageView = Backbone.View.extend({
     initialize: function () {
         this.model.view = this; // store reference to view on model
         this.model.bind("change", this.render.bind(this)); 
+        this.model.bind("destroy", function() {
+            this.remove();
+            // $('#container').isotope('remove', $(model.view.el));
+            // model.view.remove();
+            // model.destroy({
+            //     success: function () {
+            //     }
+            // });
+            
+        }.bind(this)); 
+        
         this.model.messages.bind('add', this.render.bind(this));
+        this.model.bind('unsubscribe', function () {
+            var request = {
+                signature: "unsubscribe",
+                params: {
+                    title: "", // TODO : Add support for title 
+                    url: this.model.attributes.feed,
+                    force: true
+                },
+                force: true
+            };
+            chrome.extension.sendRequest(request, function (response) {
+                // Unsubscribed... We need to delete all the brothas and sistas!
+                this.model.trigger('unsubscribed');
+            }.bind(this));
+        }.bind(this));
     },
     render: function () {
         var el = $(this.el),
@@ -87,15 +113,7 @@ var MessageView = Backbone.View.extend({
         this.model.voteUp();
     },
     handleDownClick: function () {
-        this.model.voteDown(function (result) {
-            if (result.unsubscribe) {
-                var request = {
-                    signature: "unsubscribe",
-                    params: this.model.attributes.feed
-                };
-                chrome.extension.sendRequest(request);
-            }
-        }.bind(this));
+        this.model.voteDown();
     },
     handleShare: function(e) {
         this.model.trigger('share', this.model);
