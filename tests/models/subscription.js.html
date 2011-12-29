@@ -38,14 +38,14 @@
     
     
     <script>
-        module("fetch_or_create");
+        module("fetchOrCreate");
         asyncTest("it should create a subscription when there is none", function () {
             var url = "http://blog.superfeedr.com/atom.xml"
             var subs = new Subscription({id: url});
             
             var go = function () {
                 var subscription = new Subscription({id: url});
-                subscription.fetch_or_create(function () {
+                subscription.fetchOrCreate(function () {
                     start();
                     equals(subscription.id, url)
                 });
@@ -67,9 +67,9 @@
             
             var go = function () {
                 var subscription = new Subscription({id: url});
-                subscription.fetch_or_create(function () {
+                subscription.fetchOrCreate(function () {
                     var notnew = new Subscription({id: url});
-                    notnew.fetch_or_create(function () {
+                    notnew.fetchOrCreate(function () {
                         start();
                         equals(notnew.id, subscription.id);
                     });
@@ -86,26 +86,26 @@
             });
         });
 
-        module("needs_refresh");
+        module("needsRefresh");
         test("new subscriptions should be refreshed", function () {
             var subscription = new Subscription({id: "http://blog.msgboy.com/rss"});
-            ok(subscription.needs_refresh());
+            ok(subscription.needsRefresh());
         });
         test("it should return true if the subscription is older than 7 days and there is no unsubscription", function () {
             var subscription = new Subscription({id: "http://blog.msgboy.com/rss", subscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 *8});
-            ok(subscription.needs_refresh());
+            ok(subscription.needsRefresh());
         });
         test("it should return true if the subscription is older than 7 days and there is an unsubscription older than 1 month", function () {
             var subscription = new Subscription({id: "http://blog.msgboy.com/rss", subscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 *8, unsubscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 * 32});
-            ok(subscription.needs_refresh());
+            ok(subscription.needsRefresh());
         });
         test("it should return false if the subscription is less than 7 days", function () {
             var subscription = new Subscription({subscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 *6});
-            ok(!subscription.needs_refresh());
+            ok(!subscription.needsRefresh());
         });
         test("it should return false if the unsubscription is less than 31 days", function () {
             var subscription = new Subscription({unsubscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 * 30});
-            ok(!subscription.needs_refresh());
+            ok(!subscription.needsRefresh());
         });
         test("it should return false for wikipedia feeds", function() {
             var subscription = new Subscription({
@@ -113,7 +113,7 @@
                 unsubscribed_at: new Date().getTime() - 1000 * 60 * 60 * 24 * 32,
                 id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&amp;feed=atom"
             });
-            ok(!subscription.needs_refresh());
+            ok(!subscription.needsRefresh());
         });
         
         module("setState");
@@ -196,7 +196,7 @@
             
             _.each(subs, function (s) {
                 var t = new Subscription(s);
-                t.fetch_or_create(function () {
+                t.fetchOrCreate(function () {
                     over();
                 })
             });

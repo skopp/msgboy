@@ -141,9 +141,9 @@ Msgboy.subscribe = function (url, force, callback) {
     // First, let's check if we have a subscription for this.
     var subscription = new Subscription({id: url});
     
-    subscription.fetch_or_create(function () {
+    subscription.fetchOrCreate(function () {
         // Looks like there is a subscription.
-        if ((subscription.needs_refresh() && subscription.attributes.state === "unsubscribed") || force) {
+        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
             subscription.setState("subscribing");
             subscription.bind("subscribing", function () {
                 Msgboy.log("subscribing to " + url);
@@ -167,7 +167,7 @@ Msgboy.subscribe = function (url, force, callback) {
 Msgboy.unsubscribe = function (url, callback) {
     console.log("HEHRE");
     var subscription = new Subscription({id: url});
-    subscription.fetch_or_create(function () {
+    subscription.fetchOrCreate(function () {
         subscription.setState("unsubscribing");
         subscription.bind("unsubscribing", function () {
             Msgboy.log("unsubscribing from " + url);

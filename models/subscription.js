@@ -8,7 +8,7 @@ var Subscription = Backbone.Model.extend({
     },
     initialize: function (attributes) {
     },
-    fetch_or_create: function (callback) {
+    fetchOrCreate: function (callback) {
         this.fetch({
             success: function () {
                 // The subscription exists!
@@ -28,7 +28,7 @@ var Subscription = Backbone.Model.extend({
             }.bind(this)
         });
     },
-    needs_refresh: function () {
+    needsRefresh: function () {
         if (this.attributes.subscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
             for (var i in Blacklist) {
                 if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
