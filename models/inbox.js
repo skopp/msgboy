@@ -67,7 +67,7 @@ var Inbox = Backbone.Model.extend({
                 var message = new Message(msg);
                 message.save({}, {
                     success: function () {
-                        message.calculate_relevance(function (_relevance) {
+                        message.calculateRelevance(function (_relevance) {
                             message.save({
                                 relevance: _relevance
                             }, {

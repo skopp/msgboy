@@ -69,7 +69,7 @@ Msgboy.Notification.prototype = {
         chrome.extension.sendRequest({
             signature: "tab",
             params: {
-                url: this.messages[0].main_link(),
+                url: this.messages[0].mainLink(),
                 selected: true
             }
         });

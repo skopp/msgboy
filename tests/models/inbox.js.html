@@ -58,7 +58,7 @@
 
         module("fetchAndPrepare");
 
-        module("add_message");
+        module("addMessage");
 
         asyncTest("it should create a message if none already exists with that id", function () {
             var inbox = new Inbox({
@@ -68,7 +68,7 @@
                 id: "123"
             };
             messageFixtures.clean_all(function () {
-                inbox.add_message(msg, {
+                inbox.addMessage(msg, {
                     success: function (message) {
                         start();
                         for (var attr in msg) {
@@ -96,7 +96,7 @@
             });
 
             messageFixtures.clean_all(function () {
-                inbox.add_message(msg, {
+                inbox.addMessage(msg, {
                     success: function (message) {
                         // Done.
                     },
@@ -117,9 +117,9 @@
                 id: "123"
             };
             messageFixtures.clean_all(function () {
-                inbox.add_message(msg, {
+                inbox.addMessage(msg, {
                     success: function (message) {
-                        inbox.add_message(msg, {
+                        inbox.addMessage(msg, {
                             success: function (message2) {
                                 start();
                                 equals(message2, null, "the second message should be null");

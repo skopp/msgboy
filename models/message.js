@@ -95,7 +95,7 @@ var Message = Backbone.Model.extend({
     },
     /* This calculates the relevance for this message and sets it. */
     /* It just calculates the relevance and does not save it. */
-    calculate_relevance: function (callback) {
+    calculateRelevance: function (callback) {
         // See Section 6.3 in Product Requirement Document.
         // We need to get all the messages from this source.
         // Count how many have been voted up, how many have been voted down.
@@ -108,7 +108,7 @@ var Message = Backbone.Model.extend({
             var relevance = 0.7; // This is the default relevance
             if (brothers.length > 0) {
                 // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].
-                relevance =  this.relevance_based_on_brothers(brothers.pluck("state"));
+                relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
             }
             // Keywords [TODO]
             // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
@@ -117,7 +117,7 @@ var Message = Backbone.Model.extend({
             }
         }.bind(this));
     },
-    relevance_based_on_brothers: function (states) {
+    relevanceBasedOnBrothers: function (states) {
         if (states.length === 0) {
             return 1;
         }
@@ -133,14 +133,14 @@ var Message = Backbone.Model.extend({
         }
     },
     /* Returns the number of links*/
-    number_of_links: function () {
+    numberOfLinks: function () {
         return 5;
     },
     /*return the links to the media included in this doc*/
-    media_included: function () {
+    mediaIncluded: function () {
         return [];
     },
-    main_link: function () {
+    mainLink: function () {
         if (this.attributes.links.alternate) {
             if (this.attributes.links.alternate["text/html"]) {
                 return this.attributes.links.alternate["text/html"][0].href;
@@ -154,7 +154,7 @@ var Message = Backbone.Model.extend({
             return "";
         }
     },
-    source_link: function () {
+    sourceLink: function () {
         if (this.attributes.source && this.attributes.source.links && this.attributes.source.links.alternate && this.attributes.source.links.alternate["text/html"] && this.attributes.source.links.alternate["text/html"][0]) {
             return this.attributes.source.links.alternate["text/html"][0].href;
         }
@@ -180,7 +180,7 @@ var Message = Backbone.Model.extend({
         }
     },
     faviconUrl: function () {
-        return "http://g.etfv.co/" + this.source_link() + "?defaulticon=lightpng";
+        return "http://g.etfv.co/" + this.sourceLink() + "?defaulticon=lightpng";
     }
 });
 

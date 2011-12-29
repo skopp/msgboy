@@ -217,7 +217,7 @@
         });
     });
     
-    module("number_of_links");
+    module("numberOfLinks");
     asyncTest("it should set return the number of links", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
@@ -225,11 +225,11 @@
                 id: "123"
             });
             start();
-            equals(message.number_of_links(), 5);
+            equals(message.numberOfLinks(), 5);
         });
     });
 
-    module("media_included");
+    module("mediaIncluded");
     asyncTest("it should return the links to media", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
@@ -237,11 +237,11 @@
                 id: "123"
             });
             start();
-            deepEqual(message.media_included(), []);
+            deepEqual(message.mediaIncluded(), []);
         });
     });
 
-    module("calculate_relevance");
+    module("calculateRelevance");
     asyncTest("it should yield a relevance between 0.0 and 1.0", function () {
         messageFixtures.clean_add(function () {
             // Looks like now!
@@ -250,7 +250,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         ok(relevance >= 0.0);
                         ok(relevance <= 1.0);
@@ -282,7 +282,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 0.0);
                     });
@@ -312,7 +312,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 1.0);
                     });
@@ -342,7 +342,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 0.5);
                     });
@@ -372,7 +372,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 0.7);
                     });
@@ -402,7 +402,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 0.4600000000000001);
                     });
@@ -432,7 +432,7 @@
             });
             message.fetch({
                 success: function () {
-                    message.calculate_relevance(function (relevance) {
+                    message.calculateRelevance(function (relevance) {
                         start();
                         equals(relevance, 0.64);
                     });
@@ -444,7 +444,7 @@
     module("when building a series")
     
     asyncTest("it should yield a relevance of 1.0  for the first message of any given feed", function () {
-       console.log(Message.relevance_based_on_brothers([]));
+       console.log(Message.relevanceBasedOnBrothers([]));
     });
     
     </script>

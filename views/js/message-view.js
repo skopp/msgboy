@@ -102,7 +102,7 @@ var MessageView = Backbone.View.extend({
                 } else {
                     chrome.extension.sendRequest({
                         signature: "tab",
-                        params: {url: this.model.main_link(), selected: false}
+                        params: {url: this.model.mainLink(), selected: false}
                     });
                     this.trigger("clicked");
                 }

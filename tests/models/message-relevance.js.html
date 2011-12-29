@@ -44,40 +44,40 @@
     module("when building a series")
     
     test("when the user never votes up or down, every other message should be shown.", function () {
-       equals(new Message().relevance_based_on_brothers([]), 1);
-       equals(new Message().relevance_based_on_brothers(["skipped"]), 0.4);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped"]), 0.4666666666666667);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped"]), 0.48);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.48571428571428565);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.48888888888888893);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.49090909090909085);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.49230769230769234);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
-       equals(new Message().relevance_based_on_brothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.4933333333333333);
+       equals(new Message().relevanceBasedOnBrothers([]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["skipped"]), 0.4);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped"]), 0.4666666666666667);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped"]), 0.48);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.48571428571428565);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.48888888888888893);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.49090909090909085);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.49230769230769234);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new"]), 0.5);
+       equals(new Message().relevanceBasedOnBrothers(["skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped", "new", "skipped"]), 0.4933333333333333);
     });
     
     test("when the user always votes up, the relevance should stick to 1.", function () {
-       equals(new Message().relevance_based_on_brothers(["up-ed"]), 1);
-       equals(new Message().relevance_based_on_brothers(["up-ed", "up-ed"]), 1);
-       equals(new Message().relevance_based_on_brothers(["up-ed", "up-ed", "up-ed"]), 1);
-       equals(new Message().relevance_based_on_brothers(["up-ed", "up-ed", "up-ed", "up-ed"]), 1);
-       equals(new Message().relevance_based_on_brothers(["up-ed", "up-ed", "up-ed", "up-ed", "up-ed"]), 1);
-       equals(new Message().relevance_based_on_brothers(["up-ed", "up-ed", "up-ed", "up-ed", "up-ed", "up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed", "up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed", "up-ed", "up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed", "up-ed", "up-ed", "up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed", "up-ed", "up-ed", "up-ed", "up-ed"]), 1);
+       equals(new Message().relevanceBasedOnBrothers(["up-ed", "up-ed", "up-ed", "up-ed", "up-ed", "up-ed"]), 1);
     });
 
     test("when the user always votes down, the relevance should stick to 0.", function () {
-       equals(new Message().relevance_based_on_brothers(["down-ed"]), 0);
-       equals(new Message().relevance_based_on_brothers(["down-ed", "down-ed"]), 0);
-       equals(new Message().relevance_based_on_brothers(["down-ed", "down-ed", "down-ed"]), 0);
-       equals(new Message().relevance_based_on_brothers(["down-ed", "down-ed", "down-ed", "down-ed"]), 0);
-       equals(new Message().relevance_based_on_brothers(["down-ed", "down-ed", "down-ed", "down-ed", "down-ed"]), 0);
-       equals(new Message().relevance_based_on_brothers(["down-ed", "down-ed", "down-ed", "down-ed", "down-ed", "down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed", "down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed", "down-ed", "down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed", "down-ed", "down-ed", "down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed", "down-ed", "down-ed", "down-ed", "down-ed"]), 0);
+       equals(new Message().relevanceBasedOnBrothers(["down-ed", "down-ed", "down-ed", "down-ed", "down-ed", "down-ed"]), 0);
     });
     
     

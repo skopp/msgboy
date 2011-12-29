@@ -151,7 +151,7 @@
             var msg = Msgboy.connection.superfeedr.convertAtomToJson(notification.payload);
             msg.source = notification.source;
             msg.feed = notification.source.url;
-            var message = Msgboy.inbox.add_message(msg, {
+            var message = Msgboy.inbox.addMessage(msg, {
                 success: function () {
                     Msgboy.log("Saved message " + msg.id);
                 }.bind(this),
