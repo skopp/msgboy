@@ -60,17 +60,18 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
 * <del>Rewrite the msgboy.com page with inbox</del>.
 * Use the delay@stamp for created_at of offline messages.
+* Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
 * <del>Run JSLint (and CSSLint?) in Rake tasks for cleaner JS.</del>
 * Add support for webintents, as a subscribing app, and calls for "sharing" apps.
 * Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
 * HTML5 : Custom (web-based) protocol handlers
 * Improve the relevance algorithm by adding the keywords based filtering (Bayes).
-* Integrate with bit.ly
+* <del>Integrate with bit.ly</del>
 * Integrate with Chartbeat
 * More plugins for websites that have some kind of subscription scheme.
 * Keyboard navigation for the dashboard and notifications.
-* Grouping of items in the dashboard (by source, and by topic).
+* <del>Grouping of items in the dashboard (by source, and by topic).</del>
 * <del>Set git tags when bumping</del>
 * <del>Throttle down importing of sources, to avoid slowness at setup. Since everything happens in the background. It's ok to take more time</del>.
 * <del>Show messages when there was no subscription performed at all...</del>
@@ -80,14 +81,15 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
 * Check Memory usage and fix it. Don't ask, it's _always_ too high.
 * Add domain-based filtering for relevance.
-* Remove the different colors for notifications. That's hard to interpret.
+* <del>Remove the different colors for notifications. That's hard to interpret.</del>
 * Show screenshot for large boxes if there is no image at all.
 * Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
-* Checking a feed status's upon notif and tkaing it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
-* Improve speed & memory footprint!
-* Allow for unsubscriptions no matter the state
-* Refactor down-vote triggered unsubscriptions
-* OPML export
+* Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
+* Mark non feed subscriptions and delete them if needed.
+* <del>Allow for unsubscriptions no matter the state</del>
+* <del>Refactor down-vote triggered unsubscriptions</del>
+* <del>OPML export</del>
+* Extract images upon creation of messages.
 
 
 ## Publishers
