@@ -12,7 +12,7 @@ var Inbox = Backbone.Model.extend({
 
     // Create credentials and saves them.
     // We may want to not run that again when we already have credentails.
-    create_credentials: function (callback) {
+    createCredentials: function (callback) {
         window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
     },
 
@@ -35,7 +35,7 @@ var Inbox = Backbone.Model.extend({
     },
 
     // Fetches and prepares the inbox if needed.
-    fetch_and_prepare: function () {
+    fetchAndPrepare: function () {
         this.fetch({
             success: function () {
                 if (this.attributes.jid && this.attributes.jid !== "" && this.attributes.password && this.attributes.password !== "") {
@@ -43,19 +43,19 @@ var Inbox = Backbone.Model.extend({
                     this.trigger("ready", this);
                 } else {
                     Msgboy.log("Refreshing new inbox ");
-                    this.create_credentials();
+                    this.createCredentials();
                 }
             }.bind(this),
             error: function () {
                 // Looks like there is no such inbox.
                 Msgboy.log("Creating new inbox");
-                this.create_credentials();
+                this.createCredentials();
             }.bind(this)
         });
     },
 
     // Adds a message in the inbox
-    add_message: function (msg, options) {
+    addMessage: function (msg, options) {
         // Adds the message if the message isn't yet present
         var message = new Message({
             'id': msg.id
@@ -89,15 +89,4 @@ var Inbox = Backbone.Model.extend({
         });
     },
 
-    // Deletes all the messages in that inbox.
-    delete_all_messages: function () {
-        var archive = new Archive();
-        archive.all({
-            created_at: [new Date().getTime(), 0]
-        }, function () {
-            _.each(archive.models, function (message) {
-                message.destroy();
-            });
-        });
-    }
 });
