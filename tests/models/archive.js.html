@@ -79,21 +79,6 @@
             
         });
         
-        module("for_source");
-        asyncTest("it should only get items from that source (alternate link)", function () {
-            messageFixtures.clean_add(function () {
-                var archive = new Archive();
-                archive.for_source("http://www.nytimes.com/", function () {
-                    start();
-                    
-                    deepEqual(archive.pluck("alternate"), [
-                      "http://www.nytimes.com/",
-                      "http://www.nytimes.com/"
-                    ]);
-                })
-            });
-        });
-        
         
 
     </script>
