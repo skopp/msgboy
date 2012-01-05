@@ -80,6 +80,7 @@
         </div>
 
         <script type="text/javascript">
+        var av = null;
             Msgboy.bind("loaded", function () {
                 var archive = new Archive();
                 
@@ -88,6 +89,7 @@
                     el: "#archive",
                     collection: archive,
                 });
+                av = archiveView;
 
                 // The modalShareView Object.
                 var modalShareView = new ModalShareView({

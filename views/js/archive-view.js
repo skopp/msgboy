@@ -6,7 +6,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'deleteFromFeed', 'showNew', 'completePage', 'loadNext');
+        _.bindAll(this, 'showNew', 'completePage', 'loadNext');
         $(document).scroll(this.completePage);
         
         $('#container').isotope({
@@ -50,12 +50,14 @@ var ArchiveView = Backbone.View.extend({
             });
             
             message.bind('unsubscribed', function() {
-                this.deleteFromFeed(message.get('feed'))
+                var brothers = new Archive();
+                brothers.forFeed(message.get('feed'));
+                brothers.bind('reset', function() {
+                    _.each(brothers.models, function(brother) {
+                        brother.destroy();
+                    });
+                });
             }.bind(this));
-            
-            message.bind("destroy", function() {
-                $('#container').isotope('reLayout');
-            })
             
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
@@ -87,18 +89,15 @@ var ArchiveView = Backbone.View.extend({
                     $('#container').isotope('reLayout');
                     $(view.el).show();
                 }.bind(this));
+                view.bind('remove', function() {
+                    $('#container').isotope('remove', $(view.el));
+                    $('#container').isotope('reLayout');
+                });
                 this.lastRendered = message; // store reference to last rendered
                 view.render();
             }
         }
         this.completePage();
-    },
-    deleteFromFeed: function (feed) {
-        _.each(this.collection.models, function (model) {
-            if (model.attributes.feed === feed) {
-                model.destroy();
-            }
-        });
     }
 });
 

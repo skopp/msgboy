@@ -29,17 +29,7 @@ var MessageView = Backbone.View.extend({
     initialize: function () {
         this.model.view = this; // store reference to view on model
         this.model.bind("change", this.render.bind(this)); 
-        this.model.bind("destroy", function() {
-            this.remove();
-            // $('#container').isotope('remove', $(model.view.el));
-            // model.view.remove();
-            // model.destroy({
-            //     success: function () {
-            //     }
-            // });
-            
-        }.bind(this)); 
-        
+        this.model.bind("destroy", this.remove.bind(this)); 
         this.model.messages.bind('add', this.render.bind(this));
         this.model.bind('unsubscribe', function () {
             var request = {
@@ -56,6 +46,9 @@ var MessageView = Backbone.View.extend({
                 this.model.trigger('unsubscribed');
             }.bind(this));
         }.bind(this));
+    },
+    remove: function() {
+        this.trigger('remove');
     },
     render: function () {
         var el = $(this.el),
