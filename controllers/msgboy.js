@@ -104,9 +104,8 @@ Msgboy.connect = function () {
 // It is perfectly anonymous and currentl not used.
 Msgboy.uploadData = function () {
     var archive = new Archive();
-    archive.all({
-        created_at: [new Date().getTime(), 0]
-    }, function () {
+    archive.fetch({ created_at: [new Date().getTime(), 0]});
+    archive.bind('reset', function () {
         $("#log").text(JSON.stringify(archive.toJSON()));
         Msgboy.helper.uploader.upload(Msgboy.inbox.attributes.jid, archive.toJSON());
     });

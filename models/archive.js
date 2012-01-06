@@ -8,21 +8,6 @@ var Archive = Backbone.Collection.extend({
     comparator: function (message) {
         return - (message.attributes.created_at);
     },
-    all: function (condition, done) {
-        this.fetch({
-            conditions: condition,
-            success: function () {
-                if (typeof(done) !== "undefined" && done) {
-                    done();
-                }
-            }.bind(this),
-            error: function (object, error) {
-                if (typeof(done) !== "undefined" && done) {
-                    done(error);
-                }
-            }
-        });
-    },
     each: function (condition) {
         this.fetch({
             conditions: condition,
@@ -37,11 +22,8 @@ var Archive = Backbone.Collection.extend({
         };
         this.fetch(options);
     },
-
-
-    forFeed: function (_feed, done) {
-        this.all({feed: _feed}, done);
+    forFeed: function (_feed) {
+        this.fetch({feed: _feed});
     }
-
 
 });

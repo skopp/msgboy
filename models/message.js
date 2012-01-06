@@ -106,7 +106,7 @@ var Message = Backbone.Model.extend({
         brothers.comparator = function (brother) {
             return brother.attributes.created_at;
         };
-        brothers.forFeed(this.attributes.feed)
+        brothers.forFeed(this.attributes.feed);
         brothers.bind('reset', function () {
             var relevance = 0.7; // This is the default relevance
             if (brothers.length > 0) {
