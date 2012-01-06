@@ -47,7 +47,7 @@ Msgboy.run =  function () {
 };
 
 // Handles XMPP Connections
-Msgboy.on_connect = function (status) {
+Msgboy.onConnect = function (status) {
     var msg = '';
     if (status === Strophe.Status.CONNECTING) {
         msg = 'Msgboy is connecting.';
@@ -55,7 +55,7 @@ Msgboy.on_connect = function (status) {
         msg = 'Msgboy failed to connect.';
         Msgboy.reconnectDelay += 1;
         if (Msgboy.autoReconnect) {
-            Msgboy.auto_reconnect();
+            Msgboy.autoReconnect();
         }
     } else if (status === Strophe.Status.AUTHFAIL) {
         msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
@@ -68,7 +68,7 @@ Msgboy.on_connect = function (status) {
         msg = 'Msgboy is disconnecting.'; // We may want to time this out.
     } else if (status === Strophe.Status.DISCONNECTED) {
         if (Msgboy.autoReconnect) {
-            Msgboy.auto_reconnect();
+            Msgboy.autoReconnect();
         }
         msg = 'Msgboy is disconnected. Reconnect in ' + Msgboy.helper.maths.number.fibonacci(Msgboy.reconnectDelay) + ' seconds.';
     } else if (status === Strophe.Status.CONNECTED) {
@@ -76,13 +76,13 @@ Msgboy.on_connect = function (status) {
         msg = 'Msgboy is connected.';
         Msgboy.connection.caps.sendPresenceWithCaps(); // Send presence!
         // Makes sure there is no missing subscription.
-        Msgboy.resume_subscriptions();
+        Msgboy.resumeSubscriptions();
     }
     Msgboy.log(msg);
 };
 
 // Reconnects the Msgboy
-Msgboy.auto_reconnect = function () {
+Msgboy.autoReconnect = function () {
     Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
     if (!Msgboy.reconnectionTimeout) {
         Msgboy.reconnectionTimeout = setTimeout(function () {
@@ -97,12 +97,12 @@ Msgboy.auto_reconnect = function () {
 Msgboy.connect = function () {
     var password = Msgboy.inbox.attributes.password;
     var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
-    Msgboy.connection.connect(jid, password, this.on_connect);
+    Msgboy.connection.connect(jid, password, this.onConnect);
 };
 
 // Uploads the content of the database. this will be used for analysis of the dataset o determine a better algorithm.
 // It is perfectly anonymous and currentl not used.
-Msgboy.upload_data = function () {
+Msgboy.uploadData = function () {
     var archive = new Archive();
     archive.all({
         created_at: [new Date().getTime(), 0]
@@ -165,7 +165,6 @@ Msgboy.subscribe = function (url, force, callback) {
 
 // Unsubscribes from a feed.
 Msgboy.unsubscribe = function (url, callback) {
-    console.log("HEHRE");
     var subscription = new Subscription({id: url});
     subscription.fetchOrCreate(function () {
         subscription.setState("unsubscribing");
@@ -183,7 +182,7 @@ Msgboy.unsubscribe = function (url, callback) {
 };
 
 // Makes sure there is no 'pending' susbcriptions.
-Msgboy.resume_subscriptions = function () {
+Msgboy.resumeSubscriptions = function () {
     var subscriptions  = new Subscriptions();
     subscriptions.bind("add", function (subs) {
         Msgboy.log("subscribing to " + subs.id);
@@ -194,6 +193,6 @@ Msgboy.resume_subscriptions = function () {
     });
     subscriptions.pending();
     setTimeout(function () {
-        Msgboy.resume_subscriptions(); // Let's retry in 10 minutes.
+        Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
     }, 1000 * 60 * 10);
 };

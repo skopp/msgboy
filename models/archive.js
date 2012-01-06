@@ -4,9 +4,6 @@ var Archive = Backbone.Collection.extend({
     model: Message,
 
     initialize: function () {
-        this.bind("add", function (message, collection) {
-            this.current = message;
-        }.bind(this));
     },
     comparator: function (message) {
         return - (message.attributes.created_at);
