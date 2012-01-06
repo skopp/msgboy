@@ -59,7 +59,9 @@ var Message = Backbone.Model.extend({
         this.setState("down-ed", function (result) {
             // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
             var brothers = new Archive();
-            brothers.forFeed(this.attributes.feed, function () {
+            brothers.forFeed(this.attributes.feed);
+            
+            brothers.bind('reset', function () {
                 var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
                     return 1;
                 });
@@ -104,7 +106,8 @@ var Message = Backbone.Model.extend({
         brothers.comparator = function (brother) {
             return brother.attributes.created_at;
         };
-        brothers.forFeed(this.attributes.feed, function () {
+        brothers.forFeed(this.attributes.feed)
+        brothers.bind('reset', function () {
             var relevance = 0.7; // This is the default relevance
             if (brothers.length > 0) {
                 // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].

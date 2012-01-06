@@ -48,15 +48,20 @@ var ArchiveView = Backbone.View.extend({
             message.bind('down-ed', function() {
                 $('#container').isotope('reLayout');
             });
+
+            message.bind('destroy', function() {
+                $('#container').isotope('reLayout');
+            });
             
             message.bind('unsubscribed', function() {
-                var brothers = new Archive();
+                var brothers = new Archive(); 
                 brothers.forFeed(message.get('feed'));
                 brothers.bind('reset', function() {
                     _.each(brothers.models, function(brother) {
-                        brother.destroy();
-                    });
-                });
+                        brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
+                        brother.destroy(); // Deletes the brothers 
+                    }.bind(this));
+                }.bind(this));
             }.bind(this));
             
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
