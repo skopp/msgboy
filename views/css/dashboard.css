@@ -34,6 +34,7 @@
     overflow: hidden;
     min-height: 50px;
     display:none;
+    color: #E6E6E6;
 }
 
 .message h1 {
@@ -66,22 +67,29 @@
     display: none;
 }
 
+.message:hover {
+    box-shadow: 0 0 5px rgba(0,0,0,0.9);
+    cursor: pointer;
+}
+
+.message p {
+    font-weight: bold;
+}
+.message:hover .controls {
+    display:block;
+    z-index: 10;
+}
+
+p.darkened {
+    background-color: #11232C;
+}
+
 .controls {
     position: absolute;
     bottom: 0px;
     right: 0px;
     display: none;
     width: 100%;
-}
-
-.message:hover {
-    box-shadow: 0 0 5px rgba(0,0,0,0.9);
-    cursor: pointer;
-}
-
-.text:hover .controls {
-    display:block;
-    z-index: 10;
 }
 
 .controls button {
@@ -130,7 +138,7 @@
     text-align: right;
 }
 
-.brick-1, .brick-1 .message {
+.brick-1 {
     /* These shouldn't be displayed anyway...*/
     display: none;
     width: 0;
@@ -141,47 +149,24 @@
     line-height: 0;
 }
 
-.brick-2, .brick-2 .message  {
+.brick-2  {
     font-size:0.8em;
     width: 100px;
     height: 110px;
+    font-weight: normal;
 }
 
-.brick-3, .brick-3 .message  {
+.brick-3  {
     font-size:1.0em;
     width: 210px;
     height: 210px;
 }
 
-.brick-4, .brick-4 .message  {
+.brick-4 {
     font-size:1.2em;
     width: 440px;
     height: 440px;
 }
-
-.isotope, .isotope .isotope-item {
-  /* change duration value to whatever you like */
-  -webkit-transition-duration: .5s;
-  -webkit-animation-timing-function: ease-out;
-}
-
-.isotope {
-  -webkit-transition-property: height, width;
-}
-
-.isotope .isotope-item {
-  -webkit-transition-property: -webkit-transform, opacity;
-}
-
-.text {
-    background-color: #11232c;
-    color: #E6E6E6;
-}
-
-/*.text img {
-    float: left;
-    padding: 0px 5px 5px 0px;
-}*/
 
 .text p {
     padding: 10px;
@@ -192,32 +177,18 @@
     bottom: 0;
 }
 
-.brick-1 p, .brick-2 p, .brick-3 p, .brick-4 p {
-    vertical-align: top;
-    padding-top: 5px;
-    font-weight: bold;
-}
-
 .stack p {
     padding-top: 20px;
     padding-left: 5px;
 }
 
-.brick-1 p {
-    padding: 0;
-}
-
 .brick-2 p, .brick-1 p {
     font-size: 1.0em;
     width: 80px;
-    height: 73px;    /*padding is 10*/
+    height: 65px;    /*padding is 10*/
     line-height: 14px;
+    font-weight: normal;
 }
-
-/*.brick-2 img {
-    left: -50%;
-    position: relative;
-}*/
 
 .brick-3 p {
     font-size: 1.1em;
@@ -233,34 +204,31 @@
     line-height: 26px;
 }
 
-p.darkened {
-    background-color: #11232C;
-}
-
-.group {
+.stack {
     background-color: #fff;
     padding: 0px;
-}
-
-.group .message {
-    display:block;
-    color: #E6E6E6;
-    position: absolute;
-    -webkit-transform-origin: 50% 50%;
-    margin:0px;
-}
-
-.stack {
     overflow: visible;
     box-shadow: none !important;
 }
 
 .stack .message {
-    width: 196px;
-    height: 196px;
-    margin: 7px;
+    display:block;
+    color: #E6E6E6;
+    position: absolute;
+    margin:0px;
+    height: 100%;
+    -webkit-transform-origin: 50% 50%;
 }
 
+.isotope, .isotope .isotope-item {
+  /* change duration value to whatever you like */
+  -webkit-transition-duration: 0.3s;
+  -webkit-animation-timing-function: ease-out;
+}
+
+.isotope .isotope-item {
+  -webkit-transition-property: -webkit-transform, opacity;
+}
 
 .isotope.no-transition,
 .isotope.no-transition .isotope-item,
@@ -268,28 +236,19 @@ p.darkened {
   -webkit-transition-duration: 0;
 }
 
-.isotope,
-.isotope .isotope-item {
-  /* change duration value to whatever you like */
-  -webkit-transition-duration: 0.4s;
-}
-
 .isotope {
   -webkit-transition-property: height, width, top, left, right;
 }
 
-.isotope .isotope-item {
-  -webkit-transition-property: -webkit-transform, opacity;
+
+#modal-share .btn {
+    margin: 5px;
+    float: right;
 }
 
 .btn img.icon {
     vertical-align: middle;
     margin: 3px;
-}
-
-#modal-share .btn {
-    margin: 5px;
-    float: right;
 }
 
 .modal-footer {

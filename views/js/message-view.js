@@ -59,13 +59,12 @@ var MessageView = Backbone.View.extend({
         });
         
         // remove all the brick classes, add new one
-        el.removeClass("brick-1 brick-2 brick-3 brick-4 group text");
+        el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
         el.addClass(this.getBrickClass());
         
         // render our compiled template
         if (isGroup) {
             el.html(this.groupTemplate({model: this.model}));
-            el.addClass("group");
             el.addClass("stack"); // added to help with CSS specificity for stack effects.
         } else {
             el.html(this.template({model: this.model}));
