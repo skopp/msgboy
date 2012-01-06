@@ -41,7 +41,7 @@ Msgboy.Notification.prototype = {
             
             this.messages[0].bind("up-ed", function () {
                 this.messages[0].view.remove();
-                this.go_to_message(this.messages[0]);
+                this.goToMessage(this.messages[0]);
                 this.messages.shift();
                 this.showNextMessage();
             }.bind(this));
@@ -65,7 +65,7 @@ Msgboy.Notification.prototype = {
             this.messages[0].view.render(); // builds the HTML
         }
     },
-    go_to_message: function (model) {
+    goToMessage: function (model) {
         chrome.extension.sendRequest({
             signature: "tab",
             params: {
