@@ -73,18 +73,18 @@ var msgboyDatabase = {
             var transaction = db.transaction(["messages"], IDBTransaction.READ_ONLY);
             var store = transaction.objectStore("messages");
             var cursor = store.openCursor();
-            var messages_to_save = [];
+            var messagesToSave = [];
             cursor.onsuccess = function (e) {
                 cursor = e.target.result;
                 if (cursor) {
                     if (typeof (cursor.value.host) === "undefined" || typeof (cursor.value.alternate) === "undefined" || !cursor.value.host || !cursor.value.alternate) {
-                        messages_to_save.push(cursor.value);
+                        messagesToSave.push(cursor.value);
                     }
                     cursor._continue();
                 }
             };
             transaction.oncomplete = function () {
-                msgboyDatabase.functions.eachBlock(messages_to_save, function (message, next) {
+                msgboyDatabase.functions.eachBlock(messagesToSave, function (message, next) {
                     var writeTransaction = db.transaction(["messages"], IDBTransaction.READ_WRITE);
                     var store = writeTransaction.objectStore("messages");
                     message.host = "";
@@ -119,18 +119,18 @@ var msgboyDatabase = {
             var transaction = db.transaction(["messages"], IDBTransaction.READ_ONLY);
             var store = transaction.objectStore("messages");
             var cursor = store.openCursor();
-            var messages_to_save = [];
+            var messagesToSave = [];
             cursor.onsuccess = function (e) {
                 cursor = e.target.result;
                 if (cursor) {
                     if (typeof (cursor.value.alternate_new) === "undefined" || !cursor.value.alternate_new) {
-                        messages_to_save.push(cursor.value);
+                        messagesToSave.push(cursor.value);
                     }
                     cursor._continue();
                 }
             };
             transaction.oncomplete = function () {
-                msgboyDatabase.functions.eachBlock(messages_to_save, function (message, next) {
+                msgboyDatabase.functions.eachBlock(messagesToSave, function (message, next) {
                     var writeTransaction = db.transaction(["messages"], IDBTransaction.READ_WRITE);
                     var store = writeTransaction.objectStore("messages");
                     message.alternate_new = "";
@@ -163,18 +163,18 @@ var msgboyDatabase = {
             var transaction = db.transaction(["messages"], IDBTransaction.READ_ONLY);
             var store = transaction.objectStore("messages");
             var cursor = store.openCursor();
-            var messages_to_save = [];
+            var messagesToSave = [];
             cursor.onsuccess = function (e) {
                 cursor = e.target.result;
                 if (cursor) {
                     if (typeof (cursor.value.state) === "undefined" || !cursor.value.state) {
-                        messages_to_save.push(cursor.value);
+                        messagesToSave.push(cursor.value);
                     }
                     cursor._continue();
                 }
             };
             transaction.oncomplete = function () {
-                msgboyDatabase.functions.eachBlock(messages_to_save, function (message, next) {
+                msgboyDatabase.functions.eachBlock(messagesToSave, function (message, next) {
                     var writeTransaction = db.transaction(["messages"], IDBTransaction.READ_WRITE);
                     var store = writeTransaction.objectStore("messages");
                     message.state = "new";
@@ -207,18 +207,18 @@ var msgboyDatabase = {
             var transaction = db.transaction(["messages"], IDBTransaction.READ_ONLY);
             var store = transaction.objectStore("messages");
             var cursor = store.openCursor();
-            var messages_to_save = [];
+            var messagesToSave = [];
             cursor.onsuccess = function (e) {
                 cursor = e.target.result;
                 if (cursor) {
                     if (typeof (cursor.value.feed) === "undefined" || !cursor.value.feed) {
-                        messages_to_save.push(cursor.value);
+                        messagesToSave.push(cursor.value);
                     }
                     cursor._continue();
                 }
             };
             transaction.oncomplete = function () {
-                msgboyDatabase.functions.eachBlock(messages_to_save, function (message, next) {
+                msgboyDatabase.functions.eachBlock(messagesToSave, function (message, next) {
                     var writeTransaction = db.transaction(["messages"], IDBTransaction.READ_WRITE);
                     var store = writeTransaction.objectStore("messages");
                     message.feed = message.source.url;
