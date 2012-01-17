@@ -8,7 +8,7 @@ var ArchiveView = Backbone.View.extend({
     initialize: function () {
         _.bindAll(this, 'showNew', 'completePage', 'loadNext');
         $(document).scroll(this.completePage);
-        
+
         $('#container').isotope({
             itemSelector: '.message',
             filter: '.brick-2 .brick-3 .brick-4',
@@ -17,9 +17,13 @@ var ArchiveView = Backbone.View.extend({
             }
         });
         
+        this.loadingTimes =[];
+
         this.collection.bind('add', this.showNew);
         this.collection.bind('add', function() {
             if (this.loaded === this.toLoad) {
+                var endLoading = new Date().getTime();
+                console.log("All loaded in ", endLoading - this.loadingStarted, "ms");
                 this.completePage();
             }
         }.bind(this));
@@ -35,6 +39,7 @@ var ArchiveView = Backbone.View.extend({
         }
     },
     loadNext: function () {
+        this.loadingStarted = new Date().getTime();
         this.loaded = 0; // Reset the loaded counter!
         this.collection.next(this.toLoad, {
             created_at: [this.upperDound, this.lowerBound]
@@ -47,7 +52,7 @@ var ArchiveView = Backbone.View.extend({
             message.bind('up-ed', function() {
                 $('#container').isotope('reLayout');
             });
-            
+
             message.bind('down-ed', function() {
                 $('#container').isotope('reLayout');
             });
@@ -55,7 +60,7 @@ var ArchiveView = Backbone.View.extend({
             message.bind('destroy', function() {
                 $('#container').isotope('reLayout');
             });
-            
+
             message.bind('unsubscribed', function() {
                 var brothers = new Archive(); 
                 brothers.forFeed(message.get('feed'));
@@ -66,7 +71,7 @@ var ArchiveView = Backbone.View.extend({
                     }.bind(this));
                 }.bind(this));
             }.bind(this));
-            
+
             // Check weather this message needs to be grouped with the previous.
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
@@ -91,19 +96,17 @@ var ArchiveView = Backbone.View.extend({
                 var view = new MessageView({
                     model: message
                 });
-                
-                $(view.el).hide();
-                $("#container").append(view.el); // Adds the view in the document.
+
+                $('#container').append(view.el); // Adds the view in the document.
                 $('#container').isotope('appended', $(view.el), function () {
-                    $('#container').isotope('reLayout');
-                    $(view.el).show();
+                    // $('#container').isotope('reLayout'); // <- this thing is leaking like crazy!!!! LEAK LEAK LEAK LEAK LEAK LEAK
                 }.bind(this));
                 view.bind('remove', function() {
                     $('#container').isotope('remove', $(view.el));
-                    $('#container').isotope('reLayout');
+                    // $('#container').isotope('reLayout');
                 });
                 this.lastRendered = message; // store reference to last rendered
-                view.render();
+                // view.render();
             }
         }
     }
