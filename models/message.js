@@ -88,7 +88,7 @@ var Message = Backbone.Model.extend({
                 this.trigger(_state, this);
             }.bind(this),
             error: function () {
-                console.log("We couldn't save " + this.id);
+                Msgboy.log.debug("We couldn't save", this.id);
                 if (typeof(callback) !== "undefined" && callback) {
                     callback(false);
                 }

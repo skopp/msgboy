@@ -5,8 +5,32 @@ if (typeof Msgboy === "undefined") {
 // Extending Msgboy with the Backbone events
 _.extend(Msgboy, Backbone.Events);
 
+// Logs messages to the console
+Msgboy.log =  {
+    levels: {
+        DEBUG: 10,
+        INFO: 20,
+        ERROR: 30,
+    },
+    debug: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
+            console.log("Debug", arguments);
+        }
+    },
+    info: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
+            console.log("Info", arguments);
+        }
+    },
+    error: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
+            console.log("Error", arguments);
+        }
+    },
+}
+
 // Attributes
-Msgboy.logEnabled = false;
+Msgboy.log.debugLevel = Msgboy.log.levels.DEBUG; // We may want to adjust that in production!
 Msgboy.autoReconnect = true;
 Msgboy.currentNotification = null;
 Msgboy.messageStack = [];
@@ -16,13 +40,6 @@ Msgboy.connection = null;
 Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
-
-// Logs messages to the console
-Msgboy.log = function (msg) {
-    if (Msgboy.logEnabled) {
-        console.log("Msgboy : " + msg);
-    }
-};
 
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
@@ -78,7 +95,7 @@ Msgboy.onConnect = function (status) {
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }
-    Msgboy.log(msg);
+    Msgboy.log.debug(msg);
 };
 
 // Reconnects the Msgboy
@@ -145,9 +162,9 @@ Msgboy.subscribe = function (url, force, callback) {
         if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
             subscription.setState("subscribing");
             subscription.bind("subscribing", function () {
-                Msgboy.log("subscribing to " + url);
+                Msgboy.log.debug("subscribing to " + url);
                 Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
-                    Msgboy.log("subscribed to " + url);
+                    Msgboy.log.debug("subscribed to " + url);
                     subscription.setState("subscribed");
                 });
             });
@@ -156,7 +173,7 @@ Msgboy.subscribe = function (url, force, callback) {
             });
         }
         else {
-            Msgboy.log("Nothing to do for " + url + " (" + subscription.attributes.state + ")");
+            Msgboy.log.debug("Nothing to do for " + url + " (" + subscription.attributes.state + ")");
             callback(false);
         }
     });
@@ -168,9 +185,9 @@ Msgboy.unsubscribe = function (url, callback) {
     subscription.fetchOrCreate(function () {
         subscription.setState("unsubscribing");
         subscription.bind("unsubscribing", function () {
-            Msgboy.log("unsubscribing from " + url);
+            Msgboy.log.debug("unsubscribing from " + url);
             Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
-                Msgboy.log("Request : unsubscribed " + url);
+                Msgboy.log.debug("Request : unsubscribed " + url);
                 subscription.setState("unsubscribed");
             });
         });
@@ -184,9 +201,9 @@ Msgboy.unsubscribe = function (url, callback) {
 Msgboy.resumeSubscriptions = function () {
     var subscriptions  = new Subscriptions();
     subscriptions.bind("add", function (subs) {
-        Msgboy.log("subscribing to " + subs.id);
+        Msgboy.log.debug("subscribing to " + subs.id);
         Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
-            Msgboy.log("subscribed to " + subs.id);
+            Msgboy.log.debug("subscribed to " + subs.id);
             subs.setState("subscribed");
         });
     });

@@ -82,8 +82,6 @@
     Msgboy.bind("loaded", function () {
         Msgboy.inbox = new Inbox();
 
-        Msgboy.logEnabled = true;
-
         Msgboy.connection = new Strophe.Connection({
             protocol: new Strophe.Websocket('ws://msgboy.com:5280')
         });
@@ -92,26 +90,26 @@
 
         Msgboy.connection.rawInput = function (data) {
             if (Msgboy.environment() == "development") {
-                Msgboy.log('RECV: ' + data);
+                Msgboy.log.debug('RECV: ' + data);
             }
         };
         Msgboy.connection.rawOutput = function (data) {
             if (Msgboy.environment() == "development") {
-                Msgboy.log('SENT: ' + data);
+                Msgboy.log.debug('SENT: ' + data);
             }
         };
 
         Strophe.log = function (level, msg) {
-            Msgboy.log(msg);
+            Msgboy.log.debug(msg);
         }
 
         // When a new message was added to the inbox
         Msgboy.inbox.bind("messages:added", function (message) {
             if (message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance) {
-                Msgboy.log("Showing message : " + message.attributes.id + " (" + message.attributes.relevance + " >= " + Msgboy.inbox.attributes.options.relevance + ") ");
+                Msgboy.log.debug("Showing message : " + message.attributes.id + " (" + message.attributes.relevance + " >= " + Msgboy.inbox.attributes.options.relevance + ") ");
                 Msgboy.notify(message.toJSON());
             } else {
-                Msgboy.log("Not showing message : " + message.attributes.id + " (" + message.attributes.relevance + " < " + Msgboy.inbox.attributes.options.relevance + ") ");
+                Msgboy.log.debug("Not showing message : " + message.attributes.id + " (" + message.attributes.relevance + " < " + Msgboy.inbox.attributes.options.relevance + ") ");
             }
         });
 
@@ -127,12 +125,12 @@
                 var msg = new Message(welcomeMessages[i]);
                 msg.save({}, {
                     success: function () {
-                        Msgboy.log("Saved message " + msg.id);
+                        Msgboy.log.debug("Saved message " + msg.id);
                     }.bind(this),
                     error: function (object, error) {
                         // Message was not saved... probably a dupe
-                        Msgboy.log("Could not save message " + JSON.stringify(msg.toJSON()));
-                        Msgboy.log(error);
+                        Msgboy.log.debug("Could not save message " + JSON.stringify(msg.toJSON()));
+                        Msgboy.log.debug(error);
                     }.bind(this)
                 });
             }
@@ -147,18 +145,18 @@
 
         // When a new notification was received from XMPP line.
         $(document).bind('notification_received', function (ev, notification) {
-            Msgboy.log("Notification received from " + notification.source.url);
+            Msgboy.log.debug("Notification received from " + notification.source.url);
             var msg = Msgboy.connection.superfeedr.convertAtomToJson(notification.payload);
             msg.source = notification.source;
             msg.feed = notification.source.url;
             var message = Msgboy.inbox.addMessage(msg, {
                 success: function () {
-                    Msgboy.log("Saved message " + msg.id);
+                    Msgboy.log.debug("Saved message " + msg.id);
                 }.bind(this),
                 error: function (object, error) {
                     // Message was not saved... probably a dupe
-                    Msgboy.log("Could not save message " + JSON.stringify(msg));
-                    Msgboy.log(error);
+                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg));
+                    Msgboy.log.debug(error);
                 }.bind(this),
             });
         });

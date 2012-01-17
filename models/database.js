@@ -91,7 +91,7 @@ var msgboyDatabase = {
                     message.alternate = "";
                     var writeRequest = store.put(message, message.id);
                     writeRequest.onerror = function (e) {
-                        console.log("There was an error. Migration will fail. Plese reload browser.");
+                        Msgboy.log.error("There was an error. Migration will fail. Plese reload browser.");
                         next();
                     };
                     writeRequest.onsuccess = function (e) {
@@ -136,7 +136,7 @@ var msgboyDatabase = {
                     message.alternate_new = "";
                     var writeRequest = store.put(message, message.id);
                     writeRequest.onerror = function (e) {
-                        console.log("There was an error. Migration will fail. Plese reload browser.");
+                        Msgboy.log.error("There was an error. Migration will fail. Plese reload browser.");
                         next();
                     };
                     writeRequest.onsuccess = function (e) {
@@ -180,7 +180,7 @@ var msgboyDatabase = {
                     message.state = "new";
                     var writeRequest = store.put(message, message.id);
                     writeRequest.onerror = function (e) {
-                        console.log("There was an error. Migration will fail. Plese reload browser.");
+                        Msgboy.log.debug("There was an error. Migration will fail. Plese reload browser.");
                         next();
                     };
                     writeRequest.onsuccess = function (e) {
@@ -224,7 +224,7 @@ var msgboyDatabase = {
                     message.feed = message.source.url;
                     var writeRequest = store.put(message, message.id);
                     writeRequest.onerror = function (e) {
-                        console.log("There was an error. Migration will fail. Plese reload browser.");
+                        Msgboy.log.debug("There was an error. Migration will fail. Plese reload browser.");
                         next();
                     };
                     writeRequest.onsuccess = function (e) {

@@ -23,12 +23,12 @@ var Inbox = Backbone.Model.extend({
             password: token
         }, {
             success: function () {
-                Msgboy.log("Inbox created for " + username);
+                Msgboy.log.debug("Inbox created for " + username);
                 this.trigger("ready", this);
                 this.trigger("new", this);
             }.bind(this),
             error: function () {
-                Msgboy.log("Failed to create inbox for " + username);
+                Msgboy.log.debug("Failed to create inbox for " + username);
             }.bind(this)
         });
     },
@@ -38,16 +38,16 @@ var Inbox = Backbone.Model.extend({
         this.fetch({
             success: function () {
                 if (this.attributes.jid && this.attributes.jid !== "" && this.attributes.password && this.attributes.password !== "") {
-                    Msgboy.log("Loaded inbox for " + this.attributes.jid);
+                    Msgboy.log.debug("Loaded inbox for " + this.attributes.jid);
                     this.trigger("ready", this);
                 } else {
-                    Msgboy.log("Refreshing new inbox ");
+                    Msgboy.log.debug("Refreshing new inbox ");
                     this.createCredentials();
                 }
             }.bind(this),
             error: function () {
                 // Looks like there is no such inbox.
-                Msgboy.log("Creating new inbox");
+                Msgboy.log.debug("Creating new inbox");
                 this.createCredentials();
             }.bind(this)
         });

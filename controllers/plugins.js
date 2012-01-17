@@ -9,7 +9,7 @@ var Plugins = {
 
         var done_with_plugin = _.after(Plugins.all.length, function () {
             // Called when we have processed all plugins.
-            console.log("Done with all plugins and subscribed to " + subscriptions_count);
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
         });
 
         _.each(Plugins.all, function (plugin) {
@@ -21,7 +21,7 @@ var Plugins = {
                     });
                 });
             }, function (count) {
-                console.log("Done with " + plugin.name + " and subscribed to " + count);
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
                 subscriptions_count += count;
                 done_with_plugin();
             });

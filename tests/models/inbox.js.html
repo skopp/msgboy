@@ -50,7 +50,7 @@
             });
             inbox.createCredentials(function () {
                 start();
-                console.log(inbox.attributes)
+                Msgboy.log.debug(inbox.attributes)
                 ok(inbox.attributes.jid != null, "there should be a jid");
                 ok(inbox.attributes.password != null, "there should be a password");
             });
