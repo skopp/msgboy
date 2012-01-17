@@ -4,7 +4,7 @@ var Plugins = {
     register: function (plugin) {
         this.all.push(plugin);
     },
-    import_subscriptions: function (callback, errback) {
+    importSubscriptions: function (callback, errback) {
         var subscriptions_count = 0;
 
         var done_with_plugin = _.after(Plugins.all.length, function () {
