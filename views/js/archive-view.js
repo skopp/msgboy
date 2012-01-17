@@ -1,8 +1,8 @@
 var ArchiveView = Backbone.View.extend({
-    upper_bound: new Date().getTime(),
-    lower_bound: 0,
-    loaded: 20,
-    to_load: 20,
+    upperDound: new Date().getTime(),
+    lowerBound: 0,
+    loaded: 0,
+    toLoad: 20,
     events: {
     },
     initialize: function () {
@@ -17,7 +17,12 @@ var ArchiveView = Backbone.View.extend({
             }
         });
         
-        this.collection.bind("add", this.showNew);
+        this.collection.bind('add', this.showNew);
+        this.collection.bind('add', function() {
+            if (this.loaded === this.toLoad) {
+                this.completePage();
+            }
+        }.bind(this));
         this.loadNext();
     },
     completePage: function () {
@@ -30,15 +35,13 @@ var ArchiveView = Backbone.View.extend({
         }
     },
     loadNext: function () {
-        if (this.loaded === this.to_load) {
-            this.loaded = 0;
-            this.collection.next(this.to_load, {
-                created_at: [this.upper_bound, this.lower_bound]
-            });
-        }
+        this.loaded = 0; // Reset the loaded counter!
+        this.collection.next(this.toLoad, {
+            created_at: [this.upperDound, this.lowerBound]
+        });
     },
     showNew: function (message) {
-        this.upper_bound = message.attributes.created_at;
+        this.upperDound = message.attributes.created_at;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
@@ -103,7 +106,6 @@ var ArchiveView = Backbone.View.extend({
                 view.render();
             }
         }
-        this.completePage();
     }
 });
 
