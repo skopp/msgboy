@@ -64,6 +64,7 @@ var ArchiveView = Backbone.View.extend({
                 }.bind(this));
             }.bind(this));
             
+            // Check weather this message needs to be grouped with the previous.
             if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastRendered.messages.add(message);
                 if(this.lastRendered.messages.length == 2) {
