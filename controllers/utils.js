@@ -102,9 +102,6 @@ Msgboy.helper.cleaner.html = function (string) {
 };
 
 Msgboy.helper.cleaner.dom = function (element) {
-    // Do stuff here :)
-    // console.log($(element));
-    // console.log(element.nodeName);
     $.each($(element).children(), function (index, child) {
         if (child.nodeName === "IMG") {
             if (Msgboy.helper.element.original_size.width < 2 || Msgboy.helper.element.original_size.height < 2) {
