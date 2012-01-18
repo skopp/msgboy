@@ -18,14 +18,6 @@ var MessageView = Backbone.View.extend({
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
-    // groupTemplate: _.template([
-    //     '<% model.messages.each(function(story, i) { %>',
-    //     '<div class="message" style="-webkit-transform: rotate(<%= Math.random()*(-i)*(15/model.messages.length) +5 %>deg);">',    // another take on generating the transform.
-    //     '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
-    //     '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
-    //     '</div>',
-    //     '<% }); %>',
-    // ].join('')),
     initialize: function () {
         this.model.bind('change', this.layout.bind(this)); 
         this.model.bind('destroy', this.remove.bind(this)); 
@@ -66,15 +58,14 @@ var MessageView = Backbone.View.extend({
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
         el.addClass(this.getBrickClass());
+
+        el.html(this.template({model: this.model}));
+        el.addClass("text");
         
         // render our compiled template
-        // if (isGroup) {
-        //     el.html(this.groupTemplate({model: this.model}));
-        //     el.addClass("stack"); // added to help with CSS specificity for stack effects.
-        // } else {
-            el.html(this.template({model: this.model}));
-            el.addClass("text");
-        // }
+        if (isGroup) {
+            el.prepend($('<div class="ribbon">' + this.model.messages.length + ' more</div>'));
+        }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
     },
@@ -117,6 +108,7 @@ var MessageView = Backbone.View.extend({
         });
         this.model.trigger('expanded', this);
         this.model.messages.reset(); // And now remove the messages inside :)
+        this.layout();
         return false;
     },
     handleImageLoad: function (e) {
