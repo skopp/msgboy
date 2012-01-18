@@ -13,32 +13,33 @@ Msgboy.log =  {
         INFO: 20,
         ERROR: 30,
     },
+    _log: Function.prototype.bind.call(console.log, console),
     raw: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
             var args = Array.prototype.slice.call(arguments);  
             args.unshift('raw');
-            console.log(args.join(", "));
+            this._log.apply(console, args);
         }
     },
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
             var args = Array.prototype.slice.call(arguments);  
             args.unshift('debug');
-            console.log(args.join(" "));
+            this._log.apply(console, args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
             var args = Array.prototype.slice.call(arguments);  
             args.unshift('info');
-            console.log(args.join(" "));
+            this._log.apply(console, args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
             var args = Array.prototype.slice.call(arguments);  
             args.unshift('error');
-            console.log(args.join(" "));
+            this._log.apply(console, args);
         }
     },
 }
