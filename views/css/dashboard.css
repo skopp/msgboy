@@ -33,7 +33,6 @@
     margin: 10px;
     overflow: hidden;
     min-height: 50px;
-    display:none;
     color: #E6E6E6;
 }
 
@@ -138,7 +137,7 @@ p.darkened {
     text-align: right;
 }
 
-.brick-1 {
+.brick-1, .brother {
     /* These shouldn't be displayed anyway...*/
     display: none;
     width: 0;
@@ -303,3 +302,19 @@ p.darkened {
 .share {
     background-image: url('../images/share.png');
 }
+
+.ribbon {
+    font-size: 0.9em;
+    height:30px;
+    line-height:30px;
+    position:relative;
+    left:30%;
+    top:10%;
+    z-index: 100;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59A1CD), to(#3284b5));
+    width: 100%;
+    text-align:center;
+    -webkit-transform: rotate(45deg);
+    -webkit-box-shadow: 0 0.1em 0.1em #222;
+}
+

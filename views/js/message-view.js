@@ -18,19 +18,12 @@ var MessageView = Backbone.View.extend({
         '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
     ].join('')),
-    groupTemplate: _.template([
-        '<% model.messages.each(function(story, i) { %>',
-        '<div class="message" style="-webkit-transform: rotate(<%= Math.random()*(-i)*(15/model.messages.length) +5 %>deg);">',    // another take on generating the transform.
-        '<p class="darkened"><%= Msgboy.helper.cleaner.html(story.attributes.title) %></p>',
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(story.attributes.source.title) %></h1>',
-        '</div>',
-        '<% }); %>',
-    ].join('')),
     initialize: function () {
-        this.model.view = this; // store reference to view on model
-        this.model.bind('change', this.render.bind(this)); 
+        this.model.bind('change', this.layout.bind(this)); 
         this.model.bind('destroy', this.remove.bind(this)); 
-        this.model.messages.bind('add', this.render.bind(this));
+        this.model.bind('expand', function() {
+            $(this.el).removeClass('brother'); // Let's show this bro!
+        }.bind(this)); 
         this.model.bind('unsubscribe', function () {
             var request = {
                 signature: "unsubscribe",
@@ -48,32 +41,34 @@ var MessageView = Backbone.View.extend({
         }.bind(this));
     },
     render: function () {
+        this.layout();
+        this.trigger('rendered');
+    },
+    layout: function() {
         var el = $(this.el),
             isGroup = this.model.messages.length > 1;
             
         // set some attributes on the container div
         $(this.el).attr({
             'data-msgboy-relevance': this.model.get('relevance'),
-            'id': isGroup ? 'group_' + this.model.id : this.model.id,
+            'id': this.model.id,
             'data-msgboy-state': this.model.get('state')
         });
         
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
         el.addClass(this.getBrickClass());
+
+        el.html(this.template({model: this.model}));
+        el.addClass("text");
         
         // render our compiled template
         if (isGroup) {
-            el.html(this.groupTemplate({model: this.model}));
-            el.addClass("stack"); // added to help with CSS specificity for stack effects.
-        } else {
-            el.html(this.template({model: this.model}));
-            el.addClass("text");
+            el.prepend($('<div class="ribbon">' + (this.model.messages.length) + ' stories</div>'));
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
     },
-    
     // Browser event handlers
     handleClick: function (evt) {
         var el = $(this.el),
@@ -108,9 +103,12 @@ var MessageView = Backbone.View.extend({
         this.model.trigger('share', this.model);
     },
     handleExpand: function (e) {
-        this.trigger('expand', this);
-        // removes the group.
-        this.remove();        
+        this.model.messages.each(function(message, i) {
+            message.trigger('expand');
+        });
+        this.model.trigger('expanded', this);
+        this.model.messages.reset(); // And now remove the messages inside :)
+        this.layout();
         return false;
     },
     handleImageLoad: function (e) {

@@ -8,23 +8,38 @@ _.extend(Msgboy, Backbone.Events);
 // Logs messages to the console
 Msgboy.log =  {
     levels: {
+        RAW: 0,
         DEBUG: 10,
         INFO: 20,
         ERROR: 30,
     },
+    _log: Function.prototype.bind.call(console.log, console),
+    raw: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('raw');
+            this._log.apply(console, args);
+        }
+    },
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
-            console.log("Debug", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('debug');
+            this._log.apply(console, args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
-            console.log("Info", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('info');
+            this._log.apply(console, args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
-            console.log("Error", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('error');
+            this._log.apply(console, args);
         }
     },
 }
@@ -162,9 +177,9 @@ Msgboy.subscribe = function (url, force, callback) {
         if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
             subscription.setState("subscribing");
             subscription.bind("subscribing", function () {
-                Msgboy.log.debug("subscribing to " + url);
+                Msgboy.log.debug("subscribing to", url);
                 Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
-                    Msgboy.log.debug("subscribed to " + url);
+                    Msgboy.log.debug("subscribed to", url);
                     subscription.setState("subscribed");
                 });
             });
@@ -173,7 +188,7 @@ Msgboy.subscribe = function (url, force, callback) {
             });
         }
         else {
-            Msgboy.log.debug("Nothing to do for " + url + " (" + subscription.attributes.state + ")");
+            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
             callback(false);
         }
     });
@@ -185,9 +200,9 @@ Msgboy.unsubscribe = function (url, callback) {
     subscription.fetchOrCreate(function () {
         subscription.setState("unsubscribing");
         subscription.bind("unsubscribing", function () {
-            Msgboy.log.debug("unsubscribing from " + url);
+            Msgboy.log.debug("unsubscribing from", url);
             Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
-                Msgboy.log.debug("Request : unsubscribed " + url);
+                Msgboy.log.debug("unsubscribed", url);
                 subscription.setState("unsubscribed");
             });
         });
@@ -201,9 +216,9 @@ Msgboy.unsubscribe = function (url, callback) {
 Msgboy.resumeSubscriptions = function () {
     var subscriptions  = new Subscriptions();
     subscriptions.bind("add", function (subs) {
-        Msgboy.log.debug("subscribing to " + subs.id);
+        Msgboy.log.debug("subscribing to", subs.id);
         Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
-            Msgboy.log.debug("subscribed to " + subs.id);
+            Msgboy.log.debug("subscribed to", subs.id);
             subs.setState("subscribed");
         });
     });

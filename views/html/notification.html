@@ -56,7 +56,7 @@
             $(document).ready(function () {
                 // Tell everyone we're ready.
                 chrome.extension.sendRequest({
-                    signature: "notification_ready",
+                    signature: "notificationReady",
                     params: {}
                 }, function () {
                     // Nothing to do.
