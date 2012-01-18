@@ -1,9 +1,7 @@
-var Archive = require('../models/archive.js').Archive;
-
-console.log(Archive);
+var Archive = require('../models/archive.js');
 
 describe('Archive', function(){
-    // var archive =  new Archive();
+    var archive =  new Archive({cool: 'stuff'});
     before(function() {
         // We need to save a couple fixture messages!
     });
