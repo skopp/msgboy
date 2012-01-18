@@ -2,7 +2,7 @@ var ArchiveView = Backbone.View.extend({
     upperDound: new Date().getTime(),
     lowerBound: 0,
     loaded: 0,
-    toLoad: 20,
+    toLoad: 50,
     events: {
     },
     initialize: function () {
@@ -18,15 +18,8 @@ var ArchiveView = Backbone.View.extend({
         });
         
         this.loadingTimes =[];
-
+        this.loaded = this.toLoad;
         this.collection.bind('add', this.showNew);
-        this.collection.bind('add', function() {
-            if (this.loaded === this.toLoad) {
-                var endLoading = new Date().getTime();
-                console.log("All loaded in ", endLoading - this.loadingStarted, "ms");
-                this.completePage();
-            }
-        }.bind(this));
         this.loadNext();
     },
     completePage: function () {
@@ -39,11 +32,12 @@ var ArchiveView = Backbone.View.extend({
         }
     },
     loadNext: function () {
-        this.loadingStarted = new Date().getTime();
-        this.loaded = 0; // Reset the loaded counter!
-        this.collection.next(this.toLoad, {
-            created_at: [this.upperDound, this.lowerBound]
-        });
+        if (this.loaded === this.toLoad) {
+            this.loaded = 0; // Reset the loaded counter!
+            this.collection.next(this.toLoad, {
+                created_at: [this.upperDound, this.lowerBound]
+            });
+        }
     },
     showNew: function (message) {
         this.upperDound = message.attributes.created_at;
@@ -60,6 +54,10 @@ var ArchiveView = Backbone.View.extend({
             message.bind('destroy', function() {
                 $('#container').isotope('reLayout');
             });
+            
+            message.bind('expanded', function() {
+                $('#container').isotope('reLayout');
+            })
 
             message.bind('unsubscribed', function() {
                 var brothers = new Archive(); 
@@ -72,42 +70,28 @@ var ArchiveView = Backbone.View.extend({
                 }.bind(this));
             }.bind(this));
 
-            // Check weather this message needs to be grouped with the previous.
-            if (this.lastRendered && this.lastRendered.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
-                this.lastRendered.messages.add(message);
-                if(this.lastRendered.messages.length == 2) {
-                    this.lastRendered.view.bind('expand', function(view) {
-                        view.model.messages.each(function (m) {
-                            var v = new MessageView({
-                                model: m
-                            });
-                            $(v.el).hide();
-                            $(view.el).after($(v.el)); // Adds the view in the document.
-                            $('#container').isotope('appended', $(v.el), function () {
-                                $('#container').isotope('reLayout');
-                                $(v.el).show();
-                            });
-                            m.messages.reset();
-                            v.render();
-                        });
-                    }.bind(this));
-                }
-            } else {
-                var view = new MessageView({
-                    model: message
-                });
-
+            var view = new MessageView({
+                model: message
+            });
+            
+            view.bind('rendered', function() {
+                this.completePage();
                 $('#container').append(view.el); // Adds the view in the document.
-                $('#container').isotope('appended', $(view.el), function () {
-                    // $('#container').isotope('reLayout'); // <- this thing is leaking like crazy!!!! LEAK LEAK LEAK LEAK LEAK LEAK
-                }.bind(this));
-                view.bind('remove', function() {
-                    $('#container').isotope('remove', $(view.el));
-                    // $('#container').isotope('reLayout');
-                });
-                this.lastRendered = message; // store reference to last rendered
-                // view.render();
+                $('#container').isotope('appended', $(view.el));
+            }.bind(this));
+
+            if (this.lastParentView && this.lastParentView.model.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
+                this.lastParentView.model.messages.add(message);
+                $(view.el).addClass('brother'); // Let's show this has a brother!
             }
+            else {
+                this.lastParentView = view;
+            }
+            
+            if(this.lastViewToRender) {
+                this.lastViewToRender.render();
+            }
+            this.lastViewToRender = view;
         }
     }
 });

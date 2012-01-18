@@ -33,7 +33,6 @@
     margin: 10px;
     overflow: hidden;
     min-height: 50px;
-    display:none;
     color: #E6E6E6;
 }
 
@@ -138,7 +137,7 @@ p.darkened {
     text-align: right;
 }
 
-.brick-1 {
+.brick-1, .brother {
     /* These shouldn't be displayed anyway...*/
     display: none;
     width: 0;
