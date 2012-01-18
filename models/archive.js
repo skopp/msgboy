@@ -25,5 +25,4 @@ var Archive = Backbone.Collection.extend({
     forFeed: function (_feed) {
         this.fetch({feed: _feed});
     }
-
 });
