@@ -8,23 +8,37 @@ _.extend(Msgboy, Backbone.Events);
 // Logs messages to the console
 Msgboy.log =  {
     levels: {
+        RAW: 0,
         DEBUG: 10,
         INFO: 20,
         ERROR: 30,
     },
+    raw: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('raw');
+            console.log(args.join(", "));
+        }
+    },
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
-            console.log("Debug", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('debug');
+            console.log(args.join(" "));
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
-            console.log("Info", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('info');
+            console.log(args.join(" "));
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
-            console.log("Error", arguments);
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('error');
+            console.log(args.join(" "));
         }
     },
 }
