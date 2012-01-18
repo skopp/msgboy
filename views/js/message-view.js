@@ -64,7 +64,7 @@ var MessageView = Backbone.View.extend({
         
         // render our compiled template
         if (isGroup) {
-            el.prepend($('<div class="ribbon">' + this.model.messages.length + ' more</div>'));
+            el.prepend($('<div class="ribbon">' + (this.model.messages.length) + ' stories</div>'));
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));

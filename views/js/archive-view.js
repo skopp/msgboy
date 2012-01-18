@@ -80,18 +80,18 @@ var ArchiveView = Backbone.View.extend({
                 $('#container').isotope('appended', $(view.el));
             }.bind(this));
 
+            // Check if we can group the messages
             if (this.lastParentView && this.lastParentView.model.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
                 this.lastParentView.model.messages.add(message);
                 $(view.el).addClass('brother'); // Let's show this has a brother!
+                view.render(); // We can render it as well as nobody cares about it for now.
             }
             else {
+                if(this.lastParentView) {
+                    this.lastParentView.render();
+                }
                 this.lastParentView = view;
             }
-            
-            if(this.lastViewToRender) {
-                this.lastViewToRender.render();
-            }
-            this.lastViewToRender = view;
         }
     }
 });
