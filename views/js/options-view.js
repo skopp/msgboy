@@ -1,12 +1,12 @@
 var OptionsView = Backbone.View.extend({
     events: {
         "change #relevance": "change",
-        "click #reset_susbcriptions": "reset_susbcriptions"
+        "click #resetRusbcriptions": "resetRusbcriptions"
     },
     el: "#options",
 
     initialize: function () {
-        _.bindAll(this, "render", "change", "reset_susbcriptions");
+        _.bindAll(this, "render", "change", "resetRusbcriptions");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -29,9 +29,9 @@ var OptionsView = Backbone.View.extend({
         this.model.save(attributes);
     },
 
-    reset_susbcriptions: function (event) {
+    resetRusbcriptions: function (event) {
         chrome.extension.sendRequest({
-            signature: "reset_susbcriptions",
+            signature: "resetRusbcriptions",
             params: {}
         }, function () {
             // Nothing to do.

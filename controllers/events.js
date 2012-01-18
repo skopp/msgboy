@@ -76,8 +76,8 @@ $(document).bind('reload', function (element, object) {
 });
 
 // When reloading the inbox is needed (after a change in settings eg)
-$(document).bind('reset_susbcriptions', function (element, object) {
-    Msgboy.log.debug("request", "reset_susbcriptions");
+$(document).bind('resetRusbcriptions', function (element, object) {
+    Msgboy.log.debug("request", "resetRusbcriptions");
     Plugins.importSubscriptions(function (subs) {
         Msgboy.subscribe(subs.url, false, function () {
             // Cool. Not much to do.
