@@ -5,9 +5,9 @@ backbone = require('backbone');
 var AppModel = backbone.Model.extend({
     defaults: {
     },
-    initialize: {
+    initialize: function() {
     }
 });
 
-var model =  new AppModel({cool: 'stuff'});
+var model = new AppModel({cool: 'stuff'});
 
