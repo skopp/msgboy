@@ -1,5 +1,5 @@
 $(document).bind('register', function (element, object) {
-    Msgboy.log.debug.debug("request", "register", object.request.params.username);
+    Msgboy.log.debug("request", "register", object.request.params.username);
     Msgboy.inbox.setup(object.request.params.username, object.request.params.token);
 });
 
