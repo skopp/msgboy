@@ -190,6 +190,8 @@ var Message = Backbone.Model.extend({
     }
 });
 
+exports.Message = Message;
+
 var relevanceMath = {
     counts: function (array, defaults, weight) {
         var counts = {}, sum = 0;
@@ -241,6 +243,8 @@ var relevanceMath = {
         return sum;
     }
 };
+
+exports.relevanceMath = relevanceMath;
 
 // Welcome messages
 var welcomeMessages = [{
@@ -581,3 +585,5 @@ var welcomeMessages = [{
     "updated": new Date().toISOString()
 }
 ];
+
+exports.welcomeMessages = welcomeMessages;
