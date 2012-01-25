@@ -90,7 +90,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Refactor down-vote triggered unsubscriptions</del>
 * <del>OPML export</del>
 * Extract images upon creation of messages.
-* In the options : add bookmarklet to subscribe
 * Add a 'Pin' Msgboy option
 * Notification should be set to none by default.
 * Ask Bit.ly to redirect msg.by to msgboy.com
