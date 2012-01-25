@@ -4,7 +4,7 @@ var Inbox = Backbone.Model.extend({
     defaults: {
         id: "1",
         options: {
-            relevance: 0.5
+            relevance: 0.0
         }
     },
     initialize: function () {

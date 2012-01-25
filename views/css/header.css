@@ -34,20 +34,24 @@ header h1 {
     z-index: 1000;
 }
 
-header a.options, header a.help {
+header a {
     display: block;
     float: left;
-    background-image: url(../images/gear-help.png);
-    background-position: top left;
-    background-repeat: no-repeat;
-    margin-left: 10px;
-    text-indent: -999em;
     position: relative;
+    margin-left: 10px;
     z-index: 1000;
-    top: 3px;
+}
+
+header a.options {
+    background: top left no-repeat url(../images/gear-help.png);
+    text-indent: -999em;
+    top: 5px;
 }
 
 header a.help {
+    background: top left no-repeat url(../images/gear-help.png);
+    text-indent: -999em;
+    top: 5px;
     background-position: -20px 0;
     margin-left: 5px;
 }
@@ -55,18 +59,4 @@ header a.help {
 header .nav li {
     width: 28px;
     height: 26px;
-}
-
-
-/* additional tweaks to the Options and Help icon 'active' states */
-.topbar ul .active > a {
-    height: 32px;
-    top: -3px;
-    background-position: 0 6.5px;
-    padding: 0 !important;
-}
-
-.topbar ul .active > a.help {
-    background-position-x: -20px;
-    width: 18px;
 }
