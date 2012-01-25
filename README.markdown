@@ -95,7 +95,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Ask Bit.ly to redirect msg.by to msgboy.com
 * Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
 * Use a different color for non-RSS feed messages.
- 
+* Mark expanded notifications as expanded (same color scheme, with slow fading)
 
 ## Publishers
 
