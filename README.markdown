@@ -94,7 +94,9 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add a 'Pin' Msgboy option
 * Notification should be set to none by default.
 * Ask Bit.ly to redirect msg.by to msgboy.com
-
+* Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
+* Use a different color for non-RSS feed messages.
+ 
 
 ## Publishers
 
