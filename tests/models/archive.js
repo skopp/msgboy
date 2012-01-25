@@ -1,4 +1,11 @@
+var _ = require('underscore')._,
+backbone = require('backbone');
+
+
 var Archive = require('../models/archive.js');
+
+console.log(Archive);
+
 
 describe('Archive', function(){
     var archive =  new Archive({cool: 'stuff'});

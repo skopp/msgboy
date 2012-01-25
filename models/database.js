@@ -246,3 +246,5 @@ var msgboyDatabase = {
         }
     }]
 };
+
+exports.msgboyDatabase = msgboyDatabase

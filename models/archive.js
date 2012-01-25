@@ -1,3 +1,4 @@
+
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,
@@ -26,3 +27,5 @@ var Archive = Backbone.Collection.extend({
         this.fetch({feed: _feed});
     }
 });
+
+exports.Archive = Archive;

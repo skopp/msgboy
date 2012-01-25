@@ -1,3 +1,6 @@
+var Backbone = require('backbone');
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
 var Message = Backbone.Model.extend({
     storeName: "messages",
     database: msgboyDatabase,
