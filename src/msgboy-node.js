@@ -1,20 +1,22 @@
 var Msgboy = require('./msgboy.js').Msgboy;
+var Archive = require('./models/archive.js').Archive;
+var ArchiveView = require('./models/archive.js').ArchiveView;
 
 Msgboy.bind("loaded", function () {
     // Bam. Msgboy loaded
     var archive = new Archive();
-     //    
-     // // The archiveView Object
-     // var archiveView = new ArchiveView({
-     //     el: "#archive",
-     //     collection: archive,
-     // });
-     // av = archiveView;
-     // 
-     // // The modalShareView Object.
+        
+     // The archiveView Object
+     var archiveView = new ArchiveView({
+         el: "#archive",
+         collection: archive,
+     });
+     
+     // The modalShareView Object.
      // var modalShareView = new ModalShareView({
      //     el: "#modal-share"
      // });
+     
      // 
      // // When a message was voted-up
      // archive.bind("up-ed", function (message) {
