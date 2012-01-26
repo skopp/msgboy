@@ -1,4 +1,3 @@
-
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,

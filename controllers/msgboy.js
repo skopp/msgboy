@@ -1,3 +1,6 @@
+var _ = require('underscore');
+var Backbone = require('backbone');
+
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
 }
@@ -68,14 +71,12 @@ Msgboy.environment = function () {
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
-    $(document).ready(function () {
+    window.onload = function () {
         chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
             Msgboy.infos = extension_infos;
             Msgboy.trigger("loaded");
         });
-        // TODO We should use Msgboy.com to register this. Much better as it will show the msgboy.com instead of the ugly extension id.
-        $('head').append($('<intent>', {action: 'http://webintents.org/subscribe', type: 'application/atom+xml', href: 'http://msgboy.com/webintents/subscribe/' + chrome.i18n.getMessage("@@extension_id") }));
-    });
+    }
 };
 
 // Handles XMPP Connections
@@ -227,3 +228,5 @@ Msgboy.resumeSubscriptions = function () {
         Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
     }, 1000 * 60 * 10);
 };
+
+exports.Msgboy = Msgboy;
