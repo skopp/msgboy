@@ -1,3 +1,7 @@
+var Backbone = require('backbone');
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,
