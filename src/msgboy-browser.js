@@ -3623,9 +3623,269 @@ exports.welcomeMessages = welcomeMessages;
 
 });
 
+require.define("/views/archive-view.js", function (require, module, exports, __dirname, __filename) {
+var Backbone = require('backbone');
+var Archive = require('../models/archive.js');
+var MessageView = require('./message-view.js').MessageView;
+
+var ArchiveView = Backbone.View.extend({
+    upperDound: new Date().getTime(),
+    lowerBound: 0,
+    loaded: 0,
+    toLoad: 50,
+    events: {
+    },
+    initialize: function () {
+        _.bindAll(this, 'showNew', 'completePage', 'loadNext');
+        $(document).scroll(this.completePage);
+
+        $('#container').isotope({
+            itemSelector: '.message',
+            filter: '.brick-2 .brick-3 .brick-4',
+            masonry: {
+                columnWidth: 10,
+            }
+        });
+        
+        this.loadingTimes =[];
+        this.loaded = this.toLoad;
+        this.collection.bind('add', this.showNew);
+        this.loadNext();
+    },
+    completePage: function () {
+        if ($("#container").height() < $(window).height()) {
+            // We should also pre-emptively load more pages if the document is shorter than the page.
+            this.loadNext();
+        } else if ($(window).scrollTop() > $(document).height() - $(window).height() - 300) {
+            // We're close to the bottom. Let's load an additional page!
+            this.loadNext();
+        }
+    },
+    loadNext: function () {
+        if (this.loaded === this.toLoad) {
+            this.loaded = 0; // Reset the loaded counter!
+            this.collection.next(this.toLoad, {
+                created_at: [this.upperDound, this.lowerBound]
+            });
+        }
+    },
+    showNew: function (message) {
+        this.upperDound = message.attributes.created_at;
+        this.loaded++;
+        if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
+            message.bind('up-ed', function() {
+                $('#container').isotope('reLayout');
+            });
+
+            message.bind('down-ed', function() {
+                $('#container').isotope('reLayout');
+            });
+
+            message.bind('destroy', function() {
+                $('#container').isotope('reLayout');
+            });
+            
+            message.bind('expanded', function() {
+                $('#container').isotope('reLayout');
+            })
+
+            message.bind('unsubscribed', function() {
+                var brothers = new Archive(); 
+                brothers.forFeed(message.get('feed'));
+                brothers.bind('reset', function() {
+                    _.each(brothers.models, function(brother) {
+                        brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
+                        brother.destroy(); // Deletes the brothers 
+                    }.bind(this));
+                }.bind(this));
+            }.bind(this));
+
+            var view = new MessageView({
+                model: message
+            });
+            
+            view.bind('rendered', function() {
+                this.completePage();
+                $('#container').append(view.el); // Adds the view in the document.
+                $('#container').isotope('appended', $(view.el));
+            }.bind(this));
+
+            // Check if we can group the messages
+            if (this.lastParentView && this.lastParentView.model.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
+                this.lastParentView.model.messages.add(message);
+                $(view.el).addClass('brother'); // Let's show this has a brother!
+                view.render(); // We can render it as well as nobody cares about it for now.
+            }
+            else {
+                if(this.lastParentView) {
+                    this.lastParentView.render();
+                }
+                this.lastParentView = view;
+            }
+        }
+    }
+});
+
+exports.ArchiveView = ArchiveView;
+
+});
+
+require.define("/views/message-view.js", function (require, module, exports, __dirname, __filename) {
+var Backbone = require('backbone');
+var _ = require('underscore');
+var Message = require('../models/message.js');
+
+var MessageView = Backbone.View.extend({
+    tagName: "div",
+    className: "message",
+    events: {
+        "click .up": "handleUpClick",
+        "click .down": "handleDownClick",
+        "click .share": "handleShare",
+        "click": "handleClick"
+    },
+    // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
+    template: _.template([
+        '<span class="controls">',
+            '<button class="vote down"></button>',
+            '<button class="share"></button>',
+            '<button class="vote up"></button>',
+        '</span>',
+        '<p class="darkened"><%= Msgboy.helper.cleaner.html(model.attributes.title) %></p>',
+        '<div class="full-content" style="display:none;"><%= Msgboy.helper.cleaner.html(model.text()) %></div>',
+        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= Msgboy.helper.cleaner.html(model.attributes.source.title) %></h1>'
+    ].join('')),
+    initialize: function () {
+        this.model.bind('change', this.layout.bind(this)); 
+        this.model.bind('destroy', this.remove.bind(this)); 
+        this.model.bind('expand', function() {
+            $(this.el).removeClass('brother'); // Let's show this bro!
+        }.bind(this)); 
+        this.model.bind('unsubscribe', function () {
+            var request = {
+                signature: "unsubscribe",
+                params: {
+                    title: "", // TODO : Add support for title 
+                    url: this.model.attributes.feed,
+                    force: true
+                },
+                force: true
+            };
+            chrome.extension.sendRequest(request, function (response) {
+                // Unsubscribed... We need to delete all the brothas and sistas!
+                this.model.trigger('unsubscribed');
+            }.bind(this));
+        }.bind(this));
+    },
+    render: function () {
+        this.layout();
+        this.trigger('rendered');
+    },
+    layout: function() {
+        var el = $(this.el),
+            isGroup = this.model.messages.length > 1;
+            
+        // set some attributes on the container div
+        $(this.el).attr({
+            'data-msgboy-relevance': this.model.get('relevance'),
+            'id': this.model.id,
+            'data-msgboy-state': this.model.get('state')
+        });
+        
+        // remove all the brick classes, add new one
+        el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
+        el.addClass(this.getBrickClass());
+
+        el.html(this.template({model: this.model}));
+        el.addClass("text");
+        
+        // render our compiled template
+        if (isGroup) {
+            el.prepend($('<div class="ribbon">' + (this.model.messages.length) + ' stories</div>'));
+        }
+        
+        $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
+    },
+    // Browser event handlers
+    handleClick: function (evt) {
+        var el = $(this.el),
+        isGroup = this.model.messages.length > 1;
+        if (isGroup) {
+            this.handleExpand();
+        }
+        else {
+            if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
+                if (evt.shiftKey) {
+                    chrome.extension.sendRequest({
+                        signature: "notify",
+                        params: this.model.toJSON()
+                    });
+                } else {
+                    chrome.extension.sendRequest({
+                        signature: "tab",
+                        params: {url: this.model.mainLink(), selected: false}
+                    });
+                    this.trigger("clicked");
+                }
+            }
+        }
+    },
+    handleUpClick: function () {
+        this.model.voteUp();
+    },
+    handleDownClick: function () {
+        this.model.voteDown();
+    },
+    handleShare: function(e) {
+        this.model.trigger('share', this.model);
+    },
+    handleExpand: function (e) {
+        this.model.messages.each(function(message, i) {
+            message.trigger('expand');
+        });
+        this.model.trigger('expanded', this);
+        this.model.messages.reset(); // And now remove the messages inside :)
+        this.layout();
+        return false;
+    },
+    handleImageLoad: function (e) {
+        var img = e.target,
+            img_size = Msgboy.helper.element.original_size($(img));
+
+        // eliminate the tracking pixels and ensure min of at least 50x50
+        if (img.width > 50 && img.height > 50) {
+            this.$("p").addClass("darkened");
+            $(this.el).append('<img class="main" src="' + $(img).attr("src") + '"/>');
+            // Resize the image.
+            if (img_size.width / img_size.height > $(self.el).width() / $(self.el).height()) {
+                this.$(".message > img.main").css("min-height", "150%");
+            } else {
+                this.$(".message > img.main").css("min-width", "100%");
+            }
+        }
+    },
+    getBrickClass: function () {
+        var res,
+            state = this.model.get('state');
+            
+        if (state === 'down-ed') {
+            res = 1;
+        } else if (state === 'up-ed') {
+            res = 4;
+        } else {
+            res = Math.ceil(this.model.attributes.relevance * 4); 
+        }
+        return 'brick-' + res;
+    }
+});
+
+});
+
 require.define("/msgboy-node.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
+var ArchiveView = require('./views/archive-view.js').ArchiveView;
+
 
 Msgboy.bind("loaded", function () {
     // Bam. Msgboy loaded

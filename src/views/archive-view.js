@@ -1,3 +1,7 @@
+var Backbone = require('backbone');
+var Archive = require('../models/archive.js');
+var MessageView = require('./message-view.js').MessageView;
+
 var ArchiveView = Backbone.View.extend({
     upperDound: new Date().getTime(),
     lowerBound: 0,
@@ -96,3 +100,4 @@ var ArchiveView = Backbone.View.extend({
     }
 });
 
+exports.ArchiveView = ArchiveView;

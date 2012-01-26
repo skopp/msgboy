@@ -1,6 +1,7 @@
 var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
-var ArchiveView = require('./models/archive.js').ArchiveView;
+var ArchiveView = require('./views/archive-view.js').ArchiveView;
+
 
 Msgboy.bind("loaded", function () {
     // Bam. Msgboy loaded

@@ -1,3 +1,7 @@
+var Backbone = require('backbone');
+var _ = require('underscore');
+var Message = require('../models/message.js');
+
 var MessageView = Backbone.View.extend({
     tagName: "div",
     className: "message",
