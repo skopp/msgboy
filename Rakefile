@@ -100,6 +100,20 @@ def manifest(destination = "")
   end
 end
 
+build_tasks = [:background, :dashboard, :help, :notification, :options, :readme, :signup, :subscribe, :subscriptions]
+
+
+task :build => build_tasks.map() { |t| :"build#{t}"  }
+namespace :build do
+  build_tasks.each do |k|
+    desc "Building #{k}.js"
+    task k do
+      `browserify ./src/#{k}.js -o ./views/js/#{k}.js`
+    end
+  end
+end
+
+
 task :lint => [:'lint:validate']
 namespace :lint do 
   desc "Validates with jshint"

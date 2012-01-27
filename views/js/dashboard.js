@@ -16133,7 +16133,7 @@ require.define("/bootstrap-modal.js", function (require, module, exports, __dirn
 }( window.jQuery || window.ender );
 });
 
-require.define("/dashboard-node.js", function (require, module, exports, __dirname, __filename) {
+require.define("/dashboard.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
 var $ = jQuery = require('jquery-browserify');
@@ -16185,4 +16185,4 @@ Msgboy.bind("loaded", function () {
 Msgboy.run();
 
 });
-require("/dashboard-node.js");
+require("/dashboard.js");
