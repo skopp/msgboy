@@ -1,3 +1,9 @@
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('../backbone-indexeddb.js');
+require('../bootstrap-modal.js');
+
+
 var ModalShareView = Backbone.View.extend({
     events: {
         'show': 'updateCountdown',
@@ -35,3 +41,5 @@ var ModalShareView = Backbone.View.extend({
         $('#modal-share').modal('hide');
     }
 });
+
+exports.ModalShareView = ModalShareView;
