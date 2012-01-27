@@ -51,6 +51,8 @@ parseUri.options = {
     }
 };
 
+exports.parseUri = parseUri;
+
 // Hopefully this should be part of the regular Msgboy
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};

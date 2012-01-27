@@ -1,4 +1,5 @@
 var $ = jQuery = require('jquery-browserify');
+var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -172,16 +173,16 @@ var Message = Backbone.Model.extend({
     },
     // This returns the longest text!
     text: function () {
-        if (this.attributes.content) {
-            if (this.attributes.summary && this.attributes.summary.length > this.attributes.content.length) {
-                return this.attributes.summary;
+        if (this.get('content')) {
+            if (this.get('summary') && this.get('summary').length > this.get('content').length) {
+                return this.get('summary');
             }
             else {
-                return this.attributes.content;
+                return this.get('content');
             }
         }
-        else if (this.attributes.summary) {
-            return this.attributes.summary;
+        else if (this.get('summary')) {
+            return this.get('summary');
         }
         else {
             return "...";
