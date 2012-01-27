@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var $ = jQuery = require('jquery-browserify');
 var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('./backbone-indexeddb.js');
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};

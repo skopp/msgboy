@@ -1,5 +1,6 @@
 var $ = jQuery = require('jquery-browserify');
 var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 
 var Message = Backbone.Model.extend({
