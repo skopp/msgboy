@@ -102,7 +102,6 @@ end
 
 build_tasks = [:background, :dashboard, :help, :notification, :options, :readme, :signup, :subscribe, :subscriptions]
 
-
 task :build => build_tasks.map() { |t| :"build#{t}"  }
 namespace :build do
   build_tasks.each do |k|
