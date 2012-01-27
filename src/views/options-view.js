@@ -1,3 +1,9 @@
+var _ = require('underscore');
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('../backbone-indexeddb.js');
+var Inbox = require('../models/inbox.js').Inbox;
+
 var OptionsView = Backbone.View.extend({
     events: {
         "change #relevance": "change",
@@ -38,3 +44,5 @@ var OptionsView = Backbone.View.extend({
         });
     }
 });
+
+exports.OptionsView = OptionsView;
