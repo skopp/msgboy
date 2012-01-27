@@ -9,78 +9,10 @@
         <link rel="stylesheet" href="../css/notification.css" />
         
         <!-- Error Reporting Code -->
-        <script type="text/javascript" src="../../controllers/error_notifier.js"></script>
-        
-        <!-- Lib includes -->
-        <script src="../../lib/jquery/jquery.js" type="text/javascript"></script> 
-        <script src="../../lib/underscore/underscore-min.js" type="text/javascript"></script> 
-        <script src="../../lib/backbone/backbone-min.js" type="text/javascript"></script> 
-        <script src="../../lib/backbone-indexeddb/backbone-indexeddb.js" type="text/javascript"></script> 
-        <script src="../../lib/jquery/jquery.isotope.min.js" type="text/javascript"></script> 
-        <script src="../../lib/date.format.js" type="text/javascript"></script> 
-    	<script src="../../lib/brain-0.3.5.min.js" type="text/javascript" ></script>
-    	<script src="../../lib/stemmer.js" type="text/javascript" ></script>
-
-        <!-- Controller includes -->
-        <script src="../../controllers/msgboy.js" type="text/javascript"></script> 
-        <script src="../../controllers/events.js" type="text/javascript"></script> 
-        <script src="../../controllers/utils.js" type="text/javascript"></script> 
-        <script src="../../controllers/notification.js" type="text/javascript"></script> 
-        <script src="../../controllers/bayesian_filter.js" type="text/javascript"></script> 
-    
-    
-        <!-- Model includes -->
-        <script src="../../models/database.js" type="text/javascript"></script> 
-        <script src="../../models/message.js" type="text/javascript"></script> 
-        <script src="../../models/archive.js" type="text/javascript"></script> 
-        <script src="../../models/inbox.js" type="text/javascript"></script> 
-        <script src="../../models/subscription.js" type="text/javascript"></script> 
-    
-        <!-- Views includes -->
-        <script src="../../views/js/message-view.js" type="text/javascript"></script>
+        <!-- <script type="text/javascript" src="../../controllers/error_notifier.js"></script> -->
+        <script src="../js/notification.js" type="text/javascript"></script> 
     
     </head>
     <body>
-        <script>
-        Msgboy.bind("loaded", function () {
-            var notification =  new Msgboy.Notification();
-
-            $("body").mouseover(function () {
-                notification.mouseOver = true;
-            });
-
-            $("body").mouseout(function () {
-                notification.mouseOver = false;
-            });
-
-            $(document).ready(function () {
-                // Tell everyone we're ready.
-                chrome.extension.sendRequest({
-                    signature: "notificationReady",
-                    params: {}
-                }, function () {
-                    // Nothing to do.
-                });
-
-                chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-                    if (request.signature == "notify" && request.params) {
-                        var message = new Message(request.params);
-                        if (_.indexOf(_.pluck(_.pluck(_.pluck(notification.messages, "attributes"), "source"), "url"), message.attributes.source.url) >= 0) {
-                            // Skipped this message because we have already a pending message from this source.
-                        } else {
-                            notification.messages.push(message);
-                            if (!notification.started) {
-                                notification.started = true // Initiate the loop.
-                                notification.showNextMessage();
-                            }
-                        }
-                    }
-                });
-            });
-            notification.rotate();
-        });
-        
-        Msgboy.run();
-        </script>
     </body>
 </html>

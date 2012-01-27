@@ -3,6 +3,7 @@ var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
 
 var Message = Backbone.Model.extend({
     storeName: "messages",
