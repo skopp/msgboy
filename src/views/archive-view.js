@@ -1,4 +1,7 @@
-var Backbone = require('backbone');
+var _ = require('underscore');
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
+var Isotope = require('../jquery.isotope.min.js');
 var Archive = require('../models/archive.js');
 var MessageView = require('./message-view.js').MessageView;
 

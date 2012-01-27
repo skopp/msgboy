@@ -1,5 +1,6 @@
 var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
+var $ = jQuery = require('jquery-browserify');
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 
 
@@ -9,7 +10,7 @@ Msgboy.bind("loaded", function () {
         
      // The archiveView Object
      var archiveView = new ArchiveView({
-         el: "#archive",
+         el: $("#archive"),
          collection: archive,
      });
      

@@ -1,5 +1,6 @@
-var Backbone = require('backbone');
 var _ = require('underscore');
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
 var Message = require('../models/message.js');
 
 var MessageView = Backbone.View.extend({

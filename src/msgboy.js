@@ -1,5 +1,6 @@
 var _ = require('underscore');
-var Backbone = require('backbone');
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
