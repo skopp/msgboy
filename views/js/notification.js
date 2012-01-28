@@ -13305,6 +13305,7 @@ var NotificationView = Backbone.View.extend({
         }
     },
     showNext: function() {
+        clearTimeout(this.nextTimeout);
         var message = this.buffer.shift(); // Race condition here!
         if(message) {
             var view = new MessageView({
@@ -13314,6 +13315,7 @@ var NotificationView = Backbone.View.extend({
             message.bind("up-ed", function () {
                 // The message was uped. We need to go to that page
                 // And show the next
+                this.showNext();
                 view.remove();
                 chrome.extension.sendRequest({
                     signature: "tab",
@@ -13322,28 +13324,34 @@ var NotificationView = Backbone.View.extend({
             }.bind(this));
 
             message.bind("down-ed", function () {
+                this.showNext();
+                view.remove();
+            }.bind(this));
+            
+            message.bind("clicked", function() {
+                this.showNext();
                 view.remove();
             }.bind(this));
 
             view.bind('rendered', function() {
-                console.log(".")
                 $("body").append(view.el); // Adds the view in the document.
             }.bind(this));
             
             view.render(); 
             
             this.nextTimeout = setTimeout(function () {
-                view.remove();
                 this.showNext();
+                view.remove();
             }.bind(this), this.period);
         }
         else {
-            console.log("DONE");
+            chrome.extension.sendRequest({
+                signature: "close",
+                params: null
+            }, function (response) {
+                window.close();
+            });
         }
-        // this.nextTimeout = setTimeout(function () {
-        //     this.showNext();
-        // }.bind(this), this.period);
-        
     }
 });
 
@@ -13440,6 +13448,7 @@ var MessageView = Backbone.View.extend({
             this.handleExpand();
         }
         else {
+            this.model.trigger('clicked');
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     chrome.extension.sendRequest({

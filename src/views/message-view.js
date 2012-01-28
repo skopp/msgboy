@@ -86,6 +86,7 @@ var MessageView = Backbone.View.extend({
             this.handleExpand();
         }
         else {
+            this.model.trigger('clicked');
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     chrome.extension.sendRequest({
