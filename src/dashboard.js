@@ -1,6 +1,6 @@
 var Msgboy = require('./msgboy.js').Msgboy;
-var Archive = require('./models/archive.js').Archive;
 var $ = jQuery = require('jquery-browserify');
+var Archive = require('./models/archive.js').Archive;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 

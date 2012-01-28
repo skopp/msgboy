@@ -12420,6 +12420,7 @@ var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
 
 var Message = Backbone.Model.extend({
     storeName: "messages",
@@ -14801,6 +14802,7 @@ var MessageView = Backbone.View.extend({
     ].join('')),
     initialize: function () {
         this.model.bind('change', this.layout.bind(this)); 
+        this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
         this.model.bind('expand', function() {
             $(this.el).removeClass('brother'); // Let's show this bro!
@@ -14826,8 +14828,8 @@ var MessageView = Backbone.View.extend({
         this.trigger('rendered');
     },
     layout: function() {
-        var el = $(this.el),
-            isGroup = this.model.messages.length > 1;
+        var el = $(this.el), 
+        isGroup = this.model.messages && this.model.messages.length > 1;
             
         // set some attributes on the container div
         $(this.el).attr({
@@ -14854,11 +14856,12 @@ var MessageView = Backbone.View.extend({
     // Browser event handlers
     handleClick: function (evt) {
         var el = $(this.el),
-        isGroup = this.model.messages.length > 1;
+                isGroup = this.model.messages.length > 1;
         if (isGroup) {
             this.handleExpand();
         }
         else {
+            this.model.trigger('clicked');
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     chrome.extension.sendRequest({
@@ -16135,8 +16138,8 @@ require.define("/bootstrap-modal.js", function (require, module, exports, __dirn
 
 require.define("/dashboard.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;
-var Archive = require('./models/archive.js').Archive;
 var $ = jQuery = require('jquery-browserify');
+var Archive = require('./models/archive.js').Archive;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
