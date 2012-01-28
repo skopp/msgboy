@@ -452,7 +452,7 @@ Msgboy.onConnect = function (status) {
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        Msgboy.connection.caps.sendPresenceWithCaps(); // Send presence!
+        Msgboy.connection.send($pres({})); // Send presence!
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }

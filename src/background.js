@@ -1,12 +1,14 @@
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
-var Msgboy = require('./msgboy.js').Msgboy;
-var Inbox = require('./models/inbox.js').Inbox;
+var $ = jQuery      = require('jquery-browserify');
+var Backbone        = require('backbone-browserify');
+var Strophe         = require('./strophejs/core.js').Strophe
+var Msgboy          = require('./msgboy.js').Msgboy;
+var Plugins         = require('./plugins.js').Plugins;
+var Inbox           = require('./models/inbox.js').Inbox;
 
 
 Msgboy.bind("loaded", function () {
     Msgboy.inbox = new Inbox();
-
+    
     Msgboy.connection = new Strophe.Connection({
         protocol: new Strophe.Websocket('ws://msgboy.com:5280')
     });
@@ -94,12 +96,6 @@ Msgboy.bind("loaded", function () {
             sendResponse: _sendResponse
         });
     });
-
-    // XMPP discovery.
-    Msgboy.connection.caps.setNode("http://download.msgboy.com/msgboy.crx")
-    Msgboy.connection.caps.addDiscoFeature("http://jabber.org/protocol/caps");
-    Msgboy.connection.caps.addDiscoCategory(Msgboy.infos.name + " " + Msgboy.infos.version, "client", "web", "en");
-    
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();

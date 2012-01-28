@@ -78,3 +78,5 @@ var Base64 = (function () {
 
     return obj;
 })();
+
+exports.Base64 = Base64

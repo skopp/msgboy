@@ -274,3 +274,5 @@ var MD5 = (function () {
 
     return obj;
 })();
+
+exports.MD5 = MD5;

@@ -29,6 +29,8 @@ var Plugins = {
     }
 };
 
+exports.Plugins = Plugins;
+
 // This is the skeleton for the Plugins
 var Plugin = function () {
     this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
