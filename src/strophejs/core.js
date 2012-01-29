@@ -1,3 +1,5 @@
+var Base64 = require('./base64.js').Base64;
+
 /*
     This program is distributed under the terms of the MIT license.
     Please see the LICENSE file for details.
@@ -1131,27 +1133,27 @@ Strophe.Handler.prototype = {
     run: function (elem)
     {
         var result = null;
-        try {
+        // try {
             result = this.handler(elem);
-        } catch (e) {
-            if (e.sourceURL) {
-                Strophe.fatal("error: " + this.handler +
-                              " " + e.sourceURL + ":" +
-                              e.line + " - " + e.name + ": " + e.message);
-            } else if (e.fileName) {
-                if (typeof(console) != "undefined") {
-                    console.trace();
-                    console.error(this.handler, " - error - ", e, e.message);
-                }
-                Strophe.fatal("error: " + this.handler + " " +
-                              e.fileName + ":" + e.lineNumber + " - " +
-                              e.name + ": " + e.message);
-            } else {
-                Strophe.fatal("error: " + this.handler);
-            }
-
-            throw e;
-        }
+        // } catch (e) {
+        //     if (e.sourceURL) {
+        //         Strophe.fatal("error: " + this.handler +
+        //                       " " + e.sourceURL + ":" +
+        //                       e.line + " - " + e.name + ": " + e.message);
+        //     } else if (e.fileName) {
+        //         if (typeof(console) != "undefined") {
+        //             console.trace();
+        //             console.error(this.handler, " - error - ", e, e.message);
+        //         }
+        //         Strophe.fatal("error: " + this.handler + " " +
+        //                       e.fileName + ":" + e.lineNumber + " - " +
+        //                       e.name + ": " + e.message);
+        //     } else {
+        //         Strophe.fatal("error: " + this.handler);
+        //     }
+        // 
+        //     throw e;
+        // }
 
         return result;
     },
@@ -1808,12 +1810,12 @@ Strophe.Connection.prototype = {
 
         // notify the user's callback
         if (this.connect_callback) {
-            try {
+            // try {
                 this.connect_callback(status, condition);
-            } catch (e) {
-                Strophe.error("User connection callback caused an " +
-                              "exception: " + e);
-            }
+            // } catch (e) {
+            //     Strophe.error("User connection callback caused an " +
+            //                   "exception: " + e);
+            // }
         }
     },
 

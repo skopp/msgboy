@@ -11511,6 +11511,8 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 });
 
 require.define("/strophejs/core.js", function (require, module, exports, __dirname, __filename) {
+var Base64 = require('./base64.js').Base64;
+
 /*
     This program is distributed under the terms of the MIT license.
     Please see the LICENSE file for details.
@@ -12644,27 +12646,27 @@ Strophe.Handler.prototype = {
     run: function (elem)
     {
         var result = null;
-        try {
+        // try {
             result = this.handler(elem);
-        } catch (e) {
-            if (e.sourceURL) {
-                Strophe.fatal("error: " + this.handler +
-                              " " + e.sourceURL + ":" +
-                              e.line + " - " + e.name + ": " + e.message);
-            } else if (e.fileName) {
-                if (typeof(console) != "undefined") {
-                    console.trace();
-                    console.error(this.handler, " - error - ", e, e.message);
-                }
-                Strophe.fatal("error: " + this.handler + " " +
-                              e.fileName + ":" + e.lineNumber + " - " +
-                              e.name + ": " + e.message);
-            } else {
-                Strophe.fatal("error: " + this.handler);
-            }
-
-            throw e;
-        }
+        // } catch (e) {
+        //     if (e.sourceURL) {
+        //         Strophe.fatal("error: " + this.handler +
+        //                       " " + e.sourceURL + ":" +
+        //                       e.line + " - " + e.name + ": " + e.message);
+        //     } else if (e.fileName) {
+        //         if (typeof(console) != "undefined") {
+        //             console.trace();
+        //             console.error(this.handler, " - error - ", e, e.message);
+        //         }
+        //         Strophe.fatal("error: " + this.handler + " " +
+        //                       e.fileName + ":" + e.lineNumber + " - " +
+        //                       e.name + ": " + e.message);
+        //     } else {
+        //         Strophe.fatal("error: " + this.handler);
+        //     }
+        // 
+        //     throw e;
+        // }
 
         return result;
     },
@@ -13321,12 +13323,12 @@ Strophe.Connection.prototype = {
 
         // notify the user's callback
         if (this.connect_callback) {
-            try {
+            // try {
                 this.connect_callback(status, condition);
-            } catch (e) {
-                Strophe.error("User connection callback caused an " +
-                              "exception: " + e);
-            }
+            // } catch (e) {
+            //     Strophe.error("User connection callback caused an " +
+            //                   "exception: " + e);
+            // }
         }
     },
 
@@ -14133,11 +14135,97 @@ exports.$pres = $pres
 
 });
 
+require.define("/strophejs/base64.js", function (require, module, exports, __dirname, __filename) {
+// This code was written by Tyler Akins and has been placed in the
+// public domain.  It would be nice if you left this header intact.
+// Base64 code from Tyler Akins -- http://rumkin.com
+
+var Base64 = (function () {
+    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    var obj = {
+        /**
+         * Encodes a string in base64
+         * @param {String} input The string to encode in base64.
+         */
+        encode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            do {
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+
+                output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+                    keyStr.charAt(enc3) + keyStr.charAt(enc4);
+            } while (i < input.length);
+
+            return output;
+        },
+
+        /**
+         * Decodes a base64 string.
+         * @param {String} input The string to decode.
+         */
+        decode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+            do {
+                enc1 = keyStr.indexOf(input.charAt(i++));
+                enc2 = keyStr.indexOf(input.charAt(i++));
+                enc3 = keyStr.indexOf(input.charAt(i++));
+                enc4 = keyStr.indexOf(input.charAt(i++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                output = output + String.fromCharCode(chr1);
+
+                if (enc3 != 64) {
+                    output = output + String.fromCharCode(chr2);
+                }
+                if (enc4 != 64) {
+                    output = output + String.fromCharCode(chr3);
+                }
+            } while (i < input.length);
+
+            return output;
+        }
+    };
+
+    return obj;
+})();
+
+exports.Base64 = Base64
+});
+
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var $ = jQuery = require('jquery-browserify');
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('./backbone-indexeddb.js');
+var Subscriptions = require('./models/subscription.js').Subscriptions;
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
@@ -14245,7 +14333,7 @@ Msgboy.onConnect = function (status) {
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        Msgboy.connection.caps.sendPresenceWithCaps(); // Send presence!
+        // Msgboy.connection.send($pres); // Send presence!
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }
@@ -14745,167 +14833,107 @@ var Backbone = require('backbone-browserify');
 })();
 });
 
-require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
-var Plugins = {
-    all: [],
-
-    register: function (plugin) {
-        this.all.push(plugin);
-    },
-    importSubscriptions: function (callback, errback) {
-        var subscriptions_count = 0;
-
-        var done_with_plugin = _.after(Plugins.all.length, function () {
-            // Called when we have processed all plugins.
-            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
-        });
-
-        _.each(Plugins.all, function (plugin) {
-            plugin.listSubscriptions(function (subscriptions) {
-                _.each(subscriptions, function (subscription) {
-                    callback({
-                        url: subscription.url,
-                        title: subscription.title
-                    });
-                });
-            }, function (count) {
-                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
-                subscriptions_count += count;
-                done_with_plugin();
-            });
-        });
-    }
-};
-
-exports.Plugins = Plugins;
-
-// This is the skeleton for the Plugins
-var Plugin = function () {
-    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
-        // This method needs to returns true if the plugin needs to be applied on this page.
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
-        // Feeds have the following form {url: _, title: _}.
-        callback([]);
-        done(0);
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
-        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
-    };
-
-    this.subscribeInBackground = function (callback) {
-        // The callback needs to be called with a feed object {url: _, title: _}
-        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
-    };
-};
-
-});
-
-require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery-browserify');
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Msgboy = require('../msgboy.js').Msgboy;
 
-var Inbox = Backbone.Model.extend({
-    storeName: "inbox",
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
     database: msgboyDatabase,
     defaults: {
-        id: "1",
-        options: {
-            relevance: 0.0
-        }
+        subscribed_at: 0,
+        unsubscribed_at: 0,
+        state: "unsubscribed"
     },
-    initialize: function () {
+    initialize: function (attributes) {
     },
-
-    // Create credentials and saves them.
-    // We may want to not run that again when we already have credentails.
-    createCredentials: function () {
-        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
-    },
-
-    setup: function (username, token) {
-        this.save({
-            epoch: new Date().getTime(),
-            jid: username,
-            password: token
-        }, {
-            success: function () {
-                Msgboy.log.debug("Inbox created for " + username);
-                this.trigger("ready", this);
-                this.trigger("new", this);
-            }.bind(this),
-            error: function () {
-                Msgboy.log.debug("Failed to create inbox for " + username);
-            }.bind(this)
-        });
-    },
-
-    // Fetches and prepares the inbox if needed.
-    fetchAndPrepare: function () {
+    fetchOrCreate: function (callback) {
         this.fetch({
             success: function () {
-                if (this.attributes.jid && this.attributes.jid !== "" && this.attributes.password && this.attributes.password !== "") {
-                    Msgboy.log.debug("Loaded inbox for " + this.attributes.jid);
-                    this.trigger("ready", this);
-                } else {
-                    Msgboy.log.debug("Refreshing new inbox ");
-                    this.createCredentials();
-                }
+                // The subscription exists!
+                callback();
             }.bind(this),
             error: function () {
-                // Looks like there is no such inbox.
-                Msgboy.log.debug("Creating new inbox");
-                this.createCredentials();
-            }.bind(this)
-        });
-    },
-
-    // Adds a message in the inbox
-    addMessage: function (msg, options) {
-        // Adds the message if the message isn't yet present
-        var message = new Message({
-            'id': msg.id
-        });
-
-        message.fetch({
-            error: function () {
-                // The message was not found, so we just have to create one!
-                var message = new Message(msg);
-                message.save({}, {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save(this.attributes, {
                     success: function () {
-                        message.calculateRelevance(function (_relevance) {
-                            message.save({
-                                relevance: _relevance
-                            }, {
-                                success: function () {
-                                    this.trigger("messages:added", message);
-                                    options.success(message);
-                                }.bind(this)
-                            });
-                        }.bind(this));
-                    }.bind(this),
-                    error: function (object, error) {
-                        options.error(object, error);
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
                     }
                 });
-            }.bind(this),
-            success: function () {
-                options.success(null);
             }.bind(this)
         });
     },
-
+    needsRefresh: function () {
+        if (this.attributes.subscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribed_at: new Date().getTime()}, {
+                success: function () {
+                    this.trigger("subscribed");
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribed_at: new Date().getTime()}, {
+                success: function () {
+                    this.trigger("unsubscribed");
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
 });
 
-exports.Inbox = Inbox;
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    },
+    clear: function () {
+        this.fetch({
+            clear: true
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
 });
 
 require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
@@ -15159,6 +15187,169 @@ var msgboyDatabase = {
 };
 
 exports.msgboyDatabase = msgboyDatabase
+});
+
+require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Plugins = {
+    all: [],
+
+    register: function (plugin) {
+        this.all.push(plugin);
+    },
+    importSubscriptions: function (callback, errback) {
+        var subscriptions_count = 0;
+
+        var done_with_plugin = _.after(Plugins.all.length, function () {
+            // Called when we have processed all plugins.
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
+        });
+
+        _.each(Plugins.all, function (plugin) {
+            plugin.listSubscriptions(function (subscriptions) {
+                _.each(subscriptions, function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
+                    });
+                });
+            }, function (count) {
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                subscriptions_count += count;
+                done_with_plugin();
+            });
+        });
+    }
+};
+
+exports.Plugins = Plugins;
+
+// This is the skeleton for the Plugins
+var Plugin = function () {
+    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
+        // Feeds have the following form {url: _, title: _}.
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
+    };
+
+    this.subscribeInBackground = function (callback) {
+        // The callback needs to be called with a feed object {url: _, title: _}
+        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
+    };
+};
+
+});
+
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('../backbone-indexeddb.js');
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Msgboy = require('../msgboy.js').Msgboy;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 0.0
+        }
+    },
+    initialize: function () {
+    },
+
+    // Create credentials and saves them.
+    // We may want to not run that again when we already have credentails.
+    createCredentials: function () {
+        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                Msgboy.log.debug("Inbox created for " + username);
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                Msgboy.log.debug("Failed to create inbox for " + username);
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (this.attributes.jid && this.attributes.jid !== "" && this.attributes.password && this.attributes.password !== "") {
+                    Msgboy.log.debug("Loaded inbox for " + this.attributes.jid);
+                    this.trigger("ready", this);
+                } else {
+                    Msgboy.log.debug("Refreshing new inbox ");
+                    this.createCredentials();
+                }
+            }.bind(this),
+            error: function () {
+                // Looks like there is no such inbox.
+                Msgboy.log.debug("Creating new inbox");
+                this.createCredentials();
+            }.bind(this)
+        });
+    },
+
+    // Adds a message in the inbox
+    addMessage: function (msg, options) {
+        // Adds the message if the message isn't yet present
+        var message = new Message({
+            'id': msg.id
+        });
+
+        message.fetch({
+            error: function () {
+                // The message was not found, so we just have to create one!
+                var message = new Message(msg);
+                message.save({}, {
+                    success: function () {
+                        message.calculateRelevance(function (_relevance) {
+                            message.save({
+                                relevance: _relevance
+                            }, {
+                                success: function () {
+                                    this.trigger("messages:added", message);
+                                    options.success(message);
+                                }.bind(this)
+                            });
+                        }.bind(this));
+                    }.bind(this),
+                    error: function (object, error) {
+                        options.error(object, error);
+                    }
+                });
+            }.bind(this),
+            success: function () {
+                options.success(null);
+            }.bind(this)
+        });
+    },
+
+});
+
+exports.Inbox = Inbox;
 });
 
 require.define("/background.js", function (require, module, exports, __dirname, __filename) {

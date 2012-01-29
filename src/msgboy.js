@@ -2,6 +2,7 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery-browserify');
 var Backbone = require('backbone-browserify');
 var BackboneIndexedDB = require('./backbone-indexeddb.js');
+var Subscriptions = require('./models/subscription.js').Subscriptions;
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
@@ -109,7 +110,7 @@ Msgboy.onConnect = function (status) {
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        Msgboy.connection.caps.sendPresenceWithCaps(); // Send presence!
+        // Msgboy.connection.send($pres); // Send presence!
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }

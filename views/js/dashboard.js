@@ -431,7 +431,7 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy is connecting.';
     } else if (status === Strophe.Status.CONNFAIL) {
         msg = 'Msgboy failed to connect.';
-        Msgboy.reconnectDelay += 1;
+        Msgboy.reconnectDelay = 1;
         if (Msgboy.autoReconnect) {
             Msgboy.autoReconnect();
         }
@@ -448,11 +448,11 @@ Msgboy.onConnect = function (status) {
         if (Msgboy.autoReconnect) {
             Msgboy.autoReconnect();
         }
-        msg = 'Msgboy is disconnected. Reconnect in ' + Msgboy.helper.maths.number.fibonacci(Msgboy.reconnectDelay) + ' seconds.';
+        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        Msgboy.connection.send($pres({})); // Send presence!
+        // Msgboy.connection.send($pres); // Send presence!
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }
@@ -466,7 +466,7 @@ Msgboy.autoReconnect = function () {
         Msgboy.reconnectionTimeout = setTimeout(function () {
             Msgboy.reconnectionTimeout = null;
             Msgboy.connect();
-        }, Msgboy.helper.maths.number.fibonacci(Msgboy.reconnectDelay) * 1000);
+        }, Math.pow(Msgboy.reconnectDelay, 2) * 1000);
     }
 };
 

@@ -1,3 +1,8 @@
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
+var BackboneIndexedDB = require('../backbone-indexeddb.js');
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
 var Subscription = Backbone.Model.extend({
     storeName: "subscriptions",
     database: msgboyDatabase,
@@ -89,3 +94,6 @@ var Subscriptions = Backbone.Collection.extend({
 var Blacklist = [
     /.*wikipedia\.org\/.*/
 ];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
