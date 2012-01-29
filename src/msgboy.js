@@ -51,7 +51,7 @@ Msgboy.log =  {
 }
 
 // Attributes
-Msgboy.log.debugLevel = Msgboy.log.levels.DEBUG; // We may want to adjust that in production!
+Msgboy.log.debugLevel = Msgboy.log.levels.RAW; // We may want to adjust that in production!
 Msgboy.autoReconnect = true;
 Msgboy.currentNotification = null;
 Msgboy.messageStack = [];

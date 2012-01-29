@@ -16,14 +16,12 @@ Msgboy.bind("loaded", function () {
     Msgboy.connection.max_stanzas_per_second = 1; // We limit to 1 outgoing stanzas per second.
 
     Msgboy.connection.rawInput = function (data) {
-        if (Msgboy.environment() == "development") {
-            Msgboy.log.raw('RECV', data);
-        }
+        console.log(">>", data);
+        // Msgboy.log.raw('RECV', data);
     };
     Msgboy.connection.rawOutput = function (data) {
-        if (Msgboy.environment() == "development") {
-            Msgboy.log.raw('SENT', data);
-        }
+        console.log("<<", data);
+        // Msgboy.log.raw('SENT', data);
     };
 
     Strophe.log = function (level, msg) {
