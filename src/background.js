@@ -40,11 +40,13 @@ Msgboy.bind("loaded", function () {
 
     // when the inbox is ready
     Msgboy.inbox.bind("ready", function () {
+        Msgboy.log.debug("Inbox ready");
         Msgboy.connect(Msgboy.inbox);
     });
 
     // When the inbox is new.
     Msgboy.inbox.bind("new", function () {
+        Msgboy.log.debug("New Inbox");
         // Add a couple boxes for the example!
         for(var i in welcomeMessages) {
             var msg = new Message(welcomeMessages[i]);
@@ -67,6 +69,11 @@ Msgboy.bind("loaded", function () {
             });
         });
     });
+    
+    Msgboy.inbox.bind("error", function (error) {
+        console.log(error);
+    });
+    
 
     // When a new notification was received from XMPP line.
     $(document).bind('notification_received', function (ev, notification) {

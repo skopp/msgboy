@@ -1,6 +1,6 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
+var $ = jQuery = require('jquery-browserify');
+var Backbone = require('backbone-browserify');
 var BackboneAdapter = require('../backbone-adapter.js');
 var Isotope = require('../jquery.isotope.min.js');
 var Archive = require('../models/archive.js');

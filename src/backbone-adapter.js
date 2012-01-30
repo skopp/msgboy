@@ -1,5 +1,5 @@
 var _ = require('underscore');
-var Backbone = require('backbone');
+var Backbone = require('backbone-browserify');
 var Redis = require("redis");
 
 var flatten,
