@@ -2,7 +2,6 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 var BackboneAdapter = require('../backbone-adapter.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Msgboy = require('../msgboy.js').Msgboy;
 
 var Inbox = Backbone.Model.extend({
     storeName: "inbox",
@@ -16,11 +15,11 @@ var Inbox = Backbone.Model.extend({
     initialize: function () {
     },
 
-    // Create credentials and saves them.
-    // We may want to not run that again when we already have credentails.
-    createCredentials: function () {
-        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
-    },
+    // // Create credentials and saves them.
+    // // We may want to not run that again when we already have credentails.
+    // createCredentials: function () {
+    //     window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
+    // },
 
     setup: function (username, token) {
         this.save({
@@ -29,12 +28,11 @@ var Inbox = Backbone.Model.extend({
             password: token
         }, {
             success: function () {
-                Msgboy.log.debug("Inbox created for " + username);
                 this.trigger("ready", this);
                 this.trigger("new", this);
             }.bind(this),
             error: function () {
-                Msgboy.log.debug("Failed to create inbox for " + username);
+                this.trigger('error');
             }.bind(this)
         });
     },
@@ -44,17 +42,13 @@ var Inbox = Backbone.Model.extend({
         this.fetch({
             success: function () {
                 if (this.attributes.jid && this.attributes.jid !== "" && this.attributes.password && this.attributes.password !== "") {
-                    Msgboy.log.debug("Loaded inbox for " + this.attributes.jid);
                     this.trigger("ready", this);
                 } else {
-                    Msgboy.log.debug("Refreshing new inbox ");
-                    this.createCredentials();
+                    this.trigger('error', 'Not Found');
                 }
             }.bind(this),
             error: function () {
-                // Looks like there is no such inbox.
-                Msgboy.log.debug("Creating new inbox");
-                this.createCredentials();
+                this.trigger('error', 'Not Found');
             }.bind(this)
         });
     },

@@ -2,6 +2,48 @@ var _ = require('underscore');
 var Backbone = require('backbone');
 var Redis = require("redis");
 
+var flatten,
+  __hasProp = Object.prototype.hasOwnProperty;
+
+flatten = function(obj, into, prefix, sep) {
+  var key, prop;
+  if (into == null) into = {};
+  if (prefix == null) prefix = '';
+  if (sep == null) sep = '_';
+  for (key in obj) {
+    if (!__hasProp.call(obj, key)) continue;
+    prop = obj[key];
+    if (typeof prop === 'object' && !(prop instanceof Date) && !(prop instanceof RegExp)) {
+      flatten(prop, into, prefix + key + sep, sep);
+    } else {
+      into[prefix + key] = prop;
+    }
+  }
+  return into;
+};
+
+var unflatten,
+  __hasProp = Object.prototype.hasOwnProperty;
+
+unflatten = function(obj, into, sep) {
+  var key, prop, sub, subKey, subKeys, _i, _len, _ref;
+  if (into == null) into = {};
+  if (sep == null) sep = '_';
+  for (key in obj) {
+    if (!__hasProp.call(obj, key)) continue;
+    prop = obj[key];
+    subKeys = key.split(sep);
+    sub = into;
+    _ref = subKeys.slice(0, -1);
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      subKey = _ref[_i];
+      sub = (sub[subKey] || (sub[subKey] = {}));
+    }
+    sub[subKeys.pop()] = prop;
+  }
+  return into;
+};
+
 (function () { /*global _: false, Backbone: false */
     // Generate four random hex digits.
     function S4() {
@@ -100,55 +142,33 @@ var Redis = require("redis");
         // Writes the json to the storeName in db.
         // options are just success and error callbacks.
         write: function (db, storeName, object, options) {
-            var writeTransaction = db.transaction([storeName], IDBTransaction.READ_WRITE);
-            var store = writeTransaction.objectStore(storeName);
-            var json = object.toJSON();
-
+            var json = flatten(object.toJSON());
             if (!json.id) json.id = guid();
-
-            var writeRequest = store.put(json, json.id);
-
-            writeRequest.onerror = function (e) {
-                options.error(e);
-            };
-            writeRequest.onsuccess = function (e) {
-                options.success(json);
-            };
+            db.hmset(storeName + ":" + json.id, json, function(error, object) {
+                if(error) {
+                    options.error(e);
+                }
+                else {
+                     options.success(json);
+                }
+            })
         },
 
         // Reads from storeName in db with json.id if it's there of with any json.xxxx as long as xxx is an index in storeName 
         read: function (db, storeName, object, options) {
-            var readTransaction = db.transaction([storeName], IDBTransaction.READ_ONLY);
-            var store = readTransaction.objectStore(storeName);
             var json = object.toJSON();
-
-
-            var getRequest = null;
-            if (json.id) {
-                getRequest = store.get(json.id);
-            } else {
-                // We need to find which index we have
-                _.each(store.indexNames, function (key, index) {
-                    index = store.index(key);
-                    if (json[index.keyPath] && !getRequest) {
-                        getRequest = index.get(json[index.keyPath]);
-                    }
-                });
-            }
-            if (getRequest) {
-                getRequest.onsuccess = function (event) {
-                    if (event.target.result) {
-                        options.success(event.target.result);
-                    } else {
-                        options.error("Not Found");
-                    }
-                };
-                getRequest.onerror = function () {
-                    options.error("Not Found"); // We couldn't find the record.
+            
+            db.hgetall(storeName + ":" + json.id, function(error, object) {
+                if(error) {
+                    options.error("Not Found");
                 }
-            } else {
-                options.error("Not Found"); // We couldn't even look for it, as we don't have enough data.
-            }
+                else if(object && !_.isEmpty(object)) {
+                    options.success(unflatten(object));
+                }
+                else {
+                    options.error("Not Found");
+                }
+            });
         },
 
         // Deletes the json.id key and value in storeName from db.
@@ -285,8 +305,7 @@ var Redis = require("redis");
         this.database = database
         this.started = false;
         this.stack = [];
-        this.connection = null;
-        this.server = Redis.createClient();
+        this.connection = Redis.createClient();
         
         this.error = null;
         this.ready();
