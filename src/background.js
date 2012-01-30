@@ -1,5 +1,4 @@
 var $ = jQuery      = require('jquery');
-var Backbone        = require('backbone');
 var Strophe         = require('./strophejs/core.js').Strophe
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
@@ -13,21 +12,6 @@ Msgboy.bind("loaded", function () {
         protocol: new Strophe.Websocket('ws://msgboy.com:5280')
     });
     
-    Msgboy.connection.max_stanzas_per_second = 1; // We limit to 1 outgoing stanzas per second.
-
-    Msgboy.connection.rawInput = function (data) {
-        console.log(">>", data);
-        // Msgboy.log.raw('RECV', data);
-    };
-    Msgboy.connection.rawOutput = function (data) {
-        console.log("<<", data);
-        // Msgboy.log.raw('SENT', data);
-    };
-
-    Strophe.log = function (level, msg) {
-        Msgboy.log.debug(msg);
-    }
-
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
         if (message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance) {
@@ -38,7 +22,7 @@ Msgboy.bind("loaded", function () {
         }
     });
 
-    // when the inbox is ready
+    // When the inbox is ready
     Msgboy.inbox.bind("ready", function () {
         Msgboy.log.debug("Inbox ready");
         Msgboy.connect(Msgboy.inbox);
@@ -70,6 +54,7 @@ Msgboy.bind("loaded", function () {
         });
     });
     
+    // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
         console.log(error);
     });

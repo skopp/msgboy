@@ -1,7 +1,6 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
-var BackboneAdapter = require('../backbone-adapter.js');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var Subscriptions = require('./models/subscription.js').Subscriptions;
 
 if (typeof Msgboy === "undefined") {

@@ -1319,7 +1319,7 @@ Strophe.Connection = function (service)
     this._sasl_challenge_handler = null;
     this._throttle_stanzas_handler = null;
 
-	this.max_stanzas_per_second = 10; // Traffic shaper at 10 stanzas per second, max.
+	this.max_stanzas_per_second = 1; // Traffic shaper at 10 stanzas per second, max.
 
     // initialize plugins
     for (var k in Strophe._connectionPlugins) {

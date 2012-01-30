@@ -1,6 +1,6 @@
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
-var BackboneAdapter = require('../backbone-adapter.js');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+var BackboneAdapter = require('../backbone-indexeddb.js');
 require('../bootstrap-modal.js');
 
 

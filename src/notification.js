@@ -1,6 +1,6 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;

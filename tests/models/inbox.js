@@ -1,6 +1,4 @@
-var _ = require('underscore')._,
-backbone = require('backbone'),
-Inbox = require('../../src/models/inbox.js').Inbox;
+var Inbox = require('../../src/models/inbox.js').Inbox;
 
 describe('Inbox', function(){
     before(function() {
