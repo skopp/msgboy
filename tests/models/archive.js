@@ -2,11 +2,8 @@ var _ = require('underscore')._,
     backbone = require('backbone'),
     Archive = require('../../src/models/archive.js').Archive;
 
-console.log(Archive);
-
-
 describe('Archive', function(){
-    var archive =  new Archive({cool: 'stuff'});
+    var archive =  new Archive();
     before(function() {
         // We need to save a couple fixture messages!
     });

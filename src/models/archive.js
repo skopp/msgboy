@@ -1,6 +1,6 @@
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Message = require('./message.js').Message;
 

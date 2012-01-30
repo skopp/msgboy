@@ -344,7 +344,7 @@ require.define("/msgboy.js", function (require, module, exports, __dirname, __fi
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var Subscriptions = require('./models/subscription.js').Subscriptions;
 
 if (typeof Msgboy === "undefined") {
@@ -1589,7 +1589,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 
 var Subscription = Backbone.Model.extend({
@@ -1945,7 +1945,7 @@ exports.msgboyDatabase = msgboyDatabase
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Message = require('./message.js').Message;
 
@@ -1985,7 +1985,7 @@ require.define("/models/message.js", function (require, module, exports, __dirna
 var $ = jQuery = require('jquery');
 var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;
 
@@ -2850,7 +2850,7 @@ require.define("/views/archive-view.js", function (require, module, exports, __d
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var Isotope = require('../jquery.isotope.min.js');
 var Archive = require('../models/archive.js');
 var MessageView = require('./message-view.js').MessageView;
@@ -4343,7 +4343,7 @@ require.define("/views/message-view.js", function (require, module, exports, __d
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 var Message = require('../models/message.js');
 var Sanitizer = require('sanitizer');
 
@@ -5410,7 +5410,7 @@ exports.unescapeEntities = html.unescapeEntities;
 require.define("/views/modal-share-view.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 require('../bootstrap-modal.js');
 
 
@@ -5707,7 +5707,7 @@ require.alias("jquery-browserify", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
 
-require.alias("../backbone-indexeddb.js", "/node_modules/backbone-adapter");
+require.alias("../backbone-indexeddb.js", "../backbone-adapter.js");
 
 require.define("/dashboard.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;

@@ -1,6 +1,6 @@
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('backbone-adapter');
+var BackboneAdapter = require('../backbone-adapter.js');
 require('../bootstrap-modal.js');
 
 
