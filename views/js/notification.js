@@ -11512,8 +11512,8 @@ require.define("/node_modules/backbone-browserify/lib/backbone-browserify.js", f
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('./backbone-indexeddb.js');
 
 if (typeof Msgboy === "undefined") {
@@ -11601,7 +11601,7 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy is connecting.';
     } else if (status === Strophe.Status.CONNFAIL) {
         msg = 'Msgboy failed to connect.';
-        Msgboy.reconnectDelay = 1;
+        Msgboy.reconnectDelay += 1;
         if (Msgboy.autoReconnect) {
             Msgboy.autoReconnect();
         }
@@ -11618,11 +11618,11 @@ Msgboy.onConnect = function (status) {
         if (Msgboy.autoReconnect) {
             Msgboy.autoReconnect();
         }
-        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
+        msg = 'Msgboy is disconnected. Reconnect in ' + Msgboy.helper.maths.number.fibonacci(Msgboy.reconnectDelay) + ' seconds.';
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        // Msgboy.connection.send($pres); // Send presence!
+        Msgboy.connection.caps.sendPresenceWithCaps(); // Send presence!
         // Makes sure there is no missing subscription.
         Msgboy.resumeSubscriptions();
     }
@@ -11636,7 +11636,7 @@ Msgboy.autoReconnect = function () {
         Msgboy.reconnectionTimeout = setTimeout(function () {
             Msgboy.reconnectionTimeout = null;
             Msgboy.connect();
-        }, Math.pow(Msgboy.reconnectDelay, 2) * 1000);
+        }, Msgboy.helper.maths.number.fibonacci(Msgboy.reconnectDelay) * 1000);
     }
 };
 
@@ -11750,7 +11750,7 @@ exports.Msgboy = Msgboy;
 
 require.define("/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 
 (function () { /*global _: false, Backbone: false */
     // Generate four random hex digits.
@@ -12123,9 +12123,9 @@ var Backbone = require('backbone-browserify');
 });
 
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery-browserify');
+var $ = jQuery = require('jquery');
 var parseUri = require('../utils.js').parseUri;
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;
@@ -13241,8 +13241,8 @@ exports.msgboyDatabase = msgboyDatabase
 });
 
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Message = require('./message.js').Message;
@@ -13281,8 +13281,8 @@ exports.Archive = Archive;
 
 require.define("/views/notification-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var MessageView = require('./message-view.js').MessageView;
 
@@ -13361,8 +13361,8 @@ exports.NotificationView = NotificationView;
 
 require.define("/views/message-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var Message = require('../models/message.js');
 var Sanitizer = require('sanitizer');
@@ -14429,8 +14429,8 @@ exports.unescapeEntities = html.unescapeEntities;
 
 require.define("/notification.js", function (require, module, exports, __dirname, __filename) {
     var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;

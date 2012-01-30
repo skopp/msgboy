@@ -1,5 +1,5 @@
-var $ = jQuery      = require('jquery-browserify');
-var Backbone        = require('backbone-browserify');
+var $ = jQuery      = require('jquery');
+var Backbone        = require('backbone');
 var Strophe         = require('./strophejs/core.js').Strophe
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;

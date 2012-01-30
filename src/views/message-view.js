@@ -1,6 +1,6 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var Message = require('../models/message.js');
 var Sanitizer = require('sanitizer');

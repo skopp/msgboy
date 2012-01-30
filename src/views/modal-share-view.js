@@ -1,5 +1,5 @@
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 require('../bootstrap-modal.js');
 

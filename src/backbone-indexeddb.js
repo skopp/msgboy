@@ -1,5 +1,5 @@
 var _ = require('underscore');
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 
 (function () { /*global _: false, Backbone: false */
     // Generate four random hex digits.

@@ -1,6 +1,6 @@
-var $ = jQuery = require('jquery-browserify');
+var $ = jQuery = require('jquery');
 var parseUri = require('../utils.js').parseUri;
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;

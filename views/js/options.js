@@ -342,8 +342,8 @@ exports.extname = function(path) {
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('./backbone-indexeddb.js');
 
 if (typeof Msgboy === "undefined") {
@@ -11750,7 +11750,7 @@ require.define("/node_modules/backbone-browserify/lib/backbone-browserify.js", f
 
 require.define("/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 
 (function () { /*global _: false, Backbone: false */
     // Generate four random hex digits.
@@ -12124,8 +12124,8 @@ var Backbone = require('backbone-browserify');
 
 require.define("/views/options-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var Inbox = require('../models/inbox.js').Inbox;
 
@@ -12175,8 +12175,8 @@ exports.OptionsView = OptionsView;
 });
 
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Msgboy = require('../msgboy.js').Msgboy;
@@ -12531,7 +12531,7 @@ exports.msgboyDatabase = msgboyDatabase
 
 require.define("/options.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;
-var $ = jQuery = require('jquery-browserify');
+var $ = jQuery = require('jquery');
 var OptionsView = require('./views/options-view.js').OptionsView;
 
 Msgboy.bind("loaded", function () {

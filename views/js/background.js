@@ -14222,8 +14222,8 @@ exports.Base64 = Base64
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('./backbone-indexeddb.js');
 var Subscriptions = require('./models/subscription.js').Subscriptions;
 
@@ -14461,7 +14461,7 @@ exports.Msgboy = Msgboy;
 
 require.define("/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var Backbone = require('backbone-browserify');
+var Backbone = require('backbone');
 
 (function () { /*global _: false, Backbone: false */
     // Generate four random hex digits.
@@ -14834,8 +14834,8 @@ var Backbone = require('backbone-browserify');
 });
 
 require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 
@@ -15251,8 +15251,8 @@ var Plugin = function () {
 });
 
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery-browserify');
-var Backbone = require('backbone-browserify');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
 var BackboneIndexedDB = require('../backbone-indexeddb.js');
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Msgboy = require('../msgboy.js').Msgboy;
@@ -15353,8 +15353,8 @@ exports.Inbox = Inbox;
 });
 
 require.define("/background.js", function (require, module, exports, __dirname, __filename) {
-    var $ = jQuery      = require('jquery-browserify');
-var Backbone        = require('backbone-browserify');
+    var $ = jQuery      = require('jquery');
+var Backbone        = require('backbone');
 var Strophe         = require('./strophejs/core.js').Strophe
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;

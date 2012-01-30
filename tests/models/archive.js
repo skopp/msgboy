@@ -1,8 +1,6 @@
 var _ = require('underscore')._,
-backbone = require('backbone');
-
-
-var Archive = require('../models/archive.js');
+    backbone = require('backbone'),
+    Archive = require('../../src/models/archive.js').Archive;
 
 console.log(Archive);
 
