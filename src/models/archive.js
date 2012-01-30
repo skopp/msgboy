@@ -1,6 +1,6 @@
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('../backbone-indexeddb.js');
+Backbone.sync = require('../backbone-adapter.js').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Message = require('./message.js').Message;
 
@@ -12,7 +12,7 @@ var Archive = Backbone.Collection.extend({
     initialize: function () {
     },
     comparator: function (message) {
-        return - (message.attributes.created_at);
+        return - (message.attributes.createdAt);
     },
     each: function (condition) {
         this.fetch({

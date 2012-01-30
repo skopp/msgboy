@@ -54,7 +54,7 @@ var MessageView = Backbone.View.extend({
     },
     layout: function() {
         var el = $(this.el), 
-        isGroup = this.model.messages && this.model.messages.length > 1;
+        isGroup = this.model.related && this.model.related.length > 1;
             
         // set some attributes on the container div
         $(this.el).attr({
@@ -73,7 +73,7 @@ var MessageView = Backbone.View.extend({
         
         // render our compiled template
         if (isGroup) {
-            el.prepend($('<div class="ribbon">' + (this.model.messages.length) + ' stories</div>'));
+            el.prepend($('<div class="ribbon">' + (this.model.related.length) + ' stories</div>'));
         }
         
         $(this.el).find('.full-content img').load(this.handleImageLoad.bind(this));
@@ -81,7 +81,7 @@ var MessageView = Backbone.View.extend({
     // Browser event handlers
     handleClick: function (evt) {
         var el = $(this.el),
-                isGroup = this.model.messages.length > 1;
+                isGroup = this.model.related.length > 1;
         if (isGroup) {
             this.handleExpand();
         }
@@ -113,11 +113,11 @@ var MessageView = Backbone.View.extend({
         this.model.trigger('share', this.model);
     },
     handleExpand: function (e) {
-        this.model.messages.each(function(message, i) {
+        this.model.related.each(function(message, i) {
             message.trigger('expand');
         });
         this.model.trigger('expanded', this);
-        this.model.messages.reset(); // And now remove the messages inside :)
+        this.model.related.reset(); // And now remove the messages inside :)
         this.layout();
         return false;
     },

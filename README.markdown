@@ -59,7 +59,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
 * <del>Rewrite the msgboy.com page with inbox</del>.
-* Use the delay@stamp for created_at of offline messages.
+* Use the delay@stamp for createdAt of offline messages.
 * Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
 * <del>Run JSLint (and CSSLint?) in Rake tasks for cleaner JS.</del>

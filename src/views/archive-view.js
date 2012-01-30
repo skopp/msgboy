@@ -43,12 +43,12 @@ var ArchiveView = Backbone.View.extend({
         if (this.loaded === this.toLoad) {
             this.loaded = 0; // Reset the loaded counter!
             this.collection.next(this.toLoad, {
-                created_at: [this.upperDound, this.lowerBound]
+                createdAt: [this.upperDound, this.lowerBound]
             });
         }
     },
     showNew: function (message) {
-        this.upperDound = message.attributes.created_at;
+        this.upperDound = message.attributes.createdAt;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
@@ -89,8 +89,8 @@ var ArchiveView = Backbone.View.extend({
             }.bind(this));
 
             // Check if we can group the messages
-            if (this.lastParentView && this.lastParentView.model.get('alternate') === message.get('alternate') && !message.get('ungroup')) {
-                this.lastParentView.model.messages.add(message);
+            if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
+                this.lastParentView.model.related.add(message);
                 $(view.el).addClass('brother'); // Let's show this has a brother!
                 view.render(); // We can render it as well as nobody cares about it for now.
             }

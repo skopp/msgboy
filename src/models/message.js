@@ -1,7 +1,7 @@
 var $ = jQuery = require('jquery');
 var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone');
-var BackboneAdapter = require('../backbone-indexeddb.js');
+Backbone.sync = require('../backbone-adapter.js').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;
 
@@ -10,52 +10,52 @@ var Message = Backbone.Model.extend({
     database: msgboyDatabase,
     defaults: {
         "title":        null,
-        "atom_id":      null,
+        "atomId":       null,
         "summary":      null,
         "content":      null,
         "links":        {},
-        "read_at":      0,
-        "unread_at":    0,
-        "starred_at":   0,
-        "created_at":   0,
+        "createdAt":    0,
         "source":       {},
-        "host":         "",
-        "alternate":    "",
-        "alternate_new": "",
+        "sourceHost":   "",
+        "sourceLink":   "",
         "state":        "new",
         "feed":         "",
         "relevance":    0.3
     },
     /* Initializes the messages */
-    initialize: function (attributes) {
-        if (attributes.source && attributes.source.links && attributes.source.links.alternate && attributes.source.links.alternate["text/html"] && attributes.source.links.alternate["text/html"][0]) {
-            attributes.alternate = attributes.source.links.alternate["text/html"][0].href;
-            attributes.host = parseUri(attributes.source.links.alternate["text/html"][0].href).host;
-            attributes.alternate_new = parseUri(attributes.alternate).toString();
+    initialize: function (params) {
+        if (params.source && params.source.links) {
+            if(params.source.links.alternate) {
+                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                    params.sourceLink = params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = parseUri(params.sourceLink).host;
+                }
+                else {
+                    params.sourceLink = ""; // Dang. What is it?
+                    params.sourceHost = "";
+                }
+            }
+            else {
+                params.sourceLink = ""; // Dang. What is it?
+                params.sourceHost = "";
+            }
         }
-        this.attributes = attributes;
-        if (this.attributes.unread_at === 0) {
-            this.attributes.unread_at = new Date().getTime();
+        else {
+            params.sourceLink = ""; // Dang. What is it?
+            params.sourceHost = "";
         }
-        if (this.attributes.created_at === 0) {
-            this.attributes.created_at = new Date().getTime();
+        
+        this.set(params);
+        
+        if (this.get('createdAt') === 0) {
+            this.set({createdAt: new Date().getTime()});
         }
-        // create container for similar messages
-        this.messages = new Backbone.Collection();
-        this.messages.comparator = function(message) {
-            return -message.attributes.created_at;
+        
+        this.related = new Backbone.Collection(); // create container for similar messages
+        this.related.comparator = function(message) {
+            return -message.get('createdAt');
         }
-        this.messages.add(this); // add ourselves
         return this;
-    },
-    /* Returns the state of the message
-    Valid states include :
-    - new
-    - up-ed
-    - down-ed
-    - skipped */
-    state: function () {
-        return this.attributes.state;
     },
     /* Votes the message up */
     voteUp: function () {
@@ -111,7 +111,7 @@ var Message = Backbone.Model.extend({
         // First, let's pull all the messages from the same source.
         var brothers = new Archive();
         brothers.comparator = function (brother) {
-            return brother.attributes.created_at;
+            return brother.attributes.createdAt;
         };
         brothers.forFeed(this.attributes.feed);
         brothers.bind('reset', function () {
@@ -141,14 +141,6 @@ var Message = Backbone.Model.extend({
                 "skipped": 0.4
             });
         }
-    },
-    /* Returns the number of links*/
-    numberOfLinks: function () {
-        return 5;
-    },
-    /*return the links to the media included in this doc*/
-    mediaIncluded: function () {
-        return [];
     },
     mainLink: function () {
         if (this.attributes.links.alternate) {
@@ -254,7 +246,7 @@ exports.relevanceMath = relevanceMath;
 var welcomeMessages = [{
     "title": "Welcome to msgboy!",
     "ungroup": true,
-    "atom_id": "welcome-" + new Date().getTime(),
+    "atomId": "welcome-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-1.png' />",
     "content": null,
     "links": {
@@ -267,10 +259,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime(),
+    "createdAt": new Date().getTime(),
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -285,9 +274,8 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
+    "sourceHost": "msgboy.com",
     "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 1.0,
@@ -296,7 +284,7 @@ var welcomeMessages = [{
 }, {
     "title": "Bookmark sites you love.",
     "ungroup": true,
-    "atom_id": "vote-plus" + new Date().getTime(),
+    "atomId": "vote-plus" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-2.png' />",
     "content": null,
     "links": {
@@ -309,10 +297,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 1000,
+    "createdAt": new Date().getTime() - 1000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -327,9 +312,8 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
+    "sourceHost": "msgboy.com",
     "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
@@ -338,7 +322,7 @@ var welcomeMessages = [{
 }, {
     "title": "Newly posted stories appear in realtime.",
     "ungroup": true,
-    "atom_id": "vote-minus-" + new Date().getTime(),
+    "atomId": "vote-minus-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-3.png' />",
     "content": null,
     "links": {
@@ -351,10 +335,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 2000,
+    "createdAt": new Date().getTime() - 2000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -369,9 +350,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
@@ -380,7 +359,7 @@ var welcomeMessages = [{
 }, {
     "title": "Train msgboy to give you what you want.",
     "ungroup": true,
-    "atom_id": "bookmark-" + new Date().getTime(),
+    "atomId": "bookmark-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-5.png' />",
     "content": null,
     "links": {
@@ -393,10 +372,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 3000,
+    "createdAt": new Date().getTime() - 3000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -411,9 +387,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
@@ -422,7 +396,7 @@ var welcomeMessages = [{
 }, {
     "title": "Click '+' for more like this.",
     "ungroup": true,
-    "atom_id": "bookmark-" + new Date().getTime(),
+    "atomId": "bookmark-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-6.png' />",
     "content": null,
     "links": {
@@ -435,10 +409,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 4000,
+    "createdAt": new Date().getTime() - 4000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -453,9 +424,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.8,
@@ -464,7 +433,7 @@ var welcomeMessages = [{
 }, {
     "title": "Hit '-' if you're not interested.",
     "ungroup": true,
-    "atom_id": "bookmark-" + new Date().getTime(),
+    "atomId": "bookmark-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-7.png' />",
     "content": null,
     "links": {
@@ -477,10 +446,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 5000,
+    "createdAt": new Date().getTime() - 5000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -495,9 +461,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
@@ -506,7 +470,7 @@ var welcomeMessages = [{
 }, {
     "title": "Follow and rate stories with notifications.",
     "ungroup": true,
-    "atom_id": "bookmark-" + new Date().getTime(),
+    "atomId": "bookmark-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-8.png' />",
     "content": null,
     "links": {
@@ -519,10 +483,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 6000,
+    "createdAt": new Date().getTime() - 6000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -537,9 +498,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
@@ -548,7 +507,7 @@ var welcomeMessages = [{
 }, {
     "title": "You can throttle notifications in settings.",
     "ungroup": true,
-    "atom_id": "bookmark-" + new Date().getTime(),
+    "atomId": "bookmark-" + new Date().getTime(),
     "summary": "<img src='/views/images/msgboy-help-screen-9.png' />",
     "content": null,
     "links": {
@@ -561,10 +520,7 @@ var welcomeMessages = [{
             }]
         }
     },
-    "read_at": 0,
-    "unread_at": new Date().getTime(),
-    "starred_at": 0,
-    "created_at": new Date().getTime() - 7000,
+    "createdAt": new Date().getTime() - 7000,
     "source": {
         "title": "Msgboy",
         "url": "http://blog.msgboy.com/",
@@ -579,9 +535,7 @@ var welcomeMessages = [{
             }
         }
     },
-    "host": "msgboy.com",
-    "alternate": "http://msgboy.com/",
-    "alternate_new": "http://msgboy.com/",
+    "sourceHost": "msgboy.com",
     "state": "new",
     "feed": "http://blog.msgboy.com/rss",
     "relevance": 0.6,
