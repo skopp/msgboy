@@ -1,8 +1,49 @@
 var _ = require('underscore');
 var Backbone = require('backbone');
+var Redis = require("redis");
 
+var flatten,
+__hasProp = Object.prototype.hasOwnProperty;
 
-/*global _: false, Backbone: false */
+flatten = function(obj, into, prefix, sep) {
+    var key, prop;
+    if (into == null) into = {};
+    if (prefix == null) prefix = '';
+    if (sep == null) sep = '_';
+    for (key in obj) {
+        if (!__hasProp.call(obj, key)) continue;
+        prop = obj[key];
+        if (typeof prop === 'object' && !(prop instanceof Date) && !(prop instanceof RegExp)) {
+            flatten(prop, into, prefix + key + sep, sep);
+        } else {
+            into[prefix + key] = prop;
+        }
+    }
+    return into;
+};
+
+var unflatten,
+__hasProp = Object.prototype.hasOwnProperty;
+
+unflatten = function(obj, into, sep) {
+    var key, prop, sub, subKey, subKeys, _i, _len, _ref;
+    if (into == null) into = {};
+    if (sep == null) sep = '_';
+    for (key in obj) {
+        if (!__hasProp.call(obj, key)) continue;
+        prop = obj[key];
+        subKeys = key.split(sep);
+        sub = into;
+        _ref = subKeys.slice(0, -1);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            subKey = _ref[_i];
+            sub = (sub[subKey] || (sub[subKey] = {}));
+        }
+        sub[subKeys.pop()] = prop;
+    }
+    return into;
+};
+
 // Generate four random hex digits.
 function S4() {
     return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -11,19 +52,6 @@ function S4() {
 // Generate a pseudo-GUID by concatenating random hexadecimal.
 function guid() {
     return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-}
-
-var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
-var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction; // No prefix in moz
-var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange; // No prefix in moz
-
-/* Horrible Hack to prevent ' Expected an identifier and instead saw 'continue' (a reserved word).'*/
-if (window.indexedDB) {
-    indexedDB.prototype._continue =  indexedDB.prototype.continue;
-} else if (window.webkitIDBRequest) {
-    webkitIDBRequest.prototype._continue = webkitIDBRequest.prototype.continue;
-} else if(window.mozIndexedDB) {
-    mozIndexedDB.prototype._continue = mozIndexedDB.prototype.continue;
 }
 
 // Driver object
@@ -113,55 +141,33 @@ Driver.prototype = {
     // Writes the json to the storeName in db.
     // options are just success and error callbacks.
     write: function (db, storeName, object, options) {
-        var writeTransaction = db.transaction([storeName], IDBTransaction.READ_WRITE);
-        var store = writeTransaction.objectStore(storeName);
-        var json = object.toJSON();
-
+        var json = flatten(object.toJSON());
         if (!json.id) json.id = guid();
-
-        var writeRequest = store.put(json, json.id);
-
-        writeRequest.onerror = function (e) {
-            options.error(e);
-        };
-        writeRequest.onsuccess = function (e) {
-            options.success(json);
-        };
+        db.hmset(storeName + ":" + json.id, json, function(error, object) {
+            if(error) {
+                options.error(e);
+            }
+            else {
+                options.success(json);
+            }
+        })
     },
 
     // Reads from storeName in db with json.id if it's there of with any json.xxxx as long as xxx is an index in storeName 
     read: function (db, storeName, object, options) {
-        var readTransaction = db.transaction([storeName], IDBTransaction.READ_ONLY);
-        var store = readTransaction.objectStore(storeName);
         var json = object.toJSON();
 
-
-        var getRequest = null;
-        if (json.id) {
-            getRequest = store.get(json.id);
-        } else {
-            // We need to find which index we have
-            _.each(store.indexNames, function (key, index) {
-                index = store.index(key);
-                if (json[index.keyPath] && !getRequest) {
-                    getRequest = index.get(json[index.keyPath]);
-                }
-            });
-        }
-        if (getRequest) {
-            getRequest.onsuccess = function (event) {
-                if (event.target.result) {
-                    options.success(event.target.result);
-                } else {
-                    options.error("Not Found");
-                }
-            };
-            getRequest.onerror = function () {
-                options.error("Not Found"); // We couldn't find the record.
+        db.hgetall(storeName + ":" + json.id, function(error, object) {
+            if(error) {
+                options.error("Not Found");
             }
-        } else {
-            options.error("Not Found"); // We couldn't even look for it, as we don't have enough data.
-        }
+            else if(object && !_.isEmpty(object)) {
+                options.success(unflatten(object));
+            }
+            else {
+                options.error("Not Found");
+            }
+        });
     },
 
     // Deletes the json.id key and value in storeName from db.
@@ -294,45 +300,14 @@ var Connections = {};
 
 // ExecutionQueue object
 function ExecutionQueue(driver, database) {
-    this.driver = new Driver();
+    this.driver = driver;
     this.database = database
     this.started = false;
     this.stack = [];
-    this.connection = null;
-    this.dbRequest = indexedDB.open(database.id, database.description || "");
+    this.connection = Redis.createClient();
+
     this.error = null;
-
-    this.dbRequest.onsuccess = function (e) {
-        this.connection = e.target.result; // Attach the connection ot the queue.
-        if (this.connection.version === _.last(database.migrations).version) {
-            // No migration to perform!
-            this.ready();
-        } else if (this.connection.version < _.last(database.migrations).version) {
-            // We need to migrate up to the current migration defined in the database
-            driver.migrate(this.connection, database.migrations, this.connection.version, {
-                success: function () {
-                    this.ready();
-                }.bind(this),
-                error: function () {
-                    this.error = "Database not up to date. " + this.connection.version + " expected was " + _.last(database.migrations).version;
-                }.bind(this)
-            });
-        } else {
-            // Looks like the IndexedDB is at a higher version than the current database.
-            this.error = "Database version is greater than current code " + this.connection.version + " expected was " + _.last(database.migrations).version;
-        }
-    }.bind(this);
-
-    this.dbRequest.onerror = function (e) {
-        // Failed to open the database
-        this.error = "Couldn't not connect to the database"
-    }.bind(this);
-
-    this.dbRequest.onabort = function (e) {
-        // Failed to open the database
-        this.error = "Connection to the database aborted"
-    }.bind(this);
-
+    this.ready();
 
 }
 
@@ -362,9 +337,10 @@ ExecutionQueue.prototype = {
 
 exports.sync = function (method, object, options) {
     var database = object.database;
-    
+    var driver = new Driver();
+
     if (!Connections[database.id]) {
-        Connections[database.id] = new ExecutionQueue(database);
+        Connections[database.id] = new ExecutionQueue(driver, database);
     }
     Connections[database.id].execute([method, object, options]);
 };

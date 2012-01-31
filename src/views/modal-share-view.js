@@ -1,6 +1,6 @@
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('../backbone-indexeddb.js');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
 require('../bootstrap-modal.js');
 
 

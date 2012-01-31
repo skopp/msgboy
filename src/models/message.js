@@ -1,7 +1,7 @@
 var $ = jQuery = require('jquery');
 var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone');
-Backbone.sync = require('../backbone-adapter.js').sync;
+Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;
 

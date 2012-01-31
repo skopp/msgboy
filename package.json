@@ -6,6 +6,10 @@
     ,"backbone": ">=0.5.3"
     ,"redis": ">=0.7.1"
     ,"browserify": ">=1.9.3"
+    ,"br-jquery": "*"
+    ,"backbone-indexeddb": "0.0.2"
+    ,"msgboy-backbone-adapter": "*"
+    ,"backbone-browserify": "*"
     ,"sanitizer": ">=0.0.14"
 }
 ,"repositories": [{"type": "git"

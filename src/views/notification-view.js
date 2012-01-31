@@ -1,7 +1,7 @@
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-var BackboneAdapter = require('../backbone-indexeddb.js');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
 var MessageView = require('./message-view.js').MessageView;
 
 var NotificationView = Backbone.View.extend({

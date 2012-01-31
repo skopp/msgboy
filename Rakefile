@@ -107,8 +107,7 @@ namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
     task k do
-      # `browserify --alias 'jquery:jquery-browserify' --alias 'backbone:backbone-browserify' --alias '../backbone-indexeddb.js:../backbone-adapter.js' ./src/#{k}.js -o ./views/js/#{k}.js`
-      `browserify ./src/#{k}.js -o ./views/js/#{k}.js`
+      `browserify --require 'br-jquery' --require 'backbone-browserify' --require 'backbone-indexeddb' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' --alias 'msgboy-backbone-adapter:backbone-indexeddb' --ignore './src/backbone-adapter.js' ./src/#{k}.js -o ./views/js/#{k}.js`
     end
   end
 end
