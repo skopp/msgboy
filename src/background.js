@@ -92,7 +92,6 @@ Msgboy.bind("loaded", function () {
     $(document).bind('register', function (element, object) {
         Msgboy.log.debug("request", "register", object.request.params.username);
         Msgboy.inbox.bind("new", function() {
-            console.log("OKI, new");
             object.sendResponse({
                 value: true
             });

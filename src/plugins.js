@@ -1,3 +1,5 @@
+var Msgboy = require('./msgboy.js').Msgboy
+
 var Plugins = {
     all: [],
 

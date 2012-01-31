@@ -16635,6 +16635,8 @@ exports.msgboyDatabase = msgboyDatabase
 });
 
 require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Msgboy = require('./msgboy.js').Msgboy
+
 var Plugins = {
     all: [],
 
@@ -17844,13 +17846,13 @@ Msgboy.bind("loaded", function () {
     Msgboy.inbox.fetchAndPrepare();
     
     // Plugins management
-    // $.each(Plugins.all, function (index, plugin) {
-    //     if (typeof (plugin.subscribeInBackground) != "undefined") {
-    //         plugin.subscribeInBackground(function (feed) {
-    //             $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
-    //         });
-    //     }
-    // });
+    $.each(Plugins.all, function (index, plugin) {
+        if (typeof (plugin.subscribeInBackground) != "undefined") {
+            plugin.subscribeInBackground(function (feed) {
+                $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
+            });
+        }
+    });
 });
 
 // Main!
