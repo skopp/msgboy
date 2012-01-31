@@ -243,7 +243,7 @@ var relevanceMath = {
 exports.relevanceMath = relevanceMath;
 
 // Welcome messages
-var welcomeMessages = [{
+var WelcomeMessages = [{
     "title": "Welcome to msgboy!",
     "ungroup": true,
     "atomId": "welcome-" + new Date().getTime(),
@@ -544,4 +544,4 @@ var welcomeMessages = [{
 }
 ];
 
-exports.welcomeMessages = welcomeMessages;
+exports.WelcomeMessages = WelcomeMessages;

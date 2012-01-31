@@ -15,12 +15,6 @@ var Inbox = Backbone.Model.extend({
     initialize: function () {
     },
 
-    // // Create credentials and saves them.
-    // // We may want to not run that again when we already have credentails.
-    // createCredentials: function () {
-    //     window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
-    // },
-
     setup: function (username, token) {
         this.save({
             epoch: new Date().getTime(),

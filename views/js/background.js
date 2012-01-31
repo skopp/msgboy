@@ -16713,12 +16713,6 @@ var Inbox = Backbone.Model.extend({
     initialize: function () {
     },
 
-    // // Create credentials and saves them.
-    // // We may want to not run that again when we already have credentails.
-    // createCredentials: function () {
-    //     window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
-    // },
-
     setup: function (username, token) {
         this.save({
             epoch: new Date().getTime(),
@@ -16791,6 +16785,864 @@ var Inbox = Backbone.Model.extend({
 exports.Inbox = Inbox;
 });
 
+require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var parseUri = require('../utils.js').parseUri;
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
+
+var Message = Backbone.Model.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+    defaults: {
+        "title":        null,
+        "atomId":       null,
+        "summary":      null,
+        "content":      null,
+        "links":        {},
+        "createdAt":    0,
+        "source":       {},
+        "sourceHost":   "",
+        "sourceLink":   "",
+        "state":        "new",
+        "feed":         "",
+        "relevance":    0.3
+    },
+    /* Initializes the messages */
+    initialize: function (params) {
+        if (params.source && params.source.links) {
+            if(params.source.links.alternate) {
+                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                    params.sourceLink = params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = parseUri(params.sourceLink).host;
+                }
+                else {
+                    params.sourceLink = ""; // Dang. What is it?
+                    params.sourceHost = "";
+                }
+            }
+            else {
+                params.sourceLink = ""; // Dang. What is it?
+                params.sourceHost = "";
+            }
+        }
+        else {
+            params.sourceLink = ""; // Dang. What is it?
+            params.sourceHost = "";
+        }
+        
+        this.set(params);
+        
+        if (this.get('createdAt') === 0) {
+            this.set({createdAt: new Date().getTime()});
+        }
+        
+        this.related = new Backbone.Collection(); // create container for similar messages
+        this.related.comparator = function(message) {
+            return -message.get('createdAt');
+        }
+        return this;
+    },
+    /* Votes the message up */
+    voteUp: function () {
+        this.setState("up-ed");
+    },
+    /* Votes the message down */
+    voteDown: function () {
+        this.setState("down-ed", function (result) {
+            // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
+            var brothers = new Archive();
+            brothers.forFeed(this.attributes.feed);
+            
+            brothers.bind('reset', function () {
+                var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
+                    return 1;
+                });
+                var counts = relevanceMath.counts(brothers.pluck("state"));
+                if (brothers.length > 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] > 5)) {
+                    this.trigger('unsubscribe');
+                }
+            }.bind(this));
+        }.bind(this));
+    },
+    /* Skip the message */
+    skip: function (callback) {
+        this.setState("skipped", callback);
+    },
+    /* Sets the state for the message */
+    setState: function (_state, callback) {
+        this.save({
+            state: _state
+        }, {
+            success: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(true);
+                }
+                this.trigger(_state, this);
+            }.bind(this),
+            error: function () {
+                Msgboy.log.debug("We couldn't save", this.id);
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(false);
+                }
+            }.bind(this)
+        });
+    },
+    /* This calculates the relevance for this message and sets it. */
+    /* It just calculates the relevance and does not save it. */
+    calculateRelevance: function (callback) {
+        // See Section 6.3 in Product Requirement Document.
+        // We need to get all the messages from this source.
+        // Count how many have been voted up, how many have been voted down.
+        // First, let's pull all the messages from the same source.
+        var brothers = new Archive();
+        brothers.comparator = function (brother) {
+            return brother.attributes.createdAt;
+        };
+        brothers.forFeed(this.attributes.feed);
+        brothers.bind('reset', function () {
+            var relevance = 0.7; // This is the default relevance
+            if (brothers.length > 0) {
+                // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].
+                relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
+            }
+            // Keywords [TODO]
+            // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
+            if (typeof(callback) !== "undefined" && callback) {
+                callback(relevance);
+            }
+        }.bind(this));
+    },
+    relevanceBasedOnBrothers: function (states) {
+        if (states.length === 0) {
+            return 1;
+        }
+        else {
+            var percentages = relevanceMath.percentages(states, ["new", "up-ed", "down-ed", "skipped"]);
+
+            return relevanceMath.average(percentages, {
+                "new" : 0.6,
+                "up-ed": 1.0,
+                "down-ed": 0.0,
+                "skipped": 0.4
+            });
+        }
+    },
+    mainLink: function () {
+        if (this.attributes.links.alternate) {
+            if (this.attributes.links.alternate["text/html"]) {
+                return this.attributes.links.alternate["text/html"][0].href;
+            }
+            else {
+                // Hum, let's see what other types we have!
+                return "";
+            }
+        }
+        else {
+            return "";
+        }
+    },
+    sourceLink: function () {
+        if (this.attributes.source && this.attributes.source.links && this.attributes.source.links.alternate && this.attributes.source.links.alternate["text/html"] && this.attributes.source.links.alternate["text/html"][0]) {
+            return this.attributes.source.links.alternate["text/html"][0].href;
+        }
+        else {
+            return "";
+        }
+    },
+    // This returns the longest text!
+    text: function () {
+        if (this.get('content')) {
+            if (this.get('summary') && this.get('summary').length > this.get('content').length) {
+                return this.get('summary');
+            }
+            else {
+                return this.get('content');
+            }
+        }
+        else if (this.get('summary')) {
+            return this.get('summary');
+        }
+        else {
+            return "...";
+        }
+    },
+    faviconUrl: function () {
+        return "http://g.etfv.co/" + this.sourceLink() + "?defaulticon=lightpng";
+    }
+});
+
+exports.Message = Message;
+
+var relevanceMath = {
+    counts: function (array, defaults, weight) {
+        var counts = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            if (typeof(weight) !== "undefined") {
+                counts[element] += weight(element, index);
+            }
+            else {
+                counts[element] += 1;
+            }
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        return counts;
+    },
+    // Returns the percentages of each element in an array.
+    percentages: function (array) {
+        var counts = {}, percentages = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            counts[element] += 1;
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        _.each(_.keys(counts), function (key) {
+            percentages[key] = counts[key] / sum;
+        });
+        return percentages;
+    },
+    // Returns the average based on the weights and the percentages.
+    average: function (percentages, weights) {
+        var sum = 0, norm = 0;
+        _.each(_.keys(percentages), function (key) {
+            sum += percentages[key] * weights[key];
+            norm += percentages[key];
+        });
+        if (norm === 0) {
+            return sum;
+        } else {
+            return sum / norm;
+        }
+        return sum;
+    }
+};
+
+exports.relevanceMath = relevanceMath;
+
+// Welcome messages
+var WelcomeMessages = [{
+    "title": "Welcome to msgboy!",
+    "ungroup": true,
+    "atomId": "welcome-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-1.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime(),
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 1.0,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Bookmark sites you love.",
+    "ungroup": true,
+    "atomId": "vote-plus" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-2.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 1000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Newly posted stories appear in realtime.",
+    "ungroup": true,
+    "atomId": "vote-minus-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-3.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 2000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Train msgboy to give you what you want.",
+    "ungroup": true,
+    "atomId": "bookmark-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-5.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 3000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Click '+' for more like this.",
+    "ungroup": true,
+    "atomId": "bookmark-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-6.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 4000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.8,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Hit '-' if you're not interested.",
+    "ungroup": true,
+    "atomId": "bookmark-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-7.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 5000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Follow and rate stories with notifications.",
+    "ungroup": true,
+    "atomId": "bookmark-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-8.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 6000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "You can throttle notifications in settings.",
+    "ungroup": true,
+    "atomId": "bookmark-" + new Date().getTime(),
+    "summary": "<img src='/views/images/msgboy-help-screen-9.png' />",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 7000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}
+];
+
+exports.WelcomeMessages = WelcomeMessages;
+
+});
+
+require.define("/utils.js", function (require, module, exports, __dirname, __filename) {
+Uri = function () {
+    // and URI object
+};
+
+Uri.prototype = {
+    toString: function () {
+        str = '';
+        if (this.protocol) {
+            str += this.protocol + "://";
+        }
+        if (this.authority) {
+            str += this.authority;
+        }
+        if (this.relative) {
+            str += this.relative;
+        }
+        if (this.relative === "") {
+            str += "/";
+        }
+        return str;
+    }
+};
+
+function parseUri(str) {
+    var o = parseUri.options,
+    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+    uri = new Uri(),
+    i   = 14;
+    while (i--) {
+        uri[o.key[i]] = m[i] || "";
+    }
+    uri[o.q.name] = {};
+    uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+        if ($1) {
+            uri[o.q.name][$1] = $2;
+        }
+    });
+    return uri;
+}
+
+parseUri.options = {
+    strictMode: false,
+    key: ["source", "protocol", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "anchor"],
+    q:   {
+        name:   "queryKey",
+        parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+    },
+    parser: {
+        strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+        loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+    }
+};
+
+exports.parseUri = parseUri;
+
+// Hopefully this should be part of the regular Msgboy
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Let's define the helper module.
+if (typeof Msgboy.helper === "undefined") {
+    Msgboy.helper = {};
+}
+
+// Feediscovery module. The only API that needs to be used is the Msgboy.helper.feediscovery.get
+Msgboy.helper.feediscovery = {};
+Msgboy.helper.feediscovery.stack = [];
+Msgboy.helper.feediscovery.get = function (_url, _callback) {
+    Msgboy.helper.feediscovery.stack.push([_url, _callback]);
+};
+Msgboy.helper.feediscovery.run = function () {
+    var next = Msgboy.helper.feediscovery.stack.shift();
+    if (next) {
+        $.ajax({url: "http://feediscovery.appspot.com/",
+            data: {url: next[0]},
+            success: function (data) {
+                next[1](JSON.parse(data));
+                Msgboy.helper.feediscovery.run();
+            },
+            error: function () {
+                // Let's restack, in the back.
+                Msgboy.helper.feediscovery.get(next[0], next[1]);
+            }
+        });
+    } else {
+        setTimeout(function () {
+            Msgboy.helper.feediscovery.run();
+        }, 1000);
+    }
+};
+Msgboy.helper.feediscovery.run();
+
+
+// The DOM cleaner
+Msgboy.helper.cleaner = {};
+// This function, which requires JQUERY cleans up the HTML that it includes
+Msgboy.helper.cleaner.html = function (string) {
+    // We must remove the <script> tags from the string first.
+    string = string.replace(/(<script([^>]+)>.*<\/script>)/ig, ' ');
+    var div = $("<div/>").html(string);
+    var cleaned = $(Msgboy.helper.cleaner.dom(div.get()));
+    return cleaned.html();
+};
+
+Msgboy.helper.cleaner.dom = function (element) {
+    $.each($(element).children(), function (index, child) {
+        if (child.nodeName === "IMG") {
+            if (Msgboy.helper.element.original_size.width < 2 || Msgboy.helper.element.original_size.height < 2) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                var src = $(child).attr("src");
+                if (!src) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://rss.feedsportal.com/.*/*.gif")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://da.feedsportal.com/.*/*.img")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://ads.pheedo.com/img.phdo?.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://feedads.g.doubleclick.net/~at/.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "P") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+        }
+        else if (child.nodeName === "NOSCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "IFRAME") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "DIV") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                if (child.innerHTML.replace(/(<([^>]+)>)/ig, "").replace(/[^a-zA-Z 0-9 ]+/g, "").replace(/^\s+|\s+$/g, "") === "") {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "CENTER") {
+            // We need to replace this with a p. We don't want specific formats...
+            var p = document.createElement("P");
+            p.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(p, child);
+            child = p;
+        }
+        else if (child.nodeName === "FONT") {
+            // Let's replace with a span. We don't want specific formats!
+            var span = document.createElement("SPAN");
+            span.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(span, child);
+            child = span;
+        }
+        else if (child.nodeName === "BR") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "OBJECT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "SCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if ($(child).hasClass("mf-viral") || $(child).hasClass("feedflare")) {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        // Remove style attributes
+        $(child).removeAttr("style");
+        $(child).removeAttr("align");
+        $(child).removeAttr("width");
+        $(child).removeAttr("height");
+        $(child).removeAttr("class");
+        $(child).removeAttr("border");
+        $(child).removeAttr("cellpadding");
+        $(child).removeAttr("cellspacing");
+        $(child).removeAttr("valign");
+        $(child).removeAttr("border");
+        $(child).removeAttr("hspace");
+        $(child).removeAttr("vspace");
+        Msgboy.helper.cleaner.dom(child);
+    });
+    return element;
+};
+Msgboy.helper.cleaner.remove = function (element) {
+    var parent = element.parentNode;
+    if (parent) {
+        parent.removeChild(element);
+        if (parent.childNodes.length === 0) {
+            Msgboy.helper.cleaner.remove(parent);
+        }
+    }
+};
+
+// Helper for the DOM elements
+Msgboy.helper.element = {};
+// Returns the original size of the element.
+Msgboy.helper.element.original_size = function (el) {
+    var clone = $(el).clone();
+    clone.css("display", "none");
+    clone.removeAttr('height');
+    clone.removeAttr('width');
+    clone.appendTo($("body"));
+    var sizes = {width: clone.width(), height: clone.height()};
+    clone.remove();
+    return sizes;
+};
+
+// Helpers for maths
+Msgboy.helper.maths = {};
+// Helpers for arrays of elements
+Msgboy.helper.maths.array = {};
+Msgboy.helper.maths.array.normalized_deviation = function (array) {
+    return Msgboy.helper.maths.array.deviation(array) / Msgboy.helper.maths.array.average(array);
+};
+Msgboy.helper.maths.array.deviation = function (array) {
+    var avg = Msgboy.helper.maths.array.average(array);
+    var count = array.length;
+    var i = count - 1;
+    var v = 0;
+    while (i >= 0) {
+        v += Math.pow((array[i] - avg), 2);
+        i = i - 1;
+    }
+    return Math.sqrt(v / count);
+};
+Msgboy.helper.maths.array.average = function (array) {
+    var count = array.length;
+    var i = count - 1;
+    var sum = 0;
+    while (i >= 0) {
+        sum += array[i];
+        i = i - 1;
+    }
+    return sum / count;
+};
+// Helpers for numbers
+Msgboy.helper.maths.number = {};
+Msgboy.helper.maths.number.fibonacci = function (n) {
+    var o;
+    if (n < 0) {
+        return 0;
+    }
+    else if (n < 2) {
+        return n;
+    }
+    else {
+        return Msgboy.helper.maths.number.fibonacci(n - 1) + Msgboy.helper.maths.number.fibonacci(n - 2);
+    }
+    // return n < 2 ? n : n % 2 ? (o = Msgboy.helper.maths.number.fibonacci(n = -(-n >> 1))) * o + (o = Msgboy.helper.maths.number.fibonacci(n - 1)) * o : (Msgboy.helper.maths.number.fibonacci(n >>= 1) + 2 * Msgboy.helper.maths.number.fibonacci(n - 1)) * Msgboy.helper.maths.number.fibonacci(n);
+};
+
+
+
+
+});
+
+require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Archive = Backbone.Collection.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+    model: Message,
+
+    initialize: function () {
+    },
+    comparator: function (message) {
+        return - (message.attributes.createdAt);
+    },
+    each: function (condition) {
+        this.fetch({
+            conditions: condition,
+            addIndividually: true
+        });
+    },
+    next: function (number, condition) {
+        options = {
+            conditions: condition,
+            limit: number,
+            addIndividually: true
+        };
+        this.fetch(options);
+    },
+    forFeed: function (_feed) {
+        this.fetch({feed: _feed});
+    }
+});
+
+exports.Archive = Archive;
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
@@ -16803,7 +17655,8 @@ var Strophe         = require('./strophejs/core.js').Strophe
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
-
+var Message         = require('./models/message.js').Message;
+var WelcomeMessages = require('./models/message.js').WelcomeMessages;
 
 Msgboy.bind("loaded", function () {
     Msgboy.inbox = new Inbox();
@@ -16832,8 +17685,8 @@ Msgboy.bind("loaded", function () {
     Msgboy.inbox.bind("new", function () {
         Msgboy.log.debug("New Inbox");
         // Add a couple boxes for the example!
-        for(var i in welcomeMessages) {
-            var msg = new Message(welcomeMessages[i]);
+        for(var i in WelcomeMessages) {
+            var msg = new Message(WelcomeMessages[i]);
             msg.save({}, {
                 success: function () {
                     Msgboy.log.debug("Saved message " + msg.id);
@@ -16856,7 +17709,8 @@ Msgboy.bind("loaded", function () {
     
     // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
-        console.log(error);
+        // Ok, no such inbox... So we need to create an account!
+        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
     });
     
 
@@ -16887,17 +17741,116 @@ Msgboy.bind("loaded", function () {
         });
     });
     
+    $(document).bind('register', function (element, object) {
+        Msgboy.log.debug("request", "register", object.request.params.username);
+        Msgboy.inbox.bind("new", function() {
+            console.log("OKI, new");
+            object.sendResponse({
+                value: true
+            });
+        });
+        Msgboy.inbox.setup(object.request.params.username, object.request.params.token);
+    });
+
+    $(document).bind('subscribe', function (element, object) {
+        Msgboy.log.debug("request", "subscribe", object.request.params.url);
+        Msgboy.subscribe(object.request.params.url, object.request.params.force || false, function (result) {
+            object.sendResponse({
+                value: result
+            });
+        });
+    });
+
+    $(document).bind('unsubscribe', function (element, object) {
+        Msgboy.log.debug("request", "unsubscribe", object.request.params.url);
+        Msgboy.unsubscribe(object.request.params.url, function (result) {
+            object.sendResponse({
+                value: result
+            });
+        });
+    });
+
+    $(document).bind('notify', function (element, object) {
+        Msgboy.log.debug("request", "notify", object.request.params);
+        Msgboy.notify(object.request.params);
+        // Nothing to do.
+    });
+
+    $(document).bind('notificationReady', function (element, object) {
+        Msgboy.log.debug("request", "notificationReady");
+        Msgboy.currentNotification.ready = true;
+        // We should then start sending all notifications.
+        while (Msgboy.messageStack.length > 0) {
+            chrome.extension.sendRequest({
+                signature:"notify",
+                params: Msgboy.messageStack.pop()
+            }, function (response) {
+                // Nothing to do.
+            });
+        }
+    });
+
+    $(document).bind('tab', function (element, object) {
+        Msgboy.log.debug("request", "tab", object.request.params.url);
+        var active_window = null;
+        chrome.windows.getAll({}, function (windows) {
+            windows = _.select(windows, function (win) {
+                return win.type ==="normal" && win.focused;
+            }, this);
+            // If no window is focused and"normal"
+            if (windows.length === 0) {
+                window.open(object.request.params.url); // Can't use Chrome's API as it's buggy :(
+            }
+            else {
+                // Just open an extra tab.
+                options = object.request.params;
+                options.windowId = windows[0].id;
+                chrome.tabs.create(options);
+            }
+        });
+    });
+
+    $(document).bind('close', function (element, object) {
+        Msgboy.log.debug("request", "close");
+        Msgboy.currentNotification = null;
+        object.sendResponse({
+            value: true
+        });
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    $(document).bind('reload', function (element, object) {
+        Msgboy.log.debug("request", "reload");
+        Msgboy.inbox.fetch();
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    $(document).bind('resetRusbcriptions', function (element, object) {
+        Msgboy.log.debug("request", "resetRusbcriptions");
+        Plugins.importSubscriptions(function (subs) {
+            Msgboy.subscribe(subs.url, false, function () {
+                // Cool. Not much to do.
+            });
+        });
+    });
+
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    $(document).bind('debug', function (element, object) {
+        Msgboy.log.debug("request", "debug", object);
+    });
+    
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
     
     // Plugins management
-    $.each(Plugins.all, function (index, plugin) {
-        if (typeof (plugin.subscribeInBackground) != "undefined") {
-            plugin.subscribeInBackground(function (feed) {
-                $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
-            });
-        }
-    });
+    // $.each(Plugins.all, function (index, plugin) {
+    //     if (typeof (plugin.subscribeInBackground) != "undefined") {
+    //         plugin.subscribeInBackground(function (feed) {
+    //             $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
+    //         });
+    //     }
+    // });
 });
 
 // Main!
