@@ -47,10 +47,12 @@ Msgboy.bind("loaded", function () {
             });
         }
         
-        // And import all plugins.
-        Plugins.importSubscriptions(function (subs) {
-            Msgboy.subscribe(subs.url, function () {
-                // Cool. Not much to do.
+        Msgboy.bind("connected", function(){
+            // And import all plugins.
+            Plugins.importSubscriptions(function (subs) {
+                Msgboy.subscribe(subs.url, function () {
+                    // Cool. Not much to do.
+                });
             });
         });
     });
@@ -61,7 +63,11 @@ Msgboy.bind("loaded", function () {
         window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
     });
     
-
+    // Triggered when connected
+    Msgboy.bind("connected", function(){
+        Msgboy.resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
+    });
+    
     // When a new notification was received from XMPP line.
     $(document).bind('notification_received', function (ev, notification) {
         Msgboy.log.debug("Notification received from " + notification.source.url);
@@ -82,48 +88,44 @@ Msgboy.bind("loaded", function () {
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
-        $(document).trigger(_request.signature, {
-            request: _request,
-            sender: _sender,
-            sendResponse: _sendResponse
-        });
+        Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
     
-    $(document).bind('register', function (element, object) {
-        Msgboy.log.debug("request", "register", object.request.params.username);
+    Msgboy.bind('register', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "register", params.username);
         Msgboy.inbox.bind("new", function() {
-            object.sendResponse({
+            _sendResponse({
                 value: true
             });
         });
-        Msgboy.inbox.setup(object.request.params.username, object.request.params.token);
+        Msgboy.inbox.setup(params.username, params.token);
     });
 
-    $(document).bind('subscribe', function (element, object) {
-        Msgboy.log.debug("request", "subscribe", object.request.params.url);
-        Msgboy.subscribe(object.request.params.url, object.request.params.force || false, function (result) {
-            object.sendResponse({
+    Msgboy.bind('subscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "subscribe", params.url);
+        Msgboy.subscribe(params.url, params.force || false, function (result) {
+            _sendResponse({
                 value: result
             });
         });
     });
 
-    $(document).bind('unsubscribe', function (element, object) {
-        Msgboy.log.debug("request", "unsubscribe", object.request.params.url);
-        Msgboy.unsubscribe(object.request.params.url, function (result) {
-            object.sendResponse({
+    Msgboy.bind('unsubscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "unsubscribe", params.url);
+        Msgboy.unsubscribe(params.url, function (result) {
+            _sendResponse({
                 value: result
             });
         });
     });
 
-    $(document).bind('notify', function (element, object) {
-        Msgboy.log.debug("request", "notify", object.request.params);
-        Msgboy.notify(object.request.params);
+    Msgboy.bind('notify', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notify", params);
+        Msgboy.notify(params);
         // Nothing to do.
     });
 
-    $(document).bind('notificationReady', function (element, object) {
+    Msgboy.bind('notificationReady', function (params, _sendResponse) {
         Msgboy.log.debug("request", "notificationReady");
         Msgboy.currentNotification.ready = true;
         // We should then start sending all notifications.
@@ -137,8 +139,8 @@ Msgboy.bind("loaded", function () {
         }
     });
 
-    $(document).bind('tab', function (element, object) {
-        Msgboy.log.debug("request", "tab", object.request.params.url);
+    Msgboy.bind('tab', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "tab", params.url);
         var active_window = null;
         chrome.windows.getAll({}, function (windows) {
             windows = _.select(windows, function (win) {
@@ -146,33 +148,33 @@ Msgboy.bind("loaded", function () {
             }, this);
             // If no window is focused and"normal"
             if (windows.length === 0) {
-                window.open(object.request.params.url); // Can't use Chrome's API as it's buggy :(
+                window.open(params.url); // Can't use Chrome's API as it's buggy :(
             }
             else {
                 // Just open an extra tab.
-                options = object.request.params;
+                options = params;
                 options.windowId = windows[0].id;
                 chrome.tabs.create(options);
             }
         });
     });
 
-    $(document).bind('close', function (element, object) {
+    Msgboy.bind('close', function (params, _sendResponse) {
         Msgboy.log.debug("request", "close");
         Msgboy.currentNotification = null;
-        object.sendResponse({
+        _sendResponse({
             value: true
         });
     });
 
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('reload', function (element, object) {
+    Msgboy.bind('reload', function (params, _sendResponse) {
         Msgboy.log.debug("request", "reload");
         Msgboy.inbox.fetch();
     });
 
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('resetRusbcriptions', function (element, object) {
+    Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
         Msgboy.log.debug("request", "resetRusbcriptions");
         Plugins.importSubscriptions(function (subs) {
             Msgboy.subscribe(subs.url, false, function () {
@@ -181,23 +183,22 @@ Msgboy.bind("loaded", function () {
         });
     });
 
-
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('debug', function (element, object) {
+    Msgboy.bind('debug', function (params, _sendResponse) {
         Msgboy.log.debug("request", "debug", object);
+    });
+    
+    // Plugins management for those who use the Chrome API to subscribe in background.
+    $.each(Plugins.all, function (index, plugin) {
+        if (typeof (plugin.subscribeInBackground) != "undefined") {
+            plugin.subscribeInBackground(function (feed) {
+                Msgboy.trigger('subscribe', {request: {params: {url: feed.href}}});
+            });
+        }
     });
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
-    
-    // Plugins management
-    $.each(Plugins.all, function (index, plugin) {
-        if (typeof (plugin.subscribeInBackground) != "undefined") {
-            plugin.subscribeInBackground(function (feed) {
-                $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
-            });
-        }
-    });
 });
 
 // Main!

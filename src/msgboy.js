@@ -90,7 +90,7 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy failed to connect.';
         Msgboy.reconnectDelay = 1;
         if (Msgboy.autoReconnect) {
-            Msgboy.autoReconnect();
+            Msgboy.reconnect();
         }
     } else if (status === Strophe.Status.AUTHFAIL) {
         msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
@@ -103,21 +103,21 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy is disconnecting.'; // We may want to time this out.
     } else if (status === Strophe.Status.DISCONNECTED) {
         if (Msgboy.autoReconnect) {
-            Msgboy.autoReconnect();
+            Msgboy.reconnect();
         }
         msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        // Msgboy.connection.send($pres); // Send presence!
-        // Makes sure there is no missing subscription.
-        Msgboy.resumeSubscriptions();
+        Msgboy.reconnectDelay = 1;
+        Msgboy.connection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
     }
     Msgboy.log.debug(msg);
 };
 
 // Reconnects the Msgboy
-Msgboy.autoReconnect = function () {
+Msgboy.reconnect = function () {
     Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
     if (!Msgboy.reconnectionTimeout) {
         Msgboy.reconnectionTimeout = setTimeout(function () {
@@ -130,6 +130,12 @@ Msgboy.autoReconnect = function () {
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
 Msgboy.connect = function () {
+    Msgboy.connection.rawInput = function (data) {
+        Msgboy.log.raw('RECV', data);
+    };
+    Msgboy.connection.rawOutput = function (data) {
+        Msgboy.log.raw('SENT', data);
+    };
     var password = Msgboy.inbox.attributes.password;
     var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
     Msgboy.connection.connect(jid, password, this.onConnect);

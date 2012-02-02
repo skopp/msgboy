@@ -1,14 +1,6 @@
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
+var $ = jQuery = require('jquery');
 
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.posterous = function () {
+Posterous = function () {
 
     this.name = 'Posterous';
     this.hijacked = false;
@@ -100,4 +92,4 @@ Msgboy.plugins.posterous = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.posterous());
+exports.Posterous = Posterous;

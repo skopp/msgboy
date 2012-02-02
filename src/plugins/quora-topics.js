@@ -1,15 +1,4 @@
-// Typepad
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.quora_topics = function () {
+QuoraTopics = function () {
 
     this.name = 'Quora Topics';
 
@@ -45,4 +34,4 @@ Msgboy.plugins.quora_topics = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.quora_topics());
+exports.QuoraTopics = QuoraTopics;

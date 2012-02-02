@@ -16312,7 +16312,7 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy failed to connect.';
         Msgboy.reconnectDelay = 1;
         if (Msgboy.autoReconnect) {
-            Msgboy.autoReconnect();
+            Msgboy.reconnect();
         }
     } else if (status === Strophe.Status.AUTHFAIL) {
         msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
@@ -16325,21 +16325,21 @@ Msgboy.onConnect = function (status) {
         msg = 'Msgboy is disconnecting.'; // We may want to time this out.
     } else if (status === Strophe.Status.DISCONNECTED) {
         if (Msgboy.autoReconnect) {
-            Msgboy.autoReconnect();
+            Msgboy.reconnect();
         }
         msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
     } else if (status === Strophe.Status.CONNECTED) {
         Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
         msg = 'Msgboy is connected.';
-        // Msgboy.connection.send($pres); // Send presence!
-        // Makes sure there is no missing subscription.
-        Msgboy.resumeSubscriptions();
+        Msgboy.reconnectDelay = 1;
+        Msgboy.connection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
     }
     Msgboy.log.debug(msg);
 };
 
 // Reconnects the Msgboy
-Msgboy.autoReconnect = function () {
+Msgboy.reconnect = function () {
     Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
     if (!Msgboy.reconnectionTimeout) {
         Msgboy.reconnectionTimeout = setTimeout(function () {
@@ -16352,6 +16352,12 @@ Msgboy.autoReconnect = function () {
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
 Msgboy.connect = function () {
+    Msgboy.connection.rawInput = function (data) {
+        Msgboy.log.raw('RECV', data);
+    };
+    Msgboy.connection.rawOutput = function (data) {
+        Msgboy.log.raw('SENT', data);
+    };
     var password = Msgboy.inbox.attributes.password;
     var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
     Msgboy.connection.connect(jid, password, this.onConnect);
@@ -16668,6 +16674,48 @@ var Plugins = {
     }
 };
 
+var Blogger = require('./plugins/blogger.js').Blogger;
+Plugins.register(new Blogger());
+
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+Plugins.register(new Bookmarks());
+
+var Digg = require('./plugins/digg.js').Digg;
+Plugins.register(new Digg());
+
+var Disqus = require('./plugins/disqus.js').Disqus;
+Plugins.register(new Disqus());
+
+var Generic = require('./plugins/generic.js').Generic;
+Plugins.register(new Generic());
+
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+Plugins.register(new GoogleReader());
+
+var History = require('./plugins/history.js').History;
+Plugins.register(new History());
+
+var Posterous = require('./plugins/posterous.js').Posterous;
+Plugins.register(new Posterous());
+
+var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
+Plugins.register(new QuoraPeople());
+
+var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
+Plugins.register(new QuoraTopics());
+
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+Plugins.register(new Statusnet());
+
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+Plugins.register(new Tumblr());
+
+var Typepad = require('./plugins/typepad.js').Typepad;
+Plugins.register(new Typepad());
+
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+Plugins.register(new Wordpress());
+
 exports.Plugins = Plugins;
 
 // This is the skeleton for the Plugins
@@ -16695,6 +16743,699 @@ var Plugin = function () {
     };
 };
 
+});
+
+require.define("/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+// Blogger
+var $ = jQuery = require('jquery');
+
+Blogger = function () {
+
+    this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('a#b-follow-this').click(function (event) {
+            follow({
+                title: "",
+                url: $("#searchthis").attr("action").replace("search", "feeds/posts/default")
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        var subscriptions = [];
+        $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
+            var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
+            var match = rex.exec(data);
+            while (match) {
+                subscriptions.push({
+                    url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
+                    title: match[1].replace(/"/g, '').trim()
+                });
+                match = rex.exec(data);
+            }
+            callback(subscriptions);
+            done(subscriptions.length);
+        }.bind(this));
+    };
+};
+
+exports.Blogger = Blogger;
+
+});
+
+require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var Bookmarks = function () {
+
+    this.name = 'Browser Bookmarks';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Hum. What?
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        console.log("TOFIX - DEPENDENCIES");
+        done();
+        // var seen = [];
+        // var total_feeds = 0;
+        // chrome.bookmarks.getRecent(1000,
+        //     function (bookmarks) {
+        //         var done_once = _.after(bookmarks.length, function () {
+        //             // We have processed all the bookmarks
+        //             done(total_feeds);
+        //         });
+        //         if (bookmarks.length === 0) {
+        //             done(total_feeds);
+        //         }
+        //         _.each(bookmarks, function (bookmark) {
+        //             Msgboy.helper.feediscovery.get(bookmark.url, function (links) {
+        //                 var feeds = [];
+        //                 _.each(links, function (link) {
+        //                     total_feeds++;
+        //                     if (seen.indexOf(link.href) === -1) {
+        //                         feeds.push({title: link.title, url: link.href});
+        //                         seen.push(link.href);
+        //                     }
+        //                 });
+        //                 if (feeds.length > 0) {
+        //                     callback(feeds);
+        //                 }
+        //                 done_once();
+        //             });
+        //         });
+        //     }.bind(this)
+        // );
+    };
+
+    this.subscribeInBackground = function (callback) {
+        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+            Msgboy.helper.feediscovery.get(bookmark.url, function (links) {
+                _.each(links, function (link) {
+                    callback(link);
+                });
+            });
+        }.bind(this));
+    };
+};
+
+exports.Bookmarks = Bookmarks;
+});
+
+require.define("/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+Digg = function () {
+
+    this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "digg.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        $(".btn-follow").live('click', function (event) {
+            url = $(event.target).attr("href");
+            login =  url.split("/")[1];
+            action = url.split("/")[2];
+            switch (action) {
+            case "follow":
+                follow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            case "unfollow":
+                unfollow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            default:
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Digg = Digg;
+});
+
+require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+Disqus = function () {
+
+    this.name = 'Disqus Comments';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (document.getElementById("disqus_thread"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#dsq-post-button").live('click', function (event) {
+            follow({
+                url: $(".dsq-subscribe-rss a").attr("href"),
+                title: document.title + " comments"
+            }, function () {
+                //Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.Disqus = Disqus;
+});
+
+require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+Generic = function () {
+    this.name = 'Generic Plugin which will listen for any page';
+
+    this.onSubscriptionPage = function () {
+        return true;
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Adds a listen event on all elements
+        $(".msgboy-follow").click(function (element) {
+            follow({
+                title: $(element.currentTarget).attr("data-msgboy-title"),
+                url: $(element.currentTarget).attr("data-msgboy-url")
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+};
+
+exports.Generic = Generic;
+});
+
+require.define("/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+GoogleReader = function () {
+
+    this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        var submitted = function () {
+            follow({
+                url: $("#quickadd").val(),
+                title: $("#quickadd").val()
+            }, function () {
+                // Done
+            });
+        };
+        $("#quick-add-form .goog-button-body").click(submitted);
+        $("#quick-add-form").submit(submitted);
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        links = [];
+        request = new XMLHttpRequest();
+        $.get("http://www.google.com/reader/subscriptions/export", function (data) {
+            var subscriptions = [];
+            urls = $(data).find("outline").each(function () {
+                subscriptions.push({
+                    url:  $(this).attr("xmlUrl"),
+                    title: $(this).attr("title")
+                });
+            });
+            callback(subscriptions);
+            done(subscriptions.length);
+        });
+    };
+};
+
+exports.GoogleReader = GoogleReader;
+});
+
+require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+
+var History = function () {
+    this.name = 'Browsing History';
+    this.visits_to_be_popular = 3;
+    this.deviation = 1;
+    this.elapsed = 1000 * 60 * 60 * 3;
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+    this.hijack = function (follow, unfollow) {
+        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
+    };
+    this.listSubscriptions = function (callback, done) {
+        console.log("TOFIX - DEPENDENCIES");
+        done();
+        // 
+        // var seen = [];
+        // var pending = 0;
+        // var total_feeds = 0;
+        // 
+        // chrome.history.search({
+        //     'text': '',
+        //     // Return every history item....
+        //     'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
+        //     // that was accessed less than one month ago.
+        //     'maxResults': 10000
+        // }, function (historyItems) {
+        //     if (historyItems.length === 0) {
+        //         done(0);
+        //     }
+        //     var done_once = _.after(historyItems.length, function () {
+        //         done(total_feeds);
+        //     });
+        // 
+        //     _.each(historyItems, function (item) {
+        //         if (item.visitCount > this.visits_to_be_popular) {
+        //             this.visitsRegularly(item.url, function (result) {
+        //                 if (result) {
+        //                     pending++;
+        //                     Msgboy.helper.feediscovery.get(item.url, function (links) {
+        //                         var feeds = [];
+        //                         _.each(links, function (link) {
+        //                             total_feeds++;
+        //                             if (seen.indexOf(link.href) === -1) {
+        //                                 feeds.push({title: link.title, url: link.href});
+        //                                 seen.push(link.href);
+        //                             }
+        //                         });
+        //                         pending--;
+        //                         done_once();
+        //                         if (feeds.length > 0) {
+        //                             callback(feeds);
+        //                         }
+        //                     });
+        //                 }
+        //                 else {
+        //                     // Not visited regularly.
+        //                     done_once();
+        //                 }
+        //             });
+        //         }
+        //         else {
+        //             done_once();
+        //             // Not visited often enough
+        //         }
+        //     }.bind(this));
+        // }.bind(this));
+    };
+    this.visitsRegularly = function (url, callback) {
+        console.log("TOFIX - DEPENDENCIES");
+        // chrome.history.getVisits({url: url}, function (visits) {
+        //     times = $.map(visits, function (visit) {
+        //         return visit.visitTime;
+        //     }).slice(-10); // We check the last 10 visits.
+        //     var diffs = [];
+        //     for (var i = 0; i < times.length - 1; i++) {
+        //         diffs[i] =  times[i + 1] - times[i];
+        //     }
+        //     // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
+        //     if (Msgboy.helper.maths.array.normalized_deviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
+        //         callback(true);
+        //     }
+        //     else {
+                callback(false);
+        //     }
+        // }.bind(this));
+    };
+    this.subscribeInBackground = function (callback) {
+        console.log("TOFIX - DEPENDENCIES");
+        // chrome.history.onVisited.addListener(function (historyItem) {
+        //     if (historyItem.visitCount > this.visits_to_be_popular) {
+        //         this.visitsRegularly(historyItem.url, function (result) {
+        //             Msgboy.helper.feediscovery.get(historyItem.url, function (links) {
+        //                 _.each(links, function (link) {
+        //                     callback(link);
+        //                 });
+        //             });
+        //         });
+        //     }
+        // }.bind(this));
+    };
+};
+
+exports.History = History;
+});
+
+require.define("/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Posterous = function () {
+
+    this.name = 'Posterous';
+    this.hijacked = false;
+
+    this.onSubscriptionPage = function () {
+        return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('#posterous_required_header').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // done
+                    });
+                });
+            }
+        }, function () {});
+
+        $('#posterous_bar').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // Done
+                    });
+                });
+            }
+        }, function () {});
+
+        $("#subscribe_link").click(function () {
+            follow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $("#psub_unsubscribed_link").click(function () {
+            unfollow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $(".subscribe_ajax a.unsubscribed").click(function (event) {
+            var parent = $($($($(event.target).parent()).parent()).parent().find(".profile_sub_site a")[0]);
+            unfollow({
+                title: $.trim(parent.html()),
+                url: parent.attr("href") + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        var that = this;
+        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
+            content = $(data);
+            links = content.find("#subscriptions td.image a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "/rss.xml",
+                    title: $(link).attr("title")
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Posterous = Posterous;
+});
+
+require.define("/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+QuoraPeople = function () {
+
+    this.name = 'Quora People';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".follow_button").not(".unfollow_button").not(".topic_follow").click(function (event) {
+            if ($.trim($(event.target).html()) !== "Follow Question") {
+                // This is must a button on a user's page. Which we want to follow
+                follow({
+                    title: document.title,
+                    url: window.location.href + "/rss"
+                });
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.QuoraPeople = QuoraPeople;
+});
+
+require.define("/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+QuoraTopics = function () {
+
+    this.name = 'Quora Topics';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".topic_follow.follow_button").not(".unfollow_button").click(function (event) {
+            url = "";
+            title = "";
+            if ($(event.target).parent().parent().find(".topic_name").length > 0) {
+                link = $(event.target).parent().parent().find(".topic_name")[0];
+                url = "http://www.quora.com" + ($(link).attr("href")) + "/rss";
+                title = $($(link).children()[0]).html() + " on Quora";
+            }
+            else {
+                title = document.title;
+                url = window.location.href + "/rss";
+            }
+            follow({
+                url: url,
+                title: title
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.QuoraTopics = QuoraTopics;
+});
+
+require.define("/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+Statusnet = function () {
+
+    this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+        return (window.location.host.match(/status\.net/));
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        $('#form_ostatus_connect').live("submit", function () {
+            user = $($(this).find("#nickname")[0]).attr("value");
+            url = "http://" + parseUri(window.location).host + "/api/statuses/user_timeline/1.atom";
+            follow({
+                title:  user + " on Status.net",
+                url: url
+            }, function () {
+                // Done
+            });
+        });
+    };
+};
+
+exports.Statusnet = Statusnet;
+});
+
+require.define("/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Tumblr = function () {
+
+    this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('form[action|="/follow"]').submit(function (event) {
+            follow({
+                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
+                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
+            content = $(data);
+            links = content.find(".follower .name a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "rss",
+                    title: $(link).html() + " on Tumblr"
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Tumblr = Tumblr;
+});
+
+require.define("/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Typepad = function () {
+
+    this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#follow-display").click(function () {
+            follow({
+                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
+                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Typepad = Typepad;
+});
+
+require.define("/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Wordpress = function () {
+
+    this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (document.getElementById("wpadminbar"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('admin-bar-follow-link').live('click', function (event) {
+            follow({
+                title: $('#wp-admin-bar-blog a.ab-item').text(),
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        $.get("http://wordpress.com/#!/read/edit/", function (data) {
+            content = $(data);
+            links = content.find("a.blogurl");
+            var count = 0;
+            links.each(function (index, link) {
+                count += 1;
+                callback({
+                    url: $(link).attr("href") + "/feed",
+                    title: $(link).text()
+                });
+            });
+            done(count);
+        });
+    };
+
+};
+
+exports.Wordpress = Wordpress;
 });
 
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
@@ -17701,10 +18442,12 @@ Msgboy.bind("loaded", function () {
             });
         }
         
-        // And import all plugins.
-        Plugins.importSubscriptions(function (subs) {
-            Msgboy.subscribe(subs.url, function () {
-                // Cool. Not much to do.
+        Msgboy.bind("connected", function(){
+            // And import all plugins.
+            Plugins.importSubscriptions(function (subs) {
+                Msgboy.subscribe(subs.url, function () {
+                    // Cool. Not much to do.
+                });
             });
         });
     });
@@ -17715,7 +18458,11 @@ Msgboy.bind("loaded", function () {
         window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
     });
     
-
+    // Triggered when connected
+    Msgboy.bind("connected", function(){
+        Msgboy.resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
+    });
+    
     // When a new notification was received from XMPP line.
     $(document).bind('notification_received', function (ev, notification) {
         Msgboy.log.debug("Notification received from " + notification.source.url);
@@ -17736,49 +18483,44 @@ Msgboy.bind("loaded", function () {
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
-        $(document).trigger(_request.signature, {
-            request: _request,
-            sender: _sender,
-            sendResponse: _sendResponse
-        });
+        Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
     
-    $(document).bind('register', function (element, object) {
-        Msgboy.log.debug("request", "register", object.request.params.username);
+    Msgboy.bind('register', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "register", params.username);
         Msgboy.inbox.bind("new", function() {
-            console.log("OKI, new");
-            object.sendResponse({
+            _sendResponse({
                 value: true
             });
         });
-        Msgboy.inbox.setup(object.request.params.username, object.request.params.token);
+        Msgboy.inbox.setup(params.username, params.token);
     });
 
-    $(document).bind('subscribe', function (element, object) {
-        Msgboy.log.debug("request", "subscribe", object.request.params.url);
-        Msgboy.subscribe(object.request.params.url, object.request.params.force || false, function (result) {
-            object.sendResponse({
+    Msgboy.bind('subscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "subscribe", params.url);
+        Msgboy.subscribe(params.url, params.force || false, function (result) {
+            _sendResponse({
                 value: result
             });
         });
     });
 
-    $(document).bind('unsubscribe', function (element, object) {
-        Msgboy.log.debug("request", "unsubscribe", object.request.params.url);
-        Msgboy.unsubscribe(object.request.params.url, function (result) {
-            object.sendResponse({
+    Msgboy.bind('unsubscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "unsubscribe", params.url);
+        Msgboy.unsubscribe(params.url, function (result) {
+            _sendResponse({
                 value: result
             });
         });
     });
 
-    $(document).bind('notify', function (element, object) {
-        Msgboy.log.debug("request", "notify", object.request.params);
-        Msgboy.notify(object.request.params);
+    Msgboy.bind('notify', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notify", params);
+        Msgboy.notify(params);
         // Nothing to do.
     });
 
-    $(document).bind('notificationReady', function (element, object) {
+    Msgboy.bind('notificationReady', function (params, _sendResponse) {
         Msgboy.log.debug("request", "notificationReady");
         Msgboy.currentNotification.ready = true;
         // We should then start sending all notifications.
@@ -17792,8 +18534,8 @@ Msgboy.bind("loaded", function () {
         }
     });
 
-    $(document).bind('tab', function (element, object) {
-        Msgboy.log.debug("request", "tab", object.request.params.url);
+    Msgboy.bind('tab', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "tab", params.url);
         var active_window = null;
         chrome.windows.getAll({}, function (windows) {
             windows = _.select(windows, function (win) {
@@ -17801,33 +18543,33 @@ Msgboy.bind("loaded", function () {
             }, this);
             // If no window is focused and"normal"
             if (windows.length === 0) {
-                window.open(object.request.params.url); // Can't use Chrome's API as it's buggy :(
+                window.open(params.url); // Can't use Chrome's API as it's buggy :(
             }
             else {
                 // Just open an extra tab.
-                options = object.request.params;
+                options = params;
                 options.windowId = windows[0].id;
                 chrome.tabs.create(options);
             }
         });
     });
 
-    $(document).bind('close', function (element, object) {
+    Msgboy.bind('close', function (params, _sendResponse) {
         Msgboy.log.debug("request", "close");
         Msgboy.currentNotification = null;
-        object.sendResponse({
+        _sendResponse({
             value: true
         });
     });
 
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('reload', function (element, object) {
+    Msgboy.bind('reload', function (params, _sendResponse) {
         Msgboy.log.debug("request", "reload");
         Msgboy.inbox.fetch();
     });
 
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('resetRusbcriptions', function (element, object) {
+    Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
         Msgboy.log.debug("request", "resetRusbcriptions");
         Plugins.importSubscriptions(function (subs) {
             Msgboy.subscribe(subs.url, false, function () {
@@ -17836,23 +18578,22 @@ Msgboy.bind("loaded", function () {
         });
     });
 
-
     // When reloading the inbox is needed (after a change in settings eg)
-    $(document).bind('debug', function (element, object) {
+    Msgboy.bind('debug', function (params, _sendResponse) {
         Msgboy.log.debug("request", "debug", object);
+    });
+    
+    // Plugins management for those who use the Chrome API to subscribe in background.
+    $.each(Plugins.all, function (index, plugin) {
+        if (typeof (plugin.subscribeInBackground) != "undefined") {
+            plugin.subscribeInBackground(function (feed) {
+                Msgboy.trigger('subscribe', {request: {params: {url: feed.href}}});
+            });
+        }
     });
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
-    
-    // Plugins management
-    $.each(Plugins.all, function (index, plugin) {
-        if (typeof (plugin.subscribeInBackground) != "undefined") {
-            plugin.subscribeInBackground(function (feed) {
-                $(document).trigger('subscribe', {request: {params: {url: feed.href}}});
-            });
-        }
-    });
 });
 
 // Main!

@@ -1,15 +1,6 @@
-// Tumblr
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
+var $ = jQuery = require('jquery');
 
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.tumblr = function () {
+Tumblr = function () {
 
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
     this.onSubscriptionPage = function () {
@@ -52,4 +43,4 @@ Msgboy.plugins.tumblr = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.tumblr());
+exports.Tumblr = Tumblr;

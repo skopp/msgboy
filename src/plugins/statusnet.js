@@ -1,15 +1,4 @@
-// This is the plugin for status.net.
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.statusnet = function () {
+Statusnet = function () {
 
     this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
@@ -38,4 +27,4 @@ Msgboy.plugins.statusnet = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.statusnet());
+exports.Statusnet = Statusnet;

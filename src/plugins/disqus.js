@@ -1,14 +1,4 @@
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.disqus = function () {
+Disqus = function () {
 
     this.name = 'Disqus Comments';
 
@@ -35,4 +25,4 @@ Msgboy.plugins.disqus = function () {
 
 };
 
-Plugins.register(new Msgboy.plugins.disqus());
+exports.Disqus = Disqus;

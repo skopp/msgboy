@@ -1,15 +1,4 @@
-// Digg
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.digg = function () {
+Digg = function () {
 
     this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
@@ -52,4 +41,4 @@ Msgboy.plugins.digg = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.digg());
+exports.Digg = Digg;

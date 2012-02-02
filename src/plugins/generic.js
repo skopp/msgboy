@@ -1,14 +1,4 @@
-// Hopefully this should be part of the regular Msgboy
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Let's define the helper module.
-if (typeof Msgboy.plugins === "undefined") {
-    Msgboy.plugins = {};
-}
-
-Msgboy.plugins.generic = function () {
+Generic = function () {
     this.name = 'Generic Plugin which will listen for any page';
 
     this.onSubscriptionPage = function () {
@@ -34,4 +24,4 @@ Msgboy.plugins.generic = function () {
     };
 };
 
-Plugins.register(new Msgboy.plugins.generic());
+exports.Generic = Generic;
