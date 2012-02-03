@@ -24,6 +24,9 @@ var Message = Backbone.Model.extend({
     },
     /* Initializes the messages */
     initialize: function (params) {
+        if(typeof params === "undefined") {
+            params = {}; // Default params
+        }
         // Setting up the source attributes
         if (params.source && params.source.links) {
             if(params.source.links.alternate) {
