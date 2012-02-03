@@ -12,7 +12,7 @@ var Archive = Backbone.Collection.extend({
     initialize: function () {
     },
     comparator: function (message) {
-        return - (message.attributes.createdAt);
+        return - (message.get('createdAt'));
     },
     each: function (condition) {
         this.fetch({

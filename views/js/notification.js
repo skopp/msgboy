@@ -14055,6 +14055,7 @@ var Message = Backbone.Model.extend({
     },
     /* Initializes the messages */
     initialize: function (params) {
+        // Setting up the source attributes
         if (params.source && params.source.links) {
             if(params.source.links.alternate) {
                 if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
@@ -14076,11 +14077,39 @@ var Message = Backbone.Model.extend({
             params.sourceHost = "";
         }
         
-        this.set(params);
-        
-        if (this.get('createdAt') === 0) {
-            this.set({createdAt: new Date().getTime()});
+        // Setting up the mainLink
+        if (params.links && params.links.alternate) {
+            if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
+                params.mainLink = params.links.alternate["text/html"][0].href;
+            }
+            else {
+                // Hum, let's see what other types we have!
+                params.mainLink = "";
+            }
         }
+        else {
+            params.mainLink = "";
+        }
+        
+        // Setting up the text, as the longest between the summary and the content.
+        if (params.content) {
+            if (params.summary && params.summary.length > params.content.length) {
+                params.text =  params.summary;
+            }
+            else {
+                params.text =  params.content;
+            }
+        }
+        else if (this.get('summary')) {
+            params.text =  params.summary;
+        }
+        else {
+            params.text = "";
+        }
+        
+        
+        // Setting up the params
+        this.set(params);
         
         this.related = new Backbone.Collection(); // create container for similar messages
         this.related.comparator = function(message) {
@@ -14111,8 +14140,8 @@ var Message = Backbone.Model.extend({
         }.bind(this));
     },
     /* Skip the message */
-    skip: function (callback) {
-        this.setState("skipped", callback);
+    skip: function () {
+        this.setState("skipped");
     },
     /* Sets the state for the message */
     setState: function (_state, callback) {
@@ -14126,7 +14155,6 @@ var Message = Backbone.Model.extend({
                 this.trigger(_state, this);
             }.bind(this),
             error: function () {
-                Msgboy.log.debug("We couldn't save", this.id);
                 if (typeof(callback) !== "undefined" && callback) {
                     callback(false);
                 }
@@ -14173,47 +14201,8 @@ var Message = Backbone.Model.extend({
             });
         }
     },
-    mainLink: function () {
-        if (this.attributes.links.alternate) {
-            if (this.attributes.links.alternate["text/html"]) {
-                return this.attributes.links.alternate["text/html"][0].href;
-            }
-            else {
-                // Hum, let's see what other types we have!
-                return "";
-            }
-        }
-        else {
-            return "";
-        }
-    },
-    sourceLink: function () {
-        if (this.attributes.source && this.attributes.source.links && this.attributes.source.links.alternate && this.attributes.source.links.alternate["text/html"] && this.attributes.source.links.alternate["text/html"][0]) {
-            return this.attributes.source.links.alternate["text/html"][0].href;
-        }
-        else {
-            return "";
-        }
-    },
-    // This returns the longest text!
-    text: function () {
-        if (this.get('content')) {
-            if (this.get('summary') && this.get('summary').length > this.get('content').length) {
-                return this.get('summary');
-            }
-            else {
-                return this.get('content');
-            }
-        }
-        else if (this.get('summary')) {
-            return this.get('summary');
-        }
-        else {
-            return "...";
-        }
-    },
     faviconUrl: function () {
-        return "http://g.etfv.co/" + this.sourceLink() + "?defaulticon=lightpng";
+        return "http://g.etfv.co/" + this.get('sourceLink') + "?defaulticon=lightpng";
     }
 });
 
@@ -14862,7 +14851,7 @@ var Archive = Backbone.Collection.extend({
     initialize: function () {
     },
     comparator: function (message) {
-        return - (message.attributes.createdAt);
+        return - (message.get('createdAt'));
     },
     each: function (condition) {
         this.fetch({
@@ -14926,7 +14915,7 @@ var NotificationView = Backbone.View.extend({
                 view.remove();
                 chrome.extension.sendRequest({
                     signature: "tab",
-                    params: {url: message.mainLink(), selected: true}
+                    params: {url: message.get('mainLink'), selected: true}
                 });
             }.bind(this));
 
@@ -14971,7 +14960,6 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
-var Message = require('../models/message.js');
 var Sanitizer = require('sanitizer');
 
 var MessageView = Backbone.View.extend({
@@ -15065,7 +15053,7 @@ var MessageView = Backbone.View.extend({
                 } else {
                     chrome.extension.sendRequest({
                         signature: "tab",
-                        params: {url: this.model.mainLink(), selected: false}
+                        params: {url: this.model.get('mainLink'), selected: false}
                     });
                     this.trigger("clicked");
                 }

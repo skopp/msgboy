@@ -17,7 +17,7 @@ var ModalShareView = Backbone.View.extend({
     },
     
     showForMessage: function(message) {
-        $(this.el).data('url', message.mainLink());
+        $(this.el).data('url', message.get('mainLink'));
         $('#comment').val(message.get('title') + " - " + message.get('source').title);
         $(this.el).modal('show');
     },

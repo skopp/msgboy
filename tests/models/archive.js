@@ -11,6 +11,18 @@ describe('Archive', function(){
             done();
         });
     });
+    
+    describe('each', function() {
+        
+    });
+
+    describe('next', function() {
+        
+    });
+
+    describe('forFeed', function() {
+        
+    });
 
     it('should sort message in reverse chronological order', function(complete) {
         var archive =  new Archive();

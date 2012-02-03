@@ -11,6 +11,7 @@
     ,"msgboy-backbone-adapter": "*"
     ,"backbone-browserify": "*"
     ,"sanitizer": ">=0.0.14"
+    ,"chai": "*"
 }
 ,"repositories": [{"type": "git"
 		  ,"path": "git://github.com/astro/node-xmpp.git"

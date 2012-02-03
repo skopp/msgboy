@@ -37,7 +37,7 @@ var NotificationView = Backbone.View.extend({
                 view.remove();
                 chrome.extension.sendRequest({
                     signature: "tab",
-                    params: {url: message.mainLink(), selected: true}
+                    params: {url: message.get('mainLink'), selected: true}
                 });
             }.bind(this));
 
