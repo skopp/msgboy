@@ -74,7 +74,7 @@ describe('Message', function(){
             message.get('state').should.equal('up-ed');
         });
     });
-
+    
     describe('when voting down', function() {
         it('should set the state to down-ed', function() {
             var message  = new Message();
@@ -82,7 +82,7 @@ describe('Message', function(){
             message.get('state').should.equal('down-ed');
         });
     });
-
+    
     describe('when skipping', function() {
         it('should set the state to skiped', function() {
             var message  = new Message();
@@ -122,4 +122,11 @@ describe('Message', function(){
         
     });
     
+    describe('calculateRelevance', function() {
+        
+    });
+    
+    describe('relevanceBasedOnBrothers', function() {
+        
+    });
 });
