@@ -1,3 +1,9 @@
+var _ = require('underscore');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var Subscriptions = require('../models/subscription.js').Subscriptions;
+
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
     events: {
@@ -49,6 +55,7 @@ var SubscriptionView = Backbone.View.extend({
     }
 });
 
+
 var SubscriptionsView = Backbone.View.extend({
     events: {
         "click #opml": "opmlExport"
@@ -80,3 +87,6 @@ var SubscriptionsView = Backbone.View.extend({
     }
     
 });
+
+exports.SubscriptionsView = SubscriptionsView;
+

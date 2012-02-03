@@ -2,7 +2,6 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
-var Message = require('../models/message.js');
 var Sanitizer = require('sanitizer');
 
 var MessageView = Backbone.View.extend({

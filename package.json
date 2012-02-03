@@ -7,7 +7,7 @@
     ,"redis": ">=0.7.1"
     ,"browserify": ">=1.9.3"
     ,"br-jquery": "*"
-    ,"backbone-indexeddb": "0.0.2"
+    ,"backbone-indexeddb": "0.0.3"
     ,"msgboy-backbone-adapter": "*"
     ,"backbone-browserify": "*"
     ,"sanitizer": ">=0.0.14"

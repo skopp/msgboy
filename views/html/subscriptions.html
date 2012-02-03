@@ -2,42 +2,16 @@
 <html lang="en-US">
 <head>
     <meta charset="UTF-8">
-    <title>Msgboy Subscriptions</title>
-    <meta name="application-name" content="Msgboy"/>
+    <title>Msgboy Options</title>
+    <meta name="application-name" content="Msgboy" />
     <link rel="stylesheet" href="../css/bootstrap.min.css" />
     <link rel="stylesheet" href="../css/header.css" />
     <link rel="stylesheet" href="../css/full.css" />
 
-    <!-- Lib includes -->
-    <script src="../../lib/jquery/jquery.js"></script>
-    <script src="../../lib/underscore/underscore-min.js" type="text/javascript"></script> 
-    <script src="../../lib/backbone/backbone-min.js" type="text/javascript"></script> 
-    <script src="../../lib/backbone-indexeddb/backbone-indexeddb.js" type="text/javascript"></script> 
-    <script src="../../lib/jquery/jquery.isotope.min.js" type="text/javascript"></script> 
-    <script src="../../lib/date.format.js" type="text/javascript"></script> 
-    <script src="../../lib/brain-0.3.5.min.js" type="text/javascript" ></script>
-    <script src="../../lib/stemmer.js" type="text/javascript" ></script>
-    <script src="../../lib/bootstrap/bootstrap-modal.js" type="text/javascript" ></script>
-    <script src="../../lib/strophejs/base64.js" type="text/javascript"></script> 
-
-    <!-- Controller includes -->
-    <script src="../../controllers/msgboy.js" type="text/javascript"></script> 
-    <script src="../../controllers/events.js" type="text/javascript"></script> 
-    <script src="../../controllers/utils.js" type="text/javascript"></script> 
-    <script src="../../controllers/bayesian_filter.js" type="text/javascript"></script>
-
-    <!-- Model includes -->
-    <script src="../../models/database.js" type="text/javascript"></script> 
-    <script src="../../models/message.js" type="text/javascript"></script> 
-    <script src="../../models/archive.js" type="text/javascript"></script> 
-    <script src="../../models/inbox.js" type="text/javascript"></script> 
-    <script src="../../models/subscription.js" type="text/javascript"></script>
-
-    <!-- Views includes -->
-    <script src="../../views/js/subscriptions-view.js" type="text/javascript"></script>
-
+    <!-- Error Reporting Code -->
+    <!-- <script type="text/javascript" src="../../controllers/error_notifier.js"></script> -->
+    <script src="../js/subscriptions.js" type="text/javascript"></script> 
 </head>
-
 <body>
     <header class="topbar">
         <div class="fill">
@@ -50,7 +24,7 @@
             </div>
         </div>
     </header>
-
+    
     <div id="info">
         <span href="#" class="btn large primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
@@ -64,26 +38,17 @@
             </thead>
         </table>
     </div>
-
+    
     <img id="buildings" src="../images/buildings.png" />
     <img id="clouds" src="../images/clouds.png" />
     <img id="signal" src="../images/mb-signal.png" />
-
+    
     <script type="text/template" id="subscription-template">
         <td class="truncate"><%= id %></td>
         <td><%= state %></td>
         <td><button class="btn small action"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
     </script>
-
-    <script>
-    Msgboy.bind("loaded", function () {
-        var view  = new SubscriptionsView({el: "#info"});
-    });
-    Msgboy.run();
-    </script>
-
-
+    
 </body>
-
-
 </html>
+
