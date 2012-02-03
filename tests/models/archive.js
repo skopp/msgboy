@@ -12,11 +12,33 @@ describe('Archive', function(){
         });
     });
     
-    describe('each', function() {
-        
-    });
-
     describe('next', function() {
+        it('should add messages one by one', function(done) {
+            var archive =  new Archive();
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    done();
+                }
+            })
+            archive.next(limit);
+        });
+        
+        it('should stick to the conditions on messages added', function(done) {
+            var archive =  new Archive();
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    archive.pluck('sourceHost').should.equal(['superfeedr.com', 'superfeedr.com', 'superfeedr.com']);
+                    done();
+                }
+            })
+            archive.next(limit, {sourceHost: "superfeedr.com"})
+        });
         
     });
 

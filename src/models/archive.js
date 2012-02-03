@@ -14,12 +14,6 @@ var Archive = Backbone.Collection.extend({
     comparator: function (message) {
         return - (message.get('createdAt'));
     },
-    each: function (condition) {
-        this.fetch({
-            conditions: condition,
-            addIndividually: true
-        });
-    },
     next: function (number, condition) {
         options = {
             conditions: condition,
