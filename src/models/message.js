@@ -17,10 +17,10 @@ var Message = Backbone.Model.extend({
         "links":        {},
         "createdAt":    0,
         "source":       {},
-        "sourceHost":   "",
-        "sourceLink":   "",
+        "sourceHost":   null,
+        "sourceLink":   null,
         "state":        "new",
-        "feed":         "",
+        "feed":         null,
         "relevance":    0.3
     },
     /* Initializes the messages */
@@ -32,22 +32,22 @@ var Message = Backbone.Model.extend({
         if (params.source && params.source.links) {
             if(params.source.links.alternate) {
                 if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
-                    params.sourceLink = params.source.links.alternate["text/html"][0].href;
-                    params.sourceHost = parseUri(params.sourceLink).host;
+                    params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = params.sourceHost || parseUri(params.sourceLink).host;
                 }
                 else {
-                    params.sourceLink = ""; // Dang. What is it?
-                    params.sourceHost = "";
+                    params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                    params.sourceHost = params.sourceHost || "";
                 }
             }
             else {
-                params.sourceLink = ""; // Dang. What is it?
-                params.sourceHost = "";
+                params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                params.sourceHost = params.sourceHost || "";
             }
         }
         else {
-            params.sourceLink = ""; // Dang. What is it?
-            params.sourceHost = "";
+            params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+            params.sourceHost = params.sourceHost || "";
         }
         
         // Setting up the createdAt

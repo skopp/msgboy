@@ -23,7 +23,7 @@ var Archive = Backbone.Collection.extend({
         this.fetch(options);
     },
     forFeed: function (_feed) {
-        this.fetch({feed: _feed});
+        this.fetch({conditions: {feed: _feed}});
     }
 });
 
