@@ -15,7 +15,7 @@ var Archive = Backbone.Collection.extend({
         return - (message.get('createdAt'));
     },
     next: function (number, condition) {
-        options = {
+        var options = {
             conditions: condition,
             limit: number,
             addIndividually: true

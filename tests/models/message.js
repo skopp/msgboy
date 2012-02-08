@@ -87,7 +87,7 @@ describe('Message', function(){
         it('should set the state to skiped', function() {
             var message  = new Message();
             message.skip();
-            message.get('state').should.equal('up-ed');
+            message.get('state').should.equal('skipped');
         });
     });
     
@@ -97,21 +97,14 @@ describe('Message', function(){
             message.setState("up-ed");
             message.get('state').should.equal('up-ed');
         });
-        it('should trigger change', function(done) {
-            var message  = new Message();
-            message.bind('change', function() {
-                done();
-            });
-            message.setState("up-ed");
-        });
-        it('should trigger the state event', function() {
+        it('should trigger the state event', function(done) {
             var message  = new Message();
             message.bind('up-ed', function() {
                 done();
             });
             message.setState("up-ed");
         });
-        it('should call the callback if defined', function() {
+        it('should call the callback if defined', function(done) {
             var message  = new Message();
             message.setState("up-ed", function(result) {
                 result.should.equal(true);

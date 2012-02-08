@@ -1,4 +1,5 @@
 var $ = jQuery = require('jquery');
+var _ = require('underscore');
 var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
@@ -48,6 +49,12 @@ var Message = Backbone.Model.extend({
             params.sourceLink = ""; // Dang. What is it?
             params.sourceHost = "";
         }
+        
+        // Setting up the createdAt
+        if (!params.createdAt) {
+            params.createdAt = new Date().getTime();
+        }
+        
         
         // Setting up the mainLink
         if (params.links && params.links.alternate) {
