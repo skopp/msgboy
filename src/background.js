@@ -74,6 +74,8 @@ Msgboy.bind("loaded", function () {
         var msg = Msgboy.connection.superfeedr.convertAtomToJson(notification.payload);
         msg.source = notification.source;
         msg.feed = notification.source.url;
+        // Let's try to extract the image for this message.
+        
         var message = Msgboy.inbox.addMessage(msg, {
             success: function () {
                 Msgboy.log.debug("Saved message " + msg.id);

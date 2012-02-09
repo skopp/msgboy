@@ -245,8 +245,8 @@ exports.relevanceMath = relevanceMath;
 var WelcomeMessages = [{
     "title": "Welcome to msgboy!",
     "ungroup": true,
-    "atomId": "welcome-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-1.png' />",
+    "summary": 'Welcome to the msgboy, powered by Superfeedr!',
+    "image": '/views/images/msgboy-help-screen-1.png',
     "content": null,
     "links": {
         "alternate": {
@@ -283,8 +283,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Bookmark sites you love.",
     "ungroup": true,
-    "atomId": "vote-plus" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-2.png' />",
+    "image": "/views/images/msgboy-help-screen-2.png",
+    "summary": "Bookmark sites you love. The msgboy will show you messages when they update",
     "content": null,
     "links": {
         "alternate": {
@@ -321,8 +321,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Newly posted stories appear in realtime.",
     "ungroup": true,
-    "atomId": "vote-minus-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-3.png' />",
+    "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
+    "image": "/views/images/msgboy-help-screen-3.png",
     "content": null,
     "links": {
         "alternate": {
@@ -358,8 +358,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Train msgboy to give you what you want.",
     "ungroup": true,
-    "atomId": "bookmark-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-5.png' />",
+    "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
+    "image": "/views/images/msgboy-help-screen-5.png",
     "content": null,
     "links": {
         "alternate": {
@@ -395,8 +395,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Click '+' for more like this.",
     "ungroup": true,
-    "atomId": "bookmark-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-6.png' />",
+    "summary": "Vote stories up if you want more like them",
+    "image": "/views/images/msgboy-help-screen-6.png",
     "content": null,
     "links": {
         "alternate": {
@@ -432,8 +432,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Hit '-' if you're not interested.",
     "ungroup": true,
-    "atomId": "bookmark-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-7.png' />",
+    "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
+    "image": "/views/images/msgboy-help-screen-7.png",
     "content": null,
     "links": {
         "alternate": {
@@ -469,8 +469,8 @@ var WelcomeMessages = [{
 }, {
     "title": "Follow and rate stories with notifications.",
     "ungroup": true,
-    "atomId": "bookmark-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-8.png' />",
+    "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
+    "image": "/views/images/msgboy-help-screen-8.png",
     "content": null,
     "links": {
         "alternate": {
@@ -506,8 +506,8 @@ var WelcomeMessages = [{
 }, {
     "title": "You can throttle notifications in settings.",
     "ungroup": true,
-    "atomId": "bookmark-" + new Date().getTime(),
-    "summary": "<img src='/views/images/msgboy-help-screen-9.png' />",
+    "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+    "image": "/views/images/msgboy-help-screen-9.png",
     "content": null,
     "links": {
         "alternate": {
