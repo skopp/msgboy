@@ -24,8 +24,26 @@
             </div>
         </div>
     </header>
-    
+
     <div id="info">
+
+        <div id="modal-plugin" class="modal backdrop fade">
+            <div class="modal-header">
+                <a href="#" class="close">×</a>
+                <h3>Plugin</h3>
+            </div>
+            <div class="modal-body">
+                <p class="subscribingTo"></p>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+
+        <h1>Plugins</h1>
+        <p>This allows you to re-import existing subscriptions on other well known webservices. </p>
+        <p id="plugins">
+        </p>
+
         <span href="#" class="btn large primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
         <table id="subscriptions" class="border-free-table">
@@ -37,18 +55,20 @@
                 </tr>
             </thead>
         </table>
+
+
     </div>
-    
+
     <img id="buildings" src="../images/buildings.png" />
     <img id="clouds" src="../images/clouds.png" />
     <img id="signal" src="../images/mb-signal.png" />
-    
+
     <script type="text/template" id="subscription-template">
-        <td class="truncate"><%= id %></td>
-        <td><%= state %></td>
-        <td><button class="btn small action"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
+    <td class="truncate"><%= id %></td>
+    <td><%= state %></td>
+    <td><button class="btn small action"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
     </script>
-    
+
 </body>
 </html>
 

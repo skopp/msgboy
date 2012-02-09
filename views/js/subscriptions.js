@@ -14010,7 +14010,10 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
+var Msgboy = require('../msgboy.js').Msgboy;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
+var Plugins = require('../plugins.js').Plugins;
+require('../bootstrap-modal.js');
 
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
@@ -14075,6 +14078,27 @@ var SubscriptionsView = Backbone.View.extend({
         this.collection = new Subscriptions();
         this.collection.bind('reset', this.render, this);
         this.collection.fetch();
+        
+        // Also loads all the plugins.
+        _.each(Plugins.all, function(plugin) {
+            var btn = $('<span href="#" class="btn plugin-reset" style="margin:10px" id="">'+ plugin.name + '</span>');
+            btn.click(function() {
+                plugin.listSubscriptions(function (subscriptions) {
+                    _.each(subscriptions, function (feed) {
+                        chrome.extension.sendRequest({
+                            signature: "subscribe",
+                            params: feed
+                        }, function (response) {
+                            // Done!
+                        });
+                    }.bind(this));
+                }.bind(this), function (count) {
+                    console.log("Done with", plugin.name, "and subscribed to", count);
+                }.bind(this));
+            }.bind(this));
+            this.$('#plugins').append(btn);
+        }.bind(this));
+        
     },
     
     showOne: function(subscription) {
@@ -14100,6 +14124,1126 @@ var SubscriptionsView = Backbone.View.extend({
 exports.SubscriptionsView = SubscriptionsView;
 
 
+});
+
+require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Msgboy = require('./msgboy.js').Msgboy
+
+var Plugins = {
+    all: [],
+
+    register: function (plugin) {
+        this.all.push(plugin);
+    },
+    importSubscriptions: function (callback, errback) {
+        var subscriptions_count = 0;
+
+        var done_with_plugin = _.after(Plugins.all.length, function () {
+            // Called when we have processed all plugins.
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
+        });
+
+        _.each(Plugins.all, function (plugin) {
+            plugin.listSubscriptions(function (subscriptions) {
+                _.each(subscriptions, function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
+                    });
+                });
+            }, function (count) {
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                subscriptions_count += count;
+                done_with_plugin();
+            });
+        });
+    }
+};
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+Plugins.register(new Blogger());
+
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+Plugins.register(new Bookmarks());
+
+var Digg = require('./plugins/digg.js').Digg;
+Plugins.register(new Digg());
+
+var Disqus = require('./plugins/disqus.js').Disqus;
+Plugins.register(new Disqus());
+
+var Generic = require('./plugins/generic.js').Generic;
+Plugins.register(new Generic());
+
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+Plugins.register(new GoogleReader());
+
+var History = require('./plugins/history.js').History;
+Plugins.register(new History());
+
+var Posterous = require('./plugins/posterous.js').Posterous;
+Plugins.register(new Posterous());
+
+var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
+Plugins.register(new QuoraPeople());
+
+var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
+Plugins.register(new QuoraTopics());
+
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+Plugins.register(new Statusnet());
+
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+Plugins.register(new Tumblr());
+
+var Typepad = require('./plugins/typepad.js').Typepad;
+Plugins.register(new Typepad());
+
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+Plugins.register(new Wordpress());
+
+exports.Plugins = Plugins;
+
+// This is the skeleton for the Plugins
+var Plugin = function () {
+    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
+        // Feeds have the following form {url: _, title: _}.
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
+    };
+
+    this.subscribeInBackground = function (callback) {
+        // The callback needs to be called with a feed object {url: _, title: _}
+        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
+    };
+};
+
+});
+
+require.define("/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+// Blogger
+var $ = jQuery = require('jquery');
+
+Blogger = function () {
+
+    this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('a#b-follow-this').click(function (event) {
+            follow({
+                title: "",
+                url: $("#searchthis").attr("action").replace("search", "feeds/posts/default")
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        var subscriptions = [];
+        $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
+            var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
+            var match = rex.exec(data);
+            while (match) {
+                subscriptions.push({
+                    url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
+                    title: match[1].replace(/"/g, '').trim()
+                });
+                match = rex.exec(data);
+            }
+            callback(subscriptions);
+            done(subscriptions.length);
+        }.bind(this));
+    };
+};
+
+exports.Blogger = Blogger;
+
+});
+
+require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+
+var Bookmarks = function () {
+
+    this.name = 'Browser Bookmarks';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Hum. What?
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        done();
+        var seen = [];
+        var total_feeds = 0;
+        chrome.bookmarks.getRecent(1000,
+            function (bookmarks) {
+                var done_once = _.after(bookmarks.length, function () {
+                    // We have processed all the bookmarks
+                    done(total_feeds);
+                });
+                if (bookmarks.length === 0) {
+                    done(total_feeds);
+                }
+                _.each(bookmarks, function (bookmark) {
+                    Feediscovery.get(bookmark.url, function (links) {
+                        var feeds = [];
+                        _.each(links, function (link) {
+                            total_feeds++;
+                            if (seen.indexOf(link.href) === -1) {
+                                feeds.push({title: link.title, url: link.href});
+                                seen.push(link.href);
+                            }
+                        });
+                        if (feeds.length > 0) {
+                            callback(feeds);
+                        }
+                        done_once();
+                    });
+                });
+            }.bind(this)
+        );
+    };
+
+    this.subscribeInBackground = function (callback) {
+        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+            Feediscovery.get(bookmark.url, function (links) {
+                _.each(links, function (link) {
+                    callback(link);
+                });
+            });
+        }.bind(this));
+    };
+};
+
+exports.Bookmarks = Bookmarks;
+});
+
+require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery      = require('jquery');
+
+// Feediscovery module. The only API that needs to be used is the Feediscovery.get
+Feediscovery = {};
+Feediscovery.stack = [];
+Feediscovery.running = false;
+
+Feediscovery.get = function (_url, _callback) {
+    Feediscovery.stack.push([_url, _callback]);
+    if(!Feediscovery.running) {
+        Feediscovery.running = true;
+        Feediscovery.run();
+    }
+};
+Feediscovery.run = function () {
+    var next = Feediscovery.stack.shift();
+    if (next) {
+        $.ajax({url: "http://feediscovery.appspot.com/",
+            data: {url: next[0]},
+            success: function (data) {
+                next[1](JSON.parse(data));
+                Feediscovery.run();
+            },
+            error: function () {
+                // Let's restack, in the back.
+                Feediscovery.get(next[0], next[1]);
+            }
+        });
+    } else {
+        setTimeout(function () {
+            Feediscovery.run();
+        }, 1000);
+    }
+};
+
+exports.Feediscovery = Feediscovery;
+
+});
+
+require.define("/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+Digg = function () {
+
+    this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "digg.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        $(".btn-follow").live('click', function (event) {
+            url = $(event.target).attr("href");
+            login =  url.split("/")[1];
+            action = url.split("/")[2];
+            switch (action) {
+            case "follow":
+                follow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            case "unfollow":
+                unfollow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            default:
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Digg = Digg;
+});
+
+require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+Disqus = function () {
+
+    this.name = 'Disqus Comments';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (document.getElementById("disqus_thread"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#dsq-post-button").live('click', function (event) {
+            follow({
+                url: $(".dsq-subscribe-rss a").attr("href"),
+                title: document.title + " comments"
+            }, function () {
+                //Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.Disqus = Disqus;
+});
+
+require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+Generic = function () {
+    this.name = 'Generic Plugin which will listen for any page';
+
+    this.onSubscriptionPage = function () {
+        return true;
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Adds a listen event on all elements
+        $(".msgboy-follow").click(function (element) {
+            follow({
+                title: $(element.currentTarget).attr("data-msgboy-title"),
+                url: $(element.currentTarget).attr("data-msgboy-url")
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+};
+
+exports.Generic = Generic;
+});
+
+require.define("/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+GoogleReader = function () {
+
+    this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        var submitted = function () {
+            follow({
+                url: $("#quickadd").val(),
+                title: $("#quickadd").val()
+            }, function () {
+                // Done
+            });
+        };
+        $("#quick-add-form .goog-button-body").click(submitted);
+        $("#quick-add-form").submit(submitted);
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        links = [];
+        request = new XMLHttpRequest();
+        $.get("http://www.google.com/reader/subscriptions/export", function (data) {
+            var subscriptions = [];
+            urls = $(data).find("outline").each(function () {
+                subscriptions.push({
+                    url:  $(this).attr("xmlUrl"),
+                    title: $(this).attr("title")
+                });
+            });
+            callback(subscriptions);
+            done(subscriptions.length);
+        });
+    };
+};
+
+exports.GoogleReader = GoogleReader;
+});
+
+require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+var Maths = require("../maths.js").Maths;
+
+var History = function () {
+    this.name = 'Browsing History';
+    this.visits_to_be_popular = 3;
+    this.deviation = 1;
+    this.elapsed = 1000 * 60 * 60 * 3;
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+    this.hijack = function (follow, unfollow) {
+        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
+    };
+    this.listSubscriptions = function (callback, done) {
+        var seen = [];
+        var pending = 0;
+        var totalFeeds = 0;
+
+        chrome.history.search({
+            'text': '',
+            // Return every history item....
+            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
+            // that was accessed less than one month ago.
+            'maxResults': 10000
+        }, function (historyItems) {
+            if (historyItems.length === 0) {
+                done(0);
+            }
+            var doneOne = _.after(historyItems.length, function () {
+                done(totalFeeds);
+            });
+
+            _.each(historyItems, function (item) {
+                if (item.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(item.url, function (result) {
+                        if (result) {
+                            pending++;
+                            Feediscovery.get(item.url, function (links) {
+                                var feeds = [];
+                                _.each(links, function (link) {
+                                    totalFeeds++;
+                                    if (seen.indexOf(link.href) === -1) {
+                                        feeds.push({title: link.title, url: link.href});
+                                        seen.push(link.href);
+                                    }
+                                });
+                                pending--;
+                                doneOne();
+                                if (feeds.length > 0) {
+                                    callback(feeds);
+                                }
+                            });
+                        }
+                        else {
+                            // Not visited regularly.
+                            doneOne();
+                        }
+                    });
+                }
+                else {
+                    doneOne();
+                    // Not visited often enough
+                }
+            }.bind(this));
+        }.bind(this));
+    };
+    this.visitsRegularly = function (url, callback) {
+        chrome.history.getVisits({url: url}, function (visits) {
+            times = $.map(visits, function (visit) {
+                return visit.visitTime;
+                }).slice(-10); // We check the last 10 visits.
+                var diffs = [];
+                for (var i = 0; i < times.length - 1; i++) {
+                    diffs[i] =  times[i + 1] - times[i];
+                }
+                // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
+                if (Maths.normalizedDeviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
+                    callback(true);
+                }
+                else {
+                    callback(false);
+                }
+            }.bind(this));
+        };
+        this.subscribeInBackground = function (callback) {
+            chrome.history.onVisited.addListener(function (historyItem) {
+                if (historyItem.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(historyItem.url, function (result) {
+                        Feediscovery.get(historyItem.url, function (links) {
+                            _.each(links, function (link) {
+                                callback(link);
+                            });
+                        });
+                    });
+                }
+            }.bind(this));
+        };
+    };
+
+    exports.History = History;
+});
+
+require.define("/maths.js", function (require, module, exports, __dirname, __filename) {
+// Helpers for maths
+
+Maths = {};
+Maths.normalizedDeviation = function (array) {
+    return Maths.deviation(array) / Maths.average(array);
+};
+Maths.deviation = function (array) {
+    var avg = Maths.average(array);
+    var count = array.length;
+    var i = count - 1;
+    var v = 0;
+    while (i >= 0) {
+        v += Math.pow((array[i] - avg), 2);
+        i = i - 1;
+    }
+    return Math.sqrt(v / count);
+};
+Maths.average = function (array) {
+    var count = array.length;
+    var i = count - 1;
+    var sum = 0;
+    while (i >= 0) {
+        sum += array[i];
+        i = i - 1;
+    }
+    return sum / count;
+};
+
+
+exports.Maths = Maths;
+
+});
+
+require.define("/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Posterous = function () {
+
+    this.name = 'Posterous';
+    this.hijacked = false;
+
+    this.onSubscriptionPage = function () {
+        return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('#posterous_required_header').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // done
+                    });
+                });
+            }
+        }, function () {});
+
+        $('#posterous_bar').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // Done
+                    });
+                });
+            }
+        }, function () {});
+
+        $("#subscribe_link").click(function () {
+            follow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $("#psub_unsubscribed_link").click(function () {
+            unfollow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $(".subscribe_ajax a.unsubscribed").click(function (event) {
+            var parent = $($($($(event.target).parent()).parent()).parent().find(".profile_sub_site a")[0]);
+            unfollow({
+                title: $.trim(parent.html()),
+                url: parent.attr("href") + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        var that = this;
+        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
+            content = $(data);
+            links = content.find("#subscriptions td.image a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "/rss.xml",
+                    title: $(link).attr("title")
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Posterous = Posterous;
+});
+
+require.define("/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+QuoraPeople = function () {
+
+    this.name = 'Quora People';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".follow_button").not(".unfollow_button").not(".topic_follow").click(function (event) {
+            if ($.trim($(event.target).html()) !== "Follow Question") {
+                // This is must a button on a user's page. Which we want to follow
+                follow({
+                    title: document.title,
+                    url: window.location.href + "/rss"
+                });
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.QuoraPeople = QuoraPeople;
+});
+
+require.define("/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+QuoraTopics = function () {
+
+    this.name = 'Quora Topics';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".topic_follow.follow_button").not(".unfollow_button").click(function (event) {
+            url = "";
+            title = "";
+            if ($(event.target).parent().parent().find(".topic_name").length > 0) {
+                link = $(event.target).parent().parent().find(".topic_name")[0];
+                url = "http://www.quora.com" + ($(link).attr("href")) + "/rss";
+                title = $($(link).children()[0]).html() + " on Quora";
+            }
+            else {
+                title = document.title;
+                url = window.location.href + "/rss";
+            }
+            follow({
+                url: url,
+                title: title
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.QuoraTopics = QuoraTopics;
+});
+
+require.define("/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+Statusnet = function () {
+
+    this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+        return (window.location.host.match(/status\.net/));
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        $('#form_ostatus_connect').live("submit", function () {
+            user = $($(this).find("#nickname")[0]).attr("value");
+            url = "http://" + parseUri(window.location).host + "/api/statuses/user_timeline/1.atom";
+            follow({
+                title:  user + " on Status.net",
+                url: url
+            }, function () {
+                // Done
+            });
+        });
+    };
+};
+
+exports.Statusnet = Statusnet;
+});
+
+require.define("/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Tumblr = function () {
+
+    this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('form[action|="/follow"]').submit(function (event) {
+            follow({
+                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
+                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
+            content = $(data);
+            links = content.find(".follower .name a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "rss",
+                    title: $(link).html() + " on Tumblr"
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Tumblr = Tumblr;
+});
+
+require.define("/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Typepad = function () {
+
+    this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#follow-display").click(function () {
+            follow({
+                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
+                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Typepad = Typepad;
+});
+
+require.define("/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Wordpress = function () {
+
+    this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (document.getElementById("wpadminbar"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('admin-bar-follow-link').live('click', function (event) {
+            follow({
+                title: $('#wp-admin-bar-blog a.ab-item').text(),
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        $.get("http://wordpress.com/#!/read/edit/", function (data) {
+            content = $(data);
+            links = content.find("a.blogurl");
+            var count = 0;
+            console.log(data);
+            links.each(function (index, link) {
+                console.log(link);
+                count += 1;
+                callback({
+                    url: $(link).attr("href") + "/feed",
+                    title: $(link).text()
+                });
+            });
+            done(count);
+        });
+    };
+
+};
+
+exports.Wordpress = Wordpress;
+});
+
+require.define("/bootstrap-modal.js", function (require, module, exports, __dirname, __filename) {
+/* =========================================================
+ * bootstrap-modal.js v1.3.0
+ * http://twitter.github.com/bootstrap/javascript.html#modal
+ * =========================================================
+ * Copyright 2011 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ========================================================= */
+
+
+!function( $ ){
+
+ /* CSS TRANSITION SUPPORT (https://gist.github.com/373874)
+  * ======================================================= */
+
+  var transitionEnd
+
+  $(document).ready(function () {
+
+    $.support.transition = (function () {
+      var thisBody = document.body || document.documentElement
+        , thisStyle = thisBody.style
+        , support = thisStyle.transition !== undefined || thisStyle.WebkitTransition !== undefined || thisStyle.MozTransition !== undefined || thisStyle.MsTransition !== undefined || thisStyle.OTransition !== undefined
+      return support
+    })()
+
+    // set CSS transition event type
+    if ( $.support.transition ) {
+      transitionEnd = "TransitionEnd"
+      if ( $.browser.webkit ) {
+      	transitionEnd = "webkitTransitionEnd"
+      } else if ( $.browser.mozilla ) {
+      	transitionEnd = "transitionend"
+      } else if ( $.browser.opera ) {
+      	transitionEnd = "oTransitionEnd"
+      }
+    }
+
+  })
+
+
+ /* MODAL PUBLIC CLASS DEFINITION
+  * ============================= */
+
+  var Modal = function ( content, options ) {
+    this.settings = $.extend({}, $.fn.modal.defaults, options)
+    this.$element = $(content)
+      .delegate('.close', 'click.modal', $.proxy(this.hide, this))
+
+    if ( this.settings.show ) {
+      this.show()
+    }
+
+    return this
+  }
+
+  Modal.prototype = {
+
+      toggle: function () {
+        return this[!this.isShown ? 'show' : 'hide']()
+      }
+
+    , show: function () {
+        var that = this
+        this.isShown = true
+        this.$element.trigger('show')
+
+        escape.call(this)
+        backdrop.call(this, function () {
+          var transition = $.support.transition && that.$element.hasClass('fade')
+
+          that.$element
+            .appendTo(document.body)
+            .show()
+
+          if (transition) {
+            that.$element[0].offsetWidth // force reflow
+          }
+
+          that.$element
+            .addClass('in')
+
+          transition ?
+            that.$element.one(transitionEnd, function () { that.$element.trigger('shown') }) :
+            that.$element.trigger('shown')
+
+        })
+
+        return this
+      }
+
+    , hide: function (e) {
+        e && e.preventDefault()
+
+        if ( !this.isShown ) {
+          return this
+        }
+
+        var that = this
+        this.isShown = false
+
+        escape.call(this)
+
+        this.$element
+          .trigger('hide')
+          .removeClass('in')
+
+        function removeElement () {
+          that.$element
+            .hide()
+            .trigger('hidden')
+
+          backdrop.call(that)
+        }
+
+        $.support.transition && this.$element.hasClass('fade') ?
+          this.$element.one(transitionEnd, removeElement) :
+          removeElement()
+
+        return this
+      }
+
+  }
+
+
+ /* MODAL PRIVATE METHODS
+  * ===================== */
+
+  function backdrop ( callback ) {
+    var that = this
+      , animate = this.$element.hasClass('fade') ? 'fade' : ''
+    if ( this.isShown && this.settings.backdrop ) {
+      var doAnimate = $.support.transition && animate
+
+      this.$backdrop = $('<div class="modal-backdrop ' + animate + '" />')
+        .appendTo(document.body)
+
+      if ( this.settings.backdrop != 'static' ) {
+        this.$backdrop.click($.proxy(this.hide, this))
+      }
+
+      if ( doAnimate ) {
+        this.$backdrop[0].offsetWidth // force reflow
+      }
+
+      this.$backdrop.addClass('in')
+
+      doAnimate ?
+        this.$backdrop.one(transitionEnd, callback) :
+        callback()
+
+    } else if ( !this.isShown && this.$backdrop ) {
+      this.$backdrop.removeClass('in')
+
+      function removeElement() {
+        that.$backdrop.remove()
+        that.$backdrop = null
+      }
+
+      $.support.transition && this.$element.hasClass('fade')?
+        this.$backdrop.one(transitionEnd, removeElement) :
+        removeElement()
+    } else if ( callback ) {
+       callback()
+    }
+  }
+
+  function escape() {
+    var that = this
+    if ( this.isShown && this.settings.keyboard ) {
+      $(document).bind('keyup.modal', function ( e ) {
+        if ( e.which == 27 ) {
+          that.hide()
+        }
+      })
+    } else if ( !this.isShown ) {
+      $(document).unbind('keyup.modal')
+    }
+  }
+
+
+ /* MODAL PLUGIN DEFINITION
+  * ======================= */
+
+  $.fn.modal = function ( options ) {
+    var modal = this.data('modal')
+
+    if (!modal) {
+
+      if (typeof options == 'string') {
+        options = {
+          show: /show|toggle/.test(options)
+        }
+      }
+
+      return this.each(function () {
+        $(this).data('modal', new Modal(this, options))
+      })
+    }
+
+    if ( options === true ) {
+      return modal
+    }
+
+    if ( typeof options == 'string' ) {
+      modal[options]()
+    } else if ( modal ) {
+      modal.toggle()
+    }
+
+    return this
+  }
+
+  $.fn.modal.Modal = Modal
+
+  $.fn.modal.defaults = {
+    backdrop: false
+  , keyboard: false
+  , show: false
+  }
+
+
+ /* MODAL DATA- IMPLEMENTATION
+  * ========================== */
+
+  $(document).ready(function () {
+    $('body').delegate('[data-controls-modal]', 'click', function (e) {
+      e.preventDefault()
+      var $this = $(this).data('show', true)
+      $('#' + $this.attr('data-controls-modal')).modal( $this.data() )
+    })
+  })
+
+}( window.jQuery || window.ender );
 });
 
 require.alias("br-jquery", "/node_modules/jquery");

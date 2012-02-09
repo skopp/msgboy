@@ -2,7 +2,10 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
+var Msgboy = require('../msgboy.js').Msgboy;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
+var Plugins = require('../plugins.js').Plugins;
+require('../bootstrap-modal.js');
 
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
@@ -67,6 +70,27 @@ var SubscriptionsView = Backbone.View.extend({
         this.collection = new Subscriptions();
         this.collection.bind('reset', this.render, this);
         this.collection.fetch();
+        
+        // Also loads all the plugins.
+        _.each(Plugins.all, function(plugin) {
+            var btn = $('<span href="#" class="btn plugin-reset" style="margin:10px" id="">'+ plugin.name + '</span>');
+            btn.click(function() {
+                plugin.listSubscriptions(function (subscriptions) {
+                    _.each(subscriptions, function (feed) {
+                        chrome.extension.sendRequest({
+                            signature: "subscribe",
+                            params: feed
+                        }, function (response) {
+                            // Done!
+                        });
+                    }.bind(this));
+                }.bind(this), function (count) {
+                    console.log("Done with", plugin.name, "and subscribed to", count);
+                }.bind(this));
+            }.bind(this));
+            this.$('#plugins').append(btn);
+        }.bind(this));
+        
     },
     
     showOne: function(subscription) {

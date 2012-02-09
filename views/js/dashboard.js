@@ -14781,52 +14781,6 @@ Msgboy.helper.element.original_size = function (el) {
     return sizes;
 };
 
-// Helpers for maths
-Msgboy.helper.maths = {};
-// Helpers for arrays of elements
-Msgboy.helper.maths.array = {};
-Msgboy.helper.maths.array.normalized_deviation = function (array) {
-    return Msgboy.helper.maths.array.deviation(array) / Msgboy.helper.maths.array.average(array);
-};
-Msgboy.helper.maths.array.deviation = function (array) {
-    var avg = Msgboy.helper.maths.array.average(array);
-    var count = array.length;
-    var i = count - 1;
-    var v = 0;
-    while (i >= 0) {
-        v += Math.pow((array[i] - avg), 2);
-        i = i - 1;
-    }
-    return Math.sqrt(v / count);
-};
-Msgboy.helper.maths.array.average = function (array) {
-    var count = array.length;
-    var i = count - 1;
-    var sum = 0;
-    while (i >= 0) {
-        sum += array[i];
-        i = i - 1;
-    }
-    return sum / count;
-};
-// Helpers for numbers
-Msgboy.helper.maths.number = {};
-Msgboy.helper.maths.number.fibonacci = function (n) {
-    var o;
-    if (n < 0) {
-        return 0;
-    }
-    else if (n < 2) {
-        return n;
-    }
-    else {
-        return Msgboy.helper.maths.number.fibonacci(n - 1) + Msgboy.helper.maths.number.fibonacci(n - 2);
-    }
-    // return n < 2 ? n : n % 2 ? (o = Msgboy.helper.maths.number.fibonacci(n = -(-n >> 1))) * o + (o = Msgboy.helper.maths.number.fibonacci(n - 1)) * o : (Msgboy.helper.maths.number.fibonacci(n >>= 1) + 2 * Msgboy.helper.maths.number.fibonacci(n - 1)) * Msgboy.helper.maths.number.fibonacci(n);
-};
-
-
-
 
 });
 

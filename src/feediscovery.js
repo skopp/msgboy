@@ -11,9 +11,6 @@ Feediscovery.get = function (_url, _callback) {
         Feediscovery.running = true;
         Feediscovery.run();
     }
-    else {
-        console.log(Feediscovery.stack.length);
-    }
 };
 Feediscovery.run = function () {
     var next = Feediscovery.stack.shift();
