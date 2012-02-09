@@ -2,6 +2,7 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 var Subscriptions = require('./models/subscription.js').Subscriptions;
+var Subscription = require('./models/subscription.js').Subscription;
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
@@ -238,3 +239,4 @@ Msgboy.resumeSubscriptions = function () {
 };
 
 exports.Msgboy = Msgboy;
+

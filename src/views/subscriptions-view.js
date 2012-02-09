@@ -62,6 +62,7 @@ var SubscriptionsView = Backbone.View.extend({
     },
 
     initialize: function () {
+        _.bindAll(this, 'showOne', 'render', 'opmlExport');
         // Loading the subscriptions.
         this.collection = new Subscriptions();
         this.collection.bind('reset', this.render, this);
@@ -82,8 +83,8 @@ var SubscriptionsView = Backbone.View.extend({
         this.collection.each(function(subscription) {
             opml += '<outline xmlUrl="' + escape(subscription.id) + '" />';
         });
-        opml += '</body></opml>'
-        window.location = "data:application/xml;base64," + Base64.encode(opml);
+        opml += '</body></opml>';
+        window.location = "data:application/xml;base64," + window.btoa(opml);   
     }
     
 });

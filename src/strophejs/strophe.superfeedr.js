@@ -1,4 +1,6 @@
-Strophe.addConnectionPlugin('superfeedr', {
+var $ = jQuery      = require('jquery');
+
+var SuperfeedrPlugin = {
 
     _connection: null,
     _firehoser: 'firehoser.superfeedr.com',
@@ -139,6 +141,8 @@ Strophe.addConnectionPlugin('superfeedr', {
 	        links: links,
 	    };
 	},
-	
-	
-});
+}
+
+exports.SuperfeedrPlugin = SuperfeedrPlugin;
+
+

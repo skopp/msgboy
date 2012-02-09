@@ -63,33 +63,7 @@ if (typeof Msgboy.helper === "undefined") {
     Msgboy.helper = {};
 }
 
-// Feediscovery module. The only API that needs to be used is the Msgboy.helper.feediscovery.get
-Msgboy.helper.feediscovery = {};
-Msgboy.helper.feediscovery.stack = [];
-Msgboy.helper.feediscovery.get = function (_url, _callback) {
-    Msgboy.helper.feediscovery.stack.push([_url, _callback]);
-};
-Msgboy.helper.feediscovery.run = function () {
-    var next = Msgboy.helper.feediscovery.stack.shift();
-    if (next) {
-        $.ajax({url: "http://feediscovery.appspot.com/",
-            data: {url: next[0]},
-            success: function (data) {
-                next[1](JSON.parse(data));
-                Msgboy.helper.feediscovery.run();
-            },
-            error: function () {
-                // Let's restack, in the back.
-                Msgboy.helper.feediscovery.get(next[0], next[1]);
-            }
-        });
-    } else {
-        setTimeout(function () {
-            Msgboy.helper.feediscovery.run();
-        }, 1000);
-    }
-};
-Msgboy.helper.feediscovery.run();
+
 
 
 // The DOM cleaner

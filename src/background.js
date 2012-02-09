@@ -1,5 +1,7 @@
 var $ = jQuery      = require('jquery');
 var Strophe         = require('./strophejs/core.js').Strophe
+var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
+Strophe.addConnectionPlugin('superfeedr',SuperfeedrPlugin);
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
@@ -75,6 +77,7 @@ Msgboy.bind("loaded", function () {
         msg.source = notification.source;
         msg.feed = notification.source.url;
         // Let's try to extract the image for this message.
+        // We should extract the largest image from the content, if possible... then, attach it as msg.image. This way we won't have to look up for it later.
         
         var message = Msgboy.inbox.addMessage(msg, {
             success: function () {
