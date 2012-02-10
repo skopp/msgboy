@@ -1,7 +1,7 @@
 var $ = jQuery      = require('jquery');
 var Strophe         = require('./strophejs/core.js').Strophe
 var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
-Strophe.addConnectionPlugin('superfeedr',SuperfeedrPlugin);
+Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
@@ -71,9 +71,9 @@ Msgboy.bind("loaded", function () {
     });
     
     // When a new notification was received from XMPP line.
-    $(document).bind('notification_received', function (ev, notification) {
+    SuperfeedrPlugin.onNotificationReceived = function (notification) {
         Msgboy.log.debug("Notification received from " + notification.source.url);
-        var msg = Msgboy.connection.superfeedr.convertAtomToJson(notification.payload);
+        var msg = SuperfeedrPlugin.convertAtomToJson(notification.payload);
         msg.source = notification.source;
         msg.feed = notification.source.url;
         // Let's try to extract the image for this message.
@@ -89,7 +89,7 @@ Msgboy.bind("loaded", function () {
                 Msgboy.log.debug(error);
             }.bind(this),
         });
-    });
+    }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {

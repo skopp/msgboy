@@ -16383,10 +16383,10 @@ var SuperfeedrPlugin = {
 	// we set up the handler. If it was previously set, we just unset it, and delete it.
     statusChanged: function (status) {
         if (this._handler) {
-			this._connection.deleteHandler(this._handler);
-			this._handler = null;
+            this._connection.deleteHandler(this._handler);
+            this._handler = null;
         }
-    	this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
+        this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
     },
 
     notificationReceived: function (msg) {
@@ -16399,7 +16399,7 @@ var SuperfeedrPlugin = {
                 links: this.atomLinksToJson(status.getElementsByTagName("link"))
             }
             for (i = 0; i < entries.length; i++) {
-	            $(document).trigger('notification_received', {payload: entries[i], source: source});
+                this.onNotificationReceived({payload: entries[i], source: source});
             }
         }
         return true; // We must return true to keep the handler active!
@@ -16426,7 +16426,7 @@ var SuperfeedrPlugin = {
 	    var atom_links = atom.getElementsByTagName("link");
 	    var links = this.atomLinksToJson(atom_links);
 	    return {
-	        id: MD5.hexdigest(Strophe.getText(atom.getElementsByTagName("id")[0])),
+	        id: window.btoa(Strophe.getText(atom.getElementsByTagName("id")[0])),
 	        atomId: Strophe.getText(atom.getElementsByTagName("id")[0]),
 	        published: Strophe.getText(atom.getElementsByTagName("published")[0]),
 	        updated: Strophe.getText(atom.getElementsByTagName("updated")[0]),
@@ -16435,6 +16435,10 @@ var SuperfeedrPlugin = {
 	        content: Strophe.getText(atom.getElementsByTagName("content")[0]),
 	        links: links,
 	    };
+	},
+	
+	onNotificationReceived: function(notification) {
+	    // This method should be overwritten!
 	},
 }
 
@@ -17722,9 +17726,7 @@ var Wordpress = function () {
             content = $(data);
             links = content.find("a.blogurl");
             var count = 0;
-            console.log(data);
             links.each(function (index, link) {
-                console.log(link);
                 count += 1;
                 callback({
                     url: $(link).attr("href") + "/feed",
@@ -17745,6 +17747,7 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
 
 var Inbox = Backbone.Model.extend({
     storeName: "inbox",
@@ -18619,7 +18622,7 @@ require.define("/background.js", function (require, module, exports, __dirname, 
     var $ = jQuery      = require('jquery');
 var Strophe         = require('./strophejs/core.js').Strophe
 var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
-Strophe.addConnectionPlugin('superfeedr',SuperfeedrPlugin);
+Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
@@ -18689,9 +18692,9 @@ Msgboy.bind("loaded", function () {
     });
     
     // When a new notification was received from XMPP line.
-    $(document).bind('notification_received', function (ev, notification) {
+    SuperfeedrPlugin.onNotificationReceived = function (notification) {
         Msgboy.log.debug("Notification received from " + notification.source.url);
-        var msg = Msgboy.connection.superfeedr.convertAtomToJson(notification.payload);
+        var msg = SuperfeedrPlugin.convertAtomToJson(notification.payload);
         msg.source = notification.source;
         msg.feed = notification.source.url;
         // Let's try to extract the image for this message.
@@ -18707,7 +18710,7 @@ Msgboy.bind("loaded", function () {
                 Msgboy.log.debug(error);
             }.bind(this),
         });
-    });
+    }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {

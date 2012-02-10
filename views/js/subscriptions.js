@@ -14981,9 +14981,7 @@ var Wordpress = function () {
             content = $(data);
             links = content.find("a.blogurl");
             var count = 0;
-            console.log(data);
             links.each(function (index, link) {
-                console.log(link);
                 count += 1;
                 callback({
                     url: $(link).attr("href") + "/feed",

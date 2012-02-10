@@ -14888,7 +14888,7 @@ var MessageView = Backbone.View.extend({
             '<button class="vote up"></button>',
         '</span>',
         '<p class="darkened"><%= model.escape("title") %></p>',
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.escape("source").title %></h1>'
+        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>'
     ].join('')),
     initialize: function () {
         this.model.bind('change', this.layout.bind(this)); 
@@ -14939,7 +14939,9 @@ var MessageView = Backbone.View.extend({
         if (isGroup) {
             el.prepend($('<div class="ribbon">' + (this.model.related.length) + ' stories</div>'));
         }
-        $(this.el).append('<img class="main" src="' + this.model.get('image') + '"/>');
+        if(typeof this.model.get('image') !== "undefined") {
+            $(this.el).append('<img class="main" src="' + this.model.get('image') + '"/>');
+        }
     },
     // Browser event handlers
     handleClick: function (evt) {

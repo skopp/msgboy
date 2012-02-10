@@ -88,10 +88,10 @@ var SuperfeedrPlugin = {
 	// we set up the handler. If it was previously set, we just unset it, and delete it.
     statusChanged: function (status) {
         if (this._handler) {
-			this._connection.deleteHandler(this._handler);
-			this._handler = null;
+            this._connection.deleteHandler(this._handler);
+            this._handler = null;
         }
-    	this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
+        this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
     },
 
     notificationReceived: function (msg) {
@@ -104,7 +104,7 @@ var SuperfeedrPlugin = {
                 links: this.atomLinksToJson(status.getElementsByTagName("link"))
             }
             for (i = 0; i < entries.length; i++) {
-	            $(document).trigger('notification_received', {payload: entries[i], source: source});
+                this.onNotificationReceived({payload: entries[i], source: source});
             }
         }
         return true; // We must return true to keep the handler active!
@@ -131,7 +131,7 @@ var SuperfeedrPlugin = {
 	    var atom_links = atom.getElementsByTagName("link");
 	    var links = this.atomLinksToJson(atom_links);
 	    return {
-	        id: MD5.hexdigest(Strophe.getText(atom.getElementsByTagName("id")[0])),
+	        id: window.btoa(Strophe.getText(atom.getElementsByTagName("id")[0])),
 	        atomId: Strophe.getText(atom.getElementsByTagName("id")[0]),
 	        published: Strophe.getText(atom.getElementsByTagName("published")[0]),
 	        updated: Strophe.getText(atom.getElementsByTagName("updated")[0]),
@@ -140,6 +140,10 @@ var SuperfeedrPlugin = {
 	        content: Strophe.getText(atom.getElementsByTagName("content")[0]),
 	        links: links,
 	    };
+	},
+	
+	onNotificationReceived: function(notification) {
+	    // This method should be overwritten!
 	},
 }
 

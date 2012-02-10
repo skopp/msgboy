@@ -2,6 +2,7 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
 
 var Inbox = Backbone.Model.extend({
     storeName: "inbox",
