@@ -17857,7 +17857,7 @@ var Message = Backbone.Model.extend({
         "sourceLink":   null,
         "state":        "new",
         "feed":         null,
-        "relevance":    0.5
+        "relevance":    0.6
     },
     /* Initializes the messages */
     initialize: function (params) {
@@ -18724,7 +18724,7 @@ Msgboy.bind("loaded", function () {
         })
         
         images.load(function(evt) {
-            if(!largestImgSize || largestImgSize < evt.target.height * evt.target.width) {
+            if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && !(evt.target.height === 250 && evt.target.width === 300)) {
                 largestImgSize = evt.target.height * evt.target.width;
                 largestImg = evt.target.src;
             }
