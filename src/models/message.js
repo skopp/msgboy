@@ -79,7 +79,7 @@ var Message = Backbone.Model.extend({
                 params.text =  params.content;
             }
         }
-        else if (this.get('summary')) {
+        else if (params.summary) {
             params.text =  params.summary;
         }
         else {

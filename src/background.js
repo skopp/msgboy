@@ -77,18 +77,39 @@ Msgboy.bind("loaded", function () {
         msg.source = notification.source;
         msg.feed = notification.source.url;
         // Let's try to extract the image for this message.
-        // We should extract the largest image from the content, if possible... then, attach it as msg.image. This way we won't have to look up for it later.
+        var container = $("<div>");
+        var content = $(msg.content)
+        container.append(content);
+        var images = container.find("img");
+        var largestImg = null;
+        var largestImgSize = null;
+        var imgLoaded = _.after(images.length, function() {
+            // The problem with this approach is that if the load event is not triggered, then we're in trouble.
+            if(largestImg) {
+                msg.image = largestImg;
+            }
+            container.remove();
+            var message = Msgboy.inbox.addMessage(msg, {
+                success: function () {
+                    Msgboy.log.debug("Saved message " + msg.id);
+                }.bind(this),
+                error: function (object, error) {
+                    // Message was not saved... probably a dupe
+                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg));
+                    Msgboy.log.debug(error);
+                }.bind(this),
+            });
+
+        })
         
-        var message = Msgboy.inbox.addMessage(msg, {
-            success: function () {
-                Msgboy.log.debug("Saved message " + msg.id);
-            }.bind(this),
-            error: function (object, error) {
-                // Message was not saved... probably a dupe
-                Msgboy.log.debug("Could not save message " + JSON.stringify(msg));
-                Msgboy.log.debug(error);
-            }.bind(this),
+        images.load(function(evt) {
+            if(!largestImgSize || largestImgSize < evt.target.height * evt.target.width) {
+                largestImgSize = evt.target.height * evt.target.width;
+                largestImg = evt.target.src;
+            }
+            imgLoaded();
         });
+        $("body").append(container); // Let's hook up everything together!
     }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.

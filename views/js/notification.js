@@ -14029,7 +14029,7 @@ var Message = Backbone.Model.extend({
         "sourceLink":   null,
         "state":        "new",
         "feed":         null,
-        "relevance":    0.3
+        "relevance":    0.5
     },
     /* Initializes the messages */
     initialize: function (params) {
@@ -14087,7 +14087,7 @@ var Message = Backbone.Model.extend({
                 params.text =  params.content;
             }
         }
-        else if (this.get('summary')) {
+        else if (params.summary) {
             params.text =  params.summary;
         }
         else {
