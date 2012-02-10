@@ -21,7 +21,7 @@ var Message = Backbone.Model.extend({
         "sourceLink":   null,
         "state":        "new",
         "feed":         null,
-        "relevance":    0.5
+        "relevance":    0.6
     },
     /* Initializes the messages */
     initialize: function (params) {
