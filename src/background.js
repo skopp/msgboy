@@ -103,7 +103,10 @@ Msgboy.bind("loaded", function () {
         })
         
         images.load(function(evt) {
-            if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && !(evt.target.height === 250 && evt.target.width === 300) && !(evt.target.height < 100  || evt.target.width < 100)) {
+            if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && 
+                !(evt.target.height === 250 && evt.target.width === 300) && 
+                !(evt.target.height < 100  || evt.target.width < 100) &&
+                !evt.target.src.match('/doubleclick.net/')) {
                 largestImgSize = evt.target.height * evt.target.width;
                 largestImg = evt.target.src;
             }
