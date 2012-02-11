@@ -3,8 +3,8 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var Isotope = require('../jquery.isotope.min.js');
-var Archive = require('../models/archive.js');
 var MessageView = require('./message-view.js').MessageView;
+var Archive = require('../models/archive.js').Archive;
 
 var ArchiveView = Backbone.View.extend({
     upperDound: new Date().getTime(),
@@ -68,14 +68,19 @@ var ArchiveView = Backbone.View.extend({
             })
 
             message.bind('unsubscribed', function() {
+                console.log("QUI");
+                // We have unsubscribed a feed. So we want to delete all of its brothers.
                 var brothers = new Archive(); 
-                brothers.forFeed(message.get('feed'));
                 brothers.bind('reset', function() {
+                    console.log("HERE")
                     _.each(brothers.models, function(brother) {
                         brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
                         brother.destroy(); // Deletes the brothers 
                     }.bind(this));
                 }.bind(this));
+                console.log(message.get('feed'));
+                
+                brothers.forFeed(message.get('feed'));
             }.bind(this));
 
             var view = new MessageView({

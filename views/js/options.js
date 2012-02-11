@@ -14263,7 +14263,7 @@ var Message = Backbone.Model.extend({
                     return 1;
                 });
                 var counts = relevanceMath.counts(brothers.pluck("state"));
-                if (brothers.length > 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] > 5)) {
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
                     this.trigger('unsubscribe');
                 }
             }.bind(this));
@@ -14899,14 +14899,13 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Message = require('./message.js').Message;
 
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,
-    model: Message,
 
     initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
     },
     comparator: function (message) {
         return - (message.get('createdAt'));

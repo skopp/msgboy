@@ -35,7 +35,7 @@ var MessageView = Backbone.View.extend({
                 signature: "unsubscribe",
                 params: {
                     title: "", // TODO : Add support for title 
-                    url: this.model.attributes.feed,
+                    url: this.model.get('feed'),
                     force: true
                 },
                 force: true
@@ -119,27 +119,6 @@ var MessageView = Backbone.View.extend({
         this.layout();
         return false;
     },
-    // handleImageLoad: function (e) {
-    //         // We should check the size of the image and only display it if it's bigger than the previous one.
-    //         // We should also resize it to fit the square.
-    //         var img = e.target;
-    //         $(this.el).append('<img class="main" src="' + $(img).attr("src") + '"/>');
-    //         
-    //         // var img = e.target,
-    //         //     img_size = Msgboy.helper.element.original_size($(img));
-    //         // 
-    //         // // eliminate the tracking pixels and ensure min of at least 50x50
-    //         // if (img.width > 50 && img.height > 50) {
-    //         //     this.$("p").addClass("darkened");
-    //             // $(this.el).append('<img class="main" src="' + $(img).attr("src") + '"/>');
-    //         //     // Resize the image.
-    //         //     if (img_size.width / img_size.height > $(self.el).width() / $(self.el).height()) {
-    //         //         this.$(".message > img.main").css("min-height", "150%");
-    //         //     } else {
-    //         //         this.$(".message > img.main").css("min-width", "100%");
-    //         //     }
-    //         // }
-    //     },
     getBrickClass: function () {
         var res,
             state = this.model.get('state');

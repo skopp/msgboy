@@ -14010,14 +14010,13 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Message = require('./message.js').Message;
 
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,
-    model: Message,
 
     initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
     },
     comparator: function (message) {
         return - (message.get('createdAt'));
@@ -14153,7 +14152,7 @@ var Message = Backbone.Model.extend({
                     return 1;
                 });
                 var counts = relevanceMath.counts(brothers.pluck("state"));
-                if (brothers.length > 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] > 5)) {
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
                     this.trigger('unsubscribe');
                 }
             }.bind(this));
@@ -14790,8 +14789,8 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var Isotope = require('../jquery.isotope.min.js');
-var Archive = require('../models/archive.js');
 var MessageView = require('./message-view.js').MessageView;
+var Archive = require('../models/archive.js').Archive;
 
 var ArchiveView = Backbone.View.extend({
     upperDound: new Date().getTime(),
@@ -14855,14 +14854,19 @@ var ArchiveView = Backbone.View.extend({
             })
 
             message.bind('unsubscribed', function() {
+                console.log("QUI");
+                // We have unsubscribed a feed. So we want to delete all of its brothers.
                 var brothers = new Archive(); 
-                brothers.forFeed(message.get('feed'));
                 brothers.bind('reset', function() {
+                    console.log("HERE")
                     _.each(brothers.models, function(brother) {
                         brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
                         brother.destroy(); // Deletes the brothers 
                     }.bind(this));
                 }.bind(this));
+                console.log(message.get('feed'));
+                
+                brothers.forFeed(message.get('feed'));
             }.bind(this));
 
             var view = new MessageView({
@@ -16315,7 +16319,7 @@ var MessageView = Backbone.View.extend({
                 signature: "unsubscribe",
                 params: {
                     title: "", // TODO : Add support for title 
-                    url: this.model.attributes.feed,
+                    url: this.model.get('feed'),
                     force: true
                 },
                 force: true
@@ -16399,27 +16403,6 @@ var MessageView = Backbone.View.extend({
         this.layout();
         return false;
     },
-    // handleImageLoad: function (e) {
-    //         // We should check the size of the image and only display it if it's bigger than the previous one.
-    //         // We should also resize it to fit the square.
-    //         var img = e.target;
-    //         $(this.el).append('<img class="main" src="' + $(img).attr("src") + '"/>');
-    //         
-    //         // var img = e.target,
-    //         //     img_size = Msgboy.helper.element.original_size($(img));
-    //         // 
-    //         // // eliminate the tracking pixels and ensure min of at least 50x50
-    //         // if (img.width > 50 && img.height > 50) {
-    //         //     this.$("p").addClass("darkened");
-    //             // $(this.el).append('<img class="main" src="' + $(img).attr("src") + '"/>');
-    //         //     // Resize the image.
-    //         //     if (img_size.width / img_size.height > $(self.el).width() / $(self.el).height()) {
-    //         //         this.$(".message > img.main").css("min-height", "150%");
-    //         //     } else {
-    //         //         this.$(".message > img.main").css("min-width", "100%");
-    //         //     }
-    //         // }
-    //     },
     getBrickClass: function () {
         var res,
             state = this.model.get('state');

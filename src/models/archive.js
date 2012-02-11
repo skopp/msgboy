@@ -2,14 +2,13 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Message = require('./message.js').Message;
 
 var Archive = Backbone.Collection.extend({
     storeName: "messages",
     database: msgboyDatabase,
-    model: Message,
 
     initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
     },
     comparator: function (message) {
         return - (message.get('createdAt'));

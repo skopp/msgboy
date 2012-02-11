@@ -112,7 +112,7 @@ var Message = Backbone.Model.extend({
                     return 1;
                 });
                 var counts = relevanceMath.counts(brothers.pluck("state"));
-                if (brothers.length > 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] > 5)) {
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
                     this.trigger('unsubscribe');
                 }
             }.bind(this));
