@@ -16,7 +16,7 @@ The msgboy is open source. We use git for source versioning and [github to host 
 
 ### Technology used
 
-Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org/TR/IndexedDB/), [Websockets](http://dev.w3.org/html5/websockets/), [PubSubHubbub](http://code.google.com/p/pubsubhubbub/), [XMPP](http://xmpp.org/), [StropheJS](http://strophe.im/), [Backbone.js](http://documentcloud.github.com/backbone/), [jQuery](http://jquery.com/), [Isotope](http://isotope.metafizzy.co/). If you're into 3 or more of these technologies, feel free to get in touch, *we're hiring*!
+Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org/TR/IndexedDB/), [Websockets](http://dev.w3.org/html5/websockets/), [PubSubHubbub](http://code.google.com/p/pubsubhubbub/), [XMPP](http://xmpp.org/), [StropheJS](http://strophe.im/), [Backbone.js](http://documentcloud.github.com/backbone/), [jQuery](http://jquery.com/), [Isotope](http://isotope.metafizzy.co/), [Node.js](http://nodejs.org/) and [Browserify](https://github.com/substack/node-browserify). If you're into 3 or more of these technologies, feel free to get in touch, *we're hiring*!
 
 ### Debugging and Inspecting
 
@@ -25,15 +25,11 @@ Clicking on <code>/views/html/background.html</code> will let you inspect the ba
 
 If you submit bug reports, please provide as much content as possible (Chrome version, as well as the logs from the background page).
 
+### Building the Msgboy
 
-### Code standards
-Code standards for the project are enforced with node-jshint. If you install the 'ignore' branch of this project: [https://github.com/jshint/node-jshint/tree/ignore](https://github.com/jshint/node-jshint/tree/ignore) then you can run `jshint .` at the root of the project and it will check all js files that are not in `.jshintignore` against the linting options specified in the `.jshintrc` file.
+The msgboy is a javascript application. We use node.js for a lot of things, including tests, and when you modify the code, you need to rebuild the application using the following command:
 
-Note that you can't simply install it with `npm` you have to download the `ignore` branch specifically and then from the root of that project you can do:
-
-    npm install . -g
-
-After that, the `jshint` command should be available. 
+    rake build
 
 ### Plugins
 
@@ -51,13 +47,13 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 
 ### TODO
 
-* Add per-site unread list (as top screen bars)
+* <del>Add per-site unread list (as top screen bars) DEPRECATED</del>
 * <del>Add snooze</del>
 * Add support for unsubscription in plugins.
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
 * <del>Rewrite the msgboy.com page with inbox</del>.
-* Use the delay@stamp for createdAt of offline messages.
+* <del>Use the delay@stamp for createdAt of offline messages</del>.
 * Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
 * <del>Run JSLint (and CSSLint?) in Rake tasks for cleaner JS.</del>
