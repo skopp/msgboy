@@ -97,6 +97,8 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Use a different color for non-RSS feed messages.
 * Mark expanded notifications as expanded (same color scheme, with slow fading)
 * Remove the parseURI and replace by require('uri') when browserify supports it.
+* Add google Analytics tracking in links for referrals.
+* Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 
 ## Publishers
 
