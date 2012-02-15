@@ -1,6 +1,6 @@
 # Msgboy
 
-The msgboy is a *browser application* that pushes content from the web to the users. It observes the user's browsing habits (but respects their privacy!), and subscribes to the sites they seem to care about, using [Superfeedr](http://superfeedr.com). When these sites update, the content is sent to the user and a notification is shown to the user. 
+The msgboy is a *browser application* that pushes content from the web to its users. It observes the user's browsing habits (but respects their privacy!), and subscribes to the sites they seem to care about, using [Superfeedr](http://superfeedr.com). When these sites update, the content is sent to the user and a notification is shown to the user. 
 
 The msgboy may not always show relevant messages, which is why *the user is asked to vote up or down on messages that he gets*. The msgboy learns from that and tries to only show relevant messages to the user.
 
@@ -97,6 +97,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Remove the parseURI and replace by require('uri') when browserify supports it.
 * Add google Analytics tracking in links for referrals.
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
+* Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
 
 ## Publishers
 
