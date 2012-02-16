@@ -13727,17 +13727,6 @@ Msgboy.connect = function () {
     Msgboy.connection.connect(jid, password, this.onConnect);
 };
 
-// Uploads the content of the database. this will be used for analysis of the dataset o determine a better algorithm.
-// It is perfectly anonymous and currentl not used.
-Msgboy.uploadData = function () {
-    var archive = new Archive();
-    archive.fetch({ createdAt: [new Date().getTime(), 0]});
-    archive.bind('reset', function () {
-        $("#log").text(JSON.stringify(archive.toJSON()));
-        Msgboy.helper.uploader.upload(Msgboy.inbox.attributes.jid, archive.toJSON());
-    });
-};
-
 // Shows a popup notification
 Msgboy.notify = function (message) {
     // Open a notification window if needed!
@@ -13822,6 +13811,44 @@ Msgboy.resumeSubscriptions = function () {
         Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
     }, 1000 * 60 * 10);
 };
+
+// Extracts the largest image of an HTML content
+Msgboy.extractLargestImage = function(blob, callback) {
+    var container = $("<div>");
+    var content = $(blob)
+    container.append(content);
+    var images = container.find("img");
+    var largestImg = null;
+    var largestImgSize = null;
+    
+    if(images.length > 0) {
+        // Let's try to extract the image for this message.
+
+        var imgLoaded = _.after(images.length, function() {
+            callback(largestImg);
+        });
+        
+        _.each(images, function(image) {
+            var src = $(image).attr('src');
+            $("<img/>") // Make in memory copy of image to avoid css issues
+                .attr("src", src)
+                .load(function() {
+                    if((!largestImgSize || largestImgSize < this.height * this.width) && 
+                    !(this.height === 250 && this.width === 300) && 
+                    !(this.height < 100  || this.width < 100) &&
+                    !src.match('/doubleclick.net/')) {
+                        largestImgSize = this.height * this.width;
+                        largestImg = src;
+                    }
+                    imgLoaded();
+                });
+        });
+    }
+    else {
+        // No image!
+        callback(null);
+    }
+}
 
 exports.Msgboy = Msgboy;
 

@@ -16593,17 +16593,6 @@ Msgboy.connect = function () {
     Msgboy.connection.connect(jid, password, this.onConnect);
 };
 
-// Uploads the content of the database. this will be used for analysis of the dataset o determine a better algorithm.
-// It is perfectly anonymous and currentl not used.
-Msgboy.uploadData = function () {
-    var archive = new Archive();
-    archive.fetch({ createdAt: [new Date().getTime(), 0]});
-    archive.bind('reset', function () {
-        $("#log").text(JSON.stringify(archive.toJSON()));
-        Msgboy.helper.uploader.upload(Msgboy.inbox.attributes.jid, archive.toJSON());
-    });
-};
-
 // Shows a popup notification
 Msgboy.notify = function (message) {
     // Open a notification window if needed!
@@ -16688,6 +16677,44 @@ Msgboy.resumeSubscriptions = function () {
         Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
     }, 1000 * 60 * 10);
 };
+
+// Extracts the largest image of an HTML content
+Msgboy.extractLargestImage = function(blob, callback) {
+    var container = $("<div>");
+    var content = $(blob)
+    container.append(content);
+    var images = container.find("img");
+    var largestImg = null;
+    var largestImgSize = null;
+    
+    if(images.length > 0) {
+        // Let's try to extract the image for this message.
+
+        var imgLoaded = _.after(images.length, function() {
+            callback(largestImg);
+        });
+        
+        _.each(images, function(image) {
+            var src = $(image).attr('src');
+            $("<img/>") // Make in memory copy of image to avoid css issues
+                .attr("src", src)
+                .load(function() {
+                    if((!largestImgSize || largestImgSize < this.height * this.width) && 
+                    !(this.height === 250 && this.width === 300) && 
+                    !(this.height < 100  || this.width < 100) &&
+                    !src.match('/doubleclick.net/')) {
+                        largestImgSize = this.height * this.width;
+                        largestImg = src;
+                    }
+                    imgLoaded();
+                });
+        });
+    }
+    else {
+        // No image!
+        callback(null);
+    }
+}
 
 exports.Msgboy = Msgboy;
 
@@ -18698,11 +18725,8 @@ Msgboy.bind("loaded", function () {
         var msg = SuperfeedrPlugin.convertAtomToJson(notification.payload);
         msg.source = notification.source;
         msg.feed = notification.source.url;
-
-        var largestImg = null;
-        var largestImgSize = null;
-
-        var saveMessage = function() {
+        
+        Msgboy.extractLargestImage(msg.content, function(largestImg) {
             // The problem with this approach is that if the load event is not triggered, then we're in trouble.
             if(largestImg) {
                 msg.image = largestImg;
@@ -18717,36 +18741,7 @@ Msgboy.bind("loaded", function () {
                     Msgboy.log.debug(error);
                 }.bind(this),
             });
-        };
-
-        var images = container.find("img");
-        if(images.length > 0) {
-            // Let's try to extract the image for this message.
-            var container = $("<div>");
-            var content = $(msg.content)
-            container.append(content);
-
-            var imgLoaded = _.after(images.length, function() {
-                container.remove();
-                saveMessage();
-            });
-            
-            images.load(function(evt) {
-                if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && 
-                !(evt.target.height === 250 && evt.target.width === 300) && 
-                !(evt.target.height < 100  || evt.target.width < 100) &&
-                !evt.target.src.match('/doubleclick.net/')) {
-                    largestImgSize = evt.target.height * evt.target.width;
-                    largestImg = evt.target.src;
-                }
-                imgLoaded();
-            });
-            $("body").append(container); // Let's hook up everything together!
-        }
-        else {
-            // No image!
-            saveMessage();
-        }
+        });
     }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
