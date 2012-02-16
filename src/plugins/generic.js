@@ -1,3 +1,5 @@
+var $ = jQuery = require('jquery');
+
 Generic = function () {
     this.name = 'Generic Plugin which will listen for any page';
 

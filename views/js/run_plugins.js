@@ -14336,6 +14336,8 @@ exports.Disqus = Disqus;
 });
 
 require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
 Generic = function () {
     this.name = 'Generic Plugin which will listen for any page';
 
@@ -15757,30 +15759,23 @@ var $ = jQuery      = require('jquery');
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
 
-
-console.log("Hello from the Msgboy plygins")
-
 // Runs all the plugins
-if (typeof($) !== "undefined") {
-    $.each(Plugins.all, function (index, plugin) {
-        if (plugin.onSubscriptionPage()) { // Are we on the plugin's page?
-            // Let's then hijack the "subscribe" button, if needed.
-            plugin.hijack(function (feed, done) {
-                // Follow:
-                chrome.extension.sendRequest({
-                    signature: "subscribe",
-                    params: feed
-                }, function (response) {
-                    done();
-                });
-            }, function (feed, done) {
-                // Unfollow?
-                // We should first check whether the user is subscribed, and if he is, then, ask whether he wants to unsubscribe from here as well.
+$.each(Plugins.all, function (index, plugin) {
+    if (plugin.onSubscriptionPage()) { // Are we on the plugin's page?
+        plugin.hijack(function (feed, done) {
+            chrome.extension.sendRequest({
+                signature: "subscribe",
+                params: feed
+            }, function (response) {
                 done();
             });
-        }
-    });
-}
+        }, function (feed, done) {
+            // Unfollow?
+            // We should first check whether the user is subscribed, and if he is, then, ask whether he wants to unsubscribe from here as well.
+            done();
+        });
+    }
+});
 
 });
 require("/run_plugins.js");
