@@ -18696,19 +18696,15 @@ Msgboy.bind("loaded", function () {
         var msg = SuperfeedrPlugin.convertAtomToJson(notification.payload);
         msg.source = notification.source;
         msg.feed = notification.source.url;
-        // Let's try to extract the image for this message.
-        var container = $("<div>");
-        var content = $(msg.content)
-        container.append(content);
-        var images = container.find("img");
+
         var largestImg = null;
         var largestImgSize = null;
-        var imgLoaded = _.after(images.length, function() {
+
+        var saveMessage = function() {
             // The problem with this approach is that if the load event is not triggered, then we're in trouble.
             if(largestImg) {
                 msg.image = largestImg;
             }
-            container.remove();
             var message = Msgboy.inbox.addMessage(msg, {
                 success: function () {
                     Msgboy.log.debug("Saved message " + msg.id);
@@ -18719,17 +18715,36 @@ Msgboy.bind("loaded", function () {
                     Msgboy.log.debug(error);
                 }.bind(this),
             });
+        };
 
-        })
-        
-        images.load(function(evt) {
-            if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && !(evt.target.height === 250 && evt.target.width === 300) && !(evt.target.height < 100  || evt.target.width < 100)) {
-                largestImgSize = evt.target.height * evt.target.width;
-                largestImg = evt.target.src;
-            }
-            imgLoaded();
-        });
-        $("body").append(container); // Let's hook up everything together!
+        var images = container.find("img");
+        if(images.length > 0) {
+            // Let's try to extract the image for this message.
+            var container = $("<div>");
+            var content = $(msg.content)
+            container.append(content);
+
+            var imgLoaded = _.after(images.length, function() {
+                container.remove();
+                saveMessage();
+            });
+            
+            images.load(function(evt) {
+                if((!largestImgSize || largestImgSize < evt.target.height * evt.target.width) && 
+                !(evt.target.height === 250 && evt.target.width === 300) && 
+                !(evt.target.height < 100  || evt.target.width < 100) &&
+                !evt.target.src.match('/doubleclick.net/')) {
+                    largestImgSize = evt.target.height * evt.target.width;
+                    largestImg = evt.target.src;
+                }
+                imgLoaded();
+            });
+            $("body").append(container); // Let's hook up everything together!
+        }
+        else {
+            // No image!
+            saveMessage();
+        }
     }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.

@@ -17639,6 +17639,9 @@ Msgboy.bind("loaded", function () {
     // Bam. Msgboy loaded
     var archive = new Archive();
         
+        window.archive = archive;
+        window.$ = $;
+        
      // The archiveView Object
      var archiveView = new ArchiveView({
          el: $("#archive"),
