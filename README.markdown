@@ -70,7 +70,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Throttle down importing of sources, to avoid slowness at setup. Since everything happens in the background. It's ok to take more time</del>.
 * <del>Show messages when there was no subscription performed at all...</del>
 * <del>Show more help in the msgboy dashboard in the form of boxes. These should indicate what needs to be done to subscribe to more content (bookmarking stuff!).</del>
-* <del>Add some feeds in blacklists (like wikipedia's feeds).</del>
+* <del>Add some feeds in black lists (like wikipedia's feeds).</del>
 * Check safari bookmarks so that they're not taken into account...
 * Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
 * Check Memory usage and fix it. Don't ask, it's _always_ too high.
@@ -83,12 +83,12 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Allow for unsubscriptions no matter the state</del>
 * <del>Refactor down-vote triggered unsubscriptions</del>
 * <del>OPML export</del>
-* Extract images upon creation of messages.
+* <del>Extract images upon creation of messages.</del>
 * Add a 'Pin' Msgboy option
 * Notification should be set to none by default.
 * Ask Bit.ly to redirect msg.by to msgboy.com
 * Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
-* Use a different color for non-RSS feed messages.
+* Use a different color for Msgboy messages. (just use a match on the domain).
 * Mark expanded notifications as expanded (same color scheme, with slow fading)
 * Remove the parseURI and replace by require('uri') when browserify supports it.
 * Add google Analytics tracking in links for referrals.
