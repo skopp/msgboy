@@ -94,7 +94,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add google Analytics tracking in links for referrals.
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
-* See why some images do not load.
+* See why some images are not extracted.
 
 ## Publishers
 
