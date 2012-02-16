@@ -14457,6 +14457,8 @@ exports.Disqus = Disqus;
 });
 
 require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
 Generic = function () {
     this.name = 'Generic Plugin which will listen for any page';
 
