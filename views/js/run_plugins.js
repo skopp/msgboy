@@ -13582,6 +13582,2169 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
 
 });
 
+require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Msgboy = require('./msgboy.js').Msgboy
+
+var Plugins = {
+    all: [],
+
+    register: function (plugin) {
+        this.all.push(plugin);
+    },
+    importSubscriptions: function (callback, errback) {
+        var subscriptions_count = 0;
+
+        var done_with_plugin = _.after(Plugins.all.length, function () {
+            // Called when we have processed all plugins.
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
+        });
+
+        _.each(Plugins.all, function (plugin) {
+            plugin.listSubscriptions(function (subscriptions) {
+                _.each(subscriptions, function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
+                    });
+                });
+            }, function (count) {
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                subscriptions_count += count;
+                done_with_plugin();
+            });
+        });
+    }
+};
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+Plugins.register(new Blogger());
+
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+Plugins.register(new Bookmarks());
+
+var Digg = require('./plugins/digg.js').Digg;
+Plugins.register(new Digg());
+
+var Disqus = require('./plugins/disqus.js').Disqus;
+Plugins.register(new Disqus());
+
+var Generic = require('./plugins/generic.js').Generic;
+Plugins.register(new Generic());
+
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+Plugins.register(new GoogleReader());
+
+var History = require('./plugins/history.js').History;
+Plugins.register(new History());
+
+var Posterous = require('./plugins/posterous.js').Posterous;
+Plugins.register(new Posterous());
+
+var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
+Plugins.register(new QuoraPeople());
+
+var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
+Plugins.register(new QuoraTopics());
+
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+Plugins.register(new Statusnet());
+
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+Plugins.register(new Tumblr());
+
+var Typepad = require('./plugins/typepad.js').Typepad;
+Plugins.register(new Typepad());
+
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+Plugins.register(new Wordpress());
+
+exports.Plugins = Plugins;
+
+// This is the skeleton for the Plugins
+var Plugin = function () {
+    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
+        // Feeds have the following form {url: _, title: _}.
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
+    };
+
+    this.subscribeInBackground = function (callback) {
+        // The callback needs to be called with a feed object {url: _, title: _}
+        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
+    };
+};
+
+});
+
+require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+var Subscriptions = require('./models/subscription.js').Subscriptions;
+var Subscription = require('./models/subscription.js').Subscription;
+
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Extending Msgboy with the Backbone events
+_.extend(Msgboy, Backbone.Events);
+
+// Logs messages to the console
+Msgboy.log =  {
+    levels: {
+        RAW: 0,
+        DEBUG: 10,
+        INFO: 20,
+        ERROR: 30,
+    },
+    _log: Function.prototype.bind.call(console.log, console),
+    raw: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('raw');
+            this._log.apply(console, args);
+        }
+    },
+    debug: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('debug');
+            this._log.apply(console, args);
+        }
+    },
+    info: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('info');
+            this._log.apply(console, args);
+        }
+    },
+    error: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('error');
+            this._log.apply(console, args);
+        }
+    },
+}
+
+// Attributes
+Msgboy.log.debugLevel = Msgboy.log.levels.RAW; // We may want to adjust that in production!
+Msgboy.autoReconnect = true;
+Msgboy.currentNotification = null;
+Msgboy.messageStack = [];
+Msgboy.connectionTimeout = null;
+Msgboy.reconnectDelay = 1;
+Msgboy.connection = null;
+Msgboy.infos = {};
+Msgboy.inbox = null;
+Msgboy.reconnectionTimeout = null;
+
+// Returns the environment in which this msgboy is running
+Msgboy.environment = function () {
+    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
+        return "production";
+    }
+    else {
+        return "development";
+    }
+};
+
+// Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
+Msgboy.run =  function () {
+    window.onload = function () {
+        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+            Msgboy.infos = extension_infos;
+            Msgboy.trigger("loaded");
+        });
+    }
+};
+
+// Handles XMPP Connections
+Msgboy.onConnect = function (status) {
+    var msg = '';
+    if (status === Strophe.Status.CONNECTING) {
+        msg = 'Msgboy is connecting.';
+    } else if (status === Strophe.Status.CONNFAIL) {
+        msg = 'Msgboy failed to connect.';
+        Msgboy.reconnectDelay = 1;
+        if (Msgboy.autoReconnect) {
+            Msgboy.reconnect();
+        }
+    } else if (status === Strophe.Status.AUTHFAIL) {
+        msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
+        Msgboy.autoReconnect = false; // We need to open the settings tab
+        chrome.tabs.create({
+            url: chrome.extension.getURL('/views/html/options.html'),
+            selected: true
+        });
+    } else if (status === Strophe.Status.DISCONNECTING) {
+        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
+    } else if (status === Strophe.Status.DISCONNECTED) {
+        if (Msgboy.autoReconnect) {
+            Msgboy.reconnect();
+        }
+        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
+    } else if (status === Strophe.Status.CONNECTED) {
+        Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
+        msg = 'Msgboy is connected.';
+        Msgboy.reconnectDelay = 1;
+        Msgboy.connection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
+    }
+    Msgboy.log.debug(msg);
+};
+
+// Reconnects the Msgboy
+Msgboy.reconnect = function () {
+    Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
+    if (!Msgboy.reconnectionTimeout) {
+        Msgboy.reconnectionTimeout = setTimeout(function () {
+            Msgboy.reconnectionTimeout = null;
+            Msgboy.connect();
+        }, Math.pow(Msgboy.reconnectDelay, 2) * 1000);
+    }
+};
+
+// Connects the XMPP Client
+// It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
+Msgboy.connect = function () {
+    Msgboy.connection.rawInput = function (data) {
+        Msgboy.log.raw('RECV', data);
+    };
+    Msgboy.connection.rawOutput = function (data) {
+        Msgboy.log.raw('SENT', data);
+    };
+    var password = Msgboy.inbox.attributes.password;
+    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
+    Msgboy.connection.connect(jid, password, this.onConnect);
+};
+
+// Uploads the content of the database. this will be used for analysis of the dataset o determine a better algorithm.
+// It is perfectly anonymous and currentl not used.
+Msgboy.uploadData = function () {
+    var archive = new Archive();
+    archive.fetch({ createdAt: [new Date().getTime(), 0]});
+    archive.bind('reset', function () {
+        $("#log").text(JSON.stringify(archive.toJSON()));
+        Msgboy.helper.uploader.upload(Msgboy.inbox.attributes.jid, archive.toJSON());
+    });
+};
+
+// Shows a popup notification
+Msgboy.notify = function (message) {
+    // Open a notification window if needed!
+    if (!Msgboy.currentNotification) {
+        url = chrome.extension.getURL('/views/html/notification.html');
+        Msgboy.currentNotification = window.webkitNotifications.createHTMLNotification(url);
+        Msgboy.currentNotification.onclose = function () {
+            Msgboy.currentNotification = null;
+        };
+        Msgboy.currentNotification.ready = false;
+        Msgboy.currentNotification.show();
+        Msgboy.messageStack.push(message);
+    }
+    else {
+        chrome.extension.sendRequest({
+            signature: "notify",
+            params: message
+        }, function (response) {
+            // Nothing to do.
+        });
+    }
+    return Msgboy.currentNotification;
+};
+
+// Subscribes to a feed.
+Msgboy.subscribe = function (url, force, callback) {
+    // First, let's check if we have a subscription for this.
+    var subscription = new Subscription({id: url});
+    
+    subscription.fetchOrCreate(function () {
+        // Looks like there is a subscription.
+        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
+            subscription.setState("subscribing");
+            subscription.bind("subscribing", function () {
+                Msgboy.log.debug("subscribing to", url);
+                Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
+                    Msgboy.log.debug("subscribed to", url);
+                    subscription.setState("subscribed");
+                });
+            });
+            subscription.bind("subscribed", function () {
+                callback(true);
+            });
+        }
+        else {
+            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
+            callback(false);
+        }
+    });
+};
+
+// Unsubscribes from a feed.
+Msgboy.unsubscribe = function (url, callback) {
+    var subscription = new Subscription({id: url});
+    subscription.fetchOrCreate(function () {
+        subscription.setState("unsubscribing");
+        subscription.bind("unsubscribing", function () {
+            Msgboy.log.debug("unsubscribing from", url);
+            Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
+                Msgboy.log.debug("unsubscribed", url);
+                subscription.setState("unsubscribed");
+            });
+        });
+        subscription.bind("unsubscribed", function () {
+            callback(true);
+        });
+    });
+};
+
+// Makes sure there is no 'pending' susbcriptions.
+Msgboy.resumeSubscriptions = function () {
+    var subscriptions  = new Subscriptions();
+    subscriptions.bind("add", function (subs) {
+        Msgboy.log.debug("subscribing to", subs.id);
+        Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
+            Msgboy.log.debug("subscribed to", subs.id);
+            subs.setState("subscribed");
+        });
+    });
+    subscriptions.pending();
+    setTimeout(function () {
+        Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
+    }, 1000 * 60 * 10);
+};
+
+exports.Msgboy = Msgboy;
+
+
+});
+
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    defaults: {
+        subscribed_at: 0,
+        unsubscribed_at: 0,
+        state: "unsubscribed"
+    },
+    initialize: function (attributes) {
+    },
+    fetchOrCreate: function (callback) {
+        this.fetch({
+            success: function () {
+                // The subscription exists!
+                callback();
+            }.bind(this),
+            error: function () {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save(this.attributes, {
+                    success: function () {
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
+                    }
+                });
+            }.bind(this)
+        });
+    },
+    needsRefresh: function () {
+        if (this.attributes.subscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribed_at: new Date().getTime()}, {
+                success: function () {
+                    this.trigger("subscribed");
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribed_at: new Date().getTime()}, {
+                success: function () {
+                    this.trigger("unsubscribed");
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
+});
+
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    },
+    clear: function () {
+        this.fetch({
+            clear: true
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
+});
+
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribed_at", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribed_at", {unique: false});
+            next();
+        }
+    }]
+};
+
+exports.msgboyDatabase = msgboyDatabase
+});
+
+require.define("/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+// Blogger
+var $ = jQuery = require('jquery');
+
+Blogger = function () {
+
+    this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('a#b-follow-this').click(function (event) {
+            follow({
+                title: "",
+                url: $("#searchthis").attr("action").replace("search", "feeds/posts/default")
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        var subscriptions = [];
+        $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
+            var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
+            var match = rex.exec(data);
+            while (match) {
+                subscriptions.push({
+                    url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
+                    title: match[1].replace(/"/g, '').trim()
+                });
+                match = rex.exec(data);
+            }
+            callback(subscriptions);
+            done(subscriptions.length);
+        }.bind(this));
+    };
+};
+
+exports.Blogger = Blogger;
+
+});
+
+require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+
+var Bookmarks = function () {
+
+    this.name = 'Browser Bookmarks';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Hum. What?
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        done();
+        var seen = [];
+        var total_feeds = 0;
+        chrome.bookmarks.getRecent(1000,
+            function (bookmarks) {
+                var done_once = _.after(bookmarks.length, function () {
+                    // We have processed all the bookmarks
+                    done(total_feeds);
+                });
+                if (bookmarks.length === 0) {
+                    done(total_feeds);
+                }
+                _.each(bookmarks, function (bookmark) {
+                    Feediscovery.get(bookmark.url, function (links) {
+                        var feeds = [];
+                        _.each(links, function (link) {
+                            total_feeds++;
+                            if (seen.indexOf(link.href) === -1) {
+                                feeds.push({title: link.title, url: link.href});
+                                seen.push(link.href);
+                            }
+                        });
+                        if (feeds.length > 0) {
+                            callback(feeds);
+                        }
+                        done_once();
+                    });
+                });
+            }.bind(this)
+        );
+    };
+
+    this.subscribeInBackground = function (callback) {
+        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+            Feediscovery.get(bookmark.url, function (links) {
+                _.each(links, function (link) {
+                    callback(link);
+                });
+            });
+        }.bind(this));
+    };
+};
+
+exports.Bookmarks = Bookmarks;
+});
+
+require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery      = require('jquery');
+
+// Feediscovery module. The only API that needs to be used is the Feediscovery.get
+Feediscovery = {};
+Feediscovery.stack = [];
+Feediscovery.running = false;
+
+Feediscovery.get = function (_url, _callback) {
+    Feediscovery.stack.push([_url, _callback]);
+    if(!Feediscovery.running) {
+        Feediscovery.running = true;
+        Feediscovery.run();
+    }
+};
+Feediscovery.run = function () {
+    var next = Feediscovery.stack.shift();
+    if (next) {
+        $.ajax({url: "http://feediscovery.appspot.com/",
+            data: {url: next[0]},
+            success: function (data) {
+                next[1](JSON.parse(data));
+                Feediscovery.run();
+            },
+            error: function () {
+                // Let's restack, in the back.
+                Feediscovery.get(next[0], next[1]);
+            }
+        });
+    } else {
+        setTimeout(function () {
+            Feediscovery.run();
+        }, 1000);
+    }
+};
+
+exports.Feediscovery = Feediscovery;
+
+});
+
+require.define("/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+Digg = function () {
+
+    this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "digg.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        $(".btn-follow").live('click', function (event) {
+            url = $(event.target).attr("href");
+            login =  url.split("/")[1];
+            action = url.split("/")[2];
+            switch (action) {
+            case "follow":
+                follow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            case "unfollow":
+                unfollow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            default:
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Digg = Digg;
+});
+
+require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+Disqus = function () {
+
+    this.name = 'Disqus Comments';
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (document.getElementById("disqus_thread"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#dsq-post-button").live('click', function (event) {
+            follow({
+                url: $(".dsq-subscribe-rss a").attr("href"),
+                title: document.title + " comments"
+            }, function () {
+                //Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.Disqus = Disqus;
+});
+
+require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+Generic = function () {
+    this.name = 'Generic Plugin which will listen for any page';
+
+    this.onSubscriptionPage = function () {
+        return true;
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Adds a listen event on all elements
+        $(".msgboy-follow").click(function (element) {
+            follow({
+                title: $(element.currentTarget).attr("data-msgboy-title"),
+                url: $(element.currentTarget).attr("data-msgboy-url")
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+};
+
+exports.Generic = Generic;
+});
+
+require.define("/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+GoogleReader = function () {
+
+    this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        var submitted = function () {
+            follow({
+                url: $("#quickadd").val(),
+                title: $("#quickadd").val()
+            }, function () {
+                // Done
+            });
+        };
+        $("#quick-add-form .goog-button-body").click(submitted);
+        $("#quick-add-form").submit(submitted);
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        links = [];
+        request = new XMLHttpRequest();
+        $.get("http://www.google.com/reader/subscriptions/export", function (data) {
+            var subscriptions = [];
+            urls = $(data).find("outline").each(function () {
+                subscriptions.push({
+                    url:  $(this).attr("xmlUrl"),
+                    title: $(this).attr("title")
+                });
+            });
+            callback(subscriptions);
+            done(subscriptions.length);
+        });
+    };
+};
+
+exports.GoogleReader = GoogleReader;
+});
+
+require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+var Maths = require("../maths.js").Maths;
+
+var History = function () {
+    this.name = 'Browsing History';
+    this.visits_to_be_popular = 3;
+    this.deviation = 1;
+    this.elapsed = 1000 * 60 * 60 * 3;
+    this.onSubscriptionPage = function () {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+    this.hijack = function (follow, unfollow) {
+        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
+    };
+    this.listSubscriptions = function (callback, done) {
+        var seen = [];
+        var pending = 0;
+        var totalFeeds = 0;
+
+        chrome.history.search({
+            'text': '',
+            // Return every history item....
+            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
+            // that was accessed less than one month ago.
+            'maxResults': 10000
+        }, function (historyItems) {
+            if (historyItems.length === 0) {
+                done(0);
+            }
+            var doneOne = _.after(historyItems.length, function () {
+                done(totalFeeds);
+            });
+
+            _.each(historyItems, function (item) {
+                if (item.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(item.url, function (result) {
+                        if (result) {
+                            pending++;
+                            Feediscovery.get(item.url, function (links) {
+                                var feeds = [];
+                                _.each(links, function (link) {
+                                    totalFeeds++;
+                                    if (seen.indexOf(link.href) === -1) {
+                                        feeds.push({title: link.title, url: link.href});
+                                        seen.push(link.href);
+                                    }
+                                });
+                                pending--;
+                                doneOne();
+                                if (feeds.length > 0) {
+                                    callback(feeds);
+                                }
+                            });
+                        }
+                        else {
+                            // Not visited regularly.
+                            doneOne();
+                        }
+                    });
+                }
+                else {
+                    doneOne();
+                    // Not visited often enough
+                }
+            }.bind(this));
+        }.bind(this));
+    };
+    this.visitsRegularly = function (url, callback) {
+        chrome.history.getVisits({url: url}, function (visits) {
+            times = $.map(visits, function (visit) {
+                return visit.visitTime;
+                }).slice(-10); // We check the last 10 visits.
+                var diffs = [];
+                for (var i = 0; i < times.length - 1; i++) {
+                    diffs[i] =  times[i + 1] - times[i];
+                }
+                // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
+                if (Maths.normalizedDeviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
+                    callback(true);
+                }
+                else {
+                    callback(false);
+                }
+            }.bind(this));
+        };
+        this.subscribeInBackground = function (callback) {
+            chrome.history.onVisited.addListener(function (historyItem) {
+                if (historyItem.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(historyItem.url, function (result) {
+                        Feediscovery.get(historyItem.url, function (links) {
+                            _.each(links, function (link) {
+                                callback(link);
+                            });
+                        });
+                    });
+                }
+            }.bind(this));
+        };
+    };
+
+    exports.History = History;
+});
+
+require.define("/maths.js", function (require, module, exports, __dirname, __filename) {
+// Helpers for maths
+
+Maths = {};
+Maths.normalizedDeviation = function (array) {
+    return Maths.deviation(array) / Maths.average(array);
+};
+Maths.deviation = function (array) {
+    var avg = Maths.average(array);
+    var count = array.length;
+    var i = count - 1;
+    var v = 0;
+    while (i >= 0) {
+        v += Math.pow((array[i] - avg), 2);
+        i = i - 1;
+    }
+    return Math.sqrt(v / count);
+};
+Maths.average = function (array) {
+    var count = array.length;
+    var i = count - 1;
+    var sum = 0;
+    while (i >= 0) {
+        sum += array[i];
+        i = i - 1;
+    }
+    return sum / count;
+};
+
+
+exports.Maths = Maths;
+
+});
+
+require.define("/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Posterous = function () {
+
+    this.name = 'Posterous';
+    this.hijacked = false;
+
+    this.onSubscriptionPage = function () {
+        return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('#posterous_required_header').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // done
+                    });
+                });
+            }
+        }, function () {});
+
+        $('#posterous_bar').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // Done
+                    });
+                });
+            }
+        }, function () {});
+
+        $("#subscribe_link").click(function () {
+            follow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $("#psub_unsubscribed_link").click(function () {
+            unfollow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $(".subscribe_ajax a.unsubscribed").click(function (event) {
+            var parent = $($($($(event.target).parent()).parent()).parent().find(".profile_sub_site a")[0]);
+            unfollow({
+                title: $.trim(parent.html()),
+                url: parent.attr("href") + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        var that = this;
+        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
+            content = $(data);
+            links = content.find("#subscriptions td.image a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "/rss.xml",
+                    title: $(link).attr("title")
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Posterous = Posterous;
+});
+
+require.define("/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+QuoraPeople = function () {
+
+    this.name = 'Quora People';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".follow_button").not(".unfollow_button").not(".topic_follow").click(function (event) {
+            if ($.trim($(event.target).html()) !== "Follow Question") {
+                // This is must a button on a user's page. Which we want to follow
+                follow({
+                    title: document.title,
+                    url: window.location.href + "/rss"
+                });
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.QuoraPeople = QuoraPeople;
+});
+
+require.define("/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+QuoraTopics = function () {
+
+    this.name = 'Quora Topics';
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".topic_follow.follow_button").not(".unfollow_button").click(function (event) {
+            url = "";
+            title = "";
+            if ($(event.target).parent().parent().find(".topic_name").length > 0) {
+                link = $(event.target).parent().parent().find(".topic_name")[0];
+                url = "http://www.quora.com" + ($(link).attr("href")) + "/rss";
+                title = $($(link).children()[0]).html() + " on Quora";
+            }
+            else {
+                title = document.title;
+                url = window.location.href + "/rss";
+            }
+            follow({
+                url: url,
+                title: title
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.QuoraTopics = QuoraTopics;
+});
+
+require.define("/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+Statusnet = function () {
+
+    this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+        return (window.location.host.match(/status\.net/));
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        $('#form_ostatus_connect').live("submit", function () {
+            user = $($(this).find("#nickname")[0]).attr("value");
+            url = "http://" + parseUri(window.location).host + "/api/statuses/user_timeline/1.atom";
+            follow({
+                title:  user + " on Status.net",
+                url: url
+            }, function () {
+                // Done
+            });
+        });
+    };
+};
+
+exports.Statusnet = Statusnet;
+});
+
+require.define("/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Tumblr = function () {
+
+    this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('form[action|="/follow"]').submit(function (event) {
+            follow({
+                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
+                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
+            content = $(data);
+            links = content.find(".follower .name a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "rss",
+                    title: $(link).html() + " on Tumblr"
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Tumblr = Tumblr;
+});
+
+require.define("/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Typepad = function () {
+
+    this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function () {
+        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#follow-display").click(function () {
+            follow({
+                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
+                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Typepad = Typepad;
+});
+
+require.define("/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Wordpress = function () {
+
+    this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function () {
+        return (document.getElementById("wpadminbar"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('admin-bar-follow-link').live('click', function (event) {
+            follow({
+                title: $('#wp-admin-bar-blog a.ab-item').text(),
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        $.get("http://wordpress.com/#!/read/edit/", function (data) {
+            content = $(data);
+            links = content.find("a.blogurl");
+            var count = 0;
+            links.each(function (index, link) {
+                count += 1;
+                callback({
+                    url: $(link).attr("href") + "/feed",
+                    title: $(link).text()
+                });
+            });
+            done(count);
+        });
+    };
+
+};
+
+exports.Wordpress = Wordpress;
+});
+
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 0.0
+        }
+    },
+    initialize: function () {
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                this.trigger('error');
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (this.get('jid') != 'undefined' && this.get('jid') !== "" && this.get('password') != 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
+        });
+    },
+
+    // Adds a message in the inbox
+    addMessage: function (msg, options) {
+        // Adds the message if the message isn't yet present
+        var message = new Message({
+            'id': msg.id
+        });
+
+        message.fetch({
+            error: function () {
+                // The message was not found, so we just have to create one!
+                var message = new Message(msg);
+                message.save({}, {
+                    success: function () {
+                        message.calculateRelevance(function (_relevance) {
+                            message.save({
+                                relevance: _relevance
+                            }, {
+                                success: function () {
+                                    this.trigger("messages:added", message);
+                                    options.success(message);
+                                }.bind(this)
+                            });
+                        }.bind(this));
+                    }.bind(this),
+                    error: function (object, error) {
+                        options.error(object, error);
+                    }
+                });
+            }.bind(this),
+            success: function () {
+                options.success(null);
+            }.bind(this)
+        });
+    },
+
+});
+
+exports.Inbox = Inbox;
+});
+
+require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var _ = require('underscore');
+var parseUri = require('../utils.js').parseUri;
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
+
+var Message = Backbone.Model.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+    defaults: {
+        "title":        null,
+        "atomId":       null,
+        "summary":      null,
+        "content":      null,
+        "links":        {},
+        "createdAt":    0,
+        "source":       {},
+        "sourceHost":   null,
+        "sourceLink":   null,
+        "state":        "new",
+        "feed":         null,
+        "relevance":    0.6
+    },
+    /* Initializes the messages */
+    initialize: function (params) {
+        if(typeof params === "undefined") {
+            params = {}; // Default params
+        }
+        // Setting up the source attributes
+        if (params.source && params.source.links) {
+            if(params.source.links.alternate) {
+                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                    params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = params.sourceHost || parseUri(params.sourceLink).host;
+                }
+                else {
+                    params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                    params.sourceHost = params.sourceHost || "";
+                }
+            }
+            else {
+                params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                params.sourceHost = params.sourceHost || "";
+            }
+        }
+        else {
+            params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+            params.sourceHost = params.sourceHost || "";
+        }
+        
+        // Setting up the createdAt
+        if (!params.createdAt) {
+            params.createdAt = new Date().getTime();
+        }
+        
+        
+        // Setting up the mainLink
+        if (params.links && params.links.alternate) {
+            if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
+                params.mainLink = params.links.alternate["text/html"][0].href;
+            }
+            else {
+                // Hum, let's see what other types we have!
+                params.mainLink = "";
+            }
+        }
+        else {
+            params.mainLink = "";
+        }
+        
+        // Setting up the text, as the longest between the summary and the content.
+        if (params.content) {
+            if (params.summary && params.summary.length > params.content.length) {
+                params.text =  params.summary;
+            }
+            else {
+                params.text =  params.content;
+            }
+        }
+        else if (params.summary) {
+            params.text =  params.summary;
+        }
+        else {
+            params.text = "";
+        }
+        
+        
+        // Setting up the params
+        this.set(params);
+        
+        this.related = new Backbone.Collection(); // create container for similar messages
+        this.related.comparator = function(message) {
+            return -message.get('createdAt');
+        }
+        return this;
+    },
+    /* Votes the message up */
+    voteUp: function () {
+        this.setState("up-ed");
+    },
+    /* Votes the message down */
+    voteDown: function () {
+        this.setState("down-ed", function (result) {
+            // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
+            var brothers = new Archive();
+            brothers.forFeed(this.attributes.feed);
+            
+            brothers.bind('reset', function () {
+                var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
+                    return 1;
+                });
+                var counts = relevanceMath.counts(brothers.pluck("state"));
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
+                    this.trigger('unsubscribe');
+                }
+            }.bind(this));
+        }.bind(this));
+    },
+    /* Skip the message */
+    skip: function () {
+        this.setState("skipped");
+    },
+    /* Sets the state for the message */
+    setState: function (_state, callback) {
+        this.save({
+            state: _state
+        }, {
+            success: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(true);
+                }
+                this.trigger(_state, this);
+            }.bind(this),
+            error: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(false);
+                }
+            }.bind(this)
+        });
+    },
+    /* This calculates the relevance for this message and sets it. */
+    /* It just calculates the relevance and does not save it. */
+    calculateRelevance: function (callback) {
+        // See Section 6.3 in Product Requirement Document.
+        // We need to get all the messages from this source.
+        // Count how many have been voted up, how many have been voted down.
+        // First, let's pull all the messages from the same source.
+        var brothers = new Archive();
+        brothers.comparator = function (brother) {
+            return brother.attributes.createdAt;
+        };
+        brothers.forFeed(this.attributes.feed);
+        brothers.bind('reset', function () {
+            var relevance = 0.7; // This is the default relevance
+            if (brothers.length > 0) {
+                // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].
+                relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
+            }
+            // Keywords [TODO]
+            // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
+            if (typeof(callback) !== "undefined" && callback) {
+                callback(relevance);
+            }
+        }.bind(this));
+    },
+    relevanceBasedOnBrothers: function (states) {
+        if (states.length === 0) {
+            return 1;
+        }
+        else {
+            var percentages = relevanceMath.percentages(states, ["new", "up-ed", "down-ed", "skipped"]);
+
+            return relevanceMath.average(percentages, {
+                "new" : 0.6,
+                "up-ed": 1.0,
+                "down-ed": 0.0,
+                "skipped": 0.4
+            });
+        }
+    },
+    faviconUrl: function () {
+        return "http://g.etfv.co/" + this.get('sourceLink') + "?defaulticon=lightpng";
+    }
+});
+
+exports.Message = Message;
+
+var relevanceMath = {
+    counts: function (array, defaults, weight) {
+        var counts = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            if (typeof(weight) !== "undefined") {
+                counts[element] += weight(element, index);
+            }
+            else {
+                counts[element] += 1;
+            }
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        return counts;
+    },
+    // Returns the percentages of each element in an array.
+    percentages: function (array) {
+        var counts = {}, percentages = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            counts[element] += 1;
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        _.each(_.keys(counts), function (key) {
+            percentages[key] = counts[key] / sum;
+        });
+        return percentages;
+    },
+    // Returns the average based on the weights and the percentages.
+    average: function (percentages, weights) {
+        var sum = 0, norm = 0;
+        _.each(_.keys(percentages), function (key) {
+            sum += percentages[key] * weights[key];
+            norm += percentages[key];
+        });
+        if (norm === 0) {
+            return sum;
+        } else {
+            return sum / norm;
+        }
+        return sum;
+    }
+};
+
+exports.relevanceMath = relevanceMath;
+
+// Welcome messages
+var WelcomeMessages = [{
+    "title": "Welcome to msgboy!",
+    "ungroup": true,
+    "summary": 'Welcome to the msgboy, powered by Superfeedr!',
+    "image": '/views/images/msgboy-help-screen-1.png',
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime(),
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 1.0,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Bookmark sites you love.",
+    "ungroup": true,
+    "image": "/views/images/msgboy-help-screen-2.png",
+    "summary": "Bookmark sites you love. The msgboy will show you messages when they update",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 1000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Newly posted stories appear in realtime.",
+    "ungroup": true,
+    "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
+    "image": "/views/images/msgboy-help-screen-3.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 2000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Train msgboy to give you what you want.",
+    "ungroup": true,
+    "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
+    "image": "/views/images/msgboy-help-screen-5.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 3000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Click '+' for more like this.",
+    "ungroup": true,
+    "summary": "Vote stories up if you want more like them",
+    "image": "/views/images/msgboy-help-screen-6.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 4000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.8,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Hit '-' if you're not interested.",
+    "ungroup": true,
+    "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
+    "image": "/views/images/msgboy-help-screen-7.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 5000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Follow and rate stories with notifications.",
+    "ungroup": true,
+    "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
+    "image": "/views/images/msgboy-help-screen-8.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 6000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "You can throttle notifications in settings.",
+    "ungroup": true,
+    "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+    "image": "/views/images/msgboy-help-screen-9.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 7000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}
+];
+
+exports.WelcomeMessages = WelcomeMessages;
+
+});
+
+require.define("/utils.js", function (require, module, exports, __dirname, __filename) {
+Uri = function () {
+    // and URI object
+};
+
+Uri.prototype = {
+    toString: function () {
+        str = '';
+        if (this.protocol) {
+            str += this.protocol + "://";
+        }
+        if (this.authority) {
+            str += this.authority;
+        }
+        if (this.relative) {
+            str += this.relative;
+        }
+        if (this.relative === "") {
+            str += "/";
+        }
+        return str;
+    }
+};
+
+function parseUri(str) {
+    var o = parseUri.options,
+    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+    uri = new Uri(),
+    i   = 14;
+    while (i--) {
+        uri[o.key[i]] = m[i] || "";
+    }
+    uri[o.q.name] = {};
+    uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+        if ($1) {
+            uri[o.q.name][$1] = $2;
+        }
+    });
+    return uri;
+}
+
+parseUri.options = {
+    strictMode: false,
+    key: ["source", "protocol", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "anchor"],
+    q:   {
+        name:   "queryKey",
+        parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+    },
+    parser: {
+        strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+        loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+    }
+};
+
+exports.parseUri = parseUri;
+
+// Hopefully this should be part of the regular Msgboy
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Let's define the helper module.
+if (typeof Msgboy.helper === "undefined") {
+    Msgboy.helper = {};
+}
+
+
+
+
+// The DOM cleaner
+Msgboy.helper.cleaner = {};
+// This function, which requires JQUERY cleans up the HTML that it includes
+Msgboy.helper.cleaner.html = function (string) {
+    // We must remove the <script> tags from the string first.
+    string = string.replace(/(<script([^>]+)>.*<\/script>)/ig, ' ');
+    var div = $("<div/>").html(string);
+    var cleaned = $(Msgboy.helper.cleaner.dom(div.get()));
+    return cleaned.html();
+};
+
+Msgboy.helper.cleaner.dom = function (element) {
+    $.each($(element).children(), function (index, child) {
+        if (child.nodeName === "IMG") {
+            if (Msgboy.helper.element.original_size.width < 2 || Msgboy.helper.element.original_size.height < 2) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                var src = $(child).attr("src");
+                if (!src) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://rss.feedsportal.com/.*/*.gif")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://da.feedsportal.com/.*/*.img")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://ads.pheedo.com/img.phdo?.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://feedads.g.doubleclick.net/~at/.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "P") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+        }
+        else if (child.nodeName === "NOSCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "IFRAME") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "DIV") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                if (child.innerHTML.replace(/(<([^>]+)>)/ig, "").replace(/[^a-zA-Z 0-9 ]+/g, "").replace(/^\s+|\s+$/g, "") === "") {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "CENTER") {
+            // We need to replace this with a p. We don't want specific formats...
+            var p = document.createElement("P");
+            p.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(p, child);
+            child = p;
+        }
+        else if (child.nodeName === "FONT") {
+            // Let's replace with a span. We don't want specific formats!
+            var span = document.createElement("SPAN");
+            span.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(span, child);
+            child = span;
+        }
+        else if (child.nodeName === "BR") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "OBJECT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "SCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if ($(child).hasClass("mf-viral") || $(child).hasClass("feedflare")) {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        // Remove style attributes
+        $(child).removeAttr("style");
+        $(child).removeAttr("align");
+        $(child).removeAttr("width");
+        $(child).removeAttr("height");
+        $(child).removeAttr("class");
+        $(child).removeAttr("border");
+        $(child).removeAttr("cellpadding");
+        $(child).removeAttr("cellspacing");
+        $(child).removeAttr("valign");
+        $(child).removeAttr("border");
+        $(child).removeAttr("hspace");
+        $(child).removeAttr("vspace");
+        Msgboy.helper.cleaner.dom(child);
+    });
+    return element;
+};
+Msgboy.helper.cleaner.remove = function (element) {
+    var parent = element.parentNode;
+    if (parent) {
+        parent.removeChild(element);
+        if (parent.childNodes.length === 0) {
+            Msgboy.helper.cleaner.remove(parent);
+        }
+    }
+};
+
+// Helper for the DOM elements
+Msgboy.helper.element = {};
+// Returns the original size of the element.
+Msgboy.helper.element.original_size = function (el) {
+    var clone = $(el).clone();
+    clone.css("display", "none");
+    clone.removeAttr('height');
+    clone.removeAttr('width');
+    clone.appendTo($("body"));
+    var sizes = {width: clone.width(), height: clone.height()};
+    clone.remove();
+    return sizes;
+};
+
+
+});
+
+require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Archive = Backbone.Collection.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+
+    initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
+    },
+    comparator: function (message) {
+        return - (message.get('createdAt'));
+    },
+    next: function (number, condition) {
+        var options = {
+            conditions: condition,
+            limit: number,
+            addIndividually: true
+        };
+        this.fetch(options);
+    },
+    forFeed: function (_feed) {
+        this.fetch({conditions: {feed: _feed}});
+    }
+});
+
+exports.Archive = Archive;
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
@@ -13589,7 +15752,15 @@ require.alias("backbone-browserify", "/node_modules/backbone");
 require.alias("backbone-indexeddb", "/node_modules/msgboy-backbone-adapter");
 
 require.define("/run_plugins.js", function (require, module, exports, __dirname, __filename) {
-    // Runs all the plugins
+    // Ok. Here, we need to require all the plugins!
+var $ = jQuery      = require('jquery');
+var Plugins         = require('./plugins.js').Plugins;
+var Inbox           = require('./models/inbox.js').Inbox;
+
+
+console.log("Hello from the Msgboy plygins")
+
+// Runs all the plugins
 if (typeof($) !== "undefined") {
     $.each(Plugins.all, function (index, plugin) {
         if (plugin.onSubscriptionPage()) { // Are we on the plugin's page?

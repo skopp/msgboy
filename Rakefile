@@ -51,23 +51,6 @@ def manifest(destination = "")
     :content_scripts => [
       {
         :js => [
-          # "/lib/date.format.js",
-          # "/lib/jquery/jquery.js",
-          # "/controllers/utils.js",
-          # "/controllers/plugins.js",
-          # "/controllers/plugins/bookmarks.js",
-          # "/controllers/plugins/digg.js",
-          # "/controllers/plugins/disqus.js",
-          # "/controllers/plugins/generic.js",
-          # "/controllers/plugins/google-reader.js",
-          # "/controllers/plugins/history.js",
-          # "/controllers/plugins/posterous.js",
-          # "/controllers/plugins/quora-people.js",
-          # "/controllers/plugins/quora-topics.js",
-          # "/controllers/plugins/statusnet.js",
-          # "/controllers/plugins/tumblr.js",
-          # "/controllers/plugins/typepad.js",
-          # "/controllers/plugins/blogger.js",
           "/views/js/run_plugins.js"
         ],
         :css => [

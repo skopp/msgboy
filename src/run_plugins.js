@@ -1,3 +1,8 @@
+// Ok. Here, we need to require all the plugins!
+var $ = jQuery      = require('jquery');
+var Plugins         = require('./plugins.js').Plugins;
+var Inbox           = require('./models/inbox.js').Inbox;
+
 // Runs all the plugins
 if (typeof($) !== "undefined") {
     $.each(Plugins.all, function (index, plugin) {
