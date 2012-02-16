@@ -139,12 +139,12 @@ html,body{
     color: #EEE;
 } 
 
-#option {
+.option {
     margin-bottom: 30px;
     margin-top: 10px;
 }
 
-#option label {
+.option label {
     width:120px;
     text-align:left;
 }
