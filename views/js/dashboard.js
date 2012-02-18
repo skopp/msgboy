@@ -16364,13 +16364,6 @@ var MessageView = Backbone.View.extend({
     layout: function() {
         var el = $(this.el), 
         isGroup = this.model.related && this.model.related.length > 1;
-            
-        // set some attributes on the container div
-        $(this.el).attr({
-            'data-msgboy-relevance': this.model.get('relevance'),
-            'id': this.model.id,
-            'data-msgboy-state': this.model.get('state')
-        });
         
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
