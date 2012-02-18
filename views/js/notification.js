@@ -14964,7 +14964,7 @@ var MessageView = Backbone.View.extend({
         // render our compiled template
         if (isGroup) {
             el.addClass("stack");
-            el.prepend($('<div class="ribbon">' + (this.model.related.length) + ' stories</div>'));
+            el.prepend($('<div class="ribbon">' + (this.model.related.length + 1) + ' stories</div>'));
         }
         if(typeof this.model.get('image') !== "undefined") {
             $(this.el).append('<img class="main" src="' + this.model.get('image') + '"/>');
