@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
+var Isotope = require('../jquery.color.js');
 var Backbone = require('backbone');
 Backbone.sync = require('msgboy-backbone-adapter').sync;
 var Sanitizer = require('sanitizer');
@@ -30,6 +31,8 @@ var MessageView = Backbone.View.extend({
         this.model.bind('expand', function() {
             $(this.el).removeClass('stack'); // Let's show this bro!
             $(this.el).removeClass('brother'); // Let's show this bro!
+            // $(this.el).css('background-color',"#3284b5");
+            $(this.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
         }.bind(this)); 
         this.model.bind('unsubscribe', function () {
             var request = {
