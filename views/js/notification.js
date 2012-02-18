@@ -14921,6 +14921,7 @@ var MessageView = Backbone.View.extend({
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
         this.model.bind('expand', function() {
+            $(this.el).removeClass('stack'); // Let's show this bro!
             $(this.el).removeClass('brother'); // Let's show this bro!
         }.bind(this)); 
         this.model.bind('unsubscribe', function () {
@@ -15008,6 +15009,7 @@ var MessageView = Backbone.View.extend({
         this.model.related.each(function(message, i) {
             message.trigger('expand');
         });
+        this.model.trigger('expand', this); // Let's also expand this model.
         this.model.trigger('expanded', this);
         this.model.related.reset(); // And now remove the messages inside :)
         this.layout();

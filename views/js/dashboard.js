@@ -14881,18 +14881,14 @@ var ArchiveView = Backbone.View.extend({
             })
 
             message.bind('unsubscribed', function() {
-                console.log("QUI");
                 // We have unsubscribed a feed. So we want to delete all of its brothers.
                 var brothers = new Archive(); 
                 brothers.bind('reset', function() {
-                    console.log("HERE")
                     _.each(brothers.models, function(brother) {
                         brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
                         brother.destroy(); // Deletes the brothers 
                     }.bind(this));
                 }.bind(this));
-                console.log(message.get('feed'));
-                
                 brothers.forFeed(message.get('feed'));
             }.bind(this));
 
@@ -14910,7 +14906,7 @@ var ArchiveView = Backbone.View.extend({
             if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
                 this.lastParentView.model.related.add(message);
                 $(view.el).addClass('brother'); // Let's show this has a brother!
-                view.render(); // We can render it as well as nobody cares about it for now.
+                view.render(); 
             }
             else {
                 if(this.lastParentView) {
@@ -16339,6 +16335,7 @@ var MessageView = Backbone.View.extend({
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
         this.model.bind('expand', function() {
+            $(this.el).removeClass('stack'); // Let's show this bro!
             $(this.el).removeClass('brother'); // Let's show this bro!
         }.bind(this)); 
         this.model.bind('unsubscribe', function () {
@@ -16426,6 +16423,7 @@ var MessageView = Backbone.View.extend({
         this.model.related.each(function(message, i) {
             message.trigger('expand');
         });
+        this.model.trigger('expand', this); // Let's also expand this model.
         this.model.trigger('expanded', this);
         this.model.related.reset(); // And now remove the messages inside :)
         this.layout();

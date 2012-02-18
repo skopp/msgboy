@@ -93,7 +93,7 @@ var ArchiveView = Backbone.View.extend({
             if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
                 this.lastParentView.model.related.add(message);
                 $(view.el).addClass('brother'); // Let's show this has a brother!
-                view.render(); // We can render it as well as nobody cares about it for now.
+                view.render(); 
             }
             else {
                 if(this.lastParentView) {
