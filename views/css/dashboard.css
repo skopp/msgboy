@@ -71,9 +71,30 @@
     cursor: pointer;
 }
 
-.message:hover .controls {
+.message:hover:not(.stack) .controls {
     display:block;
     z-index: 10;
+}
+
+.ribbon {
+    font-size: 0.9em;
+    height:30px;
+    line-height:30px;
+    position:relative;
+    left:30%;
+    top:10%;
+    z-index: 100;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59A1CD), to(#3284b5));
+    width: 100%;
+    text-align:center;
+    -webkit-transform: rotate(45deg);
+    -webkit-box-shadow: 0 0.1em 0.1em #222;
+    box-shadow: 0 0 5px rgba(0,0,0,0.9);
+}
+
+.message.stack:hover .ribbon {
+    font-size: 1.1em;
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
 }
 
 p.darkened {
@@ -273,18 +294,4 @@ p.darkened {
     background-image: url('../images/share.png');
 }
 
-.ribbon {
-    font-size: 0.9em;
-    height:30px;
-    line-height:30px;
-    position:relative;
-    left:30%;
-    top:10%;
-    z-index: 100;
-    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59A1CD), to(#3284b5));
-    width: 100%;
-    text-align:center;
-    -webkit-transform: rotate(45deg);
-    -webkit-box-shadow: 0 0.1em 0.1em #222;
-}
 
