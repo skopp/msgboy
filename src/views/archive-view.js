@@ -68,18 +68,14 @@ var ArchiveView = Backbone.View.extend({
             })
 
             message.bind('unsubscribed', function() {
-                console.log("QUI");
                 // We have unsubscribed a feed. So we want to delete all of its brothers.
                 var brothers = new Archive(); 
                 brothers.bind('reset', function() {
-                    console.log("HERE")
                     _.each(brothers.models, function(brother) {
                         brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
                         brother.destroy(); // Deletes the brothers 
                     }.bind(this));
                 }.bind(this));
-                console.log(message.get('feed'));
-                
                 brothers.forFeed(message.get('feed'));
             }.bind(this));
 
