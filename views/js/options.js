@@ -12073,8 +12073,6 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
 
             if (!json.id) json.id = guid();
 
-            console.log(json)
-
             var writeRequest = store.put(json, json.id);
 
             writeRequest.onerror = function (e) {

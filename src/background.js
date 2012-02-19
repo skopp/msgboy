@@ -78,14 +78,17 @@ Msgboy.bind("loaded", function () {
         msg.feed = notification.source.url;
         
         var message = new Message(msg);
-        Msgboy.extractLargestImage(message.content, function(largestImg) {
+        
+        Msgboy.extractLargestImage(message.get('text'), function(largestImg) {
+            var attributes = {};
+            
             if(largestImg) {
-                message.image = largestImg;
+                attributes.image = largestImg;
             }
             
             message.calculateRelevance(function (_relevance) {
-                message.relevance = _relevance;
-                message.save({}, {
+                attributes.relevance = _relevance;
+                message.save(attributes, {
                     success: function() {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);
