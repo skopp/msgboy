@@ -77,22 +77,25 @@ Msgboy.bind("loaded", function () {
         msg.source = notification.source;
         msg.feed = notification.source.url;
         
-        Msgboy.extractLargestImage(msg.content, function(largestImg) {
-            // The problem with this approach is that if the load event is not triggered, then we're in trouble.
+        var message = new Message(msg);
+        Msgboy.extractLargestImage(message.content, function(largestImg) {
             if(largestImg) {
-                msg.image = largestImg;
+                message.image = largestImg;
             }
-            var message = Msgboy.inbox.addMessage(msg, {
-                success: function () {
-                    Msgboy.log.debug("Saved message " + msg.id);
-                }.bind(this),
-                error: function (object, error) {
-                    // Message was not saved... probably a dupe
-                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg));
-                    Msgboy.log.debug(error);
-                }.bind(this),
-            });
-        });
+            
+            message.calculateRelevance(function (_relevance) {
+                message.relevance = _relevance;
+                message.save({}, {
+                    success: function() {
+                        Msgboy.log.debug("Saved message", msg.id);
+                        Msgboy.inbox.trigger("messages:added", message);
+                    }.bind(this),
+                    error: function() {
+                        Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
+                    }.bind(this)
+                }); 
+            }.bind(this));
+        }.bind(this));
     }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
