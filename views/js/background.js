@@ -18852,7 +18852,9 @@ Msgboy.bind("loaded", function () {
     $.each(Plugins.all, function (index, plugin) {
         if (typeof (plugin.subscribeInBackground) != "undefined") {
             plugin.subscribeInBackground(function (feed) {
-                Msgboy.trigger('subscribe', {request: {params: {url: feed.href}}});
+                Msgboy.trigger('subscribe', {url: feed.href}, function() {
+                    // Nothing.
+                });
             });
         }
     });
