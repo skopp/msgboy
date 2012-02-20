@@ -18778,7 +18778,7 @@ Msgboy.bind("loaded", function () {
 
     Msgboy.bind('notify', function (params, _sendResponse) {
         Msgboy.log.debug("request", "notify", params);
-        Msgboy.notify(params);
+        Msgboy.notify(params, true);
         // Nothing to do.
     });
 
