@@ -20,8 +20,8 @@ Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org
 
 ### Debugging and Inspecting
 
-The msgboy is a [Chrome application](http://code.google.com/chrome/extensions/index.html). If you'd like to dive into the code, you need to [checkout the source code](https://github.com/superfeedr/msgboy). Then, open Chrome and go to <code>[chrome://extensions/](chrome://extensions/)</code> in a new tab. Click on <code>Developer Mode</code>. Now, hit the <code>Load Unpacked extension</code> button and select the msgboy source directory.
-Clicking on <code>/views/html/background.html</code> will let you inspect the background HTML page for the msgboy which runs continuously.
+The msgboy is a [Chrome application](http://code.google.com/chrome/extensions/index.html). If you'd like to dive into the code, you need to [checkout the source code](https://github.com/superfeedr/msgboy). Then, open Chrome and go to <code>[chrome://extensions/](chrome://extensions/)</code> in a new tab. Check the <code>Developer Mode</code> checkbox. Now, hit the <code>Load Unpacked extension</code> button and select the msgboy source directory.
+If you expand the Msgboy section, you will then see the list of active views. Clicking on <code>/views/html/background.html</code> will let you inspect the background HTML page for the msgboy which runs continuously.
 
 If you submit bug reports, please provide as much content as possible (Chrome version, as well as the logs from the background page).
 
