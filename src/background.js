@@ -17,12 +17,7 @@ Msgboy.bind("loaded", function () {
     
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
-        if (message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance) {
-            Msgboy.log.debug("Showing message : " + message.attributes.id + " (" + message.attributes.relevance + " >= " + Msgboy.inbox.attributes.options.relevance + ") ");
-            Msgboy.notify(message.toJSON());
-        } else {
-            Msgboy.log.debug("Not showing message : " + message.attributes.id + " (" + message.attributes.relevance + " < " + Msgboy.inbox.attributes.options.relevance + ") ");
-        }
+        Msgboy.notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
     });
 
     // When the inbox is ready

@@ -144,9 +144,9 @@ Msgboy.connect = function () {
 };
 
 // Shows a popup notification
-Msgboy.notify = function (message) {
+Msgboy.notify = function (message, popup) {
     // Open a notification window if needed!
-    if (!Msgboy.currentNotification) {
+    if (!Msgboy.currentNotification && popup) {
         url = chrome.extension.getURL('/views/html/notification.html');
         Msgboy.currentNotification = window.webkitNotifications.createHTMLNotification(url);
         Msgboy.currentNotification.onclose = function () {
