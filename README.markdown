@@ -79,7 +79,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Show screenshot for large boxes if there is no image at all.
 * Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
 * Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
-* Mark non feed subscriptions and delete them if needed.
+* <del>Mark non feed subscriptions and delete them if needed</del>.
 * <del>Allow for unsubscriptions no matter the state</del>
 * <del>Refactor down-vote triggered unsubscriptions</del>
 * <del>OPML export</del>
@@ -89,12 +89,12 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Ask Bit.ly to redirect msg.by to msgboy.com
 * Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
 * Use a different color for Msgboy messages. (just use a match on the domain).
-* Mark expanded notifications as expanded (same color scheme, with slow fading)
+* <del>Mark expanded notifications as expanded (same color scheme, with slow fading)</del>
 * Remove the parseURI and replace by require('uri') when browserify supports it.
 * Add google Analytics tracking in links for referrals.
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
-* See why some images are not extracted.
+* <del>See why some images are not extracted.</del>
 
 ## Publishers
 
