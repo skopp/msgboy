@@ -6,14 +6,14 @@ var Inbox = require('../models/inbox.js').Inbox;
 
 var OptionsView = Backbone.View.extend({
     events: {
-        "change #relevance": "change",
+        "change #relevance": "adjustRelevance",
         "click #resetRusbcriptions": "resetRusbcriptions",
         "click #pinMsgboy": "pinMsgboy"
     },
     el: "#options",
 
     initialize: function () {
-        _.bindAll(this, "render", "change", "resetRusbcriptions", "pinMsgboy");
+        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -27,15 +27,18 @@ var OptionsView = Backbone.View.extend({
 
     render: function () {
         this.$("#relevance").val((1 - this.model.attributes.options.relevance) * 100);
-        this.$("#pinMsgboy").val(this.model.attributes.options.pinMsgboy ? "pined" : "unpined");
-        this.$("#pinMsgboy").html(this.model.attributes.options.pinMsgboy ? "Unpin" : "Pin");
+        if(this.model.attributes.options.pinMsgboy) {
+            this.$("#pinMsgboy").val("pined");
+            this.$("#pinMsgboy").html("Unpin");
+        }
+        else {
+            this.$("#pinMsgboy").val("unpined");
+            this.$("#pinMsgboy").html("Pin");
+        }
     },
 
-    change: function (event) {
-        var attributes = {};
-        attributes.options = {};
-        attributes.options[event.target.id] = 1 - $(event.target).val() / 100;
-        this.model.save(attributes);
+    adjustRelevance: function (event) {
+        this.saveModel();
     },
 
     resetRusbcriptions: function (event) {
@@ -48,15 +51,28 @@ var OptionsView = Backbone.View.extend({
     },
     
     pinMsgboy: function(event) {
-        var attributes = {};
-        attributes.options = {};
-        attributes.options[event.target.id] = event.target.value === "unpined";
-        this.model.save(attributes);
+        if(this.$("#pinMsgboy").val() === "unpined") {
+            this.$("#pinMsgboy").val("pined");
+        }
+        else {
+            this.$("#pinMsgboy").val("unpined");
+        }
+        
+        this.saveModel();
         chrome.tabs.getCurrent(function(tab) {
-            chrome.tabs.update(tab.id, {pinned: attributes.options[event.target.id]}, function() {
+            chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pined"}, function() {
                 // Done
             }.bind(this))
         }.bind(this));
+    },
+    
+    saveModel: function() {
+        var attributes = {};
+        attributes.options = {};
+        attributes.options['pinMsgboy'] = this.$("#pinMsgboy").val() === "pined";
+        attributes.options['relevance'] = 1 - this.$("#relevance").val() / 100;
+        this.model.set(attributes);
+        this.model.save();
     }
 });
 
