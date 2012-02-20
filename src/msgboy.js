@@ -245,9 +245,12 @@ Msgboy.extractLargestImage = function(blob, callback) {
         
         _.each(images, function(image) {
             var src = $(image).attr('src');
-            $("<img/>") // Make in memory copy of image to avoid css issues
-                .attr("src", src)
-                .load(function() {
+            if(src || typeof src === "undefined") {
+                imgLoaded();
+            }
+            else {
+                var imgTag = $("<img/>").attr("src", src);
+                imgTag.load(function() {
                     if((!largestImgSize || largestImgSize < this.height * this.width) && 
                     !(this.height === 250 && this.width === 300) && 
                     !(this.height < 100  || this.width < 100) &&
@@ -257,6 +260,7 @@ Msgboy.extractLargestImage = function(blob, callback) {
                     }
                     imgLoaded();
                 });
+            }
         });
     }
     else {
