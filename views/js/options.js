@@ -14389,9 +14389,9 @@ exports.relevanceMath = relevanceMath;
 
 // Welcome messages
 var WelcomeMessages = [{
-    "title": "Welcome to msgboy!",
+    "title": "Welcome to msgboy! It will show you the web you care about.",
     "ungroup": true,
-    "summary": 'Welcome to the msgboy, powered by Superfeedr!',
+    "summary": 'Welcome to msgboy! It will show you the web you care about.',
     "image": '/views/images/msgboy-help-screen-1.png',
     "content": null,
     "links": {
@@ -14427,7 +14427,7 @@ var WelcomeMessages = [{
     "published": new Date().toISOString(),
     "updated": new Date().toISOString()
 }, {
-    "title": "Bookmark sites you love.",
+    "title": "Bookmark or come back to sites you love.",
     "ungroup": true,
     "image": "/views/images/msgboy-help-screen-2.png",
     "summary": "Bookmark sites you love. The msgboy will show you messages when they update",

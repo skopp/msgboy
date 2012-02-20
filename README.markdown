@@ -87,8 +87,8 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add a 'Pin' Msgboy option
 * <del>Notification should be set to none by default.</del>
 * Ask Bit.ly to redirect msg.by to msgboy.com
-* Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
-* Use a different color for Msgboy messages. (just use a match on the domain).
+* <del>Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.</del>
+* Use a different color for Msgboy messages. (just use a match on the domain). The background is not enough. How, then?
 * <del>Mark expanded notifications as expanded (same color scheme, with slow fading)</del>
 * Remove the parseURI and replace by require('uri') when browserify supports it.
 * Add google Analytics tracking in links for referrals.
