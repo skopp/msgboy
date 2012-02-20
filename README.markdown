@@ -85,7 +85,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>OPML export</del>
 * <del>Extract images upon creation of messages.</del>
 * Add a 'Pin' Msgboy option
-* Notification should be set to none by default.
+* <del>Notification should be set to none by default.</del>
 * Ask Bit.ly to redirect msg.by to msgboy.com
 * Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.
 * Use a different color for Msgboy messages. (just use a match on the domain).
