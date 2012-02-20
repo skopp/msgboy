@@ -17791,7 +17791,7 @@ var Inbox = Backbone.Model.extend({
     defaults: {
         id: "1",
         options: {
-            relevance: 0.0
+            relevance: 1.0
         }
     },
     initialize: function () {
@@ -18672,7 +18672,7 @@ Msgboy.bind("loaded", function () {
         Msgboy.bind("connected", function(){
             // And import all plugins.
             Plugins.importSubscriptions(function (subs) {
-                Msgboy.subscribe(subs.url, function () {
+                Msgboy.subscribe(subs.url, false, function () {
                     // Cool. Not much to do.
                 });
             });

@@ -14922,7 +14922,7 @@ var Inbox = Backbone.Model.extend({
     defaults: {
         id: "1",
         options: {
-            relevance: 0.0
+            relevance: 1.0
         }
     },
     initialize: function () {
