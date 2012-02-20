@@ -52,7 +52,7 @@ Msgboy.bind("loaded", function () {
         Msgboy.bind("connected", function(){
             // And import all plugins.
             Plugins.importSubscriptions(function (subs) {
-                Msgboy.subscribe(subs.url, function () {
+                Msgboy.subscribe(subs.url, false, function () {
                     // Cool. Not much to do.
                 });
             });
