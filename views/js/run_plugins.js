@@ -13752,6 +13752,7 @@ Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
 
+
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
     if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
@@ -14922,7 +14923,8 @@ var Inbox = Backbone.Model.extend({
     defaults: {
         id: "1",
         options: {
-            relevance: 1.0
+            relevance: 1.0,
+            pinMsgboy: false
         }
     },
     initialize: function () {

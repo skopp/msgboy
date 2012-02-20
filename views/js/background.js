@@ -16516,6 +16516,7 @@ Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
 
+
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
     if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
@@ -17791,7 +17792,8 @@ var Inbox = Backbone.Model.extend({
     defaults: {
         id: "1",
         options: {
-            relevance: 1.0
+            relevance: 1.0,
+            pinMsgboy: false
         }
     },
     initialize: function () {
@@ -18649,6 +18651,23 @@ Msgboy.bind("loaded", function () {
     Msgboy.inbox.bind("ready", function () {
         Msgboy.log.debug("Inbox ready");
         Msgboy.connect(Msgboy.inbox);
+        // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
+        if(Msgboy.inbox.attributes.options.pinMsgboy) {
+            chrome.tabs.getAllInWindow(undefined, function(tabs) {
+                for (var i = 0, tab; tab = tabs[i]; i++) {
+                    if (tab.url && tab.url.match(/chrome-extension:\/\/.*\/views\/html\/dashboard\.html/)) {
+                        // Fine, the tab is opened. No need to do much more.
+                        return;
+                    }
+                }
+                chrome.tabs.create({
+                    url: chrome.extension.getURL('/views/html/dashboard.html'),
+                    selected: true,
+                    pinned: true
+                });
+
+            });
+        }
     });
 
     // When the inbox is new.

@@ -13647,6 +13647,7 @@ Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
 
+
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
     if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {

@@ -84,7 +84,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Refactor down-vote triggered unsubscriptions</del>
 * <del>OPML export</del>
 * <del>Extract images upon creation of messages.</del>
-* Add a 'Pin' Msgboy option
+* <del>Add a 'Pin' Msgboy option - thanks [John B.](http://www.borthwick.com/) for the idea.</del>
 * <del>Notification should be set to none by default.</del>
 * Ask Bit.ly to redirect msg.by to msgboy.com
 * <del>Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.</del>
