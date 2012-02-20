@@ -49,36 +49,17 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 
 * <del>Add per-site unread list (as top screen bars) DEPRECATED</del>
 * <del>Add snooze</del>
-* Add support for unsubscription in plugins.
-* Add support for ActivityStreams
-* When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
 * <del>Rewrite the msgboy.com page with inbox</del>.
 * <del>Use the delay@stamp for createdAt of offline messages</del>.
-* Show a "Path 2.0" clock to indicate some kind of time scale.
-* Run continuous testing before running Rake tasks.
 * <del>Run JSLint (and CSSLint?) in Rake tasks for cleaner JS.</del>
-* Add support for webintents, as a subscribing app, and calls for "sharing" apps.
-* Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
-* HTML5 : Custom (web-based) protocol handlers
-* Improve the relevance algorithm by adding the keywords based filtering (Bayes).
 * <del>Integrate with bit.ly</del>
-* Integrate with Chartbeat
-* More plugins for websites that have some kind of subscription scheme.
-* Keyboard navigation for the dashboard and notifications.
 * <del>Grouping of items in the dashboard (by source, and by topic).</del>
 * <del>Set git tags when bumping</del>
 * <del>Throttle down importing of sources, to avoid slowness at setup. Since everything happens in the background. It's ok to take more time</del>.
 * <del>Show messages when there was no subscription performed at all...</del>
 * <del>Show more help in the msgboy dashboard in the form of boxes. These should indicate what needs to be done to subscribe to more content (bookmarking stuff!).</del>
 * <del>Add some feeds in black lists (like wikipedia's feeds).</del>
-* Check safari bookmarks so that they're not taken into account...
-* Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
-* Check Memory usage and fix it. Don't ask, it's _always_ too high.
-* Add domain-based filtering for relevance.
 * <del>Remove the different colors for notifications. That's hard to interpret.</del>
-* Show screenshot for large boxes if there is no image at all.
-* Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
-* Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
 * <del>Mark non feed subscriptions and delete them if needed</del>.
 * <del>Allow for unsubscriptions no matter the state</del>
 * <del>Refactor down-vote triggered unsubscriptions</del>
@@ -86,15 +67,34 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Extract images upon creation of messages.</del>
 * <del>Add a 'Pin' Msgboy option - thanks [John B.](http://www.borthwick.com/) for the idea.</del>
 * <del>Notification should be set to none by default.</del>
-* Ask Bit.ly to redirect msg.by to msgboy.com
-* <del>Improve the "Welcome to Superfeedr" message by indicating what Superfeedr is.</del>
-* Use a different color for Msgboy messages. (just use a match on the domain). The background is not enough. How, then?
+* <del>Improve the "Welcome to Msgboy" message by indicating what Msgboy is.</del>
 * <del>Mark expanded notifications as expanded (same color scheme, with slow fading)</del>
+* <del>See why some images are not extracted.</del>
+* <del>Use a different color for Msgboy messages. (just use a match on the domain). The background is not enough. How, then?</del>
+* Add support for unsubscription in plugins.
+* Add support for ActivityStreams
+* When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
+* Show a "Path 2.0" clock to indicate some kind of time scale.
+* Run continuous testing before running Rake tasks.
+* Add support for webintents, as a subscribing app, and calls for "sharing" apps.
+* Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
+* HTML5 : Custom (web-based) protocol handlers
+* Improve the relevance algorithm by adding the keywords based filtering (Bayes).
+* Integrate with Chartbeat
+* More plugins for websites that have some kind of subscription scheme.
+* Keyboard navigation for the dashboard and notifications.
+* Check safari bookmarks so that they're not taken into account...
+* Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
+* Check Memory usage and fix it. Don't ask, it's _always_ too high.
+* Add domain-based filtering for relevance.
+* Show screenshot for large boxes if there is no image at all.
+* Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
+* Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
+* Ask Bit.ly to redirect msg.by to msgboy.com
 * Remove the parseURI and replace by require('uri') when browserify supports it.
 * Add google Analytics tracking in links for referrals.
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
-* <del>See why some images are not extracted.</del>
 
 ## Publishers
 
