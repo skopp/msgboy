@@ -103,8 +103,11 @@ var SuperfeedrPlugin = {
                 url: status.getAttribute("feed"),
                 links: this.atomLinksToJson(status.getElementsByTagName("link"))
             }
+            if(entries.length === 0) {
+                this.onNotificationReceived({payload: null, source: source});
+            }
             for (i = 0; i < entries.length; i++) {
-                this.onNotificationReceived({payload: entries[i], source: source});
+                this.onNotificationReceived({payload: this.convertAtomToJson(entries[i]), source: source});
             }
         }
         return true; // We must return true to keep the handler active!

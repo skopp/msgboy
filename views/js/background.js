@@ -16398,8 +16398,11 @@ var SuperfeedrPlugin = {
                 url: status.getAttribute("feed"),
                 links: this.atomLinksToJson(status.getElementsByTagName("link"))
             }
+            if(entries.length === 0) {
+                this.onNotificationReceived({payload: null, source: source});
+            }
             for (i = 0; i < entries.length; i++) {
-                this.onNotificationReceived({payload: entries[i], source: source});
+                this.onNotificationReceived({payload: this.convertAtomToJson(entries[i]), source: source});
             }
         }
         return true; // We must return true to keep the handler active!
@@ -16696,7 +16699,7 @@ Msgboy.extractLargestImage = function(blob, callback) {
         
         _.each(images, function(image) {
             var src = $(image).attr('src');
-            if(src || typeof src === "undefined") {
+            if(!src || typeof src === "undefined") {
                 imgLoaded();
             }
             else {
@@ -18690,32 +18693,40 @@ Msgboy.bind("loaded", function () {
     // When a new notification was received from XMPP line.
     SuperfeedrPlugin.onNotificationReceived = function (notification) {
         Msgboy.log.debug("Notification received from " + notification.source.url);
-        var msg = SuperfeedrPlugin.convertAtomToJson(notification.payload);
-        msg.source = notification.source;
-        msg.feed = notification.source.url;
-        
-        var message = new Message(msg);
-        
-        Msgboy.extractLargestImage(message.get('text'), function(largestImg) {
-            var attributes = {};
-            
-            if(largestImg) {
-                attributes.image = largestImg;
-            }
-            
-            message.calculateRelevance(function (_relevance) {
-                attributes.relevance = _relevance;
-                message.save(attributes, {
-                    success: function() {
-                        Msgboy.log.debug("Saved message", msg.id);
-                        Msgboy.inbox.trigger("messages:added", message);
-                    }.bind(this),
-                    error: function() {
-                        Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
-                    }.bind(this)
-                }); 
+        if(notification.payload) {
+            var msg = notification.payload;
+            msg.source = notification.source;
+            msg.feed = notification.source.url;
+
+            var message = new Message(msg);
+
+            Msgboy.extractLargestImage(message.get('text'), function(largestImg) {
+                var attributes = {};
+
+                if(largestImg) {
+                    attributes.image = largestImg;
+                }
+
+                message.calculateRelevance(function (_relevance) {
+                    attributes.relevance = _relevance;
+                    message.save(attributes, {
+                        success: function() {
+                            Msgboy.log.debug("Saved message", msg.id);
+                            Msgboy.inbox.trigger("messages:added", message);
+                        }.bind(this),
+                        error: function() {
+                            Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
+                        }.bind(this)
+                    }); 
+                }.bind(this));
             }.bind(this));
-        }.bind(this));
+        }
+        else {
+            // Notification with no payload. Not good. We should unsubscribe as it's useless!
+            Msgboy.unsubscribe(notification.source.url, function (result) {
+                Msgboy.log.debug("Unsubscribed from ", notification.source.url);
+            });
+        }
     }
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.

@@ -13935,7 +13935,7 @@ Msgboy.extractLargestImage = function(blob, callback) {
         
         _.each(images, function(image) {
             var src = $(image).attr('src');
-            if(src || typeof src === "undefined") {
+            if(!src || typeof src === "undefined") {
                 imgLoaded();
             }
             else {
