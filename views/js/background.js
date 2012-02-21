@@ -11856,7 +11856,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
         this.db             = null;
         this.supportOnUpgradeNeeded = false;
         var lastMigrationPathVersion = _.last(this.schema.migrations).version;
-        debug_log("opening database " + this.schema.id + " in version #" + lastMigrationPathVersion);
+        debugLog("opening database " + this.schema.id + " in version #" + lastMigrationPathVersion);
         this.dbRequest      = indexedDB.open(this.schema.id,lastMigrationPathVersion); //schema version need to be an unsigned long
 
         this.launchMigrationPath = function(dbVersion) {
@@ -11872,7 +11872,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
         };
 
         this.dbRequest.onblocked = function(event){
-            debug_log("blocked");
+            debugLog("blocked");
         }
 
         this.dbRequest.onsuccess = function (e) {
@@ -11914,14 +11914,14 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
 
             this.supportOnUpgradeNeeded = true;
 
-            debug_log("onupgradeneeded = " + iDBVersionChangeEvent.oldVersion + " => " + iDBVersionChangeEvent.newVersion);
+            debugLog("onupgradeneeded = " + iDBVersionChangeEvent.oldVersion + " => " + iDBVersionChangeEvent.newVersion);
             this.launchMigrationPath(iDBVersionChangeEvent.oldVersion);
 
 
         }.bind(this);
     }
 
-    function debug_log(str) {
+    function debugLog(str) {
         if (typeof window !== "undefined" && typeof window.console !== "undefined" && typeof window.console.log !== "undefined") {
             window.console.log(str);
         }
@@ -11947,13 +11947,13 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
 
         // Performs all the migrations to reach the right version of the database.
         migrate: function (migrations, version, options) {
-            debug_log("Starting migrations from " + version);
+            debugLog("Starting migrations from " + version);
             this._migrate_next(migrations, version, options);
         },
 
         // Performs the next migrations. This method is private and should probably not be called.
         _migrate_next: function (migrations, version, options) {
-            debug_log("_migrate_next begin version from #" + version);
+            debugLog("_migrate_next begin version from #" + version);
             var that = this;
             var migration = migrations.shift();
             if (migration) {
@@ -11970,37 +11970,37 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                         };
                     }
                     // First, let's run the before script
-                    debug_log("_migrate_next begin before version #" + migration.version);
+                    debugLog("_migrate_next begin before version #" + migration.version);
                     migration.before(function () {
-                        debug_log("_migrate_next done before version #" + migration.version);
+                        debugLog("_migrate_next done before version #" + migration.version);
 
                         var continueMigration = function (e) {
-                            debug_log("_migrate_next continueMigration version #" + migration.version);
+                            debugLog("_migrate_next continueMigration version #" + migration.version);
 
                             var transaction = this.dbRequest.transaction || versionRequest.result;
-                            debug_log("_migrate_next begin migrate version #" + migration.version);
+                            debugLog("_migrate_next begin migrate version #" + migration.version);
 
                             migration.migrate(transaction, function () {
-                                debug_log("_migrate_next done migrate version #" + migration.version);
+                                debugLog("_migrate_next done migrate version #" + migration.version);
                                 // Migration successfully appliedn let's go to the next one!
-                                debug_log("_migrate_next begin after version #" + migration.version);
+                                debugLog("_migrate_next begin after version #" + migration.version);
                                 migration.after(function () {
-                                    debug_log("_migrate_next done after version #" + migration.version);
-                                    debug_log("Migrated to " + migration.version);
+                                    debugLog("_migrate_next done after version #" + migration.version);
+                                    debugLog("Migrated to " + migration.version);
 
                                     //last modification occurred, need finish
                                     if(migrations.length ==0) {
                                         /*if(this.supportOnUpgradeNeeded){
-                                            debug_log("Done migrating");
+                                            debugLog("Done migrating");
                                             // No more migration
                                             options.success();
                                         }
                                         else{*/
-                                            debug_log("_migrate_next setting transaction.oncomplete to finish  version #" + migration.version);
+                                            debugLog("_migrate_next setting transaction.oncomplete to finish  version #" + migration.version);
                                             transaction.oncomplete = function() {
-                                                debug_log("_migrate_next done transaction.oncomplete version #" + migration.version);
+                                                debugLog("_migrate_next done transaction.oncomplete version #" + migration.version);
 
-                                                debug_log("Done migrating");
+                                                debugLog("Done migrating");
                                                 // No more migration
                                                 options.success();
                                             }
@@ -12008,9 +12008,9 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                                     }
                                     else
                                     {
-                                        debug_log("_migrate_next setting transaction.oncomplete to recursive _migrate_next  version #" + migration.version);
+                                        debugLog("_migrate_next setting transaction.oncomplete to recursive _migrate_next  version #" + migration.version);
                                         transaction.oncomplete = function() {
-                                           debug_log("_migrate_next end from version #" + version + " to " + migration.version);
+                                           debugLog("_migrate_next end from version #" + version + " to " + migration.version);
                                            that._migrate_next(migrations, version, options);
                                        }
                                     }
@@ -12020,7 +12020,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                         }.bind(this);
 
                         if(!this.supportOnUpgradeNeeded){
-                            debug_log("_migrate_next begin setVersion version #" + migration.version);
+                            debugLog("_migrate_next begin setVersion version #" + migration.version);
                             var versionRequest = this.db.setVersion(migration.version);
                             versionRequest.onsuccess = continueMigration;
                             versionRequest.onerror = options.error;
@@ -12032,7 +12032,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                     }.bind(this));
                 } else {
                     // No need to apply this migration
-                    debug_log("Skipping migration " + migration.version);
+                    debugLog("Skipping migration " + migration.version);
                     this._migrate_next(migrations, version, options);
                 }
             }
@@ -12040,13 +12040,13 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
 
         // This is the main method, called by the ExecutionQueue when the driver is ready (database open and migration performed)
         execute: function (storeName, method, object, options) {
-            debug_log("execute : " + method +  " on " + storeName + " for " + object.id);
+            debugLog("execute : " + method +  " on " + storeName + " for " + object.id);
             switch (method) {
             case "create":
                 this.write(storeName, object, options);
                 break;
             case "read":
-                if (object.id) {
+                if (object.id || object.cid) {
                     this.read(storeName, object, options); // It's a model
                 } else {
                     this.query(storeName, object, options); // It's a collection
@@ -12337,6 +12337,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
     }
     else {
         exports.sync = sync;
+        exports.debugLog = debugLog;
     }
     
     //window.addEventListener("unload",function(){Backbone.sync("closeall")})
@@ -16466,6 +16467,7 @@ if (typeof Msgboy === "undefined") {
 _.extend(Msgboy, Backbone.Events);
 
 // Logs messages to the console
+console._log = console.log;
 Msgboy.log =  {
     levels: {
         RAW: 0,
@@ -16473,7 +16475,7 @@ Msgboy.log =  {
         INFO: 20,
         ERROR: 30,
     },
-    _log: Function.prototype.bind.call(console.log, console),
+    _log: Function.prototype.bind.call(console._log, console),
     raw: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
             var args = Array.prototype.slice.call(arguments);  
@@ -16504,8 +16506,15 @@ Msgboy.log =  {
     },
 }
 
+// Also, hijack all console.log messages
+console.log = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    args.unshift('debug');
+    Msgboy.log.debug.apply(this, args);
+}
+
 // Attributes
-Msgboy.log.debugLevel = Msgboy.log.levels.RAW; // We may want to adjust that in production!
+Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
 Msgboy.autoReconnect = true;
 Msgboy.currentNotification = null;
 Msgboy.messageStack = [];
@@ -16515,6 +16524,7 @@ Msgboy.connection = null;
 Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
+
 
 
 // Returns the environment in which this msgboy is running
@@ -16529,6 +16539,9 @@ Msgboy.environment = function () {
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
+    if(Msgboy.environment() === "development") {
+        Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+    }
     window.onload = function () {
         chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
             Msgboy.infos = extension_infos;

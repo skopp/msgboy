@@ -12,6 +12,7 @@ if (typeof Msgboy === "undefined") {
 _.extend(Msgboy, Backbone.Events);
 
 // Logs messages to the console
+console._log = console.log;
 Msgboy.log =  {
     levels: {
         RAW: 0,
@@ -19,7 +20,7 @@ Msgboy.log =  {
         INFO: 20,
         ERROR: 30,
     },
-    _log: Function.prototype.bind.call(console.log, console),
+    _log: Function.prototype.bind.call(console._log, console),
     raw: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
             var args = Array.prototype.slice.call(arguments);  
@@ -50,8 +51,15 @@ Msgboy.log =  {
     },
 }
 
+// Also, hijack all console.log messages
+console.log = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    args.unshift('debug');
+    Msgboy.log.debug.apply(this, args);
+}
+
 // Attributes
-Msgboy.log.debugLevel = Msgboy.log.levels.RAW; // We may want to adjust that in production!
+Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
 Msgboy.autoReconnect = true;
 Msgboy.currentNotification = null;
 Msgboy.messageStack = [];
@@ -61,6 +69,7 @@ Msgboy.connection = null;
 Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
+
 
 
 // Returns the environment in which this msgboy is running
@@ -75,6 +84,9 @@ Msgboy.environment = function () {
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
+    if(Msgboy.environment() === "development") {
+        Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+    }
     window.onload = function () {
         chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
             Msgboy.infos = extension_infos;
