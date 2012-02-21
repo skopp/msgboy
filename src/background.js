@@ -8,6 +8,8 @@ var Inbox           = require('./models/inbox.js').Inbox;
 var Message         = require('./models/message.js').Message;
 var WelcomeMessages = require('./models/message.js').WelcomeMessages;
 
+window.Msgboy = Msgboy;
+
 Msgboy.bind("loaded", function () {
     Msgboy.inbox = new Inbox();
     

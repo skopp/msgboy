@@ -13816,42 +13816,59 @@ Msgboy.resumeSubscriptions = function () {
 // Extracts the largest image of an HTML content
 Msgboy.extractLargestImage = function(blob, callback) {
     var container = $("<div>");
-    var content = $(blob)
-    container.append(content);
-    var images = container.find("img");
     var largestImg = null;
     var largestImgSize = null;
+    var done = null;
     
-    if(images.length > 0) {
-        // Let's try to extract the image for this message.
+    var timeout = setTimeout(function() {
+        done();
+    }, 3000); // We allow for 3 seconds to extract images.
+    
+    done = function() {
+        clearTimeout(timeout);
+        callback(largestImg);
+    } // When done, let's just cancel the timeout and callback with the largest image.
+    
+    try {
+        var content = $(blob)
+        container.append(content);
+        var images = container.find("img");
 
-        var imgLoaded = _.after(images.length, function() {
-            callback(largestImg);
-        });
-        
-        _.each(images, function(image) {
-            var src = $(image).attr('src');
-            if(!src || typeof src === "undefined") {
-                imgLoaded();
-            }
-            else {
-                var imgTag = $("<img/>").attr("src", src);
-                imgTag.load(function() {
-                    if((!largestImgSize || largestImgSize < this.height * this.width) && 
-                    !(this.height === 250 && this.width === 300) && 
-                    !(this.height < 100  || this.width < 100) &&
-                    !src.match('/doubleclick.net/')) {
-                        largestImgSize = this.height * this.width;
-                        largestImg = src;
-                    }
+        if(images.length > 0) {
+            // Let's try to extract the image for this message.
+
+            var imgLoaded = _.after(images.length, function() {
+                done();
+            });
+
+            _.each(images, function(image) {
+                var src = $(image).attr('src');
+                if(!src || typeof src === "undefined") {
                     imgLoaded();
-                });
-            }
-        });
+                }
+                else {
+                    var imgTag = $("<img/>").attr("src", src);
+                    imgTag.load(function() {
+                        if((!largestImgSize || largestImgSize < this.height * this.width) && 
+                        !(this.height === 250 && this.width === 300) && 
+                        !(this.height < 100  || this.width < 100) &&
+                        !src.match('/doubleclick.net/')) {
+                            largestImgSize = this.height * this.width;
+                            largestImg = src;
+                        }
+                        imgLoaded();
+                    });
+                }
+            });
+        }
+        else {
+            // No image!
+            done();
+        }
     }
-    else {
-        // No image!
-        callback(null);
+    catch(err) {
+        Msgboy.log.error("Couldn't extract images from", blob, err);
+        done();
     }
 }
 
