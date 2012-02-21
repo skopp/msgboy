@@ -96,6 +96,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
+* Make the whole Msgboy lighter. Maybe include less files?
 
 ## Publishers
 
