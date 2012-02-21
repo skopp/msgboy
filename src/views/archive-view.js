@@ -59,10 +59,6 @@ var ArchiveView = Backbone.View.extend({
                 $('#container').isotope('reLayout');
             });
 
-            message.bind('destroy', function() {
-                $('#container').isotope('reLayout');
-            });
-            
             message.bind('expanded', function() {
                 $('#container').isotope('reLayout');
             })
@@ -71,9 +67,17 @@ var ArchiveView = Backbone.View.extend({
                 // We have unsubscribed a feed. So we want to delete all of its brothers.
                 var brothers = new Archive(); 
                 brothers.bind('reset', function() {
+                    var destroyedOne = _.after(brothers.models.length, function() {
+                        // Once all brothers have been destroyed, we can redraw
+                        $('#container').isotope('reLayout');
+                    })
+                    
                     _.each(brothers.models, function(brother) {
                         brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
-                        brother.destroy(); // Deletes the brothers 
+                        brother.destroy({
+                            silent: true,
+                            success: destroyedOne
+                        }); // Deletes the brothers 
                     }.bind(this));
                 }.bind(this));
                 brothers.forFeed(message.get('feed'));
