@@ -1,6 +1,6 @@
 var _ = require('underscore');
-var Message = require('../../src/models/message.js').Message;
-var Archive = require('../../src/models/archive.js').Archive;
+var Message = require('../../models/message.js').Message;
+var Archive = require('../../models/archive.js').Archive;
 var should = require('chai').should();
 
 describe('Archive', function(){
@@ -9,31 +9,27 @@ describe('Archive', function(){
     });
 
     beforeEach(function(done) {
-        var Redis = require("redis");
-        Redis.createClient().flushall(function() {
-            // Let's create Messages!
-            var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
-            m1.bind('sync', function() {
-                var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
-                m2.bind('sync', function() {
-                    var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
-                    m3.bind('sync', function() {
-                        var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
-                        m4.bind('sync', function() {
-                            var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
-                            m5.bind('sync', function() {
-                                done();
-                            });
-                            m5.save();
+        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
+        m1.bind('change', function() {
+            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
+            m2.bind('change', function() {
+                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
+                m3.bind('change', function() {
+                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
+                    m4.bind('change', function() {
+                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
+                        m5.bind('change', function() {
+                            done();
                         });
-                        m4.save();
+                        m5.save();
                     });
-                    m3.save();
+                    m4.save();
                 });
-                m2.save();
+                m3.save();
             });
-            m1.save();
+            m2.save();
         });
+        m1.save();
     });
 
     describe('comparator', function() {
@@ -59,9 +55,9 @@ describe('Archive', function(){
                 prev = m;
             });
             done();
-        })
+        });
     })
-    
+
     describe('next', function() {
         it('should add messages one by one', function(done) {
             var archive =  new Archive();
@@ -76,7 +72,7 @@ describe('Archive', function(){
             })
             archive.next(limit);
         });
-        
+
         it('should stick to the conditions on messages added', function(done) {
             var archive =  new Archive();
             archive.model = Message;
@@ -93,9 +89,8 @@ describe('Archive', function(){
             })
             archive.next(limit, {sourceHost: "superfeedr.com"});
         });
-        
     });
-    
+
     describe('forFeed', function() {
         it('should return all the messages for a given feed when called with forFeed', function(done) {
             var archive =  new Archive();
@@ -109,9 +104,7 @@ describe('Archive', function(){
             })
             archive.forFeed('http://superfedr.com/dummy.xml');
         });
-        
     });
 
-    
 });
 

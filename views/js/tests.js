@@ -15657,6 +15657,1098 @@ module.exports = function (chai) {
 
 });
 
+require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var Message = require('../../models/message.js').Message;
+var Archive = require('../../models/archive.js').Archive;
+var should = require('chai').should();
+
+describe('Archive', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+
+    beforeEach(function(done) {
+        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
+        m1.bind('change', function() {
+            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
+            m2.bind('change', function() {
+                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
+                m3.bind('change', function() {
+                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
+                    m4.bind('change', function() {
+                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
+                        m5.bind('change', function() {
+                            done();
+                        });
+                        m5.save();
+                    });
+                    m4.save();
+                });
+                m3.save();
+            });
+            m2.save();
+        });
+        m1.save();
+    });
+
+    describe('comparator', function() {
+        it('should sort all the messages by createdAt', function(done) {
+            var archive =  new Archive();
+            var twelveHourAgoMessage = new Message({title: "Twelve Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 12});
+            var twentyFourHourAgoMessage = new Message({title: "Twenty-Four Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 24});
+            var sixHourAgoMessage = new Message({title: "Six Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 6});
+            var eighteenHourAgoMessage = new Message({title: "Eighteen Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 18});
+            var threeHourAgoMessage = new Message({title: "Three Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 3});
+            var NineHourAgoMessage = new Message({title: "Nine Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 9});
+            archive.add(twelveHourAgoMessage);
+            archive.add(twentyFourHourAgoMessage);
+            archive.add(threeHourAgoMessage);
+            archive.add(NineHourAgoMessage);
+            archive.add(eighteenHourAgoMessage);
+            archive.add(sixHourAgoMessage);
+            var prev = null;
+            archive.each(function(m) {
+                if(prev) {
+                    m.get('createdAt').should.be.below(prev.get('createdAt'));
+                }
+                prev = m;
+            });
+            done();
+        });
+    })
+
+    describe('next', function() {
+        it('should add messages one by one', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    done();
+                }
+            })
+            archive.next(limit);
+        });
+
+        it('should stick to the conditions on messages added', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    _.each(archive.pluck('sourceHost'), function(h) {
+                        h.should.equal('superfeedr.com');
+                    });
+                    done();
+                }
+            })
+            archive.next(limit, {sourceHost: "superfeedr.com"});
+        });
+    });
+
+    describe('forFeed', function() {
+        it('should return all the messages for a given feed when called with forFeed', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            archive.bind('reset', function() {
+                archive.length.should.equal(3);
+                archive.at(0).get('title').should.equal("Fourth Message");
+                archive.at(1).get('title').should.equal("Third Message");
+                archive.at(2).get('title').should.equal("First Message");
+                done();
+            })
+            archive.forFeed('http://superfedr.com/dummy.xml');
+        });
+    });
+
+});
+
+
+});
+
+require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var _ = require('underscore');
+var parseUri = require('../utils.js').parseUri;
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
+
+var Message = Backbone.Model.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+    defaults: {
+        "title":        null,
+        "atomId":       null,
+        "summary":      null,
+        "content":      null,
+        "links":        {},
+        "createdAt":    0,
+        "source":       {},
+        "sourceHost":   null,
+        "sourceLink":   null,
+        "state":        "new",
+        "feed":         null,
+        "relevance":    0.6
+    },
+    /* Initializes the messages */
+    initialize: function (params) {
+        if(typeof params === "undefined") {
+            params = {}; // Default params
+        }
+        // Setting up the source attributes
+        if (params.source && params.source.links) {
+            if(params.source.links.alternate) {
+                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                    params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = params.sourceHost || parseUri(params.sourceLink).host;
+                }
+                else {
+                    params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                    params.sourceHost = params.sourceHost || "";
+                }
+            }
+            else {
+                params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                params.sourceHost = params.sourceHost || "";
+            }
+        }
+        else {
+            params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+            params.sourceHost = params.sourceHost || "";
+        }
+        
+        // Setting up the createdAt
+        if (!params.createdAt) {
+            params.createdAt = new Date().getTime();
+        }
+        
+        
+        // Setting up the mainLink
+        if (params.links && params.links.alternate) {
+            if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
+                params.mainLink = params.links.alternate["text/html"][0].href;
+            }
+            else {
+                // Hum, let's see what other types we have!
+                params.mainLink = "";
+            }
+        }
+        else {
+            params.mainLink = "";
+        }
+        
+        // Setting up the text, as the longest between the summary and the content.
+        if (params.content) {
+            if (params.summary && params.summary.length > params.content.length) {
+                params.text =  params.summary;
+            }
+            else {
+                params.text =  params.content;
+            }
+        }
+        else if (params.summary) {
+            params.text =  params.summary;
+        }
+        else {
+            params.text = "";
+        }
+        
+        
+        // Setting up the params
+        this.set(params);
+        
+        this.related = new Backbone.Collection(); // create container for similar messages
+        this.related.comparator = function(message) {
+            return -message.get('createdAt');
+        }
+        return this;
+    },
+    /* Votes the message up */
+    voteUp: function () {
+        this.setState("up-ed");
+    },
+    /* Votes the message down */
+    voteDown: function () {
+        this.setState("down-ed", function (result) {
+            // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
+            var brothers = new Archive();
+            brothers.forFeed(this.attributes.feed);
+            
+            brothers.bind('reset', function () {
+                var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
+                    return 1;
+                });
+                var counts = relevanceMath.counts(brothers.pluck("state"));
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
+                    this.trigger('unsubscribe');
+                }
+            }.bind(this));
+        }.bind(this));
+    },
+    /* Skip the message */
+    skip: function () {
+        this.setState("skipped");
+    },
+    /* Sets the state for the message */
+    setState: function (_state, callback) {
+        this.save({
+            state: _state
+        }, {
+            success: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(true);
+                }
+                this.trigger(_state, this);
+            }.bind(this),
+            error: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(false);
+                }
+            }.bind(this)
+        });
+    },
+    /* This calculates the relevance for this message and sets it. */
+    /* It just calculates the relevance and does not save it. */
+    calculateRelevance: function (callback) {
+        // See Section 6.3 in Product Requirement Document.
+        // We need to get all the messages from this source.
+        // Count how many have been voted up, how many have been voted down.
+        // First, let's pull all the messages from the same source.
+        var brothers = new Archive();
+        brothers.comparator = function (brother) {
+            return brother.attributes.createdAt;
+        };
+        brothers.forFeed(this.attributes.feed);
+        brothers.bind('reset', function () {
+            var relevance = 0.7; // This is the default relevance
+            if (brothers.length > 0) {
+                // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].
+                relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
+            }
+            // Keywords [TODO]
+            // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
+            if (typeof(callback) !== "undefined" && callback) {
+                callback(relevance);
+            }
+        }.bind(this));
+    },
+    relevanceBasedOnBrothers: function (states) {
+        if (states.length === 0) {
+            return 1;
+        }
+        else {
+            var percentages = relevanceMath.percentages(states, ["new", "up-ed", "down-ed", "skipped"]);
+
+            return relevanceMath.average(percentages, {
+                "new" : 0.6,
+                "up-ed": 1.0,
+                "down-ed": 0.0,
+                "skipped": 0.4
+            });
+        }
+    },
+    faviconUrl: function () {
+        return "http://g.etfv.co/" + this.get('sourceLink') + "?defaulticon=lightpng";
+    }
+});
+
+exports.Message = Message;
+
+var relevanceMath = {
+    counts: function (array, defaults, weight) {
+        var counts = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            if (typeof(weight) !== "undefined") {
+                counts[element] += weight(element, index);
+            }
+            else {
+                counts[element] += 1;
+            }
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        return counts;
+    },
+    // Returns the percentages of each element in an array.
+    percentages: function (array) {
+        var counts = {}, percentages = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            counts[element] += 1;
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        _.each(_.keys(counts), function (key) {
+            percentages[key] = counts[key] / sum;
+        });
+        return percentages;
+    },
+    // Returns the average based on the weights and the percentages.
+    average: function (percentages, weights) {
+        var sum = 0, norm = 0;
+        _.each(_.keys(percentages), function (key) {
+            sum += percentages[key] * weights[key];
+            norm += percentages[key];
+        });
+        if (norm === 0) {
+            return sum;
+        } else {
+            return sum / norm;
+        }
+        return sum;
+    }
+};
+
+exports.relevanceMath = relevanceMath;
+
+// Welcome messages
+var WelcomeMessages = [{
+    "title": "Welcome to msgboy! It will show you the web you care about.",
+    "ungroup": true,
+    "summary": 'Welcome to msgboy! It will show you the web you care about.',
+    "image": '/views/images/msgboy-help-screen-1.png',
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime(),
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 1.0,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Bookmark or come back to sites you love.",
+    "ungroup": true,
+    "image": "/views/images/msgboy-help-screen-2.png",
+    "summary": "Bookmark sites you love. The msgboy will show you messages when they update",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 1000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Newly posted stories appear in realtime.",
+    "ungroup": true,
+    "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
+    "image": "/views/images/msgboy-help-screen-3.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 2000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Train msgboy to give you what you want.",
+    "ungroup": true,
+    "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
+    "image": "/views/images/msgboy-help-screen-5.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 3000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Click '+' for more like this.",
+    "ungroup": true,
+    "summary": "Vote stories up if you want more like them",
+    "image": "/views/images/msgboy-help-screen-6.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 4000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.8,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Hit '-' if you're not interested.",
+    "ungroup": true,
+    "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
+    "image": "/views/images/msgboy-help-screen-7.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 5000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Follow and rate stories with notifications.",
+    "ungroup": true,
+    "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
+    "image": "/views/images/msgboy-help-screen-8.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 6000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "You can throttle notifications in settings.",
+    "ungroup": true,
+    "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+    "image": "/views/images/msgboy-help-screen-9.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 7000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}
+];
+
+exports.WelcomeMessages = WelcomeMessages;
+
+});
+
+require.define("/utils.js", function (require, module, exports, __dirname, __filename) {
+Uri = function () {
+    // and URI object
+};
+
+Uri.prototype = {
+    toString: function () {
+        str = '';
+        if (this.protocol) {
+            str += this.protocol + "://";
+        }
+        if (this.authority) {
+            str += this.authority;
+        }
+        if (this.relative) {
+            str += this.relative;
+        }
+        if (this.relative === "") {
+            str += "/";
+        }
+        return str;
+    }
+};
+
+function parseUri(str) {
+    var o = parseUri.options,
+    m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+    uri = new Uri(),
+    i   = 14;
+    while (i--) {
+        uri[o.key[i]] = m[i] || "";
+    }
+    uri[o.q.name] = {};
+    uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+        if ($1) {
+            uri[o.q.name][$1] = $2;
+        }
+    });
+    return uri;
+}
+
+parseUri.options = {
+    strictMode: false,
+    key: ["source", "protocol", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "anchor"],
+    q:   {
+        name:   "queryKey",
+        parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+    },
+    parser: {
+        strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+        loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+    }
+};
+
+exports.parseUri = parseUri;
+
+// Hopefully this should be part of the regular Msgboy
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Let's define the helper module.
+if (typeof Msgboy.helper === "undefined") {
+    Msgboy.helper = {};
+}
+
+
+
+
+// The DOM cleaner
+Msgboy.helper.cleaner = {};
+// This function, which requires JQUERY cleans up the HTML that it includes
+Msgboy.helper.cleaner.html = function (string) {
+    // We must remove the <script> tags from the string first.
+    string = string.replace(/(<script([^>]+)>.*<\/script>)/ig, ' ');
+    var div = $("<div/>").html(string);
+    var cleaned = $(Msgboy.helper.cleaner.dom(div.get()));
+    return cleaned.html();
+};
+
+Msgboy.helper.cleaner.dom = function (element) {
+    $.each($(element).children(), function (index, child) {
+        if (child.nodeName === "IMG") {
+            if (Msgboy.helper.element.original_size.width < 2 || Msgboy.helper.element.original_size.height < 2) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                var src = $(child).attr("src");
+                if (!src) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://rss.feedsportal.com/.*/*.gif")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://da.feedsportal.com/.*/*.img")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://ads.pheedo.com/img.phdo?.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+                else if (src.match("http://feedads.g.doubleclick.net/~at/.*")) {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "P") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+        }
+        else if (child.nodeName === "NOSCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "IFRAME") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "DIV") {
+            if (child.childNodes.length === 0) {
+                Msgboy.helper.cleaner.remove(child);
+            }
+            else {
+                if (child.innerHTML.replace(/(<([^>]+)>)/ig, "").replace(/[^a-zA-Z 0-9 ]+/g, "").replace(/^\s+|\s+$/g, "") === "") {
+                    Msgboy.helper.cleaner.remove(child);
+                }
+            }
+        }
+        else if (child.nodeName === "CENTER") {
+            // We need to replace this with a p. We don't want specific formats...
+            var p = document.createElement("P");
+            p.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(p, child);
+            child = p;
+        }
+        else if (child.nodeName === "FONT") {
+            // Let's replace with a span. We don't want specific formats!
+            var span = document.createElement("SPAN");
+            span.innerHTML = child.innerHTML;
+            child.parentNode.replaceChild(span, child);
+            child = span;
+        }
+        else if (child.nodeName === "BR") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "OBJECT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if (child.nodeName === "SCRIPT") {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        else if ($(child).hasClass("mf-viral") || $(child).hasClass("feedflare")) {
+            Msgboy.helper.cleaner.remove(child);
+        }
+        // Remove style attributes
+        $(child).removeAttr("style");
+        $(child).removeAttr("align");
+        $(child).removeAttr("width");
+        $(child).removeAttr("height");
+        $(child).removeAttr("class");
+        $(child).removeAttr("border");
+        $(child).removeAttr("cellpadding");
+        $(child).removeAttr("cellspacing");
+        $(child).removeAttr("valign");
+        $(child).removeAttr("border");
+        $(child).removeAttr("hspace");
+        $(child).removeAttr("vspace");
+        Msgboy.helper.cleaner.dom(child);
+    });
+    return element;
+};
+Msgboy.helper.cleaner.remove = function (element) {
+    var parent = element.parentNode;
+    if (parent) {
+        parent.removeChild(element);
+        if (parent.childNodes.length === 0) {
+            Msgboy.helper.cleaner.remove(parent);
+        }
+    }
+};
+
+// Helper for the DOM elements
+Msgboy.helper.element = {};
+// Returns the original size of the element.
+Msgboy.helper.element.original_size = function (el) {
+    var clone = $(el).clone();
+    clone.css("display", "none");
+    clone.removeAttr('height');
+    clone.removeAttr('width');
+    clone.appendTo($("body"));
+    var sizes = {width: clone.width(), height: clone.height()};
+    clone.remove();
+    return sizes;
+};
+
+
+});
+
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribed_at", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribed_at", {unique: false});
+            next();
+        }
+    }]
+};
+
+exports.msgboyDatabase = msgboyDatabase
+});
+
+require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Archive = Backbone.Collection.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+
+    initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
+    },
+    comparator: function (message) {
+        return - (message.get('createdAt'));
+    },
+    next: function (number, condition) {
+        var options = {
+            conditions: condition,
+            limit: number,
+            addIndividually: true
+        };
+        this.fetch(options);
+    },
+    forFeed: function (_feed) {
+        this.fetch({conditions: {feed: _feed}});
+    }
+});
+
+exports.Archive = Archive;
+});
+
+require.define("/tests/models/message.js", function (require, module, exports, __dirname, __filename) {
+var Message = require('../../models/message.js').Message;
+console.log(Message);
+var should = require('chai').should();
+
+describe('Message', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+    
+    beforeEach(function() {
+    });
+    
+    describe('defaults', function() {
+        it('should have a relevance of 0.6', function() {
+            var message  = new Message();
+            message.get('relevance').should.equal(0.6);
+        });
+
+        it('should have a state of new', function() {
+            var message  = new Message();
+            message.get('state').should.equal("new");
+        });
+    });
+    
+    describe('when initializing the message', function() {
+        it('should set the value for sourceHost', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceHost').should.equal("msgboy.com");
+        });
+        it('should set the value for sourceLink', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for createdAt', function() {
+            var message = new Message({})
+            message.get('createdAt').should.be.above(new Date().getTime() - 10);
+            message.get('createdAt').should.be.below(new Date().getTime() + 10);
+        });
+        it('should set the value for mainLink', function() {
+            var message = new Message({links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}});
+            message.get('mainLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for text to the summary if no content exists', function() {
+            var _summary = "summary";
+            var message = new Message({summary: _summary});
+            message.get('text').should.equal(_summary);
+        });
+        it('should set the value for text to the content if no summary exists', function() {
+            var _content = "content";
+            var message = new Message({content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the content if it s longer than the summary', function() {
+            var _summary = "summary";
+            var _content = "content is longer here";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the summary if it s longer than the content', function() {
+            var _summary = "summary is longer here";
+            var _content = "content";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_summary);
+        });
+    });
+    
+    describe('when voting up', function() {
+        it('should set the state to up-ed', function() {
+            var message  = new Message();
+            message.voteUp();
+            message.get('state').should.equal('up-ed');
+        });
+    });
+    
+    describe('when voting down', function() {
+        it('should set the state to down-ed', function() {
+            var message  = new Message();
+            message.voteDown();
+            message.get('state').should.equal('down-ed');
+        });
+    });
+    
+    describe('when skipping', function() {
+        it('should set the state to skiped', function() {
+            var message  = new Message();
+            message.skip();
+            message.get('state').should.equal('skipped');
+        });
+    });
+    
+    describe('when setting the state', function() {
+        it('should set the state accordingly', function() {
+            var message  = new Message();
+            message.setState("up-ed");
+            message.get('state').should.equal('up-ed');
+        });
+        it('should trigger the state event', function(done) {
+            var message  = new Message();
+            message.bind('up-ed', function() {
+                done();
+            });
+            message.setState("up-ed");
+        });
+        it('should call the callback if defined', function(done) {
+            var message  = new Message();
+            message.setState("up-ed", function(result) {
+                result.should.equal(true);
+                done();
+            });
+        });
+        
+        
+    });
+    
+    describe('calculateRelevance', function() {
+        
+    });
+    
+    describe('relevanceBasedOnBrothers', function() {
+        
+    });
+});
+
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
@@ -15665,14 +16757,15 @@ require.alias("backbone-indexeddb", "/node_modules/msgboy-backbone-adapter");
 
 require.define("/tests.js", function (require, module, exports, __dirname, __filename) {
     var should = require('chai').should();
+require('./tests/models/archive.js');
+// require('./tests/models/database.js');
+// require('./tests/models/inbox.js');
+require('./tests/models/message.js');
+// require('./tests/models/subscription.js');
+// require('./tests/msgboy.js');
+// require('./tests/plugins/.js');
+// require('./tests/views/.js');
 
-describe('Array', function(){
-  describe('#indexOf()', function(){
-    it('should return -1 when the value is not present', function(){
-      [1,2,3].indexOf(5).should.equal(-1);
-      [1,2,3].indexOf(0).should.equal(-1);
-    })
-  })
-})
+
 });
 require("/tests.js");
