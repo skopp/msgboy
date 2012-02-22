@@ -33,7 +33,6 @@ var Wordpress = function () {
             done(count);
         });
     };
-
 };
 
 exports.Wordpress = Wordpress;

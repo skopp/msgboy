@@ -12,7 +12,7 @@ var Plugins = {
         var processNextPlugin = function(plugins) {
             var plugin = plugins.pop();
             if(plugin) {
-                Msgboy.log.info("Starting with ", plugin.name);
+                Msgboy.log.info("Starting with", plugin.name);
                 plugin.listSubscriptions(function (subscriptions) {
                     _.each(subscriptions, function (subscription) {
                         callback({
@@ -31,7 +31,8 @@ var Plugins = {
             }
         }
 
-        processNextPlugin(Plugins.all);
+        var plugins = _.clone(Plugins.all); 
+        processNextPlugin(plugins);
     }
 };
 
