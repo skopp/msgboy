@@ -13593,27 +13593,31 @@ var Plugins = {
         this.all.push(plugin);
     },
     importSubscriptions: function (callback, errback) {
-        var subscriptions_count = 0;
-
-        var done_with_plugin = _.after(Plugins.all.length, function () {
-            // Called when we have processed all plugins.
-            Msgboy.log.info("Done with all plugins and subscribed to", subscriptions_count);
-        });
-
-        _.each(Plugins.all, function (plugin) {
-            plugin.listSubscriptions(function (subscriptions) {
-                _.each(subscriptions, function (subscription) {
-                    callback({
-                        url: subscription.url,
-                        title: subscription.title
+        var subscriptionsCount = 0;
+        
+        var processNextPlugin = function(plugins) {
+            var plugin = plugins.pop();
+            if(plugin) {
+                Msgboy.log.info("Starting with ", plugin.name);
+                plugin.listSubscriptions(function (subscriptions) {
+                    _.each(subscriptions, function (subscription) {
+                        callback({
+                            url: subscription.url,
+                            title: subscription.title
+                        });
                     });
+                }, function (count) {
+                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    subscriptionsCount += count;
+                    processNextPlugin(plugins);
                 });
-            }, function (count) {
-                Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
-                subscriptions_count += count;
-                done_with_plugin();
-            });
-        });
+            }
+            else {
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+            }
+        }
+
+        processNextPlugin(Plugins.all);
     }
 };
 
