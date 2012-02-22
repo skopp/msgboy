@@ -83,7 +83,7 @@ def manifest(destination = "")
   end
 end
 
-build_tasks = [:background, :dashboard, :notification, :options, :readme, :signup, :subscribe, :subscriptions, :run_plugins]
+build_tasks = [:background, :dashboard, :notification, :options, :readme, :signup, :subscribe, :subscriptions, :run_plugins, :tests]
 
 task :build => build_tasks.map() { |t| :"build:#{t}"  }
 namespace :build do
