@@ -7,8 +7,8 @@ var Subscription = Backbone.Model.extend({
     storeName: "subscriptions",
     database: msgboyDatabase,
     defaults: {
-        subscribed_at: 0,
-        unsubscribed_at: 0,
+        subscribedAt: 0,
+        unsubscribedAt: 0,
         state: "unsubscribed"
     },
     initialize: function (attributes) {
@@ -22,7 +22,7 @@ var Subscription = Backbone.Model.extend({
             error: function () {
                 // There is no such subscription.
                 // Let's save it, then!
-                this.save(this.attributes, {
+                this.save({}, {
                     success: function () {
                         callback();
                     },
@@ -34,7 +34,7 @@ var Subscription = Backbone.Model.extend({
         });
     },
     needsRefresh: function () {
-        if (this.attributes.subscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribed_at < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
             for (var i in Blacklist) {
                 if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
                     return false;
@@ -47,16 +47,16 @@ var Subscription = Backbone.Model.extend({
     setState: function (_state) {
         switch (_state) {
         case "subscribed":
-            this.save({state: _state, subscribed_at: new Date().getTime()}, {
+            this.save({state: _state, subscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("subscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
         case "unsubscribed":
-            this.save({state: _state, unsubscribed_at: new Date().getTime()}, {
+            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("unsubscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
@@ -82,11 +82,6 @@ var Subscriptions = Backbone.Collection.extend({
             conditions: {state: "subscribing"},
             addIndividually: true,
             limit: 100
-        });
-    },
-    clear: function () {
-        this.fetch({
-            clear: true
         });
     }
 });

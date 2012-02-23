@@ -1,14 +1,17 @@
 var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
 var Message = require('../../models/message.js').Message;
 var Archive = require('../../models/archive.js').Archive;
 var should = require('chai').should();
 
 describe('Archive', function(){
-    before(function() {
-        // We need to save a couple fixture messages!
-    });
-
-    beforeEach(function(done) {
+    before(function(done) {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Message = Message.extend({ database: msgboyDatabase});
+        Archive = Archive.extend({ database: msgboyDatabase});
         var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
         m1.bind('change', function() {
             var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
@@ -30,6 +33,9 @@ describe('Archive', function(){
             m2.save();
         });
         m1.save();
+    });
+
+    beforeEach(function() {
     });
 
     describe('comparator', function() {

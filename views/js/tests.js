@@ -15657,18 +15657,336 @@ module.exports = function (chai) {
 
 });
 
+require.define("/tests/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Subscription = require('../../models/subscription.js').Subscription;
+var Subscriptions = require('../../models/subscription.js').Subscriptions;
+
+describe('Subscription', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Subscription = Subscription.extend({ database: msgboyDatabase});
+        Subscriptions = Subscriptions.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+    
+    describe('fetchOrCreate', function() {
+        it('should create a subscription that does not exist', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.fetchOrCreate(function() {
+                s.id.should.equal("http://blog.superfeedr.com/atom.xml");
+                complete();
+            });
+        });
+        it('should fetch a subscription that exists', function(complete) {
+            var s = new Subscription({id: "https://github.com/superfeedr.atom"});
+            s.fetchOrCreate(function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.fetchOrCreate(function() {
+                    t.id.should.equal("https://github.com/superfeedr.atom");
+                    complete();
+                });
+            });
+        });
+        
+    });
+
+    describe('needsRefresh', function() {
+        it('should return true if the subscription is older than a week and unsubscription is older than a month and if the feed is not in the blacklist', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(true);
+        });
+        it('should return false if the subscription is earlier than a week', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if unsubscription is earlier than a month', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if the feed is in the blacklist', function() {
+            var s = new Subscription({id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(false);
+        });
+    });
+
+    describe('setState', function() {
+        it('should set the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('change', function() {
+                s.get('state').should.equal("subscribing");
+                complete();
+            })
+            s.setState("subscribing");
+        });
+        it('should trigger the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('unsubscribing', function() {
+                complete();
+            })
+            s.setState("unsubscribing");
+        });
+        
+        describe('when setting the state to subscribed', function() {
+            it('should set the subscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('subscribed', function() {
+                    s.get('subscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('subscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("subscribed");
+            });
+        });
+        describe('when setting the state to unsubscribed', function() {
+            it('should set the unsubscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('unsubscribed', function() {
+                    s.get('unsubscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('unsubscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("unsubscribed");
+            });
+        })
+        
+    });
+});
+
+describe('Subscriptions', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('pending', function(complete) {
+        it('should yield all subscriptions whose state is "subscrbing"', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('subscribing', function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.bind('subscribed', function() {
+                    var u = new Subscription({id: "http://push-pub.appspot.com/feed"});
+                    u.bind('subscribed', function() {
+                        var v = new Subscription({id: "http://github.com/julien.atom"});
+                        v.bind('subscribing', function() {
+                            var pendingSubscriptions = new Subscriptions();
+                            pendingSubscriptions.bind('reset',function(subscritions) {
+                                pendingSubscriptions.pluck('id').should.eql([ 'http://blog.superfeedr.com/atom.xml',
+                                  'http://github.com/julien.atom' ]);
+                                complete();
+                            });
+                            pendingSubscriptions.pending();
+                        });
+                        v.setState("subscribing");
+                    });
+                    u.setState("subscribed");
+                });
+                t.setState("subscribed");
+            });
+            s.setState("subscribing");
+            var subscription =  new Subscriptions();
+        });
+    });
+
+});
+
+
+});
+
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
+            next();
+        }
+    }]
+};
+
+exports.msgboyDatabase = msgboyDatabase
+});
+
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    defaults: {
+        subscribedAt: 0,
+        unsubscribedAt: 0,
+        state: "unsubscribed"
+    },
+    initialize: function (attributes) {
+    },
+    fetchOrCreate: function (callback) {
+        this.fetch({
+            success: function () {
+                // The subscription exists!
+                callback();
+            }.bind(this),
+            error: function () {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save({}, {
+                    success: function () {
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
+                    }
+                });
+            }.bind(this)
+        });
+    },
+    needsRefresh: function () {
+        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
+});
+
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
+});
+
 require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
 var Message = require('../../models/message.js').Message;
 var Archive = require('../../models/archive.js').Archive;
 var should = require('chai').should();
 
 describe('Archive', function(){
-    before(function() {
-        // We need to save a couple fixture messages!
-    });
-
-    beforeEach(function(done) {
+    before(function(done) {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Message = Message.extend({ database: msgboyDatabase});
+        Archive = Archive.extend({ database: msgboyDatabase});
         var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
         m1.bind('change', function() {
             var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
@@ -15690,6 +16008,9 @@ describe('Archive', function(){
             m2.save();
         });
         m1.save();
+    });
+
+    beforeEach(function() {
     });
 
     describe('comparator', function() {
@@ -16517,80 +16838,6 @@ Msgboy.helper.element.original_size = function (el) {
 
 });
 
-require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
-var msgboyDatabase = {
-    id: "msgboy-database",
-    description: "The database for the msgboy",
-    migrations: [{
-        version: 1,
-        migrate: function (transaction, next) {
-            transaction.db.createObjectStore("messages");
-            transaction.db.createObjectStore("inbox");
-            next();
-        }
-    }, {
-        version: 2,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("createdAtIndex", "createdAt", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 3,
-        migrate: function (transaction, next) {
-            var store = transaction.db.createObjectStore("feeds");
-            store.createIndex("urlIndex", "url", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 4,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("sourceLinkIndex", "sourceLink", {
-                unique: false
-            });
-            store.createIndex("hostIndex", "sourceHost", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 5,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("stateIndex", "state", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 6,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("feedIndex", "feed", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 7,
-        migrate: function (transaction, next) {
-            var subscriptions = transaction.db.createObjectStore("subscriptions");
-            subscriptions.createIndex("stateIndex", "state", {unique: false});
-            subscriptions.createIndex("subscribedAtIndex", "subscribed_at", {unique: false});
-            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribed_at", {unique: false});
-            next();
-        }
-    }]
-};
-
-exports.msgboyDatabase = msgboyDatabase
-});
-
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
@@ -16623,9 +16870,165 @@ var Archive = Backbone.Collection.extend({
 exports.Archive = Archive;
 });
 
+require.define("/tests/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var should = require('chai').should();
+
+describe('Database', function(){
+    before(function() {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('shema', function() {
+        it('should have the right id', function() {
+            msgboyDatabase.id.should.equal("msgboy-database-test");
+        });
+        it('should have the right description', function() {
+            msgboyDatabase.description.should.equal("The database for the msgboy");
+        });
+        it('should have 7 versions', function() {
+            msgboyDatabase.migrations.should.have.length(7);
+        });
+    });
+});
+
+
+});
+
+require.define("/tests/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Inbox = require('../../models/inbox.js').Inbox;
+
+describe('Inbox', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Inbox = Inbox.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('setup', function() {
+        it('should trigger ready if the inbox was created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+
+        it('should trigger new if the inbox was not created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('new', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+    });
+    
+    describe('fetchAndPrepare', function() {
+        it('should trigger ready if the inbox was found with the right parameters', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('ready', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("login", "token");
+        });
+        it('should trigger error if the jid is missing', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('error', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("token");
+        });
+        it('should trigger ready if the inbox was not found', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('error', function() {
+                done();
+            })
+            inbox.fetchAndPrepare();
+        })
+    })
+
+});
+
+
+});
+
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 1.0,
+            pinMsgboy: false
+        }
+    },
+    initialize: function () {
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                this.trigger('error');
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
+        });
+    }
+});
+
+exports.Inbox = Inbox;
+});
+
 require.define("/tests/models/message.js", function (require, module, exports, __dirname, __filename) {
 var Message = require('../../models/message.js').Message;
-console.log(Message);
 var should = require('chai').should();
 
 describe('Message', function(){
@@ -16757,15 +17160,20 @@ require.alias("backbone-indexeddb", "/node_modules/msgboy-backbone-adapter");
 
 require.define("/tests.js", function (require, module, exports, __dirname, __filename) {
     var should = require('chai').should();
+require('./tests/models/subscription.js');
 require('./tests/models/archive.js');
-// require('./tests/models/database.js');
-// require('./tests/models/inbox.js');
+require('./tests/models/database.js');
+require('./tests/models/inbox.js');
 require('./tests/models/message.js');
-// require('./tests/models/subscription.js');
 // require('./tests/msgboy.js');
 // require('./tests/plugins/.js');
 // require('./tests/views/.js');
 
 
+// Hijack the logs.
+console._log = console.log;
+console.log = function() {
+    //
+}
 });
 require("/tests.js");

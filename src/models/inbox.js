@@ -37,7 +37,7 @@ var Inbox = Backbone.Model.extend({
     fetchAndPrepare: function () {
         this.fetch({
             success: function () {
-                if (this.get('jid') != 'undefined' && this.get('jid') !== "" && this.get('password') != 'undefined' && this.get('password') !== "") {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
                     this.trigger("ready", this);
                 } else {
                     this.trigger('error', 'Not Found');
