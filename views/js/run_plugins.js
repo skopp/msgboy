@@ -13599,12 +13599,10 @@ var Plugins = {
             var plugin = plugins.pop();
             if(plugin) {
                 Msgboy.log.info("Starting with", plugin.name);
-                plugin.listSubscriptions(function (subscriptions) {
-                    _.each(subscriptions, function (subscription) {
-                        callback({
-                            url: subscription.url,
-                            title: subscription.title
-                        });
+                plugin.listSubscriptions(function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
                     });
                 }, function (count) {
                     Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
@@ -13767,8 +13765,6 @@ Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
 
-
-
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
     if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
@@ -13779,11 +13775,12 @@ Msgboy.environment = function () {
     }
 };
 
+if(Msgboy.environment() === "development") {
+    Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+}
+
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
-    if(Msgboy.environment() === "development") {
-        Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
-    }
     window.onload = function () {
         chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
             Msgboy.infos = extension_infos;
@@ -14181,7 +14178,7 @@ Blogger = function () {
 
     this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
+        return (doc.location.host === "www.blogger.com" && doc.location.pathname === '/navbar.g');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14196,19 +14193,19 @@ Blogger = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        var subscriptions = [];
+        var subscriptionsCount = 0;
         $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
             var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
             var match = rex.exec(data);
             while (match) {
-                subscriptions.push({
+                subscriptionsCount += 1;
+                callback({
                     url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
                     title: match[1].replace(/"/g, '').trim()
                 });
                 match = rex.exec(data);
             }
-            callback(subscriptions);
-            done(subscriptions.length);
+            done(subscriptionsCount);
         }.bind(this));
     };
 };
@@ -14234,34 +14231,31 @@ var Bookmarks = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        done();
         var seen = [];
-        var total_feeds = 0;
+        var totalFeeds = 0;
         chrome.bookmarks.getRecent(1000,
             function (bookmarks) {
-                var done_once = _.after(bookmarks.length, function () {
-                    // We have processed all the bookmarks
-                    done(total_feeds);
-                });
                 if (bookmarks.length === 0) {
-                    done(total_feeds);
+                    done(totalFeeds);
                 }
-                _.each(bookmarks, function (bookmark) {
-                    Feediscovery.get(bookmark.url, function (links) {
-                        var feeds = [];
-                        _.each(links, function (link) {
-                            total_feeds++;
-                            if (seen.indexOf(link.href) === -1) {
-                                feeds.push({title: link.title, url: link.href});
-                                seen.push(link.href);
-                            }
-                        });
-                        if (feeds.length > 0) {
-                            callback(feeds);
-                        }
-                        done_once();
+                else {
+                    var doneOnce = _.after(bookmarks.length, function () {
+                        // We have processed all the bookmarks
+                        done(totalFeeds);
                     });
-                });
+                    _.each(bookmarks, function (bookmark) {
+                        Feediscovery.get(bookmark.url, function (links) {
+                            _.each(links, function (link) {
+                                totalFeeds++;
+                                if (seen.indexOf(link.href) === -1) {
+                                    callback({title: link.title || "", url: link.href})
+                                    seen.push(link.href);
+                                }
+                            });
+                            doneOnce();
+                        });
+                    });
+                }
             }.bind(this)
         );
     };
@@ -14910,10 +14904,10 @@ var Wordpress = function () {
     };
 
     this.hijack = function (follow, unfollow) {
-        $('admin-bar-follow-link').live('click', function (event) {
+        $('#wp-admin-bar-follow').live('click', function (event) {
             follow({
                 title: $('#wp-admin-bar-blog a.ab-item').text(),
-                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "feed"
             }, function () {
                 // Done
             });
@@ -14921,19 +14915,20 @@ var Wordpress = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        $.get("http://wordpress.com/#!/read/edit/", function (data) {
-            content = $(data);
-            links = content.find("a.blogurl");
-            var count = 0;
-            links.each(function (index, link) {
-                count += 1;
-                callback({
-                    url: $(link).attr("href") + "/feed",
-                    title: $(link).text()
-                });
-            });
-            done(count);
-        });
+        // Looks like WP doesn't allow us to export the list of followed blogs. Boooh.
+        done(0);
+        // $.get("http://wordpress.com/#!/read/edit/", function (data) {
+        //     var content = $(data);
+        //     var count = 0;
+        //     links.each(function (index, link) {
+        //         count += 1;
+        //         callback({
+        //             url: $(link).attr("href") + "/feed",
+        //             title: $(link).text()
+        //         });
+        //     });
+        //     done(count);
+        // });
     };
 };
 

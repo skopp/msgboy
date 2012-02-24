@@ -13,12 +13,10 @@ var Plugins = {
             var plugin = plugins.pop();
             if(plugin) {
                 Msgboy.log.info("Starting with", plugin.name);
-                plugin.listSubscriptions(function (subscriptions) {
-                    _.each(subscriptions, function (subscription) {
-                        callback({
-                            url: subscription.url,
-                            title: subscription.title
-                        });
+                plugin.listSubscriptions(function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
                     });
                 }, function (count) {
                     Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);

@@ -13656,8 +13656,6 @@ Msgboy.infos = {};
 Msgboy.inbox = null;
 Msgboy.reconnectionTimeout = null;
 
-
-
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
     if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
@@ -13668,11 +13666,12 @@ Msgboy.environment = function () {
     }
 };
 
+if(Msgboy.environment() === "development") {
+    Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+}
+
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
-    if(Msgboy.environment() === "development") {
-        Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
-    }
     window.onload = function () {
         chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
             Msgboy.infos = extension_infos;

@@ -8,10 +8,10 @@ var Wordpress = function () {
     };
 
     this.hijack = function (follow, unfollow) {
-        $('admin-bar-follow-link').live('click', function (event) {
+        $('#wp-admin-bar-follow').live('click', function (event) {
             follow({
                 title: $('#wp-admin-bar-blog a.ab-item').text(),
-                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "feed"
             }, function () {
                 // Done
             });
@@ -19,19 +19,20 @@ var Wordpress = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        $.get("http://wordpress.com/#!/read/edit/", function (data) {
-            content = $(data);
-            links = content.find("a.blogurl");
-            var count = 0;
-            links.each(function (index, link) {
-                count += 1;
-                callback({
-                    url: $(link).attr("href") + "/feed",
-                    title: $(link).text()
-                });
-            });
-            done(count);
-        });
+        // Looks like WP doesn't allow us to export the list of followed blogs. Boooh.
+        done(0);
+        // $.get("http://wordpress.com/#!/read/edit/", function (data) {
+        //     var content = $(data);
+        //     var count = 0;
+        //     links.each(function (index, link) {
+        //         count += 1;
+        //         callback({
+        //             url: $(link).attr("href") + "/feed",
+        //             title: $(link).text()
+        //         });
+        //     });
+        //     done(count);
+        // });
     };
 };
 

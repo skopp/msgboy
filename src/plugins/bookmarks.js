@@ -14,34 +14,31 @@ var Bookmarks = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        done();
         var seen = [];
-        var total_feeds = 0;
+        var totalFeeds = 0;
         chrome.bookmarks.getRecent(1000,
             function (bookmarks) {
-                var done_once = _.after(bookmarks.length, function () {
-                    // We have processed all the bookmarks
-                    done(total_feeds);
-                });
                 if (bookmarks.length === 0) {
-                    done(total_feeds);
+                    done(totalFeeds);
                 }
-                _.each(bookmarks, function (bookmark) {
-                    Feediscovery.get(bookmark.url, function (links) {
-                        var feeds = [];
-                        _.each(links, function (link) {
-                            total_feeds++;
-                            if (seen.indexOf(link.href) === -1) {
-                                feeds.push({title: link.title, url: link.href});
-                                seen.push(link.href);
-                            }
-                        });
-                        if (feeds.length > 0) {
-                            callback(feeds);
-                        }
-                        done_once();
+                else {
+                    var doneOnce = _.after(bookmarks.length, function () {
+                        // We have processed all the bookmarks
+                        done(totalFeeds);
                     });
-                });
+                    _.each(bookmarks, function (bookmark) {
+                        Feediscovery.get(bookmark.url, function (links) {
+                            _.each(links, function (link) {
+                                totalFeeds++;
+                                if (seen.indexOf(link.href) === -1) {
+                                    callback({title: link.title || "", url: link.href})
+                                    seen.push(link.href);
+                                }
+                            });
+                            doneOnce();
+                        });
+                    });
+                }
             }.bind(this)
         );
     };

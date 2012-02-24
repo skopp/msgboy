@@ -25,7 +25,16 @@ describe('Wordpress', function(){
 
     });
     describe('listSubscriptions', function() {
-
+        it('should list all feeds to which the user is subscribed', function(done) {
+            var w = new Wordpress();
+            w.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
     });
 
 });

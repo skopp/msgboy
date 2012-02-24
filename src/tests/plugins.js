@@ -15,14 +15,17 @@ describe('Plugins', function(){
             Plugins.all = [];
             Plugins.register({
                 listSubscriptions: function(cb, done) {
-                    cb([{url: "url1", title: "title1"}, {url: 'url2', title: "title2"}, {url: 'url3', title: "title3"}]),
+                    cb({url: "url1", title: "title1"});
+                    cb({url: 'url2', title: "title2"});
+                    cb({url: 'url3', title: "title3"});
                     done(3)
                 },
                 name: "Stub 1"
             });
             Plugins.register({
                 listSubscriptions: function(cb, done) {
-                    cb([{url: "url4", title: "title4"}, {url: 'url5', title: "title5"}]),
+                    cb({url: "url4", title: "title4"});
+                    cb({url: 'url5', title: "title5"});
                     done(2)
                 },
                 name: "Stub 2"

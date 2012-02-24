@@ -1,8 +1,3 @@
-// Hijack the logs.
-// console._log = console.log;
-// console.log = function() {
-//     //
-// }
 var should = require('chai').should();
 require('./tests/plugins.js');
 require('./tests/models/subscription.js');
