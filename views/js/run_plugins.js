@@ -14361,13 +14361,15 @@ exports.Digg = Digg;
 });
 
 require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
 Disqus = function () {
 
     this.name = 'Disqus Comments';
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (document.getElementById("disqus_thread"));
+        return (doc.getElementById("disqus_thread"));
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14382,7 +14384,6 @@ Disqus = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 
@@ -14402,7 +14403,6 @@ Generic = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]);
         done(0);
     };
 
@@ -14432,7 +14432,7 @@ GoogleReader = function () {
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+        return (doc.location.host === "www.google.com" && doc.location.pathname === '/reader/view/');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14450,18 +14450,17 @@ GoogleReader = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        links = [];
-        request = new XMLHttpRequest();
+        var feedCount = 0;
         $.get("http://www.google.com/reader/subscriptions/export", function (data) {
             var subscriptions = [];
             urls = $(data).find("outline").each(function () {
-                subscriptions.push({
+                feedCount += 1;
+                callback({
                     url:  $(this).attr("xmlUrl"),
                     title: $(this).attr("title")
                 });
             });
-            callback(subscriptions);
-            done(subscriptions.length);
+            done(feedCount);
         });
     };
 };

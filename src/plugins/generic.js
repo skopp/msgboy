@@ -8,7 +8,6 @@ Generic = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]);
         done(0);
     };
 

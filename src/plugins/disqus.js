@@ -1,10 +1,12 @@
+var $ = jQuery = require('jquery');
+
 Disqus = function () {
 
     this.name = 'Disqus Comments';
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (document.getElementById("disqus_thread"));
+        return (doc.getElementById("disqus_thread"));
     };
 
     this.hijack = function (follow, unfollow) {
@@ -19,7 +21,6 @@ Disqus = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 

@@ -16617,13 +16617,15 @@ exports.Digg = Digg;
 });
 
 require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
 Disqus = function () {
 
     this.name = 'Disqus Comments';
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (document.getElementById("disqus_thread"));
+        return (doc.getElementById("disqus_thread"));
     };
 
     this.hijack = function (follow, unfollow) {
@@ -16638,7 +16640,6 @@ Disqus = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 
@@ -16658,7 +16659,6 @@ Generic = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]);
         done(0);
     };
 
@@ -16688,7 +16688,7 @@ GoogleReader = function () {
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+        return (doc.location.host === "www.google.com" && doc.location.pathname === '/reader/view/');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -16706,18 +16706,17 @@ GoogleReader = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        links = [];
-        request = new XMLHttpRequest();
+        var feedCount = 0;
         $.get("http://www.google.com/reader/subscriptions/export", function (data) {
             var subscriptions = [];
             urls = $(data).find("outline").each(function () {
-                subscriptions.push({
+                feedCount += 1;
+                callback({
                     url:  $(this).attr("xmlUrl"),
                     title: $(this).attr("title")
                 });
             });
-            callback(subscriptions);
-            done(subscriptions.length);
+            done(feedCount);
         });
     };
 };
@@ -17251,13 +17250,34 @@ describe('Disqus', function(){
     });
 
     describe('onSubscriptionPage', function() {
+        it('should return true if the page has a disqus_thread', function() {
+            var docStub = {
+                getElementById: function(id) {
+                    return id === "disqus_thread"
+                }
+            };
+            var d = new Disqus();
+            d.onSubscriptionPage(docStub).should.be.true;
+        });
 
     });
     describe('hijack', function() {
 
     });
     describe('listSubscriptions', function() {
-
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(100000); // Allow for up to 100 seconds.
+            var d = new Disqus();
+            d.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
     });
 
 });
@@ -17278,13 +17298,27 @@ describe('Generic', function(){
     });
 
     describe('onSubscriptionPage', function() {
-
+        it('should return true', function() {
+            var docStub = {};
+            var b = new Generic();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
     });
     describe('hijack', function() {
-
+        // Hum. How can we test that?
     });
     describe('listSubscriptions', function() {
-
+        it('should list all feeds to which the user is subscribed', function(done) {
+            var d = new Generic();
+            d.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                true.should.be.false; // Generic plugin does not have a way to list subscriptions
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.equal(0);
+                done();
+            });
+        });
     });
 
 });
@@ -17305,13 +17339,35 @@ describe('GoogleReader', function(){
     });
 
     describe('onSubscriptionPage', function() {
+        it('should return true if we\'re on a Google Reader page', function() {
+            var docStub = {
+                location: {
+                    host: "www.google.com"
+                    ,pathname: "/reader/view/"
+                }
+            };
+            var b = new GoogleReader();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
 
     });
     describe('hijack', function() {
 
     });
     describe('listSubscriptions', function() {
-
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(10000); // Allow for up to 10 seconds.
+            var b = new GoogleReader();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
     });
 
 });
