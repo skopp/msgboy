@@ -4,7 +4,7 @@ var $ = jQuery = require('jquery');
 Blogger = function () {
 
     this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
     };
 

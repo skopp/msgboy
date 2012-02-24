@@ -13915,7 +13915,7 @@ var Subscription = Backbone.Model.extend({
             error: function () {
                 // There is no such subscription.
                 // Let's save it, then!
-                this.save(this.attributes, {
+                this.save({}, {
                     success: function () {
                         callback();
                     },
@@ -13942,14 +13942,14 @@ var Subscription = Backbone.Model.extend({
         case "subscribed":
             this.save({state: _state, subscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("subscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
         case "unsubscribed":
             this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("unsubscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
@@ -13975,11 +13975,6 @@ var Subscriptions = Backbone.Collection.extend({
             conditions: {state: "subscribing"},
             addIndividually: true,
             limit: 100
-        });
-    },
-    clear: function () {
-        this.fetch({
-            clear: true
         });
     }
 });
@@ -14190,7 +14185,7 @@ var Inbox = Backbone.Model.extend({
     fetchAndPrepare: function () {
         this.fetch({
             success: function () {
-                if (this.get('jid') != 'undefined' && this.get('jid') !== "" && this.get('password') != 'undefined' && this.get('password') !== "") {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
                     this.trigger("ready", this);
                 } else {
                     this.trigger('error', 'Not Found');

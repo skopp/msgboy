@@ -4,7 +4,7 @@ var Bookmarks = function () {
 
     this.name = 'Browser Bookmarks';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return true;
     };

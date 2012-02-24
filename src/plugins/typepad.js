@@ -4,7 +4,7 @@ var Typepad = function () {
 
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
     };
 

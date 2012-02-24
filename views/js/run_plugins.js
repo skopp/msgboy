@@ -13592,7 +13592,7 @@ var Plugins = {
     register: function (plugin) {
         this.all.push(plugin);
     },
-    importSubscriptions: function (callback, errback) {
+    importSubscriptions: function (callback, done) {
         var subscriptionsCount = 0;
         
         var processNextPlugin = function(plugins) {
@@ -13614,8 +13614,9 @@ var Plugins = {
             }
             else {
                 Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+                done(subscriptionsCount);
             }
-        }
+        };
 
         var plugins = _.clone(Plugins.all); 
         processNextPlugin(plugins);
@@ -13669,7 +13670,7 @@ exports.Plugins = Plugins;
 // This is the skeleton for the Plugins
 var Plugin = function () {
     this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
     };
 
@@ -14025,7 +14026,7 @@ var Subscription = Backbone.Model.extend({
             error: function () {
                 // There is no such subscription.
                 // Let's save it, then!
-                this.save(this.attributes, {
+                this.save({}, {
                     success: function () {
                         callback();
                     },
@@ -14052,14 +14053,14 @@ var Subscription = Backbone.Model.extend({
         case "subscribed":
             this.save({state: _state, subscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("subscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
         case "unsubscribed":
             this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
                 success: function () {
-                    this.trigger("unsubscribed");
+                    this.trigger(_state);
                 }.bind(this)
             });
             break;
@@ -14085,11 +14086,6 @@ var Subscriptions = Backbone.Collection.extend({
             conditions: {state: "subscribing"},
             addIndividually: true,
             limit: 100
-        });
-    },
-    clear: function () {
-        this.fetch({
-            clear: true
         });
     }
 });
@@ -14184,7 +14180,7 @@ var $ = jQuery = require('jquery');
 Blogger = function () {
 
     this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
     };
 
@@ -14228,7 +14224,7 @@ var Bookmarks = function () {
 
     this.name = 'Browser Bookmarks';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return true;
     };
@@ -14329,7 +14325,7 @@ Digg = function () {
 
     this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return (window.location.host === "digg.com");
     };
@@ -14376,7 +14372,7 @@ Disqus = function () {
 
     this.name = 'Disqus Comments';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return (document.getElementById("disqus_thread"));
     };
@@ -14406,9 +14402,9 @@ require.define("/plugins/generic.js", function (require, module, exports, __dirn
 var $ = jQuery = require('jquery');
 
 Generic = function () {
-    this.name = 'Generic Plugin which will listen for any page';
+    this.name = 'Generic';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return true;
     };
 
@@ -14441,7 +14437,7 @@ GoogleReader = function () {
 
     this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
     };
@@ -14490,7 +14486,7 @@ var History = function () {
     this.visits_to_be_popular = 3;
     this.deviation = 1;
     this.elapsed = 1000 * 60 * 60 * 3;
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return true;
     };
@@ -14628,7 +14624,7 @@ Posterous = function () {
     this.name = 'Posterous';
     this.hijacked = false;
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
     };
 
@@ -14723,7 +14719,7 @@ QuoraPeople = function () {
 
     this.name = 'Quora People';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.quora.com");
     };
 
@@ -14754,7 +14750,7 @@ QuoraTopics = function () {
 
     this.name = 'Quora Topics';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.quora.com");
     };
 
@@ -14794,7 +14790,7 @@ Statusnet = function () {
 
     this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
         return (window.location.host.match(/status\.net/));
     };
@@ -14828,7 +14824,7 @@ var $ = jQuery = require('jquery');
 Tumblr = function () {
 
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
     };
 
@@ -14878,7 +14874,7 @@ var Typepad = function () {
 
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
     };
 
@@ -14909,8 +14905,8 @@ var $ = jQuery = require('jquery');
 var Wordpress = function () {
 
     this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
-        return (document.getElementById("wpadminbar"));
+    this.onSubscriptionPage = function (doc) {
+        return (doc.getElementById("wpadminbar"));
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14984,7 +14980,7 @@ var Inbox = Backbone.Model.extend({
     fetchAndPrepare: function () {
         this.fetch({
             success: function () {
-                if (this.get('jid') != 'undefined' && this.get('jid') !== "" && this.get('password') != 'undefined' && this.get('password') !== "") {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
                     this.trigger("ready", this);
                 } else {
                     this.trigger('error', 'Not Found');
@@ -15792,7 +15788,7 @@ var Inbox           = require('./models/inbox.js').Inbox;
 
 // Runs all the plugins
 $.each(Plugins.all, function (index, plugin) {
-    if (plugin.onSubscriptionPage()) { // Are we on the plugin's page?
+    if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
         plugin.hijack(function (feed, done) {
             chrome.extension.sendRequest({
                 signature: "subscribe",

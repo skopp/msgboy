@@ -2,7 +2,7 @@ Statusnet = function () {
 
     this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
         return (window.location.host.match(/status\.net/));
     };

@@ -2,7 +2,7 @@ Disqus = function () {
 
     this.name = 'Disqus Comments';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return (document.getElementById("disqus_thread"));
     };

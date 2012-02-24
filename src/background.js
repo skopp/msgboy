@@ -69,6 +69,8 @@ Msgboy.bind("loaded", function () {
                 Msgboy.subscribe(subs.url, false, function () {
                     // Cool. Not much to do.
                 });
+            }, function(subscriptionsCount) {
+                // We found subscriptionsCount!
             });
         });
     });
@@ -217,6 +219,8 @@ Msgboy.bind("loaded", function () {
             Msgboy.subscribe(subs.url, false, function () {
                 // Cool. Not much to do.
             });
+        }, function(subscriptionsCount) {
+            // We found subscriptionsCount!
         });
     });
 

@@ -1,9 +1,9 @@
 var $ = jQuery = require('jquery');
 
 Generic = function () {
-    this.name = 'Generic Plugin which will listen for any page';
+    this.name = 'Generic';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return true;
     };
 
