@@ -14321,7 +14321,7 @@ Digg = function () {
 
     this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
-        return (window.location.host === "digg.com");
+        return (doc.location.host === "digg.com");
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14353,7 +14353,6 @@ Digg = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 };

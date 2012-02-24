@@ -161,8 +161,8 @@ describe('Plugins', function(){
         });
     });
     
-    require('./plugins/blogger.js');
-    require('./plugins/bookmarks.js');
+    // require('./plugins/blogger.js');
+    // require('./plugins/bookmarks.js');
     require('./plugins/digg.js');
     require('./plugins/disqus.js');
     require('./plugins/generic.js');

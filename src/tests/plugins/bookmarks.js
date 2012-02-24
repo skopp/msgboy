@@ -34,7 +34,6 @@ describe('Bookmarks', function(){
                 done();
             });
         });
-
     });
     
     describe('subscribeInBackground', function() {
