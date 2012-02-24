@@ -3,8 +3,8 @@ var $ = jQuery = require('jquery');
 var Wordpress = function () {
 
     this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
-        return (document.getElementById("wpadminbar"));
+    this.onSubscriptionPage = function (doc) {
+        return (doc.getElementById("wpadminbar"));
     };
 
     this.hijack = function (follow, unfollow) {

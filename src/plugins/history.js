@@ -7,7 +7,7 @@ var History = function () {
     this.visits_to_be_popular = 3;
     this.deviation = 1;
     this.elapsed = 1000 * 60 * 60 * 3;
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return true;
     };

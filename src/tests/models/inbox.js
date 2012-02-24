@@ -1,14 +1,16 @@
-var Inbox = require('../../src/models/inbox.js').Inbox;
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Inbox = require('../../models/inbox.js').Inbox;
 
 describe('Inbox', function(){
     before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Inbox = Inbox.extend({ database: msgboyDatabase});
     });
 
-    beforeEach(function(done) {
-        var Redis = require("redis");
-        Redis.createClient().flushall(function() {
-            done();
-        });
+    beforeEach(function() {
     });
 
     describe('setup', function() {

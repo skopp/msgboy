@@ -2,7 +2,7 @@ QuoraTopics = function () {
 
     this.name = 'Quora Topics';
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.quora.com");
     };
 

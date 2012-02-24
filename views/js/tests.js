@@ -13583,6 +13583,2370 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
 
 });
 
+require.define("/node_modules/chai/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"./index"}
+});
+
+require.define("/node_modules/chai/index.js", function (require, module, exports, __dirname, __filename) {
+module.exports = require('./lib/chai');
+});
+
+require.define("/node_modules/chai/lib/chai.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+var exports = module.exports = {};
+
+exports.version = '0.2.4';
+
+exports.Assertion = require('./assertion');
+exports.AssertionError = require('./error');
+
+exports.inspect = require('./utils/inspect');
+
+exports.use = function (fn) {
+  fn(this);
+  return this;
+};
+
+exports.fail = function (actual, expected, message, operator, stackStartFunction) {
+  throw new exports.AssertionError({
+    message: message,
+    actual: actual,
+    expected: expected,
+    operator: operator,
+    stackStartFunction: stackStartFunction
+  });
+};
+
+var expect = require('./interface/expect');
+exports.use(expect);
+
+var should = require('./interface/should');
+exports.use(should);
+
+var assert = require('./interface/assert');
+exports.use(assert);
+
+});
+
+require.define("/node_modules/chai/lib/assertion.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ *
+ * Primarily a refactor of: should.js
+ * https://github.com/visionmedia/should.js
+ * Copyright(c) 2011 TJ Holowaychuk <tj@vision-media.ca>
+ * MIT Licensed
+ */
+
+/**
+ * ### BDD Style Introduction
+ *
+ * The BDD style is exposed through `expect` or `should` interfaces. In both
+ * scenarios, you chain together natural language assertions.
+ *
+ *      // expect
+ *      var expect = require('chai').expect;
+ *      expect(foo).to.equal('bar');
+ *
+ *      // should
+ *      var should = require('chai').should();
+ *      foo.should.equal('bar');
+ *
+ * #### Differences
+ *
+ * The `expect` interface provides a function as a starting point for chaining
+ * your language assertions. It works on both node.js and in the browser.
+ *
+ * The `should` interface extends `Object.prototype` to provide a single getter as
+ * the starting point for your language assertions. Most browser don't like
+ * extensions to `Object.prototype` so it is not recommended for browser use.
+ */
+
+/*!
+ * Module dependencies.
+ */
+
+var AssertionError = require('./error')
+  , eql = require('./utils/eql')
+  , inspect = require('./utils/inspect')
+  , statusCodes = require('./utils/constants').STATUS_CODES;
+
+/*!
+ * Module export.
+ */
+
+module.exports = Assertion;
+
+/*!
+ * # Assertion Constructor
+ *
+ * Creates object for chaining.
+ *
+ * @api private
+ */
+
+function Assertion (obj, msg, stack) {
+  this.ssfi = stack || arguments.callee;
+  this.obj = obj;
+  this.msg = msg;
+}
+
+/*!
+ * # .assert(expression, message, negateMessage)
+ *
+ * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass.
+ *
+ * @name assert
+ * @param {Philosophical} expression to be tested
+ * @param {String} message to display if fails
+ * @param {String} negatedMessage to display if negated expression fails
+ * @api privage
+ */
+
+Assertion.prototype.assert = function (expr, msg, negateMsg) {
+  var msg = (this.negate ? negateMsg : msg)
+    , ok = this.negate ? !expr : expr;
+
+  if (!ok) {
+    throw new AssertionError({
+      operator: this.msg,
+      message: msg,
+      stackStartFunction: this.ssfi
+    });
+  }
+};
+
+/*!
+ * # inspect
+ *
+ * Returns the current object stringified.
+ *
+ * @name inspect
+ * @api private
+ */
+
+Object.defineProperty(Assertion.prototype, 'inspect',
+  { get: function () {
+      return inspect(this.obj);
+    }
+});
+
+/**
+ * # to
+ *
+ * Language chain.
+ *
+ * @name to
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'to',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # be
+ *
+ * Language chain.
+ *
+ * @name be
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'be',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # been
+ *
+ * Language chain. Also tests `tense` to past for addon
+ * modules that use the tense feature.
+ *
+ * @name been
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'been',
+  { get: function () {
+      this.tense = 'past';
+      return this;
+    }
+});
+
+/**
+ * # an
+ *
+ * Language chain.
+ *
+ * @name an
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'an',
+  { get: function () {
+      return this;
+    }
+});
+/**
+ * # is
+ *
+ * Language chain.
+ *
+ * @name is
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'is',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # and
+ *
+ * Language chain.
+ *
+ * @name and
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'and',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # have
+ *
+ * Language chain.
+ *
+ * @name have
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'have',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # with
+ *
+ * Language chain.
+ *
+ * @name with
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'with',
+  { get: function () {
+      return this;
+    }
+});
+
+/**
+ * # .not
+ *
+ * Negates any of assertions following in the chain.
+ *
+ * @name not
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'not',
+  { get: function () {
+      this.negate = true;
+      return this;
+    }
+});
+
+/**
+ * # .ok
+ *
+ * Assert object truthiness.
+ *
+ *      expect('everthing').to.be.ok;
+ *      expect(false).to.not.be.ok;
+ *      expect(undefined).to.not.be.ok;
+ *      expect(null).to.not.be.ok;
+ *
+ * @name ok
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'ok',
+  { get: function () {
+      this.assert(
+          this.obj
+        , 'expected ' + this.inspect + ' to be truthy'
+        , 'expected ' + this.inspect + ' to be falsey');
+
+      return this;
+    }
+});
+
+/**
+ * # .true
+ *
+ * Assert object is true
+ *
+ * @name true
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'true',
+  { get: function () {
+      this.assert(
+          true === this.obj
+        , 'expected ' + this.inspect + ' to be true'
+        , 'expected ' + this.inspect + ' to be false');
+
+      return this;
+    }
+});
+
+/**
+ * # .false
+ *
+ * Assert object is false
+ *
+ * @name false
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'false',
+  { get: function () {
+      this.assert(
+          false === this.obj
+        , 'expected ' + this.inspect + ' to be false'
+        , 'expected ' + this.inspect + ' to be true');
+
+      return this;
+    }
+});
+
+/**
+ * # .exist
+ *
+ * Assert object exists (null).
+ *
+ *      var foo = 'hi'
+ *        , bar;
+ *      expect(foo).to.exist;
+ *      expect(bar).to.not.exist;
+ *
+ * @name exist
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'exist',
+  { get: function () {
+      this.assert(
+          null != this.obj
+        , 'expected ' + this.inspect + ' to exist'
+        , 'expected ' + this.inspect + ' to not exist');
+
+      return this;
+    }
+});
+
+/**
+ * # .empty
+ *
+ * Assert object's length to be 0.
+ *
+ *      expect([]).to.be.empty;
+ *
+ * @name empty
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'empty',
+  { get: function () {
+      new Assertion(this.obj).to.have.property('length');
+
+      this.assert(
+          0 === this.obj.length
+        , 'expected ' + this.inspect + ' to be empty'
+        , 'expected ' + this.inspect + ' not to be empty');
+
+      return this;
+    }
+});
+
+/**
+ * # .arguments
+ *
+ * Assert object is an instanceof arguments.
+ *
+ *      function test () {
+ *        expect(arguments).to.be.arguments;
+ *      }
+ *
+ * @name arguments
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'arguments',
+  { get: function () {
+      this.assert(
+          '[object Arguments]' == Object.prototype.toString.call(this.obj)
+        , 'expected ' + this.inspect + ' to be arguments'
+        , 'expected ' + this.inspect + ' to not be arguments');
+
+      return this;
+    }
+});
+
+/**
+ * # .equal(value)
+ *
+ * Assert strict equality.
+ *
+ *      expect('hello').to.equal('hello');
+ *
+ * @name equal
+ * @param {*} value
+ * @api public
+ */
+
+Assertion.prototype.equal = function (val) {
+  this.assert(
+      val === this.obj
+    , 'expected ' + this.inspect + ' to equal ' + inspect(val)
+    , 'expected ' + this.inspect + ' to not equal ' + inspect(val));
+
+  return this;
+};
+
+/**
+ * # .eql(value)
+ *
+ * Assert deep equality.
+ *
+ *      expect({ foo: 'bar' }).to.eql({ foo: 'bar' });
+ *
+ * @name eql
+ * @param {*} value
+ * @api public
+ */
+
+Assertion.prototype.eql = function (obj) {
+  this.assert(
+      eql(obj, this.obj)
+    , 'expected ' + this.inspect + ' to equal ' + inspect(obj)
+    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj));
+  return this;
+};
+
+/**
+ * # .above(value)
+ *
+ * Assert greater than `value`.
+ *
+ *      expect(10).to.be.above(5);
+ *
+ * @name above
+ * @param {Number} value
+ * @api public
+ */
+
+Assertion.prototype.above = function (val) {
+  this.assert(
+      this.obj > val
+    , 'expected ' + this.inspect + ' to be above ' + val
+    , 'expected ' + this.inspect + ' to be below ' + val);
+
+  return this;
+};
+
+/**
+ * # .below(value)
+ *
+ * Assert less than `value`.
+ *
+ *      expect(5).to.be.below(10);
+ *
+ * @name below
+ * @param {Number} value
+ * @api public
+ */
+
+Assertion.prototype.below = function (val) {
+  this.assert(
+      this.obj < val
+    , 'expected ' + this.inspect + ' to be below ' + val
+    , 'expected ' + this.inspect + ' to be above ' + val);
+
+  return this;
+};
+
+/**
+ * # .within(start, finish)
+ *
+ * Assert that a number is within a range.
+ *
+ *      expect(7).to.be.within(5,10);
+ *
+ * @name within
+ * @param {Number} start lowerbound inclusive
+ * @param {Number} finish upperbound inclusive
+ * @api public
+ */
+
+Assertion.prototype.within = function (start, finish) {
+  var range = start + '..' + finish;
+
+  this.assert(
+      this.obj >= start && this.obj <= finish
+    , 'expected ' + this.inspect + ' to be within ' + range
+    , 'expected ' + this.inspect + ' to not be within ' + range);
+
+  return this;
+};
+
+/**
+ * # .a(type)
+ *
+ * Assert typeof.
+ *
+ *      expect('test').to.be.a('string');
+ *
+ * @name a
+ * @param {String} type
+ * @api public
+ */
+
+Assertion.prototype.a = function (type) {
+  this.assert(
+      type == typeof this.obj
+    , 'expected ' + this.inspect + ' to be a ' + type
+    , 'expected ' + this.inspect + ' not to be a ' + type);
+
+  return this;
+};
+
+/**
+ * # .instanceof(constructor)
+ *
+ * Assert instanceof.
+ *
+ *      var Tea = function (name) { this.name = name; }
+ *        , Chai = new Tea('chai');
+ *
+ *      expect(Chai).to.be.an.instanceOf(Tea);
+ *
+ * @name instanceof
+ * @param {Constructor}
+ * @alias instanceOf
+ * @api public
+ */
+
+Assertion.prototype.instanceof = function (constructor) {
+  var name = constructor.name;
+  this.assert(
+      this.obj instanceof constructor
+    , 'expected ' + this.inspect + ' to be an instance of ' + name
+    , 'expected ' + this.inspect + ' to not be an instance of ' + name);
+
+  return this;
+};
+
+/**
+ * # .property(name, [value])
+ *
+ * Assert that property of `name` exists, optionally with `value`.
+ *
+ *      var obj = { foo: 'bar' }
+ *      expect(obj).to.have.property('foo');
+ *      expect(obj).to.have.property('foo', 'bar');
+ *      expect(obj).to.have.property('foo').to.be.a('string');
+ *
+ * @name property
+ * @param {String} name
+ * @param {*} value (optional)
+ * @returns value of property for chaining
+ * @api public
+ */
+
+Assertion.prototype.property = function (name, val) {
+  if (this.negate && undefined !== val) {
+    if (undefined === this.obj[name]) {
+      throw new Error(this.inspect + ' has no property ' + inspect(name));
+    }
+  } else {
+    this.assert(
+        undefined !== this.obj[name]
+      , 'expected ' + this.inspect + ' to have a property ' + inspect(name)
+      , 'expected ' + this.inspect + ' to not have property ' + inspect(name));
+  }
+
+  if (undefined !== val) {
+    this.assert(
+        val === this.obj[name]
+      , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +
+          inspect(val) + ', but got ' + inspect(this.obj[name])
+      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val));
+  }
+
+  this.obj = this.obj[name];
+  return this;
+};
+
+/**
+ * # .ownProperty(name)
+ *
+ * Assert that has own property by `name`.
+ *
+ *      expect('test').to.have.ownProperty('length');
+ *
+ * @name ownProperty
+ * @alias haveOwnProperty
+ * @param {String} name
+ * @api public
+ */
+
+Assertion.prototype.ownProperty = function (name) {
+  this.assert(
+      this.obj.hasOwnProperty(name)
+    , 'expected ' + this.inspect + ' to have own property ' + inspect(name)
+    , 'expected ' + this.inspect + ' to not have own property ' + inspect(name));
+  return this;
+};
+
+/**
+ * # .length(val)
+ *
+ * Assert that object has expected length.
+ *
+ *      expect([1,2,3]).to.have.length(3);
+ *      expect('foobar').to.have.length(6);
+ *
+ * @name length
+ * @alias lengthOf
+ * @param {Number} length
+ * @api public
+ */
+
+Assertion.prototype.length = function (n) {
+  new Assertion(this.obj).to.have.property('length');
+  var len = this.obj.length;
+
+  this.assert(
+      len == n
+    , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len
+    , 'expected ' + this.inspect + ' to not have a length of ' + len);
+
+  return this;
+};
+
+/**
+ * # .match(regexp)
+ *
+ * Assert that matches regular expression.
+ *
+ *      expect('foobar').to.match(/^foo/);
+ *
+ * @name match
+ * @param {RegExp} RegularExpression
+ * @api public
+ */
+
+Assertion.prototype.match = function (re) {
+  this.assert(
+      re.exec(this.obj)
+    , 'expected ' + this.inspect + ' to match ' + re
+    , 'expected ' + this.inspect + ' not to match ' + re);
+
+  return this;
+};
+
+/**
+ * # .include(obj)
+ *
+ * Assert the inclusion of an object in an Array or substring in string.
+ *
+ *      expect([1,2,3]).to.contain(2);
+ *
+ * @name include
+ * @param {Object|String|Number} obj
+ * @api public
+ */
+
+Assertion.prototype.include = function (obj) {
+  this.assert(
+      ~this.obj.indexOf(obj)
+    , 'expected ' + this.inspect + ' to include ' + inspect(obj)
+    , 'expected ' + this.inspect + ' to not include ' + inspect(obj));
+
+  return this;
+};
+
+/**
+ * # .string(string)
+ *
+ * Assert inclusion of string in string.
+ *
+ *      expect('foobar').to.include.string('bar');
+ *
+ * @name string
+ * @param {String} string
+ * @api public
+ */
+
+Assertion.prototype.string = function (str) {
+  new Assertion(this.obj).is.a('string');
+
+  this.assert(
+      ~this.obj.indexOf(str)
+    , 'expected ' + this.inspect + ' to contain ' + inspect(str)
+    , 'expected ' + this.inspect + ' to not contain ' + inspect(str));
+
+  return this;
+};
+
+
+
+/**
+ * # contain
+ *
+ * Toggles the `contain` flag for the `keys` assertion.
+ *
+ * @name contain
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'contain',
+  { get: function () {
+      this.contains = true;
+      return this;
+    }
+});
+
+/**
+ * # .keys(key1, [key2], [...])
+ *
+ * Assert exact keys or the inclusing of keys using the `contain` modifier.
+ *
+ *      expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);
+ *      expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');
+ *
+ * @name keys
+ * @alias key
+ * @param {String|Array} Keys
+ * @api public
+ */
+
+Assertion.prototype.keys = function(keys) {
+  var str
+    , ok = true;
+
+  keys = keys instanceof Array
+    ? keys
+    : Array.prototype.slice.call(arguments);
+
+  if (!keys.length) throw new Error('keys required');
+
+  var actual = Object.keys(this.obj)
+    , len = keys.length;
+
+  // Inclusion
+  ok = keys.every(function(key){
+    return ~actual.indexOf(key);
+  });
+
+  // Strict
+  if (!this.negate && !this.contains) {
+    ok = ok && keys.length == actual.length;
+  }
+
+  // Key string
+  if (len > 1) {
+    keys = keys.map(function(key){
+      return inspect(key);
+    });
+    var last = keys.pop();
+    str = keys.join(', ') + ', and ' + last;
+  } else {
+    str = inspect(keys[0]);
+  }
+
+  // Form
+  str = (len > 1 ? 'keys ' : 'key ') + str;
+
+  // Have / include
+  str = (this.contains ? 'contain ' : 'have ') + str;
+
+  // Assertion
+  this.assert(
+      ok
+    , 'expected ' + this.inspect + ' to ' + str
+    , 'expected ' + this.inspect + ' to not ' + str);
+
+  return this;
+}
+
+/**
+ * # .throw(constructor)
+ *
+ * Assert that a function will throw a specific type of error.
+ *
+ *      var fn = function () { throw new ReferenceError(''); }
+ *      expect(fn).to.throw(ReferenceError);
+ *
+ * @name throw
+ * @alias throws
+ * @alias Throw
+ * @param {ErrorConstructor} constructor
+ * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types
+ * @api public
+ */
+
+Assertion.prototype.throw = function (constructor) {
+  new Assertion(this.obj).is.a('function');
+
+  var thrown = false;
+
+  try {
+    this.obj();
+  } catch (err) {
+    if (constructor) {
+      this.assert(
+          err instanceof constructor && err.name == constructor.name
+        , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'
+        , 'expected ' + this.inspect + ' to not throw ' + constructor.name );
+
+      return this;
+    } else {
+      thrown = true;
+    }
+  }
+
+  var name = (constructor ? constructor.name : 'an error');
+
+  this.assert(
+      thrown === true
+    , 'expected ' + this.inspect + ' to throw ' + name
+    , 'expected ' + this.inspect + ' to not throw ' + name);
+
+  return this;
+};
+
+/**
+ * # .header(code)
+ *
+ * Assert `header` field has expected `value`.
+ *
+ * @name header
+ * @param {String} field
+ * @param {String} value
+ * @api public
+ */
+
+Assertion.prototype.header = function (field, val) {
+  new Assertion(this.obj)
+        .to.have.property('headers').and
+        .to.have.property(field.toLowerCase(), val);
+
+  return this;
+}
+
+/**
+ * # .status(code)
+ *
+ * Assert `statusCode` of `code'.
+ *
+ * @name status
+ * @param {Number} code
+ * @api public
+ */
+
+Assertion.prototype.status = function (code) {
+  new Assertion(this.obj).to.have.property('statusCode');
+
+  var status = this.obj.statusCode;
+
+  this.assert(
+      code == status
+    , 'expected response code of ' + code + ' ' + inspect(statusCodes[code])
+        + ', but got ' + status + ' ' + inspect(statusCodes[status])
+    , 'expected to not respond with ' + code + ' ' + inspect(statusCodes[code]));
+}
+
+/**
+ * # json
+ *
+ * Assert that this response has content-type: application/json.
+ *
+ * @name json
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'json',
+  { get: function () {
+      new Assertion(this.obj).to.have.header('content-type', 'application/json; charset=utf-8');
+      return this;
+    }
+});
+
+/**
+ * # html
+ *
+ * Assert that this response has content-type: text/html.
+ *
+ * @name html
+ * @api public
+ */
+
+Object.defineProperty(Assertion.prototype, 'html',
+  { get: function () {
+      new Assertion(this.obj).to.have.header('content-type', 'text/html; charset=utf-8');
+      return this;
+    }
+});
+
+
+/*!
+ * Aliases.
+ */
+
+(function alias(name, as){
+  Assertion.prototype[as] = Assertion.prototype[name];
+  return alias;
+})
+('length', 'lengthOf')
+('keys', 'key')
+('ownProperty', 'haveOwnProperty')
+('above', 'greaterThan')
+('below', 'lessThan')
+('throw', 'throws')
+('throw', 'Throw') // for troublesome browsers
+('instanceof', 'instanceOf');
+
+});
+
+require.define("/node_modules/chai/lib/error.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+var fail = require('./chai').fail;
+
+module.exports = AssertionError;
+
+/*!
+ * Inspired by node.js assert module
+ * https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/assert.js
+ */
+function AssertionError (options) {
+  options = options || {};
+  this.name = 'AssertionError';
+  this.message = options.message;
+  this.actual = options.actual;
+  this.expected = options.expected;
+  this.operator = options.operator;
+  var stackStartFunction = options.stackStartFunction || fail;
+
+  if (Error.captureStackTrace) {
+    Error.captureStackTrace(this, stackStartFunction);
+  }
+}
+
+AssertionError.prototype.__proto__ = Error.prototype;
+
+AssertionError.prototype.summary = function() {
+  var str = '';
+
+  if (this.operator) {
+    str += 'In: \'' + this.operator + '\'\n\t';
+  }
+
+  str += '' + this.name + (this.message ? ': ' + this.message : '');
+
+  return str;
+};
+
+AssertionError.prototype.details = function() {
+  return this.summary();
+};
+
+AssertionError.prototype.toString = function() {
+  return this.summary();
+};
+});
+
+require.define("/node_modules/chai/lib/utils/eql.js", function (require, module, exports, __dirname, __filename) {
+// This is directly from Node.js assert
+// https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/assert.js
+
+
+module.exports = _deepEqual;
+
+// For browser implementation
+if (!Buffer) {
+  var Buffer = {
+    isBuffer: function () {
+      return false;
+    }
+  };
+}
+
+function _deepEqual(actual, expected) {
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (actual === expected) {
+    return true;
+
+  } else if (Buffer.isBuffer(actual) && Buffer.isBuffer(expected)) {
+    if (actual.length != expected.length) return false;
+
+    for (var i = 0; i < actual.length; i++) {
+      if (actual[i] !== expected[i]) return false;
+    }
+
+    return true;
+
+  // 7.2. If the expected value is a Date object, the actual value is
+  // equivalent if it is also a Date object that refers to the same time.
+  } else if (actual instanceof Date && expected instanceof Date) {
+    return actual.getTime() === expected.getTime();
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object',
+  // equivalence is determined by ==.
+  } else if (typeof actual != 'object' && typeof expected != 'object') {
+    return actual === expected;
+
+  // 7.4. For all other Object pairs, including Array objects, equivalence is
+  // determined by having the same number of owned properties (as verified
+  // with Object.prototype.hasOwnProperty.call), the same set of keys
+  // (although not necessarily the same order), equivalent values for every
+  // corresponding key, and an identical 'prototype' property. Note: this
+  // accounts for both named and indexed properties on Arrays.
+  } else {
+    return objEquiv(actual, expected);
+  }
+}
+
+function isUndefinedOrNull(value) {
+  return value === null || value === undefined;
+}
+
+function isArguments(object) {
+  return Object.prototype.toString.call(object) == '[object Arguments]';
+}
+
+function objEquiv(a, b) {
+  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
+    return false;
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) return false;
+  //~~~I've managed to break Object.keys through screwy arguments passing.
+  //   Converting to array solves the problem.
+  if (isArguments(a)) {
+    if (!isArguments(b)) {
+      return false;
+    }
+    a = pSlice.call(a);
+    b = pSlice.call(b);
+    return _deepEqual(a, b);
+  }
+  try {
+    var ka = Object.keys(a),
+        kb = Object.keys(b),
+        key, i;
+  } catch (e) {//happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates
+  // hasOwnProperty)
+  if (ka.length != kb.length)
+    return false;
+  //the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  //~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i])
+      return false;
+  }
+  //equivalent values for every corresponding key, and
+  //~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!_deepEqual(a[key], b[key])) return false;
+  }
+  return true;
+}
+});
+
+require.define("/node_modules/chai/lib/utils/inspect.js", function (require, module, exports, __dirname, __filename) {
+// This is (almost) directly from Node.js utils
+// https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
+
+module.exports = inspect;
+
+/**
+ * Echos the value of a value. Trys to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Boolean} showHidden Flag that shows hidden (not enumerable)
+ *    properties of objects.
+ * @param {Number} depth Depth in which to descend in object. Default is 2.
+ * @param {Boolean} colors Flag to turn on ANSI escape codes to color the
+ *    output. Default is false (no coloring).
+ */
+function inspect(obj, showHidden, depth, colors) {
+  var ctx = {
+    showHidden: showHidden,
+    seen: [],
+    stylize: function (str) { return str; }
+  };
+  return formatValue(ctx, obj, (typeof depth === 'undefined' ? 2 : depth));
+}
+
+function formatValue(ctx, value, recurseTimes) {
+  // Provide a hook for user-specified inspect functions.
+  // Check that value is an object with an inspect function on it
+  if (value && typeof value.inspect === 'function' &&
+      // Filter out the util module, it's inspect function is special
+      value.inspect !== exports.inspect &&
+      // Also filter out any prototype objects using the circular check.
+      !(value.constructor && value.constructor.prototype === value)) {
+    return value.inspect(recurseTimes);
+  }
+
+  // Primitive types cannot have properties
+  var primitive = formatPrimitive(ctx, value);
+  if (primitive) {
+    return primitive;
+  }
+
+  // Look up the keys of the object.
+  var visibleKeys = Object.keys(value);
+  var keys = ctx.showHidden ? Object.getOwnPropertyNames(value) : visibleKeys;
+
+  // Some type of object without properties can be shortcutted.
+  if (keys.length === 0) {
+    if (typeof value === 'function') {
+      var name = value.name ? ': ' + value.name : '';
+      return ctx.stylize('[Function' + name + ']', 'special');
+    }
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    }
+    if (isDate(value)) {
+      return ctx.stylize(Date.prototype.toUTCString.call(value), 'date');
+    }
+    if (isError(value)) {
+      return formatError(value);
+    }
+  }
+
+  var base = '', array = false, braces = ['{', '}'];
+
+  // Make Array say that they are Array
+  if (isArray(value)) {
+    array = true;
+    braces = ['[', ']'];
+  }
+
+  // Make functions say that they are functions
+  if (typeof value === 'function') {
+    var n = value.name ? ': ' + value.name : '';
+    base = ' [Function' + n + ']';
+  }
+
+  // Make RegExps say that they are RegExps
+  if (isRegExp(value)) {
+    base = ' ' + RegExp.prototype.toString.call(value);
+  }
+
+  // Make dates with properties first say the date
+  if (isDate(value)) {
+    base = ' ' + Date.prototype.toUTCString.call(value);
+  }
+
+  // Make error with message first say the error
+  if (isError(value)) {
+    base = ' ' + formatError(value);
+  }
+
+  if (keys.length === 0 && (!array || value.length == 0)) {
+    return braces[0] + base + braces[1];
+  }
+
+  if (recurseTimes < 0) {
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    } else {
+      return ctx.stylize('[Object]', 'special');
+    }
+  }
+
+  ctx.seen.push(value);
+
+  var output;
+  if (array) {
+    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+  } else {
+    output = keys.map(function(key) {
+      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+    });
+  }
+
+  ctx.seen.pop();
+
+  return reduceToSingleString(output, base, braces);
+}
+
+
+function formatPrimitive(ctx, value) {
+  switch (typeof value) {
+    case 'undefined':
+      return ctx.stylize('undefined', 'undefined');
+
+    case 'string':
+      var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                               .replace(/'/g, "\\'")
+                                               .replace(/\\"/g, '"') + '\'';
+      return ctx.stylize(simple, 'string');
+
+    case 'number':
+      return ctx.stylize('' + value, 'number');
+
+    case 'boolean':
+      return ctx.stylize('' + value, 'boolean');
+  }
+  // For some reason typeof null is "object", so special case here.
+  if (value === null) {
+    return ctx.stylize('null', 'null');
+  }
+}
+
+
+function formatError(value) {
+  return '[' + Error.prototype.toString.call(value) + ']';
+}
+
+
+function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+  var output = [];
+  for (var i = 0, l = value.length; i < l; ++i) {
+    if (Object.prototype.hasOwnProperty.call(value, String(i))) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          String(i), true));
+    } else {
+      output.push('');
+    }
+  }
+  keys.forEach(function(key) {
+    if (!key.match(/^\d+$/)) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          key, true));
+    }
+  });
+  return output;
+}
+
+
+function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+  var name, str;
+  if (value.__lookupGetter__) {
+    if (value.__lookupGetter__(key)) {
+      if (value.__lookupSetter__(key)) {
+        str = ctx.stylize('[Getter/Setter]', 'special');
+      } else {
+        str = ctx.stylize('[Getter]', 'special');
+      }
+    } else {
+      if (value.__lookupSetter__(key)) {
+        str = ctx.stylize('[Setter]', 'special');
+      }
+    }
+  }
+  if (visibleKeys.indexOf(key) < 0) {
+    name = '[' + key + ']';
+  }
+  if (!str) {
+    if (ctx.seen.indexOf(value[key]) < 0) {
+      if (recurseTimes === null) {
+        str = formatValue(ctx, value[key], null);
+      } else {
+        str = formatValue(ctx, value[key], recurseTimes - 1);
+      }
+      if (str.indexOf('\n') > -1) {
+        if (array) {
+          str = str.split('\n').map(function(line) {
+            return '  ' + line;
+          }).join('\n').substr(2);
+        } else {
+          str = '\n' + str.split('\n').map(function(line) {
+            return '   ' + line;
+          }).join('\n');
+        }
+      }
+    } else {
+      str = ctx.stylize('[Circular]', 'special');
+    }
+  }
+  if (typeof name === 'undefined') {
+    if (array && key.match(/^\d+$/)) {
+      return str;
+    }
+    name = JSON.stringify('' + key);
+    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+      name = name.substr(1, name.length - 2);
+      name = ctx.stylize(name, 'name');
+    } else {
+      name = name.replace(/'/g, "\\'")
+                 .replace(/\\"/g, '"')
+                 .replace(/(^"|"$)/g, "'");
+      name = ctx.stylize(name, 'string');
+    }
+  }
+
+  return name + ': ' + str;
+}
+
+
+function reduceToSingleString(output, base, braces) {
+  var numLinesEst = 0;
+  var length = output.reduce(function(prev, cur) {
+    numLinesEst++;
+    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    return prev + cur.length + 1;
+  }, 0);
+
+  if (length > 60) {
+    return braces[0] +
+           (base === '' ? '' : base + '\n ') +
+           ' ' +
+           output.join(',\n  ') +
+           ' ' +
+           braces[1];
+  }
+
+  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+}
+
+function isArray(ar) {
+  return Array.isArray(ar) ||
+         (typeof ar === 'object' && objectToString(ar) === '[object Array]');
+}
+
+function isRegExp(re) {
+  return typeof re === 'object' && objectToString(re) === '[object RegExp]';
+}
+
+function isDate(d) {
+  return typeof d === 'object' && objectToString(d) === '[object Date]';
+}
+
+function isError(e) {
+  return typeof e === 'object' && objectToString(e) === '[object Error]';
+}
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+});
+
+require.define("/node_modules/chai/lib/utils/constants.js", function (require, module, exports, __dirname, __filename) {
+
+var exports = module.exports = {};
+
+/**
+ * More includes from node.js code
+ * https://github.com/joyent/node/blob/master/lib/http.js
+ */
+
+exports.STATUS_CODES = {
+  100 : 'Continue',
+  101 : 'Switching Protocols',
+  102 : 'Processing',                 // RFC 2518, obsoleted by RFC 4918
+  200 : 'OK',
+  201 : 'Created',
+  202 : 'Accepted',
+  203 : 'Non-Authoritative Information',
+  204 : 'No Content',
+  205 : 'Reset Content',
+  206 : 'Partial Content',
+  207 : 'Multi-Status',               // RFC 4918
+  300 : 'Multiple Choices',
+  301 : 'Moved Permanently',
+  302 : 'Moved Temporarily',
+  303 : 'See Other',
+  304 : 'Not Modified',
+  305 : 'Use Proxy',
+  307 : 'Temporary Redirect',
+  400 : 'Bad Request',
+  401 : 'Unauthorized',
+  402 : 'Payment Required',
+  403 : 'Forbidden',
+  404 : 'Not Found',
+  405 : 'Method Not Allowed',
+  406 : 'Not Acceptable',
+  407 : 'Proxy Authentication Required',
+  408 : 'Request Time-out',
+  409 : 'Conflict',
+  410 : 'Gone',
+  411 : 'Length Required',
+  412 : 'Precondition Failed',
+  413 : 'Request Entity Too Large',
+  414 : 'Request-URI Too Large',
+  415 : 'Unsupported Media Type',
+  416 : 'Requested Range Not Satisfiable',
+  417 : 'Expectation Failed',
+  418 : 'I\'m a teapot',              // RFC 2324
+  422 : 'Unprocessable Entity',       // RFC 4918
+  423 : 'Locked',                     // RFC 4918
+  424 : 'Failed Dependency',          // RFC 4918
+  425 : 'Unordered Collection',       // RFC 4918
+  426 : 'Upgrade Required',           // RFC 2817
+  500 : 'Internal Server Error',
+  501 : 'Not Implemented',
+  502 : 'Bad Gateway',
+  503 : 'Service Unavailable',
+  504 : 'Gateway Time-out',
+  505 : 'HTTP Version not supported',
+  506 : 'Variant Also Negotiates',    // RFC 2295
+  507 : 'Insufficient Storage',       // RFC 4918
+  509 : 'Bandwidth Limit Exceeded',
+  510 : 'Not Extended'                // RFC 2774
+};
+});
+
+require.define("/node_modules/chai/lib/interface/expect.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+module.exports = function (chai) {
+  chai.expect = function (val, message) {
+    return new chai.Assertion(val, message);
+  };
+};
+
+
+});
+
+require.define("/node_modules/chai/lib/interface/should.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+module.exports = function (chai) {
+  var Assertion = chai.Assertion;
+
+  chai.should = function () {
+    // modify Object.prototype to have `should`
+    Object.defineProperty(Object.prototype, 'should', {
+      set: function(){},
+      get: function(){
+        if (this instanceof String || this instanceof Number) {
+          return new Assertion(this.constructor(this));
+        } else if (this instanceof Boolean) {
+          return new Assertion(this == true);
+        }
+        return new Assertion(this);
+      },
+      configurable: true
+    });
+
+    var should = {};
+
+    should.equal = function (val1, val2) {
+      new Assertion(val1).to.equal(val2);
+    };
+
+    should.throw = function (fn, err) {
+      new Assertion(fn).to.throw(err);
+    };
+
+    should.exist = function (val) {
+      new Assertion(val).to.exist;
+    }
+
+    // negation
+    should.not = {}
+
+    should.not.equal = function (val1, val2) {
+      new Assertion(val1).to.not.equal(val2);
+    };
+
+    should.not.throw = function (fn, err) {
+      new Assertion(fn).to.not.throw(err);
+    };
+
+    should.not.exist = function (val) {
+      new Assertion(val).to.not.exist;
+    }
+
+    return should;
+  };
+};
+
+});
+
+require.define("/node_modules/chai/lib/interface/assert.js", function (require, module, exports, __dirname, __filename) {
+/*!
+ * chai
+ * Copyright(c) 2011 Jake Luer <jake@alogicalparadox.com>
+ * MIT Licensed
+ */
+
+/**
+ * ### TDD Style Introduction
+ *
+ * The TDD style is exposed through `assert` interfaces. This provides
+ * the classic assert.`test` notation, similiar to that packaged with
+ * node.js. This assert module, however, provides several additional
+ * tests and is browser compatible.
+ *
+ *      // assert
+ *      var assert = require('chai').assert;
+ *        , foo = 'bar';
+ *
+ *      assert.typeOf(foo, 'string');
+ *      assert.equal(foo, 'bar');
+ */
+
+module.exports = function (chai) {
+  /*!
+   * Chai dependencies.
+   */
+  var Assertion = chai.Assertion
+    , inspect = chai.inspect;
+
+  /*!
+   * Module export.
+   */
+
+  var assert = chai.assert = {};
+
+  /**
+   * # .ok(object, [message])
+   *
+   * Assert object is truthy.
+   *
+   *      assert.ok('everthing', 'everything is ok');
+   *      assert.ok(false, 'this will fail');
+   *
+   * @name ok
+   * @param {*} object to test
+   * @param {String} message
+   * @api public
+   */
+
+  assert.ok = function (val, msg) {
+    new Assertion(val, msg).is.ok;
+  };
+
+  /**
+   * # .equal(actual, expected, [message])
+   *
+   * Assert strict equality.
+   *
+   *      assert.equal(3, 3, 'these numbers are equal');
+   *
+   * @name equal
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.equal = function (act, exp, msg) {
+    var test = new Assertion(act, msg);
+
+    test.assert(
+        exp == test.obj
+      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)
+      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));
+  };
+
+  /**
+   * # .notEqual(actual, expected, [message])
+   *
+   * Assert not equal.
+   *
+   *      assert.notEqual(3, 4, 'these numbers are not equal');
+   *
+   * @name notEqual
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.notEqual = function (act, exp, msg) {
+    var test = new Assertion(act, msg);
+
+    test.assert(
+        exp != test.obj
+      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)
+      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));
+  };
+
+  /**
+   * # .strictEqual(actual, expected, [message])
+   *
+   * Assert strict equality.
+   *
+   *      assert.strictEqual(true, true, 'these booleans are strictly equal');
+   *
+   * @name strictEqual
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.strictEqual = function (act, exp, msg) {
+    new Assertion(act, msg).to.equal(exp);
+  };
+
+  /**
+   * # .notStrictEqual(actual, expected, [message])
+   *
+   * Assert strict equality.
+   *
+   *      assert.notStrictEqual(1, true, 'these booleans are not strictly equal');
+   *
+   * @name notStrictEqual
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.notStrictEqual = function (act, exp, msg) {
+    new Assertion(act, msg).to.not.equal(exp);
+  };
+
+  /**
+   * # .deepEqual(actual, expected, [message])
+   *
+   * Assert not deep equality.
+   *
+   *      assert.deepEqual({ tea: 'green' }, { tea: 'green' });
+   *
+   * @name deepEqual
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.deepEqual = function (act, exp, msg) {
+    new Assertion(act, msg).to.eql(exp);
+  };
+
+  /**
+   * # .notDeepEqual(actual, expected, [message])
+   *
+   * Assert not deep equality.
+   *
+   *      assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });
+   *
+   * @name notDeepEqual
+   * @param {*} actual
+   * @param {*} expected
+   * @param {String} message
+   * @api public
+   */
+
+  assert.notDeepEqual = function (act, exp, msg) {
+    new Assertion(act, msg).to.not.eql(exp);
+  };
+
+  /**
+   * # .isTrue(value, [message])
+   *
+   * Assert `value` is true.
+   *
+   *      var tea_served = true;
+   *      assert.isTrue(tea_served, 'the tea has been served');
+   *
+   * @name isTrue
+   * @param {Boolean} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isTrue = function (val, msg) {
+    new Assertion(val, msg).is.true;
+  };
+
+  /**
+   * # .isFalse(value, [message])
+   *
+   * Assert `value` is false.
+   *
+   *      var tea_served = false;
+   *      assert.isFalse(tea_served, 'no tea yet? hmm...');
+   *
+   * @name isFalse
+   * @param {Boolean} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isFalse = function (val, msg) {
+    new Assertion(val, msg).is.false;
+  };
+
+  /**
+   * # .isNull(value, [message])
+   *
+   * Assert `value` is null.
+   *
+   *      assert.isNull(err, 'no errors');
+   *
+   * @name isNull
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isNull = function (val, msg) {
+    new Assertion(val, msg).to.not.exist;
+  };
+
+  /**
+   * # .isNotNull(value, [message])
+   *
+   * Assert `value` is not null.
+   *
+   *      var tea = 'tasty chai';
+   *      assert.isNotNull(tea, 'great, time for tea!');
+   *
+   * @name isNotNull
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isNotNull = function (val, msg) {
+    new Assertion(val, msg).to.exist;
+  };
+
+  /**
+   * # .isUndefined(value, [message])
+   *
+   * Assert `value` is undefined.
+   *
+   *      assert.isUndefined(tea, 'no tea defined');
+   *
+   * @name isUndefined
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isUndefined = function (val, msg) {
+    new Assertion(val, msg).to.equal(undefined);
+  };
+
+  /**
+   * # .isFunction(value, [message])
+   *
+   * Assert `value` is a function.
+   *
+   *      var serve_tea = function () { return 'cup of tea'; };
+   *      assert.isFunction(serve_tea, 'great, we can have tea now');
+   *
+   * @name isFunction
+   * @param {Function} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isFunction = function (val, msg) {
+    new Assertion(val, msg).to.be.a('function');
+  };
+
+  /**
+   * # .isObject(value, [message])
+   *
+   * Assert `value` is an object.
+   *
+   *      var selection = { name: 'Chai', serve: 'with spices' };
+   *      assert.isObject(selection, 'tea selection is an object');
+   *
+   * @name isObject
+   * @param {Object} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isObject = function (val, msg) {
+    new Assertion(val, msg).to.be.a('object');
+  };
+
+  /**
+   * # .isArray(value, [message])
+   *
+   * Assert `value` is an instance of Array.
+   *
+   *      var menu = [ 'green', 'chai', 'oolong' ];
+   *      assert.isArray(menu, 'what kind of tea do we want?');
+   *
+   * @name isArray
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isArray = function (val, msg) {
+    new Assertion(val, msg).to.be.instanceof(Array);
+  };
+
+  /**
+   * # .isString(value, [message])
+   *
+   * Assert `value` is a string.
+   *
+   *      var teaorder = 'chai';
+   *      assert.isString(tea_order, 'order placed');
+   *
+   * @name isString
+   * @param {String} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isString = function (val, msg) {
+    new Assertion(val, msg).to.be.a('string');
+  };
+
+  /**
+   * # .isNumber(value, [message])
+   *
+   * Assert `value` is a number
+   *
+   *      var cups = 2;
+   *      assert.isNumber(cups, 'how many cups');
+   *
+   * @name isNumber
+   * @param {Number} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isNumber = function (val, msg) {
+    new Assertion(val, msg).to.be.instanceof(Number);
+  };
+
+  /**
+   * # .isBoolean(value, [message])
+   *
+   * Assert `value` is a boolean
+   *
+   *      var teaready = true
+   *        , teaserved = false;
+   *
+   *      assert.isBoolean(tea_ready, 'is the tea ready');
+   *      assert.isBoolean(tea_served, 'has tea been served');
+   *
+   * @name isBoolean
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isBoolean = function (val, msg) {
+    new Assertion(val, msg).to.be.a('boolean');
+  };
+
+  /**
+   * # .typeOf(value, name, [message])
+   *
+   * Assert typeof `value` is `name`.
+   *
+   *      assert.typeOf('tea', 'string', 'we have a string');
+   *
+   * @name typeOf
+   * @param {*} value
+   * @param {String} typeof name
+   * @param {String} message
+   * @api public
+   */
+
+  assert.typeOf = function (val, type, msg) {
+    new Assertion(val, msg).to.be.a(type);
+  };
+
+  /**
+   * # .instanceOf(object, constructor, [message])
+   *
+   * Assert `value` is instanceof `constructor`.
+   *
+   *      var Tea = function (name) { this.name = name; }
+   *        , Chai = new Tea('chai');
+   *
+   *      assert.instanceOf(Chai, Tea, 'chai is an instance of tea');
+   *
+   * @name instanceOf
+   * @param {Object} object
+   * @param {Constructor} constructor
+   * @param {String} message
+   * @api public
+   */
+
+  assert.instanceOf = function (val, type, msg) {
+    new Assertion(val, msg).to.be.instanceof(type);
+  };
+
+  /**
+   * # .include(value, includes, [message])
+   *
+   * Assert the inclusion of an object in another. Works
+   * for strings and arrays.
+   *
+   *      assert.include('foobar', 'bar', 'foobar contains string `var`);
+   *      assert.include([ 1, 2, 3], 3, 'array contains value);
+   *
+   * @name include
+   * @param {Array|String} value
+   * @param {*} includes
+   * @param {String} message
+   * @api public
+   */
+
+  assert.include = function (exp, inc, msg) {
+    var obj = new Assertion(exp, msg);
+
+    if (Array.isArray(exp)) {
+      obj.to.include(inc);
+    } else if ('string' === typeof exp) {
+      obj.to.contain.string(inc);
+    }
+  };
+
+  /**
+   * # .match(value, regex, [message])
+   *
+   * Assert that `value` matches regular expression.
+   *
+   *      assert.match('foobar', /^foo/, 'Regexp matches');
+   *
+   * @name match
+   * @param {*} value
+   * @param {RegExp} RegularExpression
+   * @param {String} message
+   * @api public
+   */
+
+  assert.match = function (exp, re, msg) {
+    new Assertion(exp, msg).to.match(re);
+  };
+
+  /**
+   * # .length(value, constructor, [message])
+   *
+   * Assert that object has expected length.
+   *
+   *      assert.length([1,2,3], 3, 'Array has length of 3');
+   *      assert.length('foobar', 5, 'String has length of 6');
+   *
+   * @name length
+   * @param {*} value
+   * @param {Number} length
+   * @param {String} message
+   * @api public
+   */
+
+  assert.length = function (exp, len, msg) {
+    new Assertion(exp, msg).to.have.length(len);
+  };
+
+  /**
+   * # .throws(function, [constructor], [message])
+   *
+   * Assert that a function will throw a specific
+   * type of error.
+   *
+   *      var fn = function () { throw new ReferenceError(''); }
+   *      assert.throw(fn, ReferenceError, 'function throw reference error');
+   *
+   * @name throws
+   * @alias throw
+   * @param {Function} function to test
+   * @param {ErrorConstructor} constructor
+   * @param {String} message
+   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types
+   * @api public
+   */
+
+  assert.throws = function (fn, type, msg) {
+    if ('string' === typeof type) {
+      msg = type;
+      type = null;
+    }
+
+    new Assertion(fn, msg).to.throw(type);
+  };
+
+  /**
+   * # .doesNotThrow(function, [constructor], [message])
+   *
+   * Assert that a function will throw a specific
+   * type of error.
+   *
+   *      var fn = function (err) { if (err) throw Error(err) };
+   *      assert.doesNotThrow(fn, Error, 'function throw reference error');
+   *
+   * @name doesNotThrow
+   * @param {Function} function to test
+   * @param {ErrorConstructor} constructor
+   * @param {String} message
+   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types
+   * @api public
+   */
+
+  assert.doesNotThrow = function (fn, type, msg) {
+    if ('string' === typeof type) {
+      msg = type;
+      type = null;
+    }
+
+    new Assertion(fn, msg).to.not.throw(type);
+  };
+
+  /*!
+   * Undocumented / untested
+   */
+
+  assert.ifError = function (val, msg) {
+    new Assertion(val, msg).to.not.be.ok;
+  };
+
+  /*!
+   * Aliases.
+   */
+
+  (function alias(name, as){
+    assert[as] = assert[name];
+    return alias;
+  })
+  ('length', 'lengthOf')
+  ('throws', 'throw');
+};
+
+});
+
+require.define("/tests/plugins.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Plugins = require('../plugins.js').Plugins;
+
+describe('Plugins', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+    
+    describe('importSubscriptions', function() {
+        beforeEach(function(ready) {
+            Plugins.all = [];
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb([{url: "url1", title: "title1"}, {url: 'url2', title: "title2"}, {url: 'url3', title: "title3"}]),
+                    done(3)
+                },
+                name: "Stub 1"
+            });
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb([{url: "url4", title: "title4"}, {url: 'url5', title: "title5"}]),
+                    done(2)
+                },
+                name: "Stub 2"
+            });
+            ready();
+        });
+        it('should listSubscriptions for each plugin', function(done) {
+            var subscriptionsUrls = []
+            Plugins.importSubscriptions(function(sub) {
+                subscriptionsUrls.push(sub.url)
+            }, function(count) {
+                if(count === 5) {
+                    subscriptionsUrls.should.include('url1');
+                    subscriptionsUrls.should.include('url2');
+                    subscriptionsUrls.should.include('url3');
+                    subscriptionsUrls.should.include('url4');
+                    subscriptionsUrls.should.include('url5');
+                    done();
+                }
+            });
+        });
+    });
+    
+    it("should have a 'Blogger' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === "Blogger") {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Browser Bookmarks' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Browser Bookmarks') {
+                done();
+            }
+        });
+    });
+
+    it("should have a Digg plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Digg') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Disqus Comments' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Disqus Comments') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Generic plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Generic') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Google Reader' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Google Reader') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Browsing History' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Browsing History') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Posterous' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Posterous') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Quora People' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Quora People') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Quora Topics' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Quora Topics') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Status.net' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Status.net') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Tumblr' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Tumblr') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Typepad' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Typepad') {
+                done();
+            }
+        });
+    });
+    
+    it("should have a 'Wordpress' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Wordpress') {
+                done();
+            }
+        });
+    });
+    
+    require('./plugins/blogger.js');
+    require('./plugins/bookmarks.js');
+    require('./plugins/digg.js');
+    require('./plugins/disqus.js');
+    require('./plugins/generic.js');
+    require('./plugins/google-reader.js');
+    require('./plugins/history.js');
+    require('./plugins/posterous.js');
+    require('./plugins/quora-people.js');
+    require('./plugins/quora-topics.js');
+    require('./plugins/statusnet.js');
+    require('./plugins/tumblr.js');
+    require('./plugins/typepad.js');
+    require('./plugins/wordpress.js');
+    
+});
+});
+
+require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Msgboy = require('./msgboy.js').Msgboy
+
+var Plugins = {
+    all: [],
+
+    register: function (plugin) {
+        this.all.push(plugin);
+    },
+    importSubscriptions: function (callback, done) {
+        var subscriptionsCount = 0;
+        
+        var processNextPlugin = function(plugins) {
+            var plugin = plugins.pop();
+            if(plugin) {
+                Msgboy.log.info("Starting with", plugin.name);
+                plugin.listSubscriptions(function (subscriptions) {
+                    _.each(subscriptions, function (subscription) {
+                        callback({
+                            url: subscription.url,
+                            title: subscription.title
+                        });
+                    });
+                }, function (count) {
+                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    subscriptionsCount += count;
+                    processNextPlugin(plugins);
+                });
+            }
+            else {
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+                done(subscriptionsCount);
+            }
+        };
+
+        var plugins = _.clone(Plugins.all); 
+        processNextPlugin(plugins);
+    }
+};
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+Plugins.register(new Blogger());
+
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+Plugins.register(new Bookmarks());
+
+var Digg = require('./plugins/digg.js').Digg;
+Plugins.register(new Digg());
+
+var Disqus = require('./plugins/disqus.js').Disqus;
+Plugins.register(new Disqus());
+
+var Generic = require('./plugins/generic.js').Generic;
+Plugins.register(new Generic());
+
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+Plugins.register(new GoogleReader());
+
+var History = require('./plugins/history.js').History;
+Plugins.register(new History());
+
+var Posterous = require('./plugins/posterous.js').Posterous;
+Plugins.register(new Posterous());
+
+var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
+Plugins.register(new QuoraPeople());
+
+var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
+Plugins.register(new QuoraTopics());
+
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+Plugins.register(new Statusnet());
+
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+Plugins.register(new Tumblr());
+
+var Typepad = require('./plugins/typepad.js').Typepad;
+Plugins.register(new Typepad());
+
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+Plugins.register(new Wordpress());
+
+exports.Plugins = Plugins;
+
+// This is the skeleton for the Plugins
+var Plugin = function () {
+    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function (doc) {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
+        // Feeds have the following form {url: _, title: _}.
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
+    };
+
+    this.subscribeInBackground = function (callback) {
+        // The callback needs to be called with a feed object {url: _, title: _}
+        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
+    };
+};
+
+});
+
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
@@ -14062,143 +16426,1420 @@ var msgboyDatabase = {
 exports.msgboyDatabase = msgboyDatabase
 });
 
-require.define("/views/options-view.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
+require.define("/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+// Blogger
 var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
-var Inbox = require('../models/inbox.js').Inbox;
 
-var OptionsView = Backbone.View.extend({
-    events: {
-        "change #relevance": "adjustRelevance",
-        "click #resetRusbcriptions": "resetRusbcriptions",
-        "click #pinMsgboy": "pinMsgboy"
-    },
-    el: "#options",
+Blogger = function () {
 
-    initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel");
-        this.model = new Inbox();
-        this.model.bind("change", function () {
-            this.render();
-            chrome.extension.sendRequest({
-                signature: "reload",
-                params: {}
+    this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function (doc) {
+        return (window.location.host === "www.blogger.com" && window.location.pathname === '/navbar.g');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('a#b-follow-this').click(function (event) {
+            follow({
+                title: "",
+                url: $("#searchthis").attr("action").replace("search", "feeds/posts/default")
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        var subscriptions = [];
+        $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
+            var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
+            var match = rex.exec(data);
+            while (match) {
+                subscriptions.push({
+                    url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
+                    title: match[1].replace(/"/g, '').trim()
+                });
+                match = rex.exec(data);
+            }
+            callback(subscriptions);
+            done(subscriptions.length);
+        }.bind(this));
+    };
+};
+
+exports.Blogger = Blogger;
+
+});
+
+require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+
+var Bookmarks = function () {
+
+    this.name = 'Browser Bookmarks';
+
+    this.onSubscriptionPage = function (doc) {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Hum. What?
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        done();
+        var seen = [];
+        var total_feeds = 0;
+        chrome.bookmarks.getRecent(1000,
+            function (bookmarks) {
+                var done_once = _.after(bookmarks.length, function () {
+                    // We have processed all the bookmarks
+                    done(total_feeds);
+                });
+                if (bookmarks.length === 0) {
+                    done(total_feeds);
+                }
+                _.each(bookmarks, function (bookmark) {
+                    Feediscovery.get(bookmark.url, function (links) {
+                        var feeds = [];
+                        _.each(links, function (link) {
+                            total_feeds++;
+                            if (seen.indexOf(link.href) === -1) {
+                                feeds.push({title: link.title, url: link.href});
+                                seen.push(link.href);
+                            }
+                        });
+                        if (feeds.length > 0) {
+                            callback(feeds);
+                        }
+                        done_once();
+                    });
+                });
+            }.bind(this)
+        );
+    };
+
+    this.subscribeInBackground = function (callback) {
+        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+            Feediscovery.get(bookmark.url, function (links) {
+                _.each(links, function (link) {
+                    callback(link);
+                });
             });
         }.bind(this));
-        this.model.fetch();
-    },
+    };
+};
 
-    render: function () {
-        this.$("#relevance").val((1 - this.model.attributes.options.relevance) * 100);
-        if(this.model.attributes.options.pinMsgboy) {
-            this.$("#pinMsgboy").val("pined");
-            this.$("#pinMsgboy").html("Unpin");
-        }
-        else {
-            this.$("#pinMsgboy").val("unpined");
-            this.$("#pinMsgboy").html("Pin");
-        }
-    },
+exports.Bookmarks = Bookmarks;
+});
 
-    adjustRelevance: function (event) {
-        this.saveModel();
-    },
+require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery      = require('jquery');
 
-    resetRusbcriptions: function (event) {
-        chrome.extension.sendRequest({
-            signature: "resetRusbcriptions",
-            params: {}
-        }, function () {
-            // Nothing to do.
-        });
-    },
-    
-    pinMsgboy: function(event) {
-        if(this.$("#pinMsgboy").val() === "unpined") {
-            this.$("#pinMsgboy").val("pined");
-        }
-        else {
-            this.$("#pinMsgboy").val("unpined");
-        }
-        
-        this.saveModel();
-        chrome.tabs.getCurrent(function(tab) {
-            chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pined"}, function() {
-                // Done
-            }.bind(this))
-        }.bind(this));
-    },
-    
-    saveModel: function() {
-        var attributes = {};
-        attributes.options = {};
-        attributes.options['pinMsgboy'] = this.$("#pinMsgboy").val() === "pined";
-        attributes.options['relevance'] = 1 - this.$("#relevance").val() / 100;
-        this.model.set(attributes);
-        this.model.save();
+// Feediscovery module. The only API that needs to be used is the Feediscovery.get
+Feediscovery = {};
+Feediscovery.stack = [];
+Feediscovery.running = false;
+
+Feediscovery.get = function (_url, _callback) {
+    Feediscovery.stack.push([_url, _callback]);
+    if(!Feediscovery.running) {
+        Feediscovery.running = true;
+        Feediscovery.run();
     }
+};
+Feediscovery.run = function () {
+    var next = Feediscovery.stack.shift();
+    if (next) {
+        $.ajax({url: "http://feediscovery.appspot.com/",
+            data: {url: next[0]},
+            success: function (data) {
+                next[1](JSON.parse(data));
+                Feediscovery.run();
+            },
+            error: function () {
+                // Let's restack, in the back.
+                Feediscovery.get(next[0], next[1]);
+            }
+        });
+    } else {
+        setTimeout(function () {
+            Feediscovery.run();
+        }, 1000);
+    }
+};
+
+exports.Feediscovery = Feediscovery;
+
 });
 
-exports.OptionsView = OptionsView;
+require.define("/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+Digg = function () {
 
+    this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function (doc) {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "digg.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        $(".btn-follow").live('click', function (event) {
+            url = $(event.target).attr("href");
+            login =  url.split("/")[1];
+            action = url.split("/")[2];
+            switch (action) {
+            case "follow":
+                follow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            case "unfollow":
+                unfollow({
+                    url: "http://digg.com/" + login + ".rss",
+                    title: login + " on Digg"
+                }, function () {
+                    // Done
+                });
+                break;
+            default:
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Digg = Digg;
 });
 
-require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+Disqus = function () {
+
+    this.name = 'Disqus Comments';
+
+    this.onSubscriptionPage = function (doc) {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (document.getElementById("disqus_thread"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#dsq-post-button").live('click', function (event) {
+            follow({
+                url: $(".dsq-subscribe-rss a").attr("href"),
+                title: document.title + " comments"
+            }, function () {
+                //Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.Disqus = Disqus;
+});
+
+require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
-var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Message = require('./message.js').Message;
 
-var Inbox = Backbone.Model.extend({
-    storeName: "inbox",
-    database: msgboyDatabase,
-    defaults: {
-        id: "1",
-        options: {
-            relevance: 1.0,
-            pinMsgboy: false
-        }
-    },
-    initialize: function () {
-    },
+Generic = function () {
+    this.name = 'Generic';
 
-    setup: function (username, token) {
-        this.save({
-            epoch: new Date().getTime(),
-            jid: username,
-            password: token
-        }, {
-            success: function () {
-                this.trigger("ready", this);
-                this.trigger("new", this);
-            }.bind(this),
-            error: function () {
-                this.trigger('error');
-            }.bind(this)
+    this.onSubscriptionPage = function (doc) {
+        return true;
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // Adds a listen event on all elements
+        $(".msgboy-follow").click(function (element) {
+            follow({
+                title: $(element.currentTarget).attr("data-msgboy-title"),
+                url: $(element.currentTarget).attr("data-msgboy-url")
+            }, function () {
+                // Done
+            });
+            return false;
         });
-    },
+    };
+};
 
-    // Fetches and prepares the inbox if needed.
-    fetchAndPrepare: function () {
-        this.fetch({
-            success: function () {
-                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
-                    this.trigger("ready", this);
-                } else {
-                    this.trigger('error', 'Not Found');
-                }
-            }.bind(this),
-            error: function () {
-                this.trigger('error', 'Not Found');
-            }.bind(this)
-        });
-    }
+exports.Generic = Generic;
 });
 
-exports.Inbox = Inbox;
+require.define("/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+GoogleReader = function () {
+
+    this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function (doc) {
+        // This method returns true if the plugin needs to be applied on this page.
+        return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This methods hijacks the susbcription action on the specific website for this plugin.
+        var submitted = function () {
+            follow({
+                url: $("#quickadd").val(),
+                title: $("#quickadd").val()
+            }, function () {
+                // Done
+            });
+        };
+        $("#quick-add-form .goog-button-body").click(submitted);
+        $("#quick-add-form").submit(submitted);
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        links = [];
+        request = new XMLHttpRequest();
+        $.get("http://www.google.com/reader/subscriptions/export", function (data) {
+            var subscriptions = [];
+            urls = $(data).find("outline").each(function () {
+                subscriptions.push({
+                    url:  $(this).attr("xmlUrl"),
+                    title: $(this).attr("title")
+                });
+            });
+            callback(subscriptions);
+            done(subscriptions.length);
+        });
+    };
+};
+
+exports.GoogleReader = GoogleReader;
+});
+
+require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Feediscovery = require('../feediscovery.js').Feediscovery;
+var Maths = require("../maths.js").Maths;
+
+var History = function () {
+    this.name = 'Browsing History';
+    this.visits_to_be_popular = 3;
+    this.deviation = 1;
+    this.elapsed = 1000 * 60 * 60 * 3;
+    this.onSubscriptionPage = function (doc) {
+        // This method returns true if the plugin needs to be applied on this page.
+        return true;
+    };
+    this.hijack = function (follow, unfollow) {
+        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
+    };
+    this.listSubscriptions = function (callback, done) {
+        var seen = [];
+        var pending = 0;
+        var totalFeeds = 0;
+
+        chrome.history.search({
+            'text': '',
+            // Return every history item....
+            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
+            // that was accessed less than one month ago.
+            'maxResults': 10000
+        }, function (historyItems) {
+            if (historyItems.length === 0) {
+                done(0);
+            }
+            var doneOne = _.after(historyItems.length, function () {
+                done(totalFeeds);
+            });
+
+            _.each(historyItems, function (item) {
+                if (item.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(item.url, function (result) {
+                        if (result) {
+                            pending++;
+                            Feediscovery.get(item.url, function (links) {
+                                var feeds = [];
+                                _.each(links, function (link) {
+                                    totalFeeds++;
+                                    if (seen.indexOf(link.href) === -1) {
+                                        feeds.push({title: link.title, url: link.href});
+                                        seen.push(link.href);
+                                    }
+                                });
+                                pending--;
+                                doneOne();
+                                if (feeds.length > 0) {
+                                    callback(feeds);
+                                }
+                            });
+                        }
+                        else {
+                            // Not visited regularly.
+                            doneOne();
+                        }
+                    });
+                }
+                else {
+                    doneOne();
+                    // Not visited often enough
+                }
+            }.bind(this));
+        }.bind(this));
+    };
+    this.visitsRegularly = function (url, callback) {
+        chrome.history.getVisits({url: url}, function (visits) {
+            times = $.map(visits, function (visit) {
+                return visit.visitTime;
+                }).slice(-10); // We check the last 10 visits.
+                var diffs = [];
+                for (var i = 0; i < times.length - 1; i++) {
+                    diffs[i] =  times[i + 1] - times[i];
+                }
+                // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
+                if (Maths.normalizedDeviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
+                    callback(true);
+                }
+                else {
+                    callback(false);
+                }
+            }.bind(this));
+        };
+        this.subscribeInBackground = function (callback) {
+            chrome.history.onVisited.addListener(function (historyItem) {
+                if (historyItem.visitCount > this.visits_to_be_popular) {
+                    this.visitsRegularly(historyItem.url, function (result) {
+                        Feediscovery.get(historyItem.url, function (links) {
+                            _.each(links, function (link) {
+                                callback(link);
+                            });
+                        });
+                    });
+                }
+            }.bind(this));
+        };
+    };
+
+    exports.History = History;
+});
+
+require.define("/maths.js", function (require, module, exports, __dirname, __filename) {
+// Helpers for maths
+
+Maths = {};
+Maths.normalizedDeviation = function (array) {
+    return Maths.deviation(array) / Maths.average(array);
+};
+Maths.deviation = function (array) {
+    var avg = Maths.average(array);
+    var count = array.length;
+    var i = count - 1;
+    var v = 0;
+    while (i >= 0) {
+        v += Math.pow((array[i] - avg), 2);
+        i = i - 1;
+    }
+    return Math.sqrt(v / count);
+};
+Maths.average = function (array) {
+    var count = array.length;
+    var i = count - 1;
+    var sum = 0;
+    while (i >= 0) {
+        sum += array[i];
+        i = i - 1;
+    }
+    return sum / count;
+};
+
+
+exports.Maths = Maths;
+
+});
+
+require.define("/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Posterous = function () {
+
+    this.name = 'Posterous';
+    this.hijacked = false;
+
+    this.onSubscriptionPage = function (doc) {
+        return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('#posterous_required_header').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // done
+                    });
+                });
+            }
+        }, function () {});
+
+        $('#posterous_bar').hover(function (event) {
+            if (!this.hijacked) {
+                this.hijacked = true;
+                $('#posterous_bar_subscribe').click(function () {
+                    follow({
+                        title: document.title,
+                        url: window.location.href + "/rss.xml"
+                    }, function () {
+                        // Done
+                    });
+                });
+            }
+        }, function () {});
+
+        $("#subscribe_link").click(function () {
+            follow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $("#psub_unsubscribed_link").click(function () {
+            unfollow({
+                title: document.title,
+                url: window.location.href + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+
+        $(".subscribe_ajax a.unsubscribed").click(function (event) {
+            var parent = $($($($(event.target).parent()).parent()).parent().find(".profile_sub_site a")[0]);
+            unfollow({
+                title: $.trim(parent.html()),
+                url: parent.attr("href") + "/rss.xml"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        var that = this;
+        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
+            content = $(data);
+            links = content.find("#subscriptions td.image a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "/rss.xml",
+                    title: $(link).attr("title")
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Posterous = Posterous;
+});
+
+require.define("/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+QuoraPeople = function () {
+
+    this.name = 'Quora People';
+
+    this.onSubscriptionPage = function (doc) {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".follow_button").not(".unfollow_button").not(".topic_follow").click(function (event) {
+            if ($.trim($(event.target).html()) !== "Follow Question") {
+                // This is must a button on a user's page. Which we want to follow
+                follow({
+                    title: document.title,
+                    url: window.location.href + "/rss"
+                });
+            }
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+};
+
+exports.QuoraPeople = QuoraPeople;
+});
+
+require.define("/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+QuoraTopics = function () {
+
+    this.name = 'Quora Topics';
+
+    this.onSubscriptionPage = function (doc) {
+        return (window.location.host === "www.quora.com");
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $(".topic_follow.follow_button").not(".unfollow_button").click(function (event) {
+            url = "";
+            title = "";
+            if ($(event.target).parent().parent().find(".topic_name").length > 0) {
+                link = $(event.target).parent().parent().find(".topic_name")[0];
+                url = "http://www.quora.com" + ($(link).attr("href")) + "/rss";
+                title = $($(link).children()[0]).html() + " on Quora";
+            }
+            else {
+                title = document.title;
+                url = window.location.href + "/rss";
+            }
+            follow({
+                url: url,
+                title: title
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.QuoraTopics = QuoraTopics;
+});
+
+require.define("/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+Statusnet = function () {
+
+    this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function (doc) {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+        return (window.location.host.match(/status\.net/));
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        $('#form_ostatus_connect').live("submit", function () {
+            user = $($(this).find("#nickname")[0]).attr("value");
+            url = "http://" + parseUri(window.location).host + "/api/statuses/user_timeline/1.atom";
+            follow({
+                title:  user + " on Status.net",
+                url: url
+            }, function () {
+                // Done
+            });
+        });
+    };
+};
+
+exports.Statusnet = Statusnet;
+});
+
+require.define("/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+Tumblr = function () {
+
+    this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function (doc) {
+        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('form[action|="/follow"]').submit(function (event) {
+            follow({
+                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
+                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+
+    this.listSubscriptions = function (callback, done) {
+        this.listSubscriptionsPage(1, [], callback, done);
+    };
+
+    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
+            content = $(data);
+            links = content.find(".follower .name a");
+            links.each(function (index, link) {
+                subscriptions.push({
+                    url: $(link).attr("href") + "rss",
+                    title: $(link).html() + " on Tumblr"
+                });
+            });
+            if (links.length > 0) {
+                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            } else {
+                callback(subscriptions);
+                done(subscriptions.length);
+            }
+        }.bind(this));
+    };
+};
+
+exports.Tumblr = Tumblr;
+});
+
+require.define("/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Typepad = function () {
+
+    this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
+
+    this.onSubscriptionPage = function (doc) {
+        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $("#follow-display").click(function () {
+            follow({
+                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
+                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
+            }, function () {
+                // Done
+            });
+            return false;
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        callback([]); // We're not able to list all subscriptions
+        done(0);
+    };
+};
+
+exports.Typepad = Typepad;
+});
+
+require.define("/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+
+var Wordpress = function () {
+
+    this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function (doc) {
+        return (doc.getElementById("wpadminbar"));
+    };
+
+    this.hijack = function (follow, unfollow) {
+        $('admin-bar-follow-link').live('click', function (event) {
+            follow({
+                title: $('#wp-admin-bar-blog a.ab-item').text(),
+                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "/feed"
+            }, function () {
+                // Done
+            });
+        });
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        $.get("http://wordpress.com/#!/read/edit/", function (data) {
+            content = $(data);
+            links = content.find("a.blogurl");
+            var count = 0;
+            links.each(function (index, link) {
+                count += 1;
+                callback({
+                    url: $(link).attr("href") + "/feed",
+                    title: $(link).text()
+                });
+            });
+            done(count);
+        });
+    };
+};
+
+exports.Wordpress = Wordpress;
+});
+
+require.define("/tests/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Blogger = require('../../plugins/blogger.js').Blogger;
+
+describe('Blogger', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Bookmarks = require('../../plugins/bookmarks.js').Bookmarks;
+
+describe('Bookmarks', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Digg = require('../../plugins/digg.js').Digg;
+
+describe('Digg', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Disqus = require('../../plugins/disqus.js').Disqus;
+
+describe('Disqus', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Generic = require('../../plugins/generic.js').Generic;
+
+describe('Generic', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var GoogleReader = require('../../plugins/google-reader.js').GoogleReader;
+
+describe('GoogleReader', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var History = require('../../plugins/history.js').History;
+
+describe('History', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Posterous = require('../../plugins/posterous.js').Posterous;
+
+describe('Posterous', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var QuoraPeople = require('../../plugins/quora-people.js').QuoraPeople;
+
+describe('QuoraPeople', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var QuoraTopics = require('../../plugins/quora-topics.js').QuoraTopics;
+
+describe('QuoraTopics', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Statusnet = require('../../plugins/statusnet.js').Statusnet;
+
+describe('Statusnet', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Tumblr = require('../../plugins/tumblr.js').Tumblr;
+
+describe('Tumblr', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Typepad = require('../../plugins/typepad.js').Typepad;
+
+describe('Typepad', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Wordpress = require('../../plugins/wordpress.js').Wordpress;
+
+describe('Wordpress', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the page has an element whose id is wpadminbar', function() {
+            var docStub = {
+                getElementById: function(id) {
+                    return id === "wpadminbar";
+                }
+            }
+            var w = new Wordpress();
+            w.onSubscriptionPage(docStub).should.equal(true);
+        });
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+
+    });
+
+});
+
+});
+
+require.define("/tests/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Subscription = require('../../models/subscription.js').Subscription;
+var Subscriptions = require('../../models/subscription.js').Subscriptions;
+
+describe('Subscription', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Subscription = Subscription.extend({ database: msgboyDatabase});
+        Subscriptions = Subscriptions.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+    
+    describe('fetchOrCreate', function() {
+        it('should create a subscription that does not exist', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.fetchOrCreate(function() {
+                s.id.should.equal("http://blog.superfeedr.com/atom.xml");
+                complete();
+            });
+        });
+        it('should fetch a subscription that exists', function(complete) {
+            var s = new Subscription({id: "https://github.com/superfeedr.atom"});
+            s.fetchOrCreate(function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.fetchOrCreate(function() {
+                    t.id.should.equal("https://github.com/superfeedr.atom");
+                    complete();
+                });
+            });
+        });
+        
+    });
+
+    describe('needsRefresh', function() {
+        it('should return true if the subscription is older than a week and unsubscription is older than a month and if the feed is not in the blacklist', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(true);
+        });
+        it('should return false if the subscription is earlier than a week', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if unsubscription is earlier than a month', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if the feed is in the blacklist', function() {
+            var s = new Subscription({id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(false);
+        });
+    });
+
+    describe('setState', function() {
+        it('should set the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('change', function() {
+                s.get('state').should.equal("subscribing");
+                complete();
+            })
+            s.setState("subscribing");
+        });
+        it('should trigger the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('unsubscribing', function() {
+                complete();
+            })
+            s.setState("unsubscribing");
+        });
+        
+        describe('when setting the state to subscribed', function() {
+            it('should set the subscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('subscribed', function() {
+                    s.get('subscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('subscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("subscribed");
+            });
+        });
+        describe('when setting the state to unsubscribed', function() {
+            it('should set the unsubscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('unsubscribed', function() {
+                    s.get('unsubscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('unsubscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("unsubscribed");
+            });
+        })
+        
+    });
+});
+
+describe('Subscriptions', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('pending', function(complete) {
+        it('should yield all subscriptions whose state is "subscrbing"', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('subscribing', function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.bind('subscribed', function() {
+                    var u = new Subscription({id: "http://push-pub.appspot.com/feed"});
+                    u.bind('subscribed', function() {
+                        var v = new Subscription({id: "http://github.com/julien.atom"});
+                        v.bind('subscribing', function() {
+                            var pendingSubscriptions = new Subscriptions();
+                            pendingSubscriptions.bind('reset',function(subscritions) {
+                                pendingSubscriptions.pluck('id').should.eql([ 'http://blog.superfeedr.com/atom.xml',
+                                  'http://github.com/julien.atom' ]);
+                                complete();
+                            });
+                            pendingSubscriptions.pending();
+                        });
+                        v.setState("subscribing");
+                    });
+                    u.setState("subscribed");
+                });
+                t.setState("subscribed");
+            });
+            s.setState("subscribing");
+            var subscription =  new Subscriptions();
+        });
+    });
+
+});
+
+
+});
+
+require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Message = require('../../models/message.js').Message;
+var Archive = require('../../models/archive.js').Archive;
+var should = require('chai').should();
+
+describe('Archive', function(){
+    before(function(done) {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Message = Message.extend({ database: msgboyDatabase});
+        Archive = Archive.extend({ database: msgboyDatabase});
+        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
+        m1.bind('change', function() {
+            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
+            m2.bind('change', function() {
+                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
+                m3.bind('change', function() {
+                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
+                    m4.bind('change', function() {
+                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
+                        m5.bind('change', function() {
+                            done();
+                        });
+                        m5.save();
+                    });
+                    m4.save();
+                });
+                m3.save();
+            });
+            m2.save();
+        });
+        m1.save();
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('comparator', function() {
+        it('should sort all the messages by createdAt', function(done) {
+            var archive =  new Archive();
+            var twelveHourAgoMessage = new Message({title: "Twelve Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 12});
+            var twentyFourHourAgoMessage = new Message({title: "Twenty-Four Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 24});
+            var sixHourAgoMessage = new Message({title: "Six Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 6});
+            var eighteenHourAgoMessage = new Message({title: "Eighteen Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 18});
+            var threeHourAgoMessage = new Message({title: "Three Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 3});
+            var NineHourAgoMessage = new Message({title: "Nine Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 9});
+            archive.add(twelveHourAgoMessage);
+            archive.add(twentyFourHourAgoMessage);
+            archive.add(threeHourAgoMessage);
+            archive.add(NineHourAgoMessage);
+            archive.add(eighteenHourAgoMessage);
+            archive.add(sixHourAgoMessage);
+            var prev = null;
+            archive.each(function(m) {
+                if(prev) {
+                    m.get('createdAt').should.be.below(prev.get('createdAt'));
+                }
+                prev = m;
+            });
+            done();
+        });
+    })
+
+    describe('next', function() {
+        it('should add messages one by one', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    done();
+                }
+            })
+            archive.next(limit);
+        });
+
+        it('should stick to the conditions on messages added', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    _.each(archive.pluck('sourceHost'), function(h) {
+                        h.should.equal('superfeedr.com');
+                    });
+                    done();
+                }
+            })
+            archive.next(limit, {sourceHost: "superfeedr.com"});
+        });
+    });
+
+    describe('forFeed', function() {
+        it('should return all the messages for a given feed when called with forFeed', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            archive.bind('reset', function() {
+                archive.length.should.equal(3);
+                archive.at(0).get('title').should.equal("Fourth Message");
+                archive.at(1).get('title').should.equal("Third Message");
+                archive.at(2).get('title').should.equal("First Message");
+                done();
+            })
+            archive.forFeed('http://superfedr.com/dummy.xml');
+        });
+    });
+
+});
+
+
 });
 
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
@@ -14979,21 +18620,311 @@ var Archive = Backbone.Collection.extend({
 exports.Archive = Archive;
 });
 
+require.define("/tests/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var should = require('chai').should();
+
+describe('Database', function(){
+    before(function() {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('shema', function() {
+        it('should have the right id', function() {
+            msgboyDatabase.id.should.equal("msgboy-database-test");
+        });
+        it('should have the right description', function() {
+            msgboyDatabase.description.should.equal("The database for the msgboy");
+        });
+        it('should have 7 versions', function() {
+            msgboyDatabase.migrations.should.have.length(7);
+        });
+    });
+});
+
+
+});
+
+require.define("/tests/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Inbox = require('../../models/inbox.js').Inbox;
+
+describe('Inbox', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Inbox = Inbox.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('setup', function() {
+        it('should trigger ready if the inbox was created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+
+        it('should trigger new if the inbox was not created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('new', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+    });
+    
+    describe('fetchAndPrepare', function() {
+        it('should trigger ready if the inbox was found with the right parameters', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('ready', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("login", "token");
+        });
+        it('should trigger error if the jid is missing', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('error', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("token");
+        });
+        it('should trigger ready if the inbox was not found', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('error', function() {
+                done();
+            })
+            inbox.fetchAndPrepare();
+        })
+    })
+
+});
+
+
+});
+
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('msgboy-backbone-adapter').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 1.0,
+            pinMsgboy: false
+        }
+    },
+    initialize: function () {
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                this.trigger('error');
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
+        });
+    }
+});
+
+exports.Inbox = Inbox;
+});
+
+require.define("/tests/models/message.js", function (require, module, exports, __dirname, __filename) {
+var Message = require('../../models/message.js').Message;
+var should = require('chai').should();
+
+describe('Message', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+    
+    beforeEach(function() {
+    });
+    
+    describe('defaults', function() {
+        it('should have a relevance of 0.6', function() {
+            var message  = new Message();
+            message.get('relevance').should.equal(0.6);
+        });
+
+        it('should have a state of new', function() {
+            var message  = new Message();
+            message.get('state').should.equal("new");
+        });
+    });
+    
+    describe('when initializing the message', function() {
+        it('should set the value for sourceHost', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceHost').should.equal("msgboy.com");
+        });
+        it('should set the value for sourceLink', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for createdAt', function() {
+            var message = new Message({})
+            message.get('createdAt').should.be.above(new Date().getTime() - 10);
+            message.get('createdAt').should.be.below(new Date().getTime() + 10);
+        });
+        it('should set the value for mainLink', function() {
+            var message = new Message({links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}});
+            message.get('mainLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for text to the summary if no content exists', function() {
+            var _summary = "summary";
+            var message = new Message({summary: _summary});
+            message.get('text').should.equal(_summary);
+        });
+        it('should set the value for text to the content if no summary exists', function() {
+            var _content = "content";
+            var message = new Message({content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the content if it s longer than the summary', function() {
+            var _summary = "summary";
+            var _content = "content is longer here";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the summary if it s longer than the content', function() {
+            var _summary = "summary is longer here";
+            var _content = "content";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_summary);
+        });
+    });
+    
+    describe('when voting up', function() {
+        it('should set the state to up-ed', function() {
+            var message  = new Message();
+            message.voteUp();
+            message.get('state').should.equal('up-ed');
+        });
+    });
+    
+    describe('when voting down', function() {
+        it('should set the state to down-ed', function() {
+            var message  = new Message();
+            message.voteDown();
+            message.get('state').should.equal('down-ed');
+        });
+    });
+    
+    describe('when skipping', function() {
+        it('should set the state to skiped', function() {
+            var message  = new Message();
+            message.skip();
+            message.get('state').should.equal('skipped');
+        });
+    });
+    
+    describe('when setting the state', function() {
+        it('should set the state accordingly', function() {
+            var message  = new Message();
+            message.setState("up-ed");
+            message.get('state').should.equal('up-ed');
+        });
+        it('should trigger the state event', function(done) {
+            var message  = new Message();
+            message.bind('up-ed', function() {
+                done();
+            });
+            message.setState("up-ed");
+        });
+        it('should call the callback if defined', function(done) {
+            var message  = new Message();
+            message.setState("up-ed", function(result) {
+                result.should.equal(true);
+                done();
+            });
+        });
+        
+        
+    });
+    
+    describe('calculateRelevance', function() {
+        
+    });
+    
+    describe('relevanceBasedOnBrothers', function() {
+        
+    });
+});
+
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.alias("backbone-indexeddb", "/node_modules/msgboy-backbone-adapter");
 
-require.define("/options.js", function (require, module, exports, __dirname, __filename) {
-    var Msgboy = require('./msgboy.js').Msgboy;
-var $ = jQuery = require('jquery');
-var OptionsView = require('./views/options-view.js').OptionsView;
+require.define("/tests.js", function (require, module, exports, __dirname, __filename) {
+    // Hijack the logs.
+// console._log = console.log;
+// console.log = function() {
+//     //
+// }
+var should = require('chai').should();
+require('./tests/plugins.js');
+require('./tests/models/subscription.js');
+require('./tests/models/archive.js');
+require('./tests/models/database.js');
+require('./tests/models/inbox.js');
+require('./tests/models/message.js');
+// require('./tests/msgboy.js');
+// require('./tests/views/.js');
 
-Msgboy.bind("loaded", function () {
-    var view  = new OptionsView();
-});
-Msgboy.run();
+
 
 });
-require("/options.js");
+require("/tests.js");

@@ -4,7 +4,7 @@ GoogleReader = function () {
 
     this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method returns true if the plugin needs to be applied on this page.
         return (window.location.host === "www.google.com" && window.location.pathname === '/reader/view/');
     };

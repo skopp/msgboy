@@ -1,4 +1,4 @@
-var Message = require('../../src/models/message.js').Message;
+var Message = require('../../models/message.js').Message;
 var should = require('chai').should();
 
 describe('Message', function(){
@@ -6,17 +6,13 @@ describe('Message', function(){
         // We need to save a couple fixture messages!
     });
     
-    beforeEach(function(done) {
-        var Redis = require("redis");
-        Redis.createClient().flushall(function() {
-            done();
-        });
+    beforeEach(function() {
     });
     
     describe('defaults', function() {
-        it('should have a relevance of 0.3', function() {
+        it('should have a relevance of 0.6', function() {
             var message  = new Message();
-            message.get('relevance').should.equal(0.3);
+            message.get('relevance').should.equal(0.6);
         });
 
         it('should have a state of new', function() {

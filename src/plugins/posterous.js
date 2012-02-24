@@ -5,7 +5,7 @@ Posterous = function () {
     this.name = 'Posterous';
     this.hijacked = false;
 
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
     };
 

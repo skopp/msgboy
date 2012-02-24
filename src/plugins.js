@@ -6,7 +6,7 @@ var Plugins = {
     register: function (plugin) {
         this.all.push(plugin);
     },
-    importSubscriptions: function (callback, errback) {
+    importSubscriptions: function (callback, done) {
         var subscriptionsCount = 0;
         
         var processNextPlugin = function(plugins) {
@@ -28,8 +28,9 @@ var Plugins = {
             }
             else {
                 Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+                done(subscriptionsCount);
             }
-        }
+        };
 
         var plugins = _.clone(Plugins.all); 
         processNextPlugin(plugins);
@@ -83,7 +84,7 @@ exports.Plugins = Plugins;
 // This is the skeleton for the Plugins
 var Plugin = function () {
     this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
     };
 

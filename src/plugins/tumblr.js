@@ -3,7 +3,7 @@ var $ = jQuery = require('jquery');
 Tumblr = function () {
 
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function () {
+    this.onSubscriptionPage = function (doc) {
         return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
     };
 

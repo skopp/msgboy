@@ -61,8 +61,8 @@ var msgboyDatabase = {
         migrate: function (transaction, next) {
             var subscriptions = transaction.db.createObjectStore("subscriptions");
             subscriptions.createIndex("stateIndex", "state", {unique: false});
-            subscriptions.createIndex("subscribedAtIndex", "subscribed_at", {unique: false});
-            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribed_at", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
             next();
         }
     }]

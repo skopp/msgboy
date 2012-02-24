@@ -5,7 +5,7 @@ var Inbox           = require('./models/inbox.js').Inbox;
 
 // Runs all the plugins
 $.each(Plugins.all, function (index, plugin) {
-    if (plugin.onSubscriptionPage()) { // Are we on the plugin's page?
+    if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
         plugin.hijack(function (feed, done) {
             chrome.extension.sendRequest({
                 signature: "subscribe",
