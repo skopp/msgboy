@@ -4,7 +4,7 @@ Tumblr = function () {
 
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+        return (doc.location.host === "www.tumblr.com" && doc.location.pathname === '/dashboard/iframe');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -20,7 +20,7 @@ Tumblr = function () {
 
 
     this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, [], callback, done);
+        this.listSubscriptionsPage(1, 0, callback, done);
     };
 
     this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
@@ -28,16 +28,16 @@ Tumblr = function () {
             content = $(data);
             links = content.find(".follower .name a");
             links.each(function (index, link) {
-                subscriptions.push({
+                callback({
                     url: $(link).attr("href") + "rss",
                     title: $(link).html() + " on Tumblr"
                 });
+                subscriptions += 1;
             });
             if (links.length > 0) {
                 this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
             } else {
-                callback(subscriptions);
-                done(subscriptions.length);
+                done(subscriptions);
             }
         }.bind(this));
     };

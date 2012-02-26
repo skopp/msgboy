@@ -77,6 +77,7 @@ Plugins.register(new Typepad());
 var Wordpress = require('./plugins/wordpress.js').Wordpress;
 Plugins.register(new Wordpress());
 
+
 exports.Plugins = Plugins;
 
 // This is the skeleton for the Plugins

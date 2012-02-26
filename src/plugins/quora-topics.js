@@ -3,7 +3,7 @@ QuoraTopics = function () {
     this.name = 'Quora Topics';
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.quora.com");
+        return (doc.location.host === "www.quora.com");
     };
 
     this.hijack = function (follow, unfollow) {
@@ -29,7 +29,6 @@ QuoraTopics = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 };

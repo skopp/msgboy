@@ -13663,6 +13663,7 @@ Plugins.register(new Typepad());
 var Wordpress = require('./plugins/wordpress.js').Wordpress;
 Plugins.register(new Wordpress());
 
+
 exports.Plugins = Plugins;
 
 // This is the skeleton for the Plugins
@@ -14475,7 +14476,7 @@ var Maths = require("../maths.js").Maths;
 
 var History = function () {
     this.name = 'Browsing History';
-    this.visits_to_be_popular = 3;
+    this.visitsToBePopular = 3;
     this.deviation = 1;
     this.elapsed = 1000 * 60 * 60 * 3;
     this.onSubscriptionPage = function (doc) {
@@ -14487,14 +14488,13 @@ var History = function () {
     };
     this.listSubscriptions = function (callback, done) {
         var seen = [];
-        var pending = 0;
         var totalFeeds = 0;
 
         chrome.history.search({
             'text': '',
             // Return every history item....
             'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
-            // that was accessed less than one month ago.
+            // that was accessed less than one month ago, up to 10000 pages.
             'maxResults': 10000
         }, function (historyItems) {
             if (historyItems.length === 0) {
@@ -14505,24 +14505,18 @@ var History = function () {
             });
 
             _.each(historyItems, function (item) {
-                if (item.visitCount > this.visits_to_be_popular) {
+                if (item.visitCount > this.visitsToBePopular) {
                     this.visitsRegularly(item.url, function (result) {
                         if (result) {
-                            pending++;
                             Feediscovery.get(item.url, function (links) {
-                                var feeds = [];
                                 _.each(links, function (link) {
-                                    totalFeeds++;
                                     if (seen.indexOf(link.href) === -1) {
-                                        feeds.push({title: link.title, url: link.href});
+                                        totalFeeds++;
+                                        callback({title: link.title || "", url: link.href});
                                         seen.push(link.href);
                                     }
                                 });
-                                pending--;
                                 doneOne();
-                                if (feeds.length > 0) {
-                                    callback(feeds);
-                                }
                             });
                         }
                         else {
@@ -14540,7 +14534,7 @@ var History = function () {
     };
     this.visitsRegularly = function (url, callback) {
         chrome.history.getVisits({url: url}, function (visits) {
-            times = $.map(visits, function (visit) {
+            var times = $.map(visits, function (visit) {
                 return visit.visitTime;
                 }).slice(-10); // We check the last 10 visits.
                 var diffs = [];
@@ -14558,7 +14552,7 @@ var History = function () {
         };
         this.subscribeInBackground = function (callback) {
             chrome.history.onVisited.addListener(function (historyItem) {
-                if (historyItem.visitCount > this.visits_to_be_popular) {
+                if (historyItem.visitCount > this.visitsToBePopular) {
                     this.visitsRegularly(historyItem.url, function (result) {
                         Feediscovery.get(historyItem.url, function (links) {
                             _.each(links, function (link) {
@@ -14617,87 +14611,40 @@ Posterous = function () {
     this.hijacked = false;
 
     this.onSubscriptionPage = function (doc) {
-        return ($('meta[name=generator]').attr("content") === "Posterous" || window.location.host.match(/posterous.com$/));
+        return (doc.getElementById("pbar") !== null);
     };
 
     this.hijack = function (follow, unfollow) {
-        $('#posterous_required_header').hover(function (event) {
-            if (!this.hijacked) {
-                this.hijacked = true;
-                $('#posterous_bar_subscribe').click(function () {
-                    follow({
-                        title: document.title,
-                        url: window.location.href + "/rss.xml"
-                    }, function () {
-                        // done
-                    });
-                });
-            }
-        }, function () {});
-
-        $('#posterous_bar').hover(function (event) {
-            if (!this.hijacked) {
-                this.hijacked = true;
-                $('#posterous_bar_subscribe').click(function () {
-                    follow({
-                        title: document.title,
-                        url: window.location.href + "/rss.xml"
-                    }, function () {
-                        // Done
-                    });
-                });
-            }
-        }, function () {});
-
-        $("#subscribe_link").click(function () {
+        $("a.pbar_login_form").click(function(evt) {
             follow({
                 title: document.title,
                 url: window.location.href + "/rss.xml"
             }, function () {
-                // Done
-            });
-        });
-
-        $("#psub_unsubscribed_link").click(function () {
-            unfollow({
-                title: document.title,
-                url: window.location.href + "/rss.xml"
-            }, function () {
-                // Done
-            });
-        });
-
-        $(".subscribe_ajax a.unsubscribed").click(function (event) {
-            var parent = $($($($(event.target).parent()).parent()).parent().find(".profile_sub_site a")[0]);
-            unfollow({
-                title: $.trim(parent.html()),
-                url: parent.attr("href") + "/rss.xml"
-            }, function () {
-                // Done
+                // done
             });
         });
     };
 
     this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, [], callback, done);
+        this.listSubscriptionsPage(1, 0, callback, done);
     };
 
-    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
+    this.listSubscriptionsPage = function (page, count, callback, done) {
         var that = this;
         $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
             content = $(data);
             links = content.find("#subscriptions td.image a");
             links.each(function (index, link) {
-                subscriptions.push({
+                callback({
                     url: $(link).attr("href") + "/rss.xml",
                     title: $(link).attr("title")
                 });
+                count += 1;
             });
             if (links.length > 0) {
-                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+                this.listSubscriptionsPage(page + 1, count, callback, done);
             } else {
-                callback(subscriptions);
-                done(subscriptions.length);
+                done(count);
             }
         }.bind(this));
     };
@@ -14712,7 +14659,7 @@ QuoraPeople = function () {
     this.name = 'Quora People';
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.quora.com");
+        return (doc.location.host === "www.quora.com");
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14728,7 +14675,6 @@ QuoraPeople = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 
@@ -14743,7 +14689,7 @@ QuoraTopics = function () {
     this.name = 'Quora Topics';
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.quora.com");
+        return (doc.location.host === "www.quora.com");
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14769,7 +14715,6 @@ QuoraTopics = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 };
@@ -14784,11 +14729,10 @@ Statusnet = function () {
 
     this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
-        return (window.location.host.match(/status\.net/));
+        return (doc.location.host.match(/status\.net/) !== null);
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 
@@ -14817,7 +14761,7 @@ Tumblr = function () {
 
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.tumblr.com" && window.location.pathname === '/dashboard/iframe');
+        return (doc.location.host === "www.tumblr.com" && doc.location.pathname === '/dashboard/iframe');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14833,7 +14777,7 @@ Tumblr = function () {
 
 
     this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, [], callback, done);
+        this.listSubscriptionsPage(1, 0, callback, done);
     };
 
     this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
@@ -14841,16 +14785,16 @@ Tumblr = function () {
             content = $(data);
             links = content.find(".follower .name a");
             links.each(function (index, link) {
-                subscriptions.push({
+                callback({
                     url: $(link).attr("href") + "rss",
                     title: $(link).html() + " on Tumblr"
                 });
+                subscriptions += 1;
             });
             if (links.length > 0) {
                 this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
             } else {
-                callback(subscriptions);
-                done(subscriptions.length);
+                done(subscriptions);
             }
         }.bind(this));
     };
@@ -14867,7 +14811,7 @@ var Typepad = function () {
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+        return (doc.location.host === "www.typepad.com" && doc.location.pathname === '/services/toolbar');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -14883,7 +14827,6 @@ var Typepad = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 };
@@ -14915,18 +14858,6 @@ var Wordpress = function () {
     this.listSubscriptions = function (callback, done) {
         // Looks like WP doesn't allow us to export the list of followed blogs. Boooh.
         done(0);
-        // $.get("http://wordpress.com/#!/read/edit/", function (data) {
-        //     var content = $(data);
-        //     var count = 0;
-        //     links.each(function (index, link) {
-        //         count += 1;
-        //         callback({
-        //             url: $(link).attr("href") + "/feed",
-        //             title: $(link).text()
-        //         });
-        //     });
-        //     done(count);
-        // });
     };
 };
 

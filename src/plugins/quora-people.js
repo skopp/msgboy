@@ -3,7 +3,7 @@ QuoraPeople = function () {
     this.name = 'Quora People';
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.quora.com");
+        return (doc.location.host === "www.quora.com");
     };
 
     this.hijack = function (follow, unfollow) {
@@ -19,7 +19,6 @@ QuoraPeople = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 

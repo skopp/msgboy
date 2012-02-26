@@ -4,11 +4,10 @@ Statusnet = function () {
 
     this.onSubscriptionPage = function (doc) {
         // This method needs to returns true if the plugin needs to be applied on this page.
-        return (window.location.host.match(/status\.net/));
+        return (doc.location.host.match(/status\.net/) !== null);
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 

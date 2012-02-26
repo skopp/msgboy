@@ -4,7 +4,7 @@ var Maths = require("../maths.js").Maths;
 
 var History = function () {
     this.name = 'Browsing History';
-    this.visits_to_be_popular = 3;
+    this.visitsToBePopular = 3;
     this.deviation = 1;
     this.elapsed = 1000 * 60 * 60 * 3;
     this.onSubscriptionPage = function (doc) {
@@ -16,14 +16,13 @@ var History = function () {
     };
     this.listSubscriptions = function (callback, done) {
         var seen = [];
-        var pending = 0;
         var totalFeeds = 0;
 
         chrome.history.search({
             'text': '',
             // Return every history item....
             'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
-            // that was accessed less than one month ago.
+            // that was accessed less than one month ago, up to 10000 pages.
             'maxResults': 10000
         }, function (historyItems) {
             if (historyItems.length === 0) {
@@ -34,24 +33,18 @@ var History = function () {
             });
 
             _.each(historyItems, function (item) {
-                if (item.visitCount > this.visits_to_be_popular) {
+                if (item.visitCount > this.visitsToBePopular) {
                     this.visitsRegularly(item.url, function (result) {
                         if (result) {
-                            pending++;
                             Feediscovery.get(item.url, function (links) {
-                                var feeds = [];
                                 _.each(links, function (link) {
-                                    totalFeeds++;
                                     if (seen.indexOf(link.href) === -1) {
-                                        feeds.push({title: link.title, url: link.href});
+                                        totalFeeds++;
+                                        callback({title: link.title || "", url: link.href});
                                         seen.push(link.href);
                                     }
                                 });
-                                pending--;
                                 doneOne();
-                                if (feeds.length > 0) {
-                                    callback(feeds);
-                                }
                             });
                         }
                         else {
@@ -69,7 +62,7 @@ var History = function () {
     };
     this.visitsRegularly = function (url, callback) {
         chrome.history.getVisits({url: url}, function (visits) {
-            times = $.map(visits, function (visit) {
+            var times = $.map(visits, function (visit) {
                 return visit.visitTime;
                 }).slice(-10); // We check the last 10 visits.
                 var diffs = [];
@@ -87,7 +80,7 @@ var History = function () {
         };
         this.subscribeInBackground = function (callback) {
             chrome.history.onVisited.addListener(function (historyItem) {
-                if (historyItem.visitCount > this.visits_to_be_popular) {
+                if (historyItem.visitCount > this.visitsToBePopular) {
                     this.visitsRegularly(historyItem.url, function (result) {
                         Feediscovery.get(historyItem.url, function (links) {
                             _.each(links, function (link) {

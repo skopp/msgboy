@@ -5,7 +5,7 @@ var Typepad = function () {
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
     this.onSubscriptionPage = function (doc) {
-        return (window.location.host === "www.typepad.com" && window.location.pathname === '/services/toolbar');
+        return (doc.location.host === "www.typepad.com" && doc.location.pathname === '/services/toolbar');
     };
 
     this.hijack = function (follow, unfollow) {
@@ -21,7 +21,6 @@ var Typepad = function () {
     };
 
     this.listSubscriptions = function (callback, done) {
-        callback([]); // We're not able to list all subscriptions
         done(0);
     };
 };
