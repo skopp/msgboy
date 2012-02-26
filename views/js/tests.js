@@ -16496,21 +16496,30 @@ var Bookmarks = function () {
                     done(totalFeeds);
                 }
                 else {
+
+                    var processNext = function(bookmarks) {
+                        var bookmark = bookmarks.pop();
+                        if(bookmark) {
+                            Feediscovery.get(bookmark.url, function (links) {
+                                _.each(links, function (link) {
+                                    totalFeeds++;
+                                    if (seen.indexOf(link.href) === -1) {
+                                        callback({title: link.title || "", url: link.href})
+                                        seen.push(link.href);
+                                    }
+                                });
+                                processNext(bookmarks);
+                            });
+
+                        } else {
+                            done(totalFeeds);
+                        }
+                    };
+                    processNext(bookmarks);
+
                     var doneOnce = _.after(bookmarks.length, function () {
                         // We have processed all the bookmarks
                         done(totalFeeds);
-                    });
-                    _.each(bookmarks, function (bookmark) {
-                        Feediscovery.get(bookmark.url, function (links) {
-                            _.each(links, function (link) {
-                                totalFeeds++;
-                                if (seen.indexOf(link.href) === -1) {
-                                    callback({title: link.title || "", url: link.href})
-                                    seen.push(link.href);
-                                }
-                            });
-                            doneOnce();
-                        });
                     });
                 }
             }.bind(this)
@@ -16749,43 +16758,47 @@ var History = function () {
         chrome.history.search({
             'text': '',
             // Return every history item....
-            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 31),
-            // that was accessed less than one month ago, up to 10000 pages.
+            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 15),
+            // that was accessed less than 15 days ago, up to 10000 pages.
             'maxResults': 10000
         }, function (historyItems) {
             if (historyItems.length === 0) {
                 done(0);
             }
-            var doneOne = _.after(historyItems.length, function () {
-                done(totalFeeds);
-            });
-
-            _.each(historyItems, function (item) {
-                if (item.visitCount > this.visitsToBePopular) {
-                    this.visitsRegularly(item.url, function (result) {
-                        if (result) {
-                            Feediscovery.get(item.url, function (links) {
-                                _.each(links, function (link) {
-                                    if (seen.indexOf(link.href) === -1) {
-                                        totalFeeds++;
-                                        callback({title: link.title || "", url: link.href});
-                                        seen.push(link.href);
-                                    }
+            
+            // Synchrounous 
+            var processNext = function(items) {
+                var item = items.pop();
+                if(item) {
+                    if (item.visitCount > this.visitsToBePopular) {
+                        this.visitsRegularly(item.url, function (result) {
+                            if (result) {
+                                Feediscovery.get(item.url, function (links) {
+                                    _.each(links, function (link) {
+                                        if (seen.indexOf(link.href) === -1) {
+                                            totalFeeds++;
+                                            callback({title: link.title || "", url: link.href});
+                                            seen.push(link.href);
+                                        }
+                                    });
+                                    processNext(items);
                                 });
-                                doneOne();
-                            });
-                        }
-                        else {
-                            // Not visited regularly.
-                            doneOne();
-                        }
-                    });
+                            }
+                            else {
+                                processNext(items); // Not visited regularly.
+                            }
+                        });
+                    }
+                    else {
+                        processNext(items); // Not visited often enough
+                    }
                 }
                 else {
-                    doneOne();
-                    // Not visited often enough
+                    done(totalFeeds);
                 }
-            }.bind(this));
+            }.bind(this);
+            // Let's go.
+            processNext(historyItems);
         }.bind(this));
     };
     this.visitsRegularly = function (url, callback) {
@@ -17426,7 +17439,7 @@ describe('History', function(){
     });
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(100000); // Allow for up to 100 seconds.
+            this.timeout(1000000); // Allow for up to 1000 seconds.
             var b = new History();
             b.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.

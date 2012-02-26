@@ -22,21 +22,30 @@ var Bookmarks = function () {
                     done(totalFeeds);
                 }
                 else {
+
+                    var processNext = function(bookmarks) {
+                        var bookmark = bookmarks.pop();
+                        if(bookmark) {
+                            Feediscovery.get(bookmark.url, function (links) {
+                                _.each(links, function (link) {
+                                    totalFeeds++;
+                                    if (seen.indexOf(link.href) === -1) {
+                                        callback({title: link.title || "", url: link.href})
+                                        seen.push(link.href);
+                                    }
+                                });
+                                processNext(bookmarks);
+                            });
+
+                        } else {
+                            done(totalFeeds);
+                        }
+                    };
+                    processNext(bookmarks);
+
                     var doneOnce = _.after(bookmarks.length, function () {
                         // We have processed all the bookmarks
                         done(totalFeeds);
-                    });
-                    _.each(bookmarks, function (bookmark) {
-                        Feediscovery.get(bookmark.url, function (links) {
-                            _.each(links, function (link) {
-                                totalFeeds++;
-                                if (seen.indexOf(link.href) === -1) {
-                                    callback({title: link.title || "", url: link.href})
-                                    seen.push(link.href);
-                                }
-                            });
-                            doneOnce();
-                        });
                     });
                 }
             }.bind(this)
