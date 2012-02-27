@@ -14854,8 +14854,8 @@ Tumblr = function () {
 
     this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
         $.get("http://www.tumblr.com/following/page/" + page, function (data) {
-            content = $(data);
-            links = content.find(".follower .name a");
+            var content = $(data);
+            var links = content.find(".follower .name a");
             links.each(function (index, link) {
                 callback({
                     url: $(link).attr("href") + "rss",
