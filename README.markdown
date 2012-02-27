@@ -72,6 +72,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>See why some images are not extracted.</del>
 * <del>Use a different color for Msgboy messages. (just use a match on the domain). The background is not enough. How, then?</del>
 * <del>Scale up images that should be displayed "in full"</del>.
+* <del>Do not use "message" or "stories"... let the user decide.</del>
 * Add support for unsubscription in plugins.
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
@@ -100,7 +101,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
 * Make the whole Msgboy lighter. Maybe include less files?
 * Ungrouped stories should stay ungrouped. 
-* Do not use "message" or "stories"... let the user decide.
 * Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
 
 ## Publishers

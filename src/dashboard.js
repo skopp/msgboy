@@ -36,11 +36,11 @@ Msgboy.bind("loaded", function () {
             var count = parseInt($("#new_messages").attr("data-unread"));
             if (count) {
                 $("#new_messages").attr("data-unread", count + 1);
-                $("#new_messages").text("View " + (count + 1) + " new messages");
+                $("#new_messages").text("View " + (count + 1) + " new");
             } else {
                 $("#new_messages").css("top","0");
                 $("#new_messages").attr("data-unread", "1");
-                $("#new_messages").text("View 1 new message");
+                $("#new_messages").text("View 1 new");
             }
         }
     });
