@@ -27,8 +27,8 @@ Posterous = function () {
     this.listSubscriptionsPage = function (page, count, callback, done) {
         var that = this;
         $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
-            content = $(data);
-            links = content.find("#subscriptions td.image a");
+            var content = $(data);
+            var links = content.find("#subscriptions td.image a");
             links.each(function (index, link) {
                 callback({
                     url: $(link).attr("href") + "/rss.xml",
