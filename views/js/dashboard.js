@@ -16412,6 +16412,14 @@ var MessageView = Backbone.View.extend({
         }
         if(typeof this.model.get('image') !== "undefined") {
             $(this.el).append('<img class="main" src="' + this.model.get('image') + '"/>');
+            this.$("img").load(function(e) {
+                if(e.target.height > e.target.width) {
+                    $(e.target).css("width", "100%");
+                }
+                else {
+                    $(e.target).css("height", "100%");
+                }
+            });
         }
         if(this.model.get('sourceHost') === "msgboy.com") {
             el.addClass('msgboy');
