@@ -11806,6 +11806,410 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
 });
 
+require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+var Subscriptions = require('./models/subscription.js').Subscriptions;
+var Subscription = require('./models/subscription.js').Subscription;
+
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Extending Msgboy with the Backbone events
+_.extend(Msgboy, Backbone.Events);
+
+// Logs messages to the console
+console._log = console.log;
+Msgboy.log =  {
+    levels: {
+        RAW: 0,
+        DEBUG: 10,
+        INFO: 20,
+        ERROR: 30,
+    },
+    _log: Function.prototype.bind.call(console._log, console),
+    raw: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('raw');
+            this._log.apply(console, args);
+        }
+    },
+    debug: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('debug');
+            this._log.apply(console, args);
+        }
+    },
+    info: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('info');
+            this._log.apply(console, args);
+        }
+    },
+    error: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
+            var args = Array.prototype.slice.call(arguments);  
+            args.unshift('error');
+            this._log.apply(console, args);
+        }
+    },
+}
+
+// Also, hijack all console.log messages
+console.log = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    args.unshift('debug');
+    Msgboy.log.debug.apply(this, args);
+}
+
+// Attributes
+Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
+Msgboy.autoReconnect = true;
+Msgboy.currentNotification = null;
+Msgboy.messageStack = [];
+Msgboy.connectionTimeout = null;
+Msgboy.reconnectDelay = 1;
+Msgboy.connection = null;
+Msgboy.infos = {};
+Msgboy.inbox = null;
+Msgboy.reconnectionTimeout = null;
+
+// Returns the environment in which this msgboy is running
+Msgboy.environment = function () {
+    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
+        return "production";
+    }
+    else {
+        return "development";
+    }
+};
+
+if(Msgboy.environment() === "development") {
+    Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+}
+
+// Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
+Msgboy.run =  function () {
+    window.onload = function () {
+        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+            Msgboy.infos = extension_infos;
+            Msgboy.trigger("loaded");
+        });
+    }
+};
+
+// Handles XMPP Connections
+Msgboy.onConnect = function (status) {
+    var msg = '';
+    if (status === Strophe.Status.CONNECTING) {
+        msg = 'Msgboy is connecting.';
+    } else if (status === Strophe.Status.CONNFAIL) {
+        msg = 'Msgboy failed to connect.';
+        Msgboy.reconnectDelay = 1;
+        if (Msgboy.autoReconnect) {
+            Msgboy.reconnect();
+        }
+    } else if (status === Strophe.Status.AUTHFAIL) {
+        msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
+        Msgboy.autoReconnect = false; // We need to open the settings tab
+        chrome.tabs.create({
+            url: chrome.extension.getURL('/views/html/options.html'),
+            selected: true
+        });
+    } else if (status === Strophe.Status.DISCONNECTING) {
+        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
+    } else if (status === Strophe.Status.DISCONNECTED) {
+        if (Msgboy.autoReconnect) {
+            Msgboy.reconnect();
+        }
+        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
+    } else if (status === Strophe.Status.CONNECTED) {
+        Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
+        msg = 'Msgboy is connected.';
+        Msgboy.reconnectDelay = 1;
+        Msgboy.connection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
+    }
+    Msgboy.log.debug(msg);
+};
+
+// Reconnects the Msgboy
+Msgboy.reconnect = function () {
+    Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
+    if (!Msgboy.reconnectionTimeout) {
+        Msgboy.reconnectionTimeout = setTimeout(function () {
+            Msgboy.reconnectionTimeout = null;
+            Msgboy.connect();
+        }, Math.pow(Msgboy.reconnectDelay, 2) * 1000);
+    }
+};
+
+// Connects the XMPP Client
+// It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
+Msgboy.connect = function () {
+    Msgboy.connection.rawInput = function (data) {
+        Msgboy.log.raw('RECV', data);
+    };
+    Msgboy.connection.rawOutput = function (data) {
+        Msgboy.log.raw('SENT', data);
+    };
+    var password = Msgboy.inbox.attributes.password;
+    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
+    Msgboy.connection.connect(jid, password, this.onConnect);
+};
+
+// Shows a popup notification
+Msgboy.notify = function (message, popup) {
+    // Open a notification window if needed!
+    if (!Msgboy.currentNotification && popup) {
+        url = chrome.extension.getURL('/views/html/notification.html');
+        Msgboy.currentNotification = window.webkitNotifications.createHTMLNotification(url);
+        Msgboy.currentNotification.onclose = function () {
+            Msgboy.currentNotification = null;
+        };
+        Msgboy.currentNotification.ready = false;
+        Msgboy.currentNotification.show();
+        Msgboy.messageStack.push(message);
+    }
+    else {
+        chrome.extension.sendRequest({
+            signature: "notify",
+            params: message
+        }, function (response) {
+            // Nothing to do.
+        });
+    }
+    return Msgboy.currentNotification;
+};
+
+// Subscribes to a feed.
+Msgboy.subscribe = function (url, force, callback) {
+    // First, let's check if we have a subscription for this.
+    var subscription = new Subscription({id: url});
+    
+    subscription.fetchOrCreate(function () {
+        // Looks like there is a subscription.
+        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
+            subscription.setState("subscribing");
+            subscription.bind("subscribing", function () {
+                Msgboy.log.debug("subscribing to", url);
+                Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
+                    Msgboy.log.debug("subscribed to", url);
+                    subscription.setState("subscribed");
+                });
+            });
+            subscription.bind("subscribed", function () {
+                callback(true);
+            });
+        }
+        else {
+            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
+            callback(false);
+        }
+    });
+};
+
+// Unsubscribes from a feed.
+Msgboy.unsubscribe = function (url, callback) {
+    var subscription = new Subscription({id: url});
+    subscription.fetchOrCreate(function () {
+        subscription.setState("unsubscribing");
+        subscription.bind("unsubscribing", function () {
+            Msgboy.log.debug("unsubscribing from", url);
+            Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
+                Msgboy.log.debug("unsubscribed", url);
+                subscription.setState("unsubscribed");
+            });
+        });
+        subscription.bind("unsubscribed", function () {
+            callback(true);
+        });
+    });
+};
+
+// Makes sure there is no 'pending' susbcriptions.
+Msgboy.resumeSubscriptions = function () {
+    var subscriptions  = new Subscriptions();
+    subscriptions.bind("add", function (subs) {
+        Msgboy.log.debug("subscribing to", subs.id);
+        Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
+            Msgboy.log.debug("subscribed to", subs.id);
+            subs.setState("subscribed");
+        });
+    });
+    subscriptions.pending();
+    setTimeout(function () {
+        Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
+    }, 1000 * 60 * 10);
+};
+
+// Extracts the largest image of an HTML content
+Msgboy.extractLargestImage = function(blob, callback) {
+    var container = $("<div>");
+    var largestImg = null;
+    var largestImgSize = null;
+    var done = null;
+    
+    var timeout = setTimeout(function() {
+        done();
+    }, 3000); // We allow for 3 seconds to extract images.
+    
+    done = function() {
+        clearTimeout(timeout);
+        callback(largestImg);
+    } // When done, let's just cancel the timeout and callback with the largest image.
+    
+    try {
+        var content = $(blob)
+        container.append(content);
+        var images = container.find("img");
+
+        if(images.length > 0) {
+            // Let's try to extract the image for this message.
+
+            var imgLoaded = _.after(images.length, function() {
+                done();
+            });
+
+            _.each(images, function(image) {
+                var src = $(image).attr('src');
+                if(!src || typeof src === "undefined") {
+                    imgLoaded();
+                }
+                else {
+                    var imgTag = $("<img/>").attr("src", src);
+                    imgTag.load(function() {
+                        if((!largestImgSize || largestImgSize < this.height * this.width) && 
+                        !(this.height === 250 && this.width === 300) && 
+                        !(this.height < 100  || this.width < 100) &&
+                        !src.match('/doubleclick.net/')) {
+                            largestImgSize = this.height * this.width;
+                            largestImg = src;
+                        }
+                        imgLoaded();
+                    });
+                }
+            });
+        }
+        else {
+            // No image!
+            done();
+        }
+    }
+    catch(err) {
+        Msgboy.log.error("Couldn't extract images from", blob, err);
+        done();
+    }
+}
+
+exports.Msgboy = Msgboy;
+
+
+});
+
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    defaults: {
+        subscribedAt: 0,
+        unsubscribedAt: 0,
+        state: "unsubscribed"
+    },
+    initialize: function (attributes) {
+    },
+    fetchOrCreate: function (callback) {
+        this.fetch({
+            success: function () {
+                // The subscription exists!
+                callback();
+            }.bind(this),
+            error: function () {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save({}, {
+                    success: function () {
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
+                    }
+                });
+            }.bind(this)
+        });
+    },
+    needsRefresh: function () {
+        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
+});
+
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
+});
+
 require.define("/node_modules/backbone-indexeddb/package.json", function (require, module, exports, __dirname, __filename) {
 module.exports = {"main":"backbone-indexeddb.js"}
 });
@@ -12349,7 +12753,8 @@ module.exports = {"main":"backbone.js"}
 });
 
 require.define("/node_modules/Backbone/backbone.js", function (require, module, exports, __dirname, __filename) {
-//     Backbone.js 0.5.3
+//     Backbone.js 0.9.1
+
 //     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Backbone may be freely distributed under the MIT license.
 //     For all details and documentation:
@@ -12360,10 +12765,12 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
   // Initial Setup
   // -------------
 
-  // Save a reference to the global object.
+  // Save a reference to the global object (`window` in the browser, `global`
+  // on the server).
   var root = this;
 
-  // Save the previous value of the `Backbone` variable.
+  // Save the previous value of the `Backbone` variable, so that it can be
+  // restored later on, if `noConflict` is used.
   var previousBackbone = root.Backbone;
 
   // Create a local reference to slice/splice.
@@ -12380,7 +12787,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
   }
 
   // Current version of the library. Keep in sync with `package.json`.
-  Backbone.VERSION = '0.5.3';
+  Backbone.VERSION = '0.9.1';
 
   // Require Underscore, if we're on the server, and it's not already present.
   var _ = root._;
@@ -12388,6 +12795,15 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
 
   // For Backbone's purposes, jQuery, Zepto, or Ender owns the `$` variable.
   var $ = root.jQuery || root.Zepto || root.ender;
+
+  // Set the JavaScript library that will be used for DOM manipulation and
+  // Ajax calls (a.k.a. the `$` variable). By default Backbone will use: jQuery,
+  // Zepto, or Ender; but the `setDomLibrary()` method lets you inject an
+  // alternate JavaScript library (or a mock library for testing your views
+  // outside of a browser).
+  Backbone.setDomLibrary = function(lib) {
+    $ = lib;
+  };
 
   // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
   // to its previous owner. Returns a reference to this Backbone object.
@@ -12515,16 +12931,13 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     if (!this.set(attributes, {silent: true})) {
       throw new Error("Can't create an invalid model");
     }
-    this._changed = false;
+    delete this._changed;
     this._previousAttributes = _.clone(this.attributes);
     this.initialize.apply(this, arguments);
   };
 
   // Attach all inheritable methods to the Model prototype.
   _.extend(Backbone.Model.prototype, Backbone.Events, {
-
-    // Has the item been changed since the last `"change"` event?
-    _changed: false,
 
     // The default name for the JSON `id` attribute is `"id"`. MongoDB and
     // CouchDB users may want to set this to `"_id"`.
@@ -12574,40 +12987,40 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       options || (options = {});
       if (!attrs) return this;
       if (attrs instanceof Backbone.Model) attrs = attrs.attributes;
-      if (options.unset) for (var attr in attrs) attrs[attr] = void 0;
-      var now = this.attributes, escaped = this._escapedAttributes;
+      if (options.unset) for (attr in attrs) attrs[attr] = void 0;
 
       // Run validation.
-      if (this.validate && !this._performValidation(attrs, options)) return false;
+      if (!this._validate(attrs, options)) return false;
 
       // Check for changes of `id`.
       if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
 
-      // We're about to start triggering change events.
-      var alreadyChanging = this._changing;
-      this._changing = true;
+      var now = this.attributes;
+      var escaped = this._escapedAttributes;
+      var prev = this._previousAttributes || {};
+      var alreadySetting = this._setting;
+      this._changed || (this._changed = {});
+      this._setting = true;
 
       // Update attributes.
-      var changes = {};
       for (attr in attrs) {
         val = attrs[attr];
-        if (!_.isEqual(now[attr], val) || (options.unset && (attr in now))) {
-          delete escaped[attr];
-          this._changed = true;
-          changes[attr] = val;
-        }
+        if (!_.isEqual(now[attr], val)) delete escaped[attr];
         options.unset ? delete now[attr] : now[attr] = val;
+        if (this._changing && !_.isEqual(this._changed[attr], val)) {
+          this.trigger('change:' + attr, this, val, options);
+          this._moreChanges = true;
+        }
+        delete this._changed[attr];
+        if (!_.isEqual(prev[attr], val) || (_.has(now, attr) != _.has(prev, attr))) {
+          this._changed[attr] = val;
+        }
       }
 
-      // Fire `change:attribute` events.
-      for (var attr in changes) {
-        if (!options.silent) this.trigger('change:' + attr, this, changes[attr], options);
-      }
-
-      // Fire the `"change"` event, if the model has been changed.
-      if (!alreadyChanging) {
-        if (!options.silent && this._changed) this.change(options);
-        this._changing = false;
+      // Fire the `"change"` events, if the model has been changed.
+      if (!alreadySetting) {
+        if (!options.silent && this.hasChanged()) this.change(options);
+        this._setting = false;
       }
       return this;
     },
@@ -12645,7 +13058,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     // If the server returns an attributes hash that differs, the model's
     // state will be `set` again.
     save: function(key, value, options) {
-      var attrs;
+      var attrs, current;
       if (_.isObject(key) || key == null) {
         attrs = key;
         options = value;
@@ -12655,7 +13068,11 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       }
 
       options = options ? _.clone(options) : {};
-      if (attrs && !this[options.wait ? '_performValidation' : 'set'](attrs, options)) return false;
+      if (options.wait) current = _.clone(this.attributes);
+      var silentOptions = _.extend({}, options, {silent: true});
+      if (attrs && !this.set(attrs, options.wait ? silentOptions : options)) {
+        return false;
+      }
       var model = this;
       var success = options.success;
       options.success = function(resp, status, xhr) {
@@ -12670,7 +13087,9 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       };
       options.error = Backbone.wrapError(options.error, model, options);
       var method = this.isNew() ? 'create' : 'update';
-      return (this.sync || Backbone.sync).call(this, method, this, options);
+      var xhr = (this.sync || Backbone.sync).call(this, method, this, options);
+      if (options.wait) this.set(current, silentOptions);
+      return xhr;
     },
 
     // Destroy this model on the server if it was already persisted.
@@ -12725,35 +13144,45 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       return this.id == null;
     },
 
-    // Call this method to manually fire a `change` event for this model.
+    // Call this method to manually fire a `"change"` event for this model and
+    // a `"change:attribute"` event for each changed attribute.
     // Calling this will cause all objects observing the model to update.
     change: function(options) {
-      this.trigger('change', this, options);
+      if (this._changing || !this.hasChanged()) return this;
+      this._changing = true;
+      this._moreChanges = true;
+      for (var attr in this._changed) {
+        this.trigger('change:' + attr, this, this._changed[attr], options);
+      }
+      while (this._moreChanges) {
+        this._moreChanges = false;
+        this.trigger('change', this, options);
+      }
       this._previousAttributes = _.clone(this.attributes);
-      this._changed = false;
+      delete this._changed;
+      this._changing = false;
+      return this;
     },
 
     // Determine if the model has changed since the last `"change"` event.
     // If you specify an attribute name, determine if that attribute has changed.
     hasChanged: function(attr) {
-      if (attr) return !_.isEqual(this._previousAttributes[attr], this.attributes[attr]);
-      return this._changed;
+      if (!arguments.length) return !_.isEmpty(this._changed);
+      return this._changed && _.has(this._changed, attr);
     },
 
     // Return an object containing all the attributes that have changed, or
     // false if there are no changed attributes. Useful for determining what
     // parts of a view need to be updated and/or what attributes need to be
     // persisted to the server. Unset attributes will be set to undefined.
-    changedAttributes: function(now) {
-      if (!this._changed) return false;
-      now || (now = this.attributes);
-      var changed = false, old = this._previousAttributes;
-      for (var attr in now) {
-        if (_.isEqual(old[attr], now[attr])) continue;
-        (changed || (changed = {}))[attr] = now[attr];
-      }
-      for (var attr in old) {
-        if (!(attr in now)) (changed || (changed = {}))[attr] = void 0;
+    // You can also pass an attributes object to diff against the model,
+    // determining if there *would be* a change.
+    changedAttributes: function(diff) {
+      if (!diff) return this.hasChanged() ? _.clone(this._changed) : false;
+      var val, changed = false, old = this._previousAttributes;
+      for (var attr in diff) {
+        if (_.isEqual(old[attr], (val = diff[attr]))) continue;
+        (changed || (changed = {}))[attr] = val;
       }
       return changed;
     },
@@ -12761,7 +13190,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     // Get the previous value of an attribute, recorded at the time the last
     // `"change"` event was fired.
     previous: function(attr) {
-      if (!attr || !this._previousAttributes) return null;
+      if (!arguments.length || !this._previousAttributes) return null;
       return this._previousAttributes[attr];
     },
 
@@ -12771,21 +13200,26 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       return _.clone(this._previousAttributes);
     },
 
+    // Check if the model is currently in a valid state. It's only possible to
+    // get into an *invalid* state if you're using silent changes.
+    isValid: function() {
+      return !this.validate(this.attributes);
+    },
+
     // Run validation against a set of incoming attributes, returning `true`
     // if all is well. If a specific `error` callback has been passed,
     // call that instead of firing the general `"error"` event.
-    _performValidation: function(attrs, options) {
-      var newAttrs = _.extend({}, this.attributes, attrs);
-      var error = this.validate(newAttrs, options);
-      if (error) {
-        if (options.error) {
-          options.error(this, error, options);
-        } else {
-          this.trigger('error', this, error, options);
-        }
-        return false;
+    _validate: function(attrs, options) {
+      if (options.silent || !this.validate) return true;
+      attrs = _.extend({}, this.attributes, attrs);
+      var error = this.validate(attrs, options);
+      if (!error) return true;
+      if (options && options.error) {
+        options.error(this, error, options);
+      } else {
+        this.trigger('error', this, error, options);
       }
-      return true;
+      return false;
     }
 
   });
@@ -12824,24 +13258,33 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     // Add a model, or list of models to the set. Pass **silent** to avoid
     // firing the `add` event for every new model.
     add: function(models, options) {
-      var i, index, length, model, cids = {};
+      var i, index, length, model, cid, id, cids = {}, ids = {};
       options || (options = {});
       models = _.isArray(models) ? models.slice() : [models];
+
+      // Begin by turning bare objects into model references, and preventing
+      // invalid models or duplicate models from being added.
       for (i = 0, length = models.length; i < length; i++) {
         if (!(model = models[i] = this._prepareModel(models[i], options))) {
           throw new Error("Can't add an invalid model to a collection");
         }
-        var hasId = model.id != null;
-        if (this._byCid[model.cid] || (hasId && this._byId[model.id])) {
+        if (cids[cid = model.cid] || this._byCid[cid] ||
+          (((id = model.id) != null) && (ids[id] || this._byId[id]))) {
           throw new Error("Can't add the same model to a collection twice");
         }
+        cids[cid] = ids[id] = model;
       }
+
+      // Listen to added models' events, and index models for lookup by
+      // `id` and by `cid`.
       for (i = 0; i < length; i++) {
         (model = models[i]).on('all', this._onModelEvent, this);
         this._byCid[model.cid] = model;
         if (model.id != null) this._byId[model.id] = model;
-        cids[model.cid] = true;
       }
+
+      // Insert models into the collection, re-sorting if needed, and triggering
+      // `add` events unless silenced.
       this.length += length;
       index = options.at != null ? options.at : this.models.length;
       splice.apply(this.models, [index, 0].concat(models));
@@ -12858,7 +13301,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     // Remove a model, or a list of models from the set. Pass silent to avoid
     // firing the `remove` event for every model removed.
     remove: function(models, options) {
-      var i, index, model;
+      var i, l, index, model;
       options || (options = {});
       models = _.isArray(models) ? models.slice() : [models];
       for (i = 0, l = models.length; i < l; i++) {
@@ -12989,13 +13432,13 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       this._byCid = {};
     },
 
-    // Prepare a model to be added to this collection
+    // Prepare a model or hash of attributes to be added to this collection.
     _prepareModel: function(model, options) {
       if (!(model instanceof Backbone.Model)) {
         var attrs = model;
         options.collection = this;
         model = new this.model(attrs, options);
-        if (model.validate && !model._performValidation(model.attributes, options)) model = false;
+        if (!model._validate(model.attributes, options)) model = false;
       } else if (!model.collection) {
         model.collection = this;
       }
@@ -13083,6 +13526,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
         this.trigger.apply(this, ['route:' + name].concat(args));
         Backbone.history.trigger('route', this, name, args);
       }, this));
+      return this;
     },
 
     // Simple proxy to `Backbone.history` to save a fragment into the history.
@@ -13159,9 +13603,9 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
           fragment = window.location.hash;
         }
       }
-      fragment = decodeURIComponent(fragment.replace(routeStripper, ''));
+      fragment = decodeURIComponent(fragment);
       if (!fragment.indexOf(this.options.root)) fragment = fragment.substr(this.options.root.length);
-      return fragment;
+      return fragment.replace(routeStripper, '');
     },
 
     // Start the hash change handling, returning `true` if the current URL matches
@@ -13199,11 +13643,17 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       historyStarted = true;
       var loc = window.location;
       var atRoot  = loc.pathname == this.options.root;
+
+      // If we've started off with a route from a `pushState`-enabled browser,
+      // but we're currently in a browser that doesn't support it...
       if (this._wantsHashChange && this._wantsPushState && !this._hasPushState && !atRoot) {
         this.fragment = this.getFragment(null, true);
         window.location.replace(this.options.root + '#' + this.fragment);
         // Return immediately as browser will do redirect to new url
         return true;
+
+      // Or if we've started out with a hash-based route, but we're currently
+      // in a browser where it could be `pushState`-based instead...
       } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
         this.fragment = loc.hash.replace(routeStripper, '');
         window.history.replaceState({}, document.title, loc.protocol + '//' + loc.host + this.options.root + this.fragment);
@@ -13264,10 +13714,15 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       if (!options || options === true) options = {trigger: options};
       var frag = (fragment || '').replace(routeStripper, '');
       if (this.fragment == frag || this.fragment == decodeURIComponent(frag)) return;
+
+      // If pushState is available, we use it to set the fragment as a real URL.
       if (this._hasPushState) {
         if (frag.indexOf(this.options.root) != 0) frag = this.options.root + frag;
         this.fragment = frag;
         window.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, frag);
+
+      // If hash changes haven't been explicitly disabled, update the hash
+      // fragment to store history.
       } else if (this._wantsHashChange) {
         this.fragment = frag;
         this._updateHash(window.location, frag, options.replace);
@@ -13277,6 +13732,9 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
           if(!options.replace) this.iframe.document.open().close();
           this._updateHash(this.iframe.location, frag, options.replace);
         }
+
+      // If you've told us that you explicitly don't want fallback hashchange-
+      // based history, then `navigate` becomes a page refresh.
       } else {
         window.location.assign(this.options.root + fragment);
       }
@@ -13322,7 +13780,7 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     // jQuery delegate for element lookup, scoped to DOM elements within the
     // current view. This should be prefered to global lookups where possible.
     $: function(selector) {
-      return $(selector, this.el);
+      return this.$el.find(selector);
     },
 
     // Initialize is an empty function by default. Override it with your own
@@ -13355,10 +13813,13 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
       return el;
     },
 
+    // Change the view's element (`this.el` property), including event
+    // re-delegation.
     setElement: function(element, delegate) {
       this.$el = $(element);
       this.el = this.$el[0];
       if (delegate !== false) this.delegateEvents();
+      return this;
     },
 
     // Set callbacks, where `this.events` is a hash of
@@ -13396,6 +13857,8 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
     },
 
     // Clears all callbacks previously bound to the view with `delegateEvents`.
+    // You usually don't need to use this, but may wish to if you have multiple
+    // Backbone views attached to the same DOM element.
     undelegateEvents: function() {
       this.$el.unbind('.delegateEvents' + this.cid);
     },
@@ -13513,11 +13976,11 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
   // Wrap an optional error callback with a fallback error event.
   Backbone.wrapError = function(onError, originalModel, options) {
     return function(model, resp) {
-      var resp = model === originalModel ? resp : model;
+      resp = model === originalModel ? resp : model;
       if (onError) {
-        onError(model, resp, options);
+        onError(originalModel, resp, options);
       } else {
-        originalModel.trigger('error', model, resp, options);
+        originalModel.trigger('error', originalModel, resp, options);
       }
     };
   };
@@ -13580,410 +14043,6 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
   };
 
 }).call(this);
-
-});
-
-require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-var Subscriptions = require('./models/subscription.js').Subscriptions;
-var Subscription = require('./models/subscription.js').Subscription;
-
-if (typeof Msgboy === "undefined") {
-    var Msgboy = {};
-}
-
-// Extending Msgboy with the Backbone events
-_.extend(Msgboy, Backbone.Events);
-
-// Logs messages to the console
-console._log = console.log;
-Msgboy.log =  {
-    levels: {
-        RAW: 0,
-        DEBUG: 10,
-        INFO: 20,
-        ERROR: 30,
-    },
-    _log: Function.prototype.bind.call(console._log, console),
-    raw: function () {
-        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
-            var args = Array.prototype.slice.call(arguments);  
-            args.unshift('raw');
-            this._log.apply(console, args);
-        }
-    },
-    debug: function () {
-        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
-            var args = Array.prototype.slice.call(arguments);  
-            args.unshift('debug');
-            this._log.apply(console, args);
-        }
-    },
-    info: function () {
-        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
-            var args = Array.prototype.slice.call(arguments);  
-            args.unshift('info');
-            this._log.apply(console, args);
-        }
-    },
-    error: function () {
-        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
-            var args = Array.prototype.slice.call(arguments);  
-            args.unshift('error');
-            this._log.apply(console, args);
-        }
-    },
-}
-
-// Also, hijack all console.log messages
-console.log = function() {
-    var args = Array.prototype.slice.call(arguments);  
-    args.unshift('debug');
-    Msgboy.log.debug.apply(this, args);
-}
-
-// Attributes
-Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
-Msgboy.autoReconnect = true;
-Msgboy.currentNotification = null;
-Msgboy.messageStack = [];
-Msgboy.connectionTimeout = null;
-Msgboy.reconnectDelay = 1;
-Msgboy.connection = null;
-Msgboy.infos = {};
-Msgboy.inbox = null;
-Msgboy.reconnectionTimeout = null;
-
-// Returns the environment in which this msgboy is running
-Msgboy.environment = function () {
-    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
-        return "production";
-    }
-    else {
-        return "development";
-    }
-};
-
-if(Msgboy.environment() === "development") {
-    Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
-}
-
-// Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
-Msgboy.run =  function () {
-    window.onload = function () {
-        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
-            Msgboy.infos = extension_infos;
-            Msgboy.trigger("loaded");
-        });
-    }
-};
-
-// Handles XMPP Connections
-Msgboy.onConnect = function (status) {
-    var msg = '';
-    if (status === Strophe.Status.CONNECTING) {
-        msg = 'Msgboy is connecting.';
-    } else if (status === Strophe.Status.CONNFAIL) {
-        msg = 'Msgboy failed to connect.';
-        Msgboy.reconnectDelay = 1;
-        if (Msgboy.autoReconnect) {
-            Msgboy.reconnect();
-        }
-    } else if (status === Strophe.Status.AUTHFAIL) {
-        msg = 'Msgboy couldn\'t authenticate. Please check your credentials';
-        Msgboy.autoReconnect = false; // We need to open the settings tab
-        chrome.tabs.create({
-            url: chrome.extension.getURL('/views/html/options.html'),
-            selected: true
-        });
-    } else if (status === Strophe.Status.DISCONNECTING) {
-        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
-    } else if (status === Strophe.Status.DISCONNECTED) {
-        if (Msgboy.autoReconnect) {
-            Msgboy.reconnect();
-        }
-        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(Msgboy.reconnectDelay, 2) + ' seconds.';
-    } else if (status === Strophe.Status.CONNECTED) {
-        Msgboy.autoReconnect = true; // Set autoReconnect to true only when we've been connected :)
-        msg = 'Msgboy is connected.';
-        Msgboy.reconnectDelay = 1;
-        Msgboy.connection.send($pres().tree()); // Send presence!
-        Msgboy.trigger('connected');
-    }
-    Msgboy.log.debug(msg);
-};
-
-// Reconnects the Msgboy
-Msgboy.reconnect = function () {
-    Msgboy.reconnectDelay = Math.min(Msgboy.reconnectDelay + 1, 10); // We max at one attempt every minute.
-    if (!Msgboy.reconnectionTimeout) {
-        Msgboy.reconnectionTimeout = setTimeout(function () {
-            Msgboy.reconnectionTimeout = null;
-            Msgboy.connect();
-        }, Math.pow(Msgboy.reconnectDelay, 2) * 1000);
-    }
-};
-
-// Connects the XMPP Client
-// It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
-Msgboy.connect = function () {
-    Msgboy.connection.rawInput = function (data) {
-        Msgboy.log.raw('RECV', data);
-    };
-    Msgboy.connection.rawOutput = function (data) {
-        Msgboy.log.raw('SENT', data);
-    };
-    var password = Msgboy.inbox.attributes.password;
-    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
-    Msgboy.connection.connect(jid, password, this.onConnect);
-};
-
-// Shows a popup notification
-Msgboy.notify = function (message, popup) {
-    // Open a notification window if needed!
-    if (!Msgboy.currentNotification && popup) {
-        url = chrome.extension.getURL('/views/html/notification.html');
-        Msgboy.currentNotification = window.webkitNotifications.createHTMLNotification(url);
-        Msgboy.currentNotification.onclose = function () {
-            Msgboy.currentNotification = null;
-        };
-        Msgboy.currentNotification.ready = false;
-        Msgboy.currentNotification.show();
-        Msgboy.messageStack.push(message);
-    }
-    else {
-        chrome.extension.sendRequest({
-            signature: "notify",
-            params: message
-        }, function (response) {
-            // Nothing to do.
-        });
-    }
-    return Msgboy.currentNotification;
-};
-
-// Subscribes to a feed.
-Msgboy.subscribe = function (url, force, callback) {
-    // First, let's check if we have a subscription for this.
-    var subscription = new Subscription({id: url});
-    
-    subscription.fetchOrCreate(function () {
-        // Looks like there is a subscription.
-        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
-            subscription.setState("subscribing");
-            subscription.bind("subscribing", function () {
-                Msgboy.log.debug("subscribing to", url);
-                Msgboy.connection.superfeedr.subscribe(url, function (result, feed) {
-                    Msgboy.log.debug("subscribed to", url);
-                    subscription.setState("subscribed");
-                });
-            });
-            subscription.bind("subscribed", function () {
-                callback(true);
-            });
-        }
-        else {
-            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
-            callback(false);
-        }
-    });
-};
-
-// Unsubscribes from a feed.
-Msgboy.unsubscribe = function (url, callback) {
-    var subscription = new Subscription({id: url});
-    subscription.fetchOrCreate(function () {
-        subscription.setState("unsubscribing");
-        subscription.bind("unsubscribing", function () {
-            Msgboy.log.debug("unsubscribing from", url);
-            Msgboy.connection.superfeedr.unsubscribe(url, function (result) {
-                Msgboy.log.debug("unsubscribed", url);
-                subscription.setState("unsubscribed");
-            });
-        });
-        subscription.bind("unsubscribed", function () {
-            callback(true);
-        });
-    });
-};
-
-// Makes sure there is no 'pending' susbcriptions.
-Msgboy.resumeSubscriptions = function () {
-    var subscriptions  = new Subscriptions();
-    subscriptions.bind("add", function (subs) {
-        Msgboy.log.debug("subscribing to", subs.id);
-        Msgboy.connection.superfeedr.subscribe(subs.id, function (result, feed) {
-            Msgboy.log.debug("subscribed to", subs.id);
-            subs.setState("subscribed");
-        });
-    });
-    subscriptions.pending();
-    setTimeout(function () {
-        Msgboy.resumeSubscriptions(); // Let's retry in 10 minutes.
-    }, 1000 * 60 * 10);
-};
-
-// Extracts the largest image of an HTML content
-Msgboy.extractLargestImage = function(blob, callback) {
-    var container = $("<div>");
-    var largestImg = null;
-    var largestImgSize = null;
-    var done = null;
-    
-    var timeout = setTimeout(function() {
-        done();
-    }, 3000); // We allow for 3 seconds to extract images.
-    
-    done = function() {
-        clearTimeout(timeout);
-        callback(largestImg);
-    } // When done, let's just cancel the timeout and callback with the largest image.
-    
-    try {
-        var content = $(blob)
-        container.append(content);
-        var images = container.find("img");
-
-        if(images.length > 0) {
-            // Let's try to extract the image for this message.
-
-            var imgLoaded = _.after(images.length, function() {
-                done();
-            });
-
-            _.each(images, function(image) {
-                var src = $(image).attr('src');
-                if(!src || typeof src === "undefined") {
-                    imgLoaded();
-                }
-                else {
-                    var imgTag = $("<img/>").attr("src", src);
-                    imgTag.load(function() {
-                        if((!largestImgSize || largestImgSize < this.height * this.width) && 
-                        !(this.height === 250 && this.width === 300) && 
-                        !(this.height < 100  || this.width < 100) &&
-                        !src.match('/doubleclick.net/')) {
-                            largestImgSize = this.height * this.width;
-                            largestImg = src;
-                        }
-                        imgLoaded();
-                    });
-                }
-            });
-        }
-        else {
-            // No image!
-            done();
-        }
-    }
-    catch(err) {
-        Msgboy.log.error("Couldn't extract images from", blob, err);
-        done();
-    }
-}
-
-exports.Msgboy = Msgboy;
-
-
-});
-
-require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
-var msgboyDatabase = require('./database.js').msgboyDatabase;
-
-var Subscription = Backbone.Model.extend({
-    storeName: "subscriptions",
-    database: msgboyDatabase,
-    defaults: {
-        subscribedAt: 0,
-        unsubscribedAt: 0,
-        state: "unsubscribed"
-    },
-    initialize: function (attributes) {
-    },
-    fetchOrCreate: function (callback) {
-        this.fetch({
-            success: function () {
-                // The subscription exists!
-                callback();
-            }.bind(this),
-            error: function () {
-                // There is no such subscription.
-                // Let's save it, then!
-                this.save({}, {
-                    success: function () {
-                        callback();
-                    },
-                    error: function () {
-                        // We're screwed.
-                    }
-                });
-            }.bind(this)
-        });
-    },
-    needsRefresh: function () {
-        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
-            for (var i in Blacklist) {
-                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    },
-    setState: function (_state) {
-        switch (_state) {
-        case "subscribed":
-            this.save({state: _state, subscribedAt: new Date().getTime()}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this)
-            });
-            break;
-        case "unsubscribed":
-            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this)
-            });
-            break;
-        default:
-            this.save({state: _state}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this),
-                error: function (o, e) {
-                    // Dang
-                }
-            });
-        }
-    }
-});
-
-var Subscriptions = Backbone.Collection.extend({
-    storeName: "subscriptions",
-    database: msgboyDatabase,
-    model: Subscription,
-    pending: function () {
-        this.fetch({
-            conditions: {state: "subscribing"},
-            addIndividually: true,
-            limit: 100
-        });
-    }
-});
-
-var Blacklist = [
-    /.*wikipedia\.org\/.*/
-];
-
-exports.Subscription = Subscription;
-exports.Subscriptions = Subscriptions;
 
 });
 
@@ -14065,7 +14124,7 @@ require.define("/views/options-view.js", function (require, module, exports, __d
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
+Backbone.sync = require('backbone-indexeddb').sync;
 var Inbox = require('../models/inbox.js').Inbox;
 
 var OptionsView = Backbone.View.extend({
@@ -14147,7 +14206,7 @@ exports.OptionsView = OptionsView;
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
+Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Message = require('./message.js').Message;
 
@@ -14205,7 +14264,7 @@ var $ = jQuery = require('jquery');
 var _ = require('underscore');
 var parseUri = require('../utils.js').parseUri;
 var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
+Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 var Archive = require('./archive.js').Archive;
 
@@ -14949,7 +15008,7 @@ Msgboy.helper.element.original_size = function (el) {
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
-Backbone.sync = require('msgboy-backbone-adapter').sync;
+Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
 
 var Archive = Backbone.Collection.extend({
@@ -14981,8 +15040,6 @@ exports.Archive = Archive;
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
-
-require.alias("backbone-indexeddb", "/node_modules/msgboy-backbone-adapter");
 
 require.define("/options.js", function (require, module, exports, __dirname, __filename) {
     var Msgboy = require('./msgboy.js').Msgboy;
