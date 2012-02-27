@@ -27,7 +27,7 @@ GoogleReader = function () {
         var feedCount = 0;
         $.get("http://www.google.com/reader/subscriptions/export", function (data) {
             var subscriptions = [];
-            urls = $(data).find("outline").each(function () {
+            var urls = $(data).find("outline").each(function () {
                 feedCount += 1;
                 callback({
                     url:  $(this).attr("xmlUrl"),

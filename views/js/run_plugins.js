@@ -14522,7 +14522,7 @@ GoogleReader = function () {
         var feedCount = 0;
         $.get("http://www.google.com/reader/subscriptions/export", function (data) {
             var subscriptions = [];
-            urls = $(data).find("outline").each(function () {
+            var urls = $(data).find("outline").each(function () {
                 feedCount += 1;
                 callback({
                     url:  $(this).attr("xmlUrl"),
@@ -14704,8 +14704,8 @@ Posterous = function () {
     this.listSubscriptionsPage = function (page, count, callback, done) {
         var that = this;
         $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
-            content = $(data);
-            links = content.find("#subscriptions td.image a");
+            var content = $(data);
+            var links = content.find("#subscriptions td.image a");
             links.each(function (index, link) {
                 callback({
                     url: $(link).attr("href") + "/rss.xml",
