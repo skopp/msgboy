@@ -1,3 +1,5 @@
+var Url = require('url');
+var QueryString = require('querystring');
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
@@ -296,6 +298,21 @@ Msgboy.extractLargestImage = function(blob, callback) {
         Msgboy.log.error("Couldn't extract images from", blob, err);
         done();
     }
+}
+
+// Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
+Msgboy.rewriteOutboundUrl = function(url) {
+    var parsed = Url.parse(url);
+    parsed.href = parsed.search = ""; // Deletes the href and search, which are to be re-composed with the new qs.
+
+    var qs = QueryString.parse(parsed.query);
+    qs.utm_source = 'msgboy'; // Source is Msgboy
+    qs.utm_medium = 'feed'; // Medium is feed
+    qs.utm_campaign = qs.utm_campaign || 'msgboy'; // Campaign is persisted or msgboy
+
+    parsed.query = qs; // Re-assign the query
+    
+    return Url.format(parsed);
 }
 
 exports.Msgboy = Msgboy;

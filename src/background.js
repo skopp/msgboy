@@ -181,6 +181,7 @@ Msgboy.bind("loaded", function () {
     Msgboy.bind('tab', function (params, _sendResponse) {
         Msgboy.log.debug("request", "tab", params.url);
         var active_window = null;
+        params.url = Msgboy.rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
         chrome.windows.getAll({}, function (windows) {
             windows = _.select(windows, function (win) {
                 return win.type ==="normal" && win.focused;
