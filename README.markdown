@@ -102,6 +102,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
 * Make the whole Msgboy lighter. Maybe include less files?
 * Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
+* Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.
 
 ## Publishers
 
