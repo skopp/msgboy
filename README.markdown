@@ -75,6 +75,8 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Do not use "message" or "stories"... let the user decide.</del>
 * <del>Ungrouped stories should stay ungrouped. </del>
 * <del>Remove the parseURI and replace by require('uri') when browserify supports it.</del>
+* <del>Add google Analytics tracking in links for referrals.</del>
+* <del>Measure with Google Analytics.</del>
 * Add support for unsubscription in plugins.
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
@@ -95,8 +97,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
 * Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
 * Ask Bit.ly to redirect msg.by to msgboy.com
-* Add google Analytics tracking in links for referrals.
-* Measure with Google Analytics.
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
