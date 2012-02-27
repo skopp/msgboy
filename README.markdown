@@ -103,6 +103,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Make the whole Msgboy lighter. Maybe include less files?
 * Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
 * Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.
+* Try to merge as many JS files as possible (thanks @beau) to make the msgboy lighter.
 
 ## Publishers
 
