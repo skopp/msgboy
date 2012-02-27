@@ -16369,6 +16369,8 @@ var MessageView = Backbone.View.extend({
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
         this.model.bind('expand', function() {
+            // Let's remember to never group these stories again.
+            this.model.save({ungroup: true});
             $(this.el).removeClass('stack'); // Let's show this bro!
             $(this.el).removeClass('brother'); // Let's show this bro!
             $(this.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
