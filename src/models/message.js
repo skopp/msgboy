@@ -1,6 +1,6 @@
 var $ = jQuery = require('jquery');
 var _ = require('underscore');
-var parseUri = require('../utils.js').parseUri;
+var UrlParser = require('url');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -33,7 +33,7 @@ var Message = Backbone.Model.extend({
             if(params.source.links.alternate) {
                 if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
                     params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
-                    params.sourceHost = params.sourceHost || parseUri(params.sourceLink).host;
+                    params.sourceHost = params.sourceHost || UrlParser.parse(params.sourceLink).hostname;
                 }
                 else {
                     params.sourceLink = params.sourceLink || ""; // Dang. What is it?
