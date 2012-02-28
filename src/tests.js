@@ -1,4 +1,4 @@
-var should = require('chai').should();
+var should = require('chai').should;
 require('./tests/plugins.js');
 require('./tests/models/subscription.js');
 require('./tests/models/archive.js');
