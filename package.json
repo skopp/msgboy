@@ -10,7 +10,7 @@
     ,"backbone-browserify": "*"
     ,"sanitizer": ">=0.0.15"
     ,"mocha": ">=0.13.0"
-    ,"chai": ">=0.4.1"
+    ,"chai": ">=0.4.2"
 }
 ,"repositories": [{"type": "git"
 		  ,"path": "git://github.com/astro/node-xmpp.git"
