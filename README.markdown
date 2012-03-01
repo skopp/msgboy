@@ -104,6 +104,14 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
 * Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.
 * Try to merge as many JS files as possible (thanks @beau) to make the msgboy lighter.
+* Open new tabs right _after_ the dashboard, not at the end of the window, so that the user has an indication of it.
+* Create a landing page for each of the "welcome" blocks.
+* Add a "your data is private" welcome block.
+* Add tooltips when hovering a box that says "visit article".
+* Consider not redrawing the whole dashboard on "-", but just allow for a redraw 'corner'.
+* When "resetting" subscriptions, it should indicate a message to the user...
+* We should show something on empty dashboard... but what?
+
 
 ## Publishers
 
