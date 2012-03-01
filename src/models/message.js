@@ -10,6 +10,7 @@ var Message = Backbone.Model.extend({
     storeName: "messages",
     database: msgboyDatabase,
     defaults: {
+        "url":          "",
         "title":        null,
         "atomId":       null,
         "summary":      null,
@@ -17,10 +18,10 @@ var Message = Backbone.Model.extend({
         "links":        {},
         "createdAt":    0,
         "source":       {},
-        "sourceHost":   null,
-        "sourceLink":   null,
+        "sourceHost":   "",
+        "sourceLink":   "",
         "state":        "new",
-        "feed":         null,
+        "feed":         "",
         "relevance":    0.6
     },
     /* Initializes the messages */
@@ -243,7 +244,7 @@ exports.relevanceMath = relevanceMath;
 
 // Welcome messages
 var WelcomeMessages = [{
-    "title": "Welcome to msgboy! It will show you the web you care about.",
+    "title": "Welcome to msgboy! He will show you the web you care about.",
     "ungroup": true,
     "summary": 'Welcome to msgboy! It will show you the web you care about.',
     "image": '/views/images/msgboy-help-screen-1.png',
@@ -430,7 +431,7 @@ var WelcomeMessages = [{
     "published": new Date().toISOString(),
     "updated": new Date().toISOString()
 }, {
-    "title": "Hit '-' if you're not interested.",
+    "title": "Click '-' if you're not interested.",
     "ungroup": true,
     "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
     "image": "/views/images/msgboy-help-screen-7.png",
