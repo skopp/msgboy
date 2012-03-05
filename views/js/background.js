@@ -19100,7 +19100,9 @@ Msgboy.bind("loaded", function () {
     var messageStack = [];
     var reconnectDelay = 1;
     var reconnectionTimeout = null;
-    var xmppConnection = null;
+    var xmppConnection = new Strophe.Connection({
+        protocol: new Strophe.Websocket('ws://msgboy.com:5280')
+    });
     
     // Handles XMPP Connections
     var onConnect = function (status) {
@@ -19133,6 +19135,7 @@ Msgboy.bind("loaded", function () {
         if (!reconnectionTimeout) {
             reconnectionTimeout = setTimeout(function () {
                 reconnectionTimeout = null;
+                xmppConnection.reset();
                 connect();
             }, Math.pow(reconnectDelay, 2) * 1000);
         }
@@ -19141,10 +19144,6 @@ Msgboy.bind("loaded", function () {
     // Connects the XMPP Client
     // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
     var connect = function () {
-        xmppConnection = new Strophe.Connection({
-            protocol: new Strophe.Websocket('ws://msgboy.com:5280')
-        });
-
         xmppConnection.rawInput = function (data) {
             Msgboy.log.raw('RECV', data);
         };
@@ -19160,7 +19159,7 @@ Msgboy.bind("loaded", function () {
     var notify = function (message, popup) {
         // Open a notification window if needed!
         if (!currentNotification && popup) {
-            url = chrome.extension.getURL('/views/html/notification.html');
+            var url = chrome.extension.getURL('/views/html/notification.html');
             currentNotification = window.webkitNotifications.createHTMLNotification(url);
             currentNotification.onclose = function () {
                 currentNotification = null;
@@ -19227,7 +19226,7 @@ Msgboy.bind("loaded", function () {
 
     // Makes sure there is no 'pending' susbcriptions.
     var resumeSubscriptions = function () {
-        var subscriptions  = new Subscriptions();
+        var subscriptions = new Subscriptions();
         subscriptions.bind("add", function (subs) {
             Msgboy.log.debug("subscribing to", subs.id);
             xmppConnection.superfeedr.subscribe(subs.id, function (result, feed) {
@@ -19246,16 +19245,14 @@ Msgboy.bind("loaded", function () {
         var container = $("<div>");
         var largestImg = null;
         var largestImgSize = null;
-        var done = null;
+        var done = function() {
+            clearTimeout(timeout);
+            callback(largestImg);
+        } // When done, let's just cancel the timeout and callback with the largest image.
 
         var timeout = setTimeout(function() {
             done();
         }, 3000); // We allow for 3 seconds to extract images.
-
-        done = function() {
-            clearTimeout(timeout);
-            callback(largestImg);
-        } // When done, let's just cancel the timeout and callback with the largest image.
 
         try {
             var content = $(blob)
@@ -19304,14 +19301,11 @@ Msgboy.bind("loaded", function () {
     var rewriteOutboundUrl = function(url) {
         var parsed = Url.parse(url);
         parsed.href = parsed.search = ""; // Deletes the href and search, which are to be re-composed with the new qs.
-
         var qs = QueryString.parse(parsed.query);
         qs.utm_source = 'msgboy'; // Source is Msgboy
         qs.utm_medium = 'feed'; // Medium is feed
         qs.utm_campaign = qs.utm_campaign || 'msgboy'; // Campaign is persisted or msgboy
-
         parsed.query = qs; // Re-assign the query
-
         return Url.format(parsed);
     }
 
@@ -19384,45 +19378,47 @@ Msgboy.bind("loaded", function () {
     // Triggered when connected
     Msgboy.bind("connected", function() {
         // When a new notification was received from XMPP line.
-        SuperfeedrPlugin.onNotificationReceived = function (notification) {
-            Msgboy.log.debug("Notification received from " + notification.source.url);
-            if(notification.payload) {
-                var msg = notification.payload;
-                msg.source = notification.source;
-                msg.feed = notification.source.url;
-
-                var message = new Message(msg);
-
-                extractLargestImage(message.get('text'), function(largestImg) {
-                    var attributes = {};
-
-                    if(largestImg) {
-                        attributes.image = largestImg;
-                    }
-
-                    message.calculateRelevance(function (_relevance) {
-                        attributes.relevance = _relevance;
-                        message.save(attributes, {
-                            success: function() {
-                                Msgboy.log.debug("Saved message", msg.id);
-                                Msgboy.inbox.trigger("messages:added", message);
-                            }.bind(this),
-                            error: function() {
-                                Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
-                            }.bind(this)
-                        }); 
-                    }.bind(this));
-                }.bind(this));
-            }
-            else {
-                // Notification with no payload. Not good. We should unsubscribe as it's useless!
-                unsubscribe(notification.source.url, function (result) {
-                    Msgboy.log.debug("Unsubscribed from ", notification.source.url);
-                });
-            }
-        }
         resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
     });
+    
+    SuperfeedrPlugin.onNotificationReceived = function (notification) {
+        Msgboy.log.debug("Notification received from " + notification.source.url);
+        if(notification.payload) {
+            var msg = notification.payload;
+            msg.source = notification.source;
+            msg.feed = notification.source.url;
+
+            var message = new Message(msg);
+
+            extractLargestImage(message.get('text'), function(largestImg) {
+                var attributes = {};
+
+                if(largestImg) {
+                    attributes.image = largestImg;
+                }
+
+                message.calculateRelevance(function (_relevance) {
+                    attributes.relevance = _relevance;
+                    message.save(attributes, {
+                        success: function() {
+                            Msgboy.log.debug("Saved message", msg.id);
+                            Msgboy.inbox.trigger("messages:added", message);
+                        }.bind(this),
+                        error: function() {
+                            Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
+                        }.bind(this)
+                    }); 
+                }.bind(this));
+            }.bind(this));
+        }
+        else {
+            // Notification with no payload. Not good. We should unsubscribe as it's useless!
+            unsubscribe(notification.source.url, function (result) {
+                Msgboy.log.debug("Unsubscribed from ", notification.source.url);
+            });
+        }
+    }
+    
     
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
@@ -19537,7 +19533,7 @@ Msgboy.bind("loaded", function () {
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
-});
+ });
 
 // Main!
 Msgboy.run();
