@@ -77,6 +77,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Remove the parseURI and replace by require('uri') when browserify supports it.</del>
 * <del>Add google Analytics tracking in links for referrals.</del>
 * <del>Measure with Google Analytics.</del>
+* <del>Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.</del>
 * Add support for unsubscription in plugins.
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
@@ -102,7 +103,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
 * Make the whole Msgboy lighter. Maybe include less files?
 * Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
-* Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.
 * Try to merge as many JS files as possible (thanks @beau) to make the msgboy lighter.
 * Open new tabs right _after_ the dashboard, not at the end of the window, so that the user has an indication of it.
 * Create a landing page for each of the "welcome" blocks.
@@ -111,6 +111,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Consider not redrawing the whole dashboard on "-", but just allow for a redraw 'corner'.
 * When "resetting" subscriptions, it should indicate a message to the user...
 * We should show something on empty dashboard... but what?
+* Port node-xmpp to the browser! Ask @dodo and @astro for help!
 
 
 ## Publishers
