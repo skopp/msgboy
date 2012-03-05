@@ -15574,295 +15574,1358 @@ module.exports = function (chai) {
 
 });
 
-require.define("/tests/plugins.js", function (require, module, exports, __dirname, __filename) {
+require.define("/tests/background.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
 var should = require('chai').should();
-var Plugins = require('../plugins.js').Plugins;
+var Background = require('../background.js');
 
-describe('Plugins', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-    
-    describe('importSubscriptions', function() {
-        beforeEach(function(ready) {
-            Plugins.all = [];
-            Plugins.register({
-                listSubscriptions: function(cb, done) {
-                    cb({url: "url1", title: "title1"});
-                    cb({url: 'url2', title: "title2"});
-                    cb({url: 'url3', title: "title3"});
-                    done(3)
-                },
-                name: "Stub 1"
-            });
-            Plugins.register({
-                listSubscriptions: function(cb, done) {
-                    cb({url: "url4", title: "title4"});
-                    cb({url: 'url5', title: "title5"});
-                    done(2)
-                },
-                name: "Stub 2"
-            });
-            ready();
-        });
-        it('should listSubscriptions for each plugin', function(done) {
-            var subscriptionsUrls = []
-            Plugins.importSubscriptions(function(sub) {
-                subscriptionsUrls.push(sub.url)
-            }, function(count) {
-                if(count === 5) {
-                    subscriptionsUrls.should.include('url1');
-                    subscriptionsUrls.should.include('url2');
-                    subscriptionsUrls.should.include('url3');
-                    subscriptionsUrls.should.include('url4');
-                    subscriptionsUrls.should.include('url5');
-                    done();
-                }
-            });
-        });
-    });
-    
-    it("should have a 'Blogger' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === "Blogger") {
+describe('Msgboy', function(){
+    describe('extractLargestImage', function() {
+        it('should return null if there was none', function(done) {
+            Background.extractLargestImage("This is a text sample with no image at all.", null, function(image) {
                 done();
-            }
+            })
         });
-    });
-
-    it("should have a 'Browser Bookmarks' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Browser Bookmarks') {
-                done();
-            }
-        });
-    });
-
-    it("should have a Digg plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Digg') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Disqus Comments' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Disqus Comments') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Generic plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Generic') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Google Reader' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Google Reader') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Browsing History' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Browsing History') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Posterous' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Posterous') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Quora People' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Quora People') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Quora Topics' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Quora Topics') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Status.net' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Status.net') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Tumblr' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Tumblr') {
-                done();
-            }
-        });
-    });
-
-    it("should have a 'Typepad' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Typepad') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Wordpress' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Wordpress') {
-                done();
-            }
-        });
-    });
-    
-    require('./plugins/blogger.js');
-    require('./plugins/bookmarks.js');
-    require('./plugins/digg.js');
-    require('./plugins/disqus.js');
-    require('./plugins/generic.js');
-    require('./plugins/google-reader.js');
-    require('./plugins/history.js');
-    require('./plugins/posterous.js');
-    require('./plugins/quora-people.js');
-    require('./plugins/quora-topics.js');
-    require('./plugins/statusnet.js');
-    require('./plugins/tumblr.js');
-    require('./plugins/typepad.js');
-    require('./plugins/wordpress.js');
-    
-});
-});
-
-require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
-var Msgboy = require('./msgboy.js').Msgboy
-
-var Plugins = {
-    all: [],
-
-    register: function (plugin) {
-        this.all.push(plugin);
-    },
-    importSubscriptions: function (callback, done) {
-        var subscriptionsCount = 0;
         
-        var processNextPlugin = function(plugins) {
-            var plugin = plugins.pop();
-            if(plugin) {
-                Msgboy.log.info("Starting with", plugin.name);
-                plugin.listSubscriptions(function (subscription) {
-                    callback({
-                        url: subscription.url,
-                        title: subscription.title
-                    });
-                }, function (count) {
-                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
-                    subscriptionsCount += count;
-                    processNextPlugin(plugins);
-                });
-            }
-            else {
-                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-                done(subscriptionsCount);
-            }
-        };
+        it('should return an object with src, width and height if there was one', function(done) {
+            var blob = '<p><a href="http://ffffound.com/image/0d9c9495fccbf85ec19ad087e3de1e255f83e518"><img src="http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="0" width="480" height="480"></a></p><p>via <a href="http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg">http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg</a></p>';
+            Background.extractLargestImage(blob, null, function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
+            });
+        });
+        
+        it('should return the largest one', function(done) {
+            var blob = '<p><a href="http://ffffound.com/image/0d9c9495fccbf85ec19ad087e3de1e255f83e518"><img src="http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="0" width="480" height="480"></a></p><p>via <a href="http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg">http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg</a></p>';
+            Background.extractLargestImage(blob, null, function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
+            });
+        });
 
-        var plugins = _.clone(Plugins.all); 
-        processNextPlugin(plugins);
+        it('should return the absolute url based on the base if the url of the image is relative', function(done) {
+            var blob = '<table border="0" cellpadding="2" cellspacing="7" style="vertical-align:top;"><tr><td width="80" align="center" valign="top"><font style="font-size:85%;font-family:arial,sans-serif"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFZlT7-WfGbQvBdlb3CTCuWWGc_kA&amp;url=http://www.theglobeandmail.com/news/world/powerful-storms-destroy-us-towns-kill-at-least-29/article2357253/"><img src="/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="1" width="80" height="80" /><br /><font size="-2">Globe and Mail</font></a></font></td><td valign="top" class="j"><font style="font-size:85%;font-family:arial,sans-serif"><br /><div style="padding-top:0.8em;"><img alt="" height="1" width="1" /></div><div class="lh"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNGflW9pZurmRUryNrispwwpWtC5MQ&amp;url=http://www.washingtonpost.com/national/health-science/henryville-twister-caught-on-tape-140/2012/03/05/gIQAVUtTsR_video.html"><b>Henryville twister caught on tape (1:40)</b></a><br /><font size="-1"><b><font color="#6f6f6f">Washington Post</font></b></font><br /><font size="-1">Mar. 5, 2012 - Sam Lashley, a National Weather Service meteorologist, recorded video of the tornado that hit Henryville, Indiana on Friday. The overall death toll from Friday&#39;s weather is 39, including a toddler who was found in a field.</font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNHJQVT--fmHFLwxuz-O1s5k7Y-Oig&amp;url=http://www.chicagotribune.com/news/local/sns-ap-in--severeweather-indianasnow,0,6707049.story">Wet snow blankets tornado-ravaged S. Ind.; 2 to 4 inches reported in heavily <b>...</b></a><font size="-1" color="#6f6f6f"><nobr>Chicago Tribune</nobr></font></font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFYA02T8-8vs5YPGdeFM_4M_8nVLQ&amp;url=http://articles.cnn.com/2012-03-04/us/us_severe-weather_1_tornado-victims-ef-4-alabama-town?_s%3DPM:US">Grief, resilience after storms rip through states, killing 39</a><font size="-1" color="#6f6f6f"><nobr>CNN</nobr></font></font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFiX2lNXPTwm3lml8zFWPeDKhzc-A&amp;url=http://edition.cnn.com/2012/03/02/us/severe-weather/?hpt%3Dus_c1">28 dead as &#39;enormous outbreak&#39; of tornadoes tears through US</a><font size="-1" color="#6f6f6f"><nobr>CNN International</nobr></font></font><br /><font size="-1" class="p"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNHBXbNnSdIY95atQihXvVJKYbnEqA&amp;url=http://usnews.msnbc.msn.com/_news/2012/03/05/10580677-snowy-weather-adds-to-tornado-survivors-misery"><nobr>msnbc.com</nobr></a>&nbsp;-<a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNEfbNBdF-vjSqb-sV6J0xZK9PGEew&amp;url=http://www.wvnstv.com/story/17079238/search-for-tornado-survivors-continues-in-midwest-and-south"><nobr>WVNS-TV</nobr></a>&nbsp;-<a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNGn3eTSmJJRBrgnmNJrtwyT003uDw&amp;url=http://www.google.com/hostednews/ap/article/ALeqM5gyz7FSxCAbrAylfyaGNAAsDjKBhA?docId%3D02bc49f9c2284618aab33afeb2e4eec1"><nobr>The Associated Press</nobr></a><link rel="syndication-source" href="www.ap.org/02bc49f9c2284618aab33afeb2e4eec1" /></font><br /><font class="p" size="-1"><a class="p" href="http://news.google.com/news/more?pz=1&amp;ned=us&amp;topic=h&amp;num=3&amp;ncl=dNSd1trbK_xkJwMSQJ-gwNagUq1EM"><nobr><b>all 5,372 news articles&nbsp;&raquo;</b></nobr></a></font></div></font></td></tr></table>';
+            Background.extractLargestImage(blob, "http://img.ffffound.com/hello/world", function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
+            });
+        });
+    });
+});
+
+
+});
+
+require.define("/background.js", function (require, module, exports, __dirname, __filename) {
+var Url = require('url');
+var QueryString = require('querystring');
+var $ = jQuery      = require('jquery');
+var Msgboy          = require('./msgboy.js').Msgboy;
+var Plugins         = require('./plugins.js').Plugins;
+var Inbox           = require('./models/inbox.js').Inbox;
+var Message         = require('./models/message.js').Message;
+var WelcomeMessages = require('./models/message.js').WelcomeMessages;
+var Subscriptions   = require('./models/subscription.js').Subscriptions;
+var Subscription    = require('./models/subscription.js').Subscription;
+var Strophe         = require('./strophejs/core.js').Strophe
+var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
+Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
+
+var currentNotification = null;
+var messageStack = [];
+var reconnectDelay = 1;
+var reconnectionTimeout = null;
+var xmppConnection = new Strophe.Connection({
+    protocol: new Strophe.Websocket('ws://msgboy.com:5280')
+});
+
+// Handles XMPP Connections
+var onConnect = function (status) {
+    var msg = '';
+    if (status === Strophe.Status.CONNECTING) {
+        msg = 'Msgboy is connecting.';
+    } else if (status === Strophe.Status.CONNFAIL) {
+        msg = 'Msgboy failed to connect.';
+        reconnectDelay = 1;
+        reconnect();
+    } else if (status === Strophe.Status.AUTHFAIL) {
+        // This should never happen since we register with Msgboy for an account.
+    } else if (status === Strophe.Status.DISCONNECTING) {
+        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
+    } else if (status === Strophe.Status.DISCONNECTED) {
+        reconnect();
+        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(reconnectDelay, 2) + ' seconds.';
+    } else if (status === Strophe.Status.CONNECTED) {
+        msg = 'Msgboy is connected.';
+        reconnectDelay = 1;
+        xmppConnection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
+    }
+    Msgboy.log.debug(msg);
+};
+exports.onConnect = onConnect;
+
+// Reconnects the Msgboy
+var reconnect = function () {
+    reconnectDelay = Math.min(reconnectDelay + 1, 10); // We max at one attempt every minute.
+    if (!reconnectionTimeout) {
+        reconnectionTimeout = setTimeout(function () {
+            reconnectionTimeout = null;
+            xmppConnection.reset();
+            connect();
+        }, Math.pow(reconnectDelay, 2) * 1000);
     }
 };
+exports.reconnect = reconnect;
 
-var Blogger = require('./plugins/blogger.js').Blogger;
-Plugins.register(new Blogger());
-
-var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
-Plugins.register(new Bookmarks());
-
-var Digg = require('./plugins/digg.js').Digg;
-Plugins.register(new Digg());
-
-var Disqus = require('./plugins/disqus.js').Disqus;
-Plugins.register(new Disqus());
-
-var Generic = require('./plugins/generic.js').Generic;
-Plugins.register(new Generic());
-
-var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
-Plugins.register(new GoogleReader());
-
-var History = require('./plugins/history.js').History;
-Plugins.register(new History());
-
-var Posterous = require('./plugins/posterous.js').Posterous;
-Plugins.register(new Posterous());
-
-var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
-Plugins.register(new QuoraPeople());
-
-var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
-Plugins.register(new QuoraTopics());
-
-var Statusnet = require('./plugins/statusnet.js').Statusnet;
-Plugins.register(new Statusnet());
-
-var Tumblr = require('./plugins/tumblr.js').Tumblr;
-Plugins.register(new Tumblr());
-
-var Typepad = require('./plugins/typepad.js').Typepad;
-Plugins.register(new Typepad());
-
-var Wordpress = require('./plugins/wordpress.js').Wordpress;
-Plugins.register(new Wordpress());
-
-
-exports.Plugins = Plugins;
-
-// This is the skeleton for the Plugins
-var Plugin = function () {
-    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function (doc) {
-        // This method needs to returns true if the plugin needs to be applied on this page.
+// Connects the XMPP Client
+// It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
+var connect = function () {
+    xmppConnection.rawInput = function (data) {
+        Msgboy.log.debug('Received', data);
     };
-
-    this.listSubscriptions = function (callback, done) {
-        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
-        // Feeds have the following form {url: _, title: _}.
-        callback([]);
-        done(0);
+    xmppConnection.rawOutput = function (data) {
+        Msgboy.log.debug('Sent', data);
     };
-
-    this.hijack = function (follow, unfollow) {
-        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
-        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
-    };
-
-    this.subscribeInBackground = function (callback) {
-        // The callback needs to be called with a feed object {url: _, title: _}
-        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
-    };
+    var password = Msgboy.inbox.attributes.password;
+    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
+    xmppConnection.connect(jid, password, onConnect);
 };
+exports.connect = connect;
+
+// Shows a popup notification
+var notify = function (message, popup) {
+    // Open a notification window if needed!
+    if (!currentNotification && popup) {
+        var url = chrome.extension.getURL('/views/html/notification.html');
+        currentNotification = window.webkitNotifications.createHTMLNotification(url);
+        currentNotification.onclose = function () {
+            currentNotification = null;
+        };
+        currentNotification.ready = false;
+        currentNotification.show();
+        messageStack.push(message);
+    }
+    else {
+        chrome.extension.sendRequest({
+            signature: "notify",
+            params: message
+        }, function (response) {
+            // Nothing to do.
+        });
+    }
+    return currentNotification;
+};
+exports.notify = notify;
+
+// Subscribes to a feed.
+var subscribe = function (url, force, callback) {
+    // First, let's check if we have a subscription for this.
+    var subscription = new Subscription({id: url});
+
+    subscription.fetchOrCreate(function () {
+        // Looks like there is a subscription.
+        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
+            subscription.setState("subscribing");
+            subscription.bind("subscribing", function () {
+                Msgboy.log.debug("subscribing to", url);
+                xmppConnection.superfeedr.subscribe(url, function (result, feed) {
+                    Msgboy.log.debug("subscribed to", url);
+                    subscription.setState("subscribed");
+                });
+            });
+            subscription.bind("subscribed", function () {
+                callback(true);
+            });
+        }
+        else {
+            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
+            callback(false);
+        }
+    });
+};
+exports.subscribe = subscribe;
+
+// Unsubscribes from a feed.
+var unsubscribe = function (url, callback) {
+    var subscription = new Subscription({id: url});
+    subscription.fetchOrCreate(function () {
+        subscription.setState("unsubscribing");
+        subscription.bind("unsubscribing", function () {
+            Msgboy.log.debug("unsubscribing from", url);
+            xmppConnection.superfeedr.unsubscribe(url, function (result) {
+                Msgboy.log.debug("unsubscribed", url);
+                subscription.setState("unsubscribed");
+            });
+        });
+        subscription.bind("unsubscribed", function () {
+            callback(true);
+        });
+    });
+};
+exports.unsubscribe = unsubscribe;
+
+// Makes sure there is no 'pending' susbcriptions.
+var resumeSubscriptions = function () {
+    var subscriptions = new Subscriptions();
+    subscriptions.bind("add", function (subs) {
+        Msgboy.log.debug("subscribing to", subs.id);
+        xmppConnection.superfeedr.subscribe(subs.id, function (result, feed) {
+            Msgboy.log.debug("subscribed to", subs.id);
+            subs.setState("subscribed");
+        });
+    });
+    subscriptions.pending();
+    setTimeout(function () {
+        resumeSubscriptions(); // Let's retry in 10 minutes.
+    }, 1000 * 60 * 10);
+};
+exports.resumeSubscriptions = resumeSubscriptions;
+
+// Extracts the largest image of an HTML content
+var extractLargestImage = function(blob, mainLink, callback) {
+    var container = $("<div>");
+    var largestImg = null;
+    var largestImgSize = null;
+    var done = function() {
+        clearTimeout(timeout);
+        callback(largestImg);
+    } // When done, let's just cancel the timeout and callback with the largest image.
+
+    var timeout = setTimeout(function() {
+        done();
+    }, 3000); // We allow for 3 seconds to extract images.
+
+    try {
+        var content = $(blob)
+        container.append(content);
+        var images = container.find("img");
+
+        if(images.length > 0) {
+            // Let's try to extract the image for this message.
+            var imgLoaded = _.after(images.length, function() {
+                done();
+            });
+
+            _.each(images, function(image) {
+                var src = $(image).attr('src');
+                if(!src || typeof src === "undefined") {
+                    imgLoaded();
+                }
+                else {
+                    var parsed = Url.parse(src);
+                    if(typeof parsed.host == "undefined") {
+                        var base = Url.parse(mainLink);
+                        src = Url.resolve(base, parsed).toString();
+                    }
+                    
+                    var imgTag = $("<img/>").attr("src", src);
+                    imgTag.load(function() {
+                        if((!largestImgSize || largestImgSize < this.height * this.width) && 
+                        !(this.height === 250 && this.width === 300) && 
+                        !(this.height < 100  || this.width < 100) &&
+                        !src.match('/doubleclick.net/')) {
+                            largestImgSize = this.height * this.width;
+                            largestImg = src;
+                        }
+                        imgLoaded();
+                    });
+                }
+            });
+        }
+        else {
+            // No image!
+            done();
+        }
+    }
+    catch(err) {
+        Msgboy.log.error("Couldn't extract images from", blob, err);
+        done();
+    }
+}
+exports.extractLargestImage = extractLargestImage;
+
+// Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
+var rewriteOutboundUrl = function(url) {
+    var parsed = Url.parse(url);
+    parsed.href = parsed.search = ""; // Deletes the href and search, which are to be re-composed with the new qs.
+    var qs = QueryString.parse(parsed.query);
+    qs.utm_source = 'msgboy'; // Source is Msgboy
+    qs.utm_medium = 'feed'; // Medium is feed
+    qs.utm_campaign = qs.utm_campaign || 'msgboy'; // Campaign is persisted or msgboy
+    parsed.query = qs; // Re-assign the query
+    return Url.format(parsed);
+}
+exports.rewriteOutboundUrl = rewriteOutboundUrl;
+
+SuperfeedrPlugin.onNotificationReceived = function (notification) {
+    Msgboy.log.debug("Notification received from " + notification.source.url);
+    if(notification.payload) {
+        var msg = notification.payload;
+        msg.source = notification.source;
+        msg.feed = notification.source.url;
+
+        var message = new Message(msg);
+
+        extractLargestImage(message.get('text'), message.get('mainLink'), function(largestImg) {
+            var attributes = {};
+
+            if(largestImg) {
+                attributes.image = largestImg;
+            }
+
+            message.calculateRelevance(function (_relevance) {
+                attributes.relevance = _relevance;
+                message.save(attributes, {
+                    success: function() {
+                        Msgboy.log.debug("Saved message", msg.id);
+                        Msgboy.inbox.trigger("messages:added", message);
+                    }.bind(this),
+                    error: function() {
+                        Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
+                    }.bind(this)
+                }); 
+            }.bind(this));
+        }.bind(this));
+    }
+    else {
+        // Notification with no payload. Not good. We should unsubscribe as it's useless!
+        unsubscribe(notification.source.url, function (result) {
+            Msgboy.log.debug("Unsubscribed from ", notification.source.url);
+        });
+    }
+}
+
+Msgboy.bind("loaded", function () {
+    
+    Msgboy.inbox = new Inbox();
+    
+    // When a new message was added to the inbox
+    Msgboy.inbox.bind("messages:added", function (message) {
+        notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
+    });
+
+    // When the inbox is ready
+    Msgboy.inbox.bind("ready", function () {
+        Msgboy.log.debug("Inbox ready");
+        connect(Msgboy.inbox);
+        // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
+        if(Msgboy.inbox.attributes.options.pinMsgboy) {
+            chrome.tabs.getAllInWindow(undefined, function(tabs) {
+                for (var i = 0, tab; tab = tabs[i]; i++) {
+                    if (tab.url && tab.url.match(/chrome-extension:\/\/.*\/views\/html\/dashboard\.html/)) {
+                        // Fine, the tab is opened. No need to do much more.
+                        return;
+                    }
+                }
+                chrome.tabs.create({
+                    url: chrome.extension.getURL('/views/html/dashboard.html'),
+                    selected: true,
+                    pinned: true
+                });
+
+            });
+        }
+    });
+
+    // When the inbox is new.
+    Msgboy.inbox.bind("new", function () {
+        Msgboy.log.debug("New Inbox");
+        // Add a couple boxes for the example!
+        for(var i in WelcomeMessages) {
+            var msg = new Message(WelcomeMessages[i]);
+            msg.save({}, {
+                success: function () {
+                    Msgboy.log.debug("Saved message " + msg.id);
+                }.bind(this),
+                error: function (object, error) {
+                    // Message was not saved... probably a dupe
+                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg.toJSON()));
+                    Msgboy.log.debug(error);
+                }.bind(this)
+            });
+        }
+        
+        Msgboy.bind("connected", function(){
+            // And import all plugins.
+            Plugins.importSubscriptions(function (subs) {
+                subscribe(subs.url, false, function () {
+                    // Cool. Not much to do.
+                });
+            }, function(subscriptionsCount) {
+                // We found subscriptionsCount!
+            });
+        });
+    });
+    
+    // When there is no such inbox there.
+    Msgboy.inbox.bind("error", function (error) {
+        // Ok, no such inbox... So we need to create an account!
+        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
+    });
+    
+    // Triggered when connected
+    Msgboy.bind("connected", function() {
+        // When a new notification was received from XMPP line.
+        resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
+    });
+
+    // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
+    chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
+        Msgboy.trigger(_request.signature, _request.params, _sendResponse);
+    });
+    
+    Msgboy.bind('register', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "register", params.username);
+        Msgboy.inbox.bind("new", function() {
+            _sendResponse({
+                value: true
+            });
+        });
+        Msgboy.inbox.setup(params.username, params.token);
+    });
+
+    Msgboy.bind('subscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "subscribe", params.url);
+        subscribe(params.url, params.force || false, function (result) {
+            _sendResponse({
+                value: result
+            });
+        });
+    });
+
+    Msgboy.bind('unsubscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "unsubscribe", params.url);
+        unsubscribe(params.url, function (result) {
+            _sendResponse({
+                value: result
+            });
+        });
+    });
+
+    Msgboy.bind('notify', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notify", params);
+        notify(params, true);
+        // Nothing to do.
+    });
+
+    Msgboy.bind('notificationReady', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notificationReady");
+        currentNotification.ready = true;
+        // We should then start sending all notifications.
+        while (messageStack.length > 0) {
+            chrome.extension.sendRequest({
+                signature:"notify",
+                params: messageStack.pop()
+            }, function (response) {
+                // Nothing to do.
+            });
+        }
+    });
+
+    Msgboy.bind('tab', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "tab", params.url);
+        var active_window = null;
+        params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
+        chrome.windows.getAll({}, function (windows) {
+            windows = _.select(windows, function (win) {
+                return win.type ==="normal" && win.focused;
+            }, this);
+            // If no window is focused and"normal"
+            if (windows.length === 0) {
+                window.open(params.url); // Can't use Chrome's API as it's buggy :(
+            }
+            else {
+                // Just open an extra tab.
+                options = params;
+                options.windowId = windows[0].id;
+                chrome.tabs.create(options);
+            }
+        });
+    });
+
+    Msgboy.bind('close', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "close");
+        currentNotification = null;
+        _sendResponse({
+            value: true
+        });
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    Msgboy.bind('reload', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "reload");
+        Msgboy.inbox.fetch();
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "resetRusbcriptions");
+        Plugins.importSubscriptions(function (subs) {
+            subscribe(subs.url, false, function () {
+                // Cool. Not much to do.
+            });
+        }, function(subscriptionsCount) {
+            // We found subscriptionsCount!
+        });
+    });
+    
+    // Plugins management for those who use the Chrome API to subscribe in background.
+    $.each(Plugins.all, function (index, plugin) {
+        if (typeof (plugin.subscribeInBackground) != "undefined") {
+            plugin.subscribeInBackground(function (feed) {
+                Msgboy.trigger('subscribe', {url: feed.href}, function() {
+                    // Nothing.
+                });
+            });
+        }
+    });
+    
+    // Let's go.
+    Msgboy.inbox.fetchAndPrepare();
+ });
+
+
+});
+
+require.define("url", function (require, module, exports, __dirname, __filename) {
+var punycode = { encode : function (s) { return s } };
+
+exports.parse = urlParse;
+exports.resolve = urlResolve;
+exports.resolveObject = urlResolveObject;
+exports.format = urlFormat;
+
+// Reference: RFC 3986, RFC 1808, RFC 2396
+
+// define these here so at least they only have to be
+// compiled once on the first module load.
+var protocolPattern = /^([a-z0-9.+-]+:)/i,
+    portPattern = /:[0-9]+$/,
+    // RFC 2396: characters reserved for delimiting URLs.
+    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
+    // RFC 2396: characters not allowed for various reasons.
+    unwise = ['{', '}', '|', '\\', '^', '~', '[', ']', '`'].concat(delims),
+    // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
+    autoEscape = ['\''],
+    // Characters that are never ever allowed in a hostname.
+    // Note that any invalid chars are also handled, but these
+    // are the ones that are *expected* to be seen, so we fast-path
+    // them.
+    nonHostChars = ['%', '/', '?', ';', '#']
+      .concat(unwise).concat(autoEscape),
+    nonAuthChars = ['/', '@', '?', '#'].concat(delims),
+    hostnameMaxLen = 255,
+    hostnamePartPattern = /^[a-zA-Z0-9][a-z0-9A-Z_-]{0,62}$/,
+    hostnamePartStart = /^([a-zA-Z0-9][a-z0-9A-Z_-]{0,62})(.*)$/,
+    // protocols that can allow "unsafe" and "unwise" chars.
+    unsafeProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that never have a hostname.
+    hostlessProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that always have a path component.
+    pathedProtocol = {
+      'http': true,
+      'https': true,
+      'ftp': true,
+      'gopher': true,
+      'file': true,
+      'http:': true,
+      'ftp:': true,
+      'gopher:': true,
+      'file:': true
+    },
+    // protocols that always contain a // bit.
+    slashedProtocol = {
+      'http': true,
+      'https': true,
+      'ftp': true,
+      'gopher': true,
+      'file': true,
+      'http:': true,
+      'https:': true,
+      'ftp:': true,
+      'gopher:': true,
+      'file:': true
+    },
+    querystring = require('querystring');
+
+function urlParse(url, parseQueryString, slashesDenoteHost) {
+  if (url && typeof(url) === 'object' && url.href) return url;
+
+  if (typeof url !== 'string') {
+    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
+  }
+
+  var out = {},
+      rest = url;
+
+  // cut off any delimiters.
+  // This is to support parse stuff like "<http://foo.com>"
+  for (var i = 0, l = rest.length; i < l; i++) {
+    if (delims.indexOf(rest.charAt(i)) === -1) break;
+  }
+  if (i !== 0) rest = rest.substr(i);
+
+
+  var proto = protocolPattern.exec(rest);
+  if (proto) {
+    proto = proto[0];
+    var lowerProto = proto.toLowerCase();
+    out.protocol = lowerProto;
+    rest = rest.substr(proto.length);
+  }
+
+  // figure out if it's got a host
+  // user@server is *always* interpreted as a hostname, and url
+  // resolution will treat //foo/bar as host=foo,path=bar because that's
+  // how the browser resolves relative URLs.
+  if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
+    var slashes = rest.substr(0, 2) === '//';
+    if (slashes && !(proto && hostlessProtocol[proto])) {
+      rest = rest.substr(2);
+      out.slashes = true;
+    }
+  }
+
+  if (!hostlessProtocol[proto] &&
+      (slashes || (proto && !slashedProtocol[proto]))) {
+    // there's a hostname.
+    // the first instance of /, ?, ;, or # ends the host.
+    // don't enforce full RFC correctness, just be unstupid about it.
+
+    // If there is an @ in the hostname, then non-host chars *are* allowed
+    // to the left of the first @ sign, unless some non-auth character
+    // comes *before* the @-sign.
+    // URLs are obnoxious.
+    var atSign = rest.indexOf('@');
+    if (atSign !== -1) {
+      // there *may be* an auth
+      var hasAuth = true;
+      for (var i = 0, l = nonAuthChars.length; i < l; i++) {
+        var index = rest.indexOf(nonAuthChars[i]);
+        if (index !== -1 && index < atSign) {
+          // not a valid auth.  Something like http://foo.com/bar@baz/
+          hasAuth = false;
+          break;
+        }
+      }
+      if (hasAuth) {
+        // pluck off the auth portion.
+        out.auth = rest.substr(0, atSign);
+        rest = rest.substr(atSign + 1);
+      }
+    }
+
+    var firstNonHost = -1;
+    for (var i = 0, l = nonHostChars.length; i < l; i++) {
+      var index = rest.indexOf(nonHostChars[i]);
+      if (index !== -1 &&
+          (firstNonHost < 0 || index < firstNonHost)) firstNonHost = index;
+    }
+
+    if (firstNonHost !== -1) {
+      out.host = rest.substr(0, firstNonHost);
+      rest = rest.substr(firstNonHost);
+    } else {
+      out.host = rest;
+      rest = '';
+    }
+
+    // pull out port.
+    var p = parseHost(out.host);
+    var keys = Object.keys(p);
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i];
+      out[key] = p[key];
+    }
+
+    // we've indicated that there is a hostname,
+    // so even if it's empty, it has to be present.
+    out.hostname = out.hostname || '';
+
+    // validate a little.
+    if (out.hostname.length > hostnameMaxLen) {
+      out.hostname = '';
+    } else {
+      var hostparts = out.hostname.split(/\./);
+      for (var i = 0, l = hostparts.length; i < l; i++) {
+        var part = hostparts[i];
+        if (!part) continue;
+        if (!part.match(hostnamePartPattern)) {
+          var newpart = '';
+          for (var j = 0, k = part.length; j < k; j++) {
+            if (part.charCodeAt(j) > 127) {
+              // we replace non-ASCII char with a temporary placeholder
+              // we need this to make sure size of hostname is not
+              // broken by replacing non-ASCII by nothing
+              newpart += 'x';
+            } else {
+              newpart += part[j];
+            }
+          }
+          // we test again with ASCII char only
+          if (!newpart.match(hostnamePartPattern)) {
+            var validParts = hostparts.slice(0, i);
+            var notHost = hostparts.slice(i + 1);
+            var bit = part.match(hostnamePartStart);
+            if (bit) {
+              validParts.push(bit[1]);
+              notHost.unshift(bit[2]);
+            }
+            if (notHost.length) {
+              rest = '/' + notHost.join('.') + rest;
+            }
+            out.hostname = validParts.join('.');
+            break;
+          }
+        }
+      }
+    }
+
+    // hostnames are always lower case.
+    out.hostname = out.hostname.toLowerCase();
+
+    // IDNA Support: Returns a puny coded representation of "domain".
+    // It only converts the part of the domain name that
+    // has non ASCII characters. I.e. it dosent matter if
+    // you call it with a domain that already is in ASCII.
+    var domainArray = out.hostname.split('.');
+    var newOut = [];
+    for (var i = 0; i < domainArray.length; ++i) {
+      var s = domainArray[i];
+      newOut.push(s.match(/[^A-Za-z0-9_-]/) ?
+          'xn--' + punycode.encode(s) : s);
+    }
+    out.hostname = newOut.join('.');
+
+    out.host = (out.hostname || '') +
+        ((out.port) ? ':' + out.port : '');
+    out.href += out.host;
+  }
+
+  // now rest is set to the post-host stuff.
+  // chop off any delim chars.
+  if (!unsafeProtocol[lowerProto]) {
+
+    // First, make 100% sure that any "autoEscape" chars get
+    // escaped, even if encodeURIComponent doesn't think they
+    // need to be.
+    for (var i = 0, l = autoEscape.length; i < l; i++) {
+      var ae = autoEscape[i];
+      var esc = encodeURIComponent(ae);
+      if (esc === ae) {
+        esc = escape(ae);
+      }
+      rest = rest.split(ae).join(esc);
+    }
+
+    // Now make sure that delims never appear in a url.
+    var chop = rest.length;
+    for (var i = 0, l = delims.length; i < l; i++) {
+      var c = rest.indexOf(delims[i]);
+      if (c !== -1) {
+        chop = Math.min(c, chop);
+      }
+    }
+    rest = rest.substr(0, chop);
+  }
+
+
+  // chop off from the tail first.
+  var hash = rest.indexOf('#');
+  if (hash !== -1) {
+    // got a fragment string.
+    out.hash = rest.substr(hash);
+    rest = rest.slice(0, hash);
+  }
+  var qm = rest.indexOf('?');
+  if (qm !== -1) {
+    out.search = rest.substr(qm);
+    out.query = rest.substr(qm + 1);
+    if (parseQueryString) {
+      out.query = querystring.parse(out.query);
+    }
+    rest = rest.slice(0, qm);
+  } else if (parseQueryString) {
+    // no query string, but parseQueryString still requested
+    out.search = '';
+    out.query = {};
+  }
+  if (rest) out.pathname = rest;
+  if (slashedProtocol[proto] &&
+      out.hostname && !out.pathname) {
+    out.pathname = '/';
+  }
+
+  //to support http.request
+  if (out.pathname || out.search) {
+    out.path = (out.pathname ? out.pathname : '') +
+               (out.search ? out.search : '');
+  }
+
+  // finally, reconstruct the href based on what has been validated.
+  out.href = urlFormat(out);
+  return out;
+}
+
+// format a parsed object into a url string
+function urlFormat(obj) {
+  // ensure it's an object, and not a string url.
+  // If it's an obj, this is a no-op.
+  // this way, you can call url_format() on strings
+  // to clean up potentially wonky urls.
+  if (typeof(obj) === 'string') obj = urlParse(obj);
+
+  var auth = obj.auth || '';
+  if (auth) {
+    auth = auth.split('@').join('%40');
+    for (var i = 0, l = nonAuthChars.length; i < l; i++) {
+      var nAC = nonAuthChars[i];
+      auth = auth.split(nAC).join(encodeURIComponent(nAC));
+    }
+    auth += '@';
+  }
+
+  var protocol = obj.protocol || '',
+      host = (obj.host !== undefined) ? auth + obj.host :
+          obj.hostname !== undefined ? (
+              auth + obj.hostname +
+              (obj.port ? ':' + obj.port : '')
+          ) :
+          false,
+      pathname = obj.pathname || '',
+      query = obj.query &&
+              ((typeof obj.query === 'object' &&
+                Object.keys(obj.query).length) ?
+                 querystring.stringify(obj.query) :
+                 '') || '',
+      search = obj.search || (query && ('?' + query)) || '',
+      hash = obj.hash || '';
+
+  if (protocol && protocol.substr(-1) !== ':') protocol += ':';
+
+  // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
+  // unless they had them to begin with.
+  if (obj.slashes ||
+      (!protocol || slashedProtocol[protocol]) && host !== false) {
+    host = '//' + (host || '');
+    if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
+  } else if (!host) {
+    host = '';
+  }
+
+  if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
+  if (search && search.charAt(0) !== '?') search = '?' + search;
+
+  return protocol + host + pathname + search + hash;
+}
+
+function urlResolve(source, relative) {
+  return urlFormat(urlResolveObject(source, relative));
+}
+
+function urlResolveObject(source, relative) {
+  if (!source) return relative;
+
+  source = urlParse(urlFormat(source), false, true);
+  relative = urlParse(urlFormat(relative), false, true);
+
+  // hash is always overridden, no matter what.
+  source.hash = relative.hash;
+
+  if (relative.href === '') {
+    source.href = urlFormat(source);
+    return source;
+  }
+
+  // hrefs like //foo/bar always cut to the protocol.
+  if (relative.slashes && !relative.protocol) {
+    relative.protocol = source.protocol;
+    //urlParse appends trailing / to urls like http://www.example.com
+    if (slashedProtocol[relative.protocol] &&
+        relative.hostname && !relative.pathname) {
+      relative.path = relative.pathname = '/';
+    }
+    relative.href = urlFormat(relative);
+    return relative;
+  }
+
+  if (relative.protocol && relative.protocol !== source.protocol) {
+    // if it's a known url protocol, then changing
+    // the protocol does weird things
+    // first, if it's not file:, then we MUST have a host,
+    // and if there was a path
+    // to begin with, then we MUST have a path.
+    // if it is file:, then the host is dropped,
+    // because that's known to be hostless.
+    // anything else is assumed to be absolute.
+    if (!slashedProtocol[relative.protocol]) {
+      relative.href = urlFormat(relative);
+      return relative;
+    }
+    source.protocol = relative.protocol;
+    if (!relative.host && !hostlessProtocol[relative.protocol]) {
+      var relPath = (relative.pathname || '').split('/');
+      while (relPath.length && !(relative.host = relPath.shift()));
+      if (!relative.host) relative.host = '';
+      if (!relative.hostname) relative.hostname = '';
+      if (relPath[0] !== '') relPath.unshift('');
+      if (relPath.length < 2) relPath.unshift('');
+      relative.pathname = relPath.join('/');
+    }
+    source.pathname = relative.pathname;
+    source.search = relative.search;
+    source.query = relative.query;
+    source.host = relative.host || '';
+    source.auth = relative.auth;
+    source.hostname = relative.hostname || relative.host;
+    source.port = relative.port;
+    //to support http.request
+    if (source.pathname !== undefined || source.search !== undefined) {
+      source.path = (source.pathname ? source.pathname : '') +
+                    (source.search ? source.search : '');
+    }
+    source.slashes = source.slashes || relative.slashes;
+    source.href = urlFormat(source);
+    return source;
+  }
+
+  var isSourceAbs = (source.pathname && source.pathname.charAt(0) === '/'),
+      isRelAbs = (
+          relative.host !== undefined ||
+          relative.pathname && relative.pathname.charAt(0) === '/'
+      ),
+      mustEndAbs = (isRelAbs || isSourceAbs ||
+                    (source.host && relative.pathname)),
+      removeAllDots = mustEndAbs,
+      srcPath = source.pathname && source.pathname.split('/') || [],
+      relPath = relative.pathname && relative.pathname.split('/') || [],
+      psychotic = source.protocol &&
+          !slashedProtocol[source.protocol];
+
+  // if the url is a non-slashed url, then relative
+  // links like ../.. should be able
+  // to crawl up to the hostname, as well.  This is strange.
+  // source.protocol has already been set by now.
+  // Later on, put the first path part into the host field.
+  if (psychotic) {
+
+    delete source.hostname;
+    delete source.port;
+    if (source.host) {
+      if (srcPath[0] === '') srcPath[0] = source.host;
+      else srcPath.unshift(source.host);
+    }
+    delete source.host;
+    if (relative.protocol) {
+      delete relative.hostname;
+      delete relative.port;
+      if (relative.host) {
+        if (relPath[0] === '') relPath[0] = relative.host;
+        else relPath.unshift(relative.host);
+      }
+      delete relative.host;
+    }
+    mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
+  }
+
+  if (isRelAbs) {
+    // it's absolute.
+    source.host = (relative.host || relative.host === '') ?
+                      relative.host : source.host;
+    source.hostname = (relative.hostname || relative.hostname === '') ?
+                      relative.hostname : source.hostname;
+    source.search = relative.search;
+    source.query = relative.query;
+    srcPath = relPath;
+    // fall through to the dot-handling below.
+  } else if (relPath.length) {
+    // it's relative
+    // throw away the existing file, and take the new path instead.
+    if (!srcPath) srcPath = [];
+    srcPath.pop();
+    srcPath = srcPath.concat(relPath);
+    source.search = relative.search;
+    source.query = relative.query;
+  } else if ('search' in relative) {
+    // just pull out the search.
+    // like href='?foo'.
+    // Put this after the other two cases because it simplifies the booleans
+    if (psychotic) {
+      source.hostname = source.host = srcPath.shift();
+      //occationaly the auth can get stuck only in host
+      //this especialy happens in cases like
+      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+      var authInHost = source.host && source.host.indexOf('@') > 0 ?
+                       source.host.split('@') : false;
+      if (authInHost) {
+        source.auth = authInHost.shift();
+        source.host = source.hostname = authInHost.shift();
+      }
+    }
+    source.search = relative.search;
+    source.query = relative.query;
+    //to support http.request
+    if (source.pathname !== undefined || source.search !== undefined) {
+      source.path = (source.pathname ? source.pathname : '') +
+                    (source.search ? source.search : '');
+    }
+    source.href = urlFormat(source);
+    return source;
+  }
+  if (!srcPath.length) {
+    // no path at all.  easy.
+    // we've already handled the other stuff above.
+    delete source.pathname;
+    //to support http.request
+    if (!source.search) {
+      source.path = '/' + source.search;
+    } else {
+      delete source.path;
+    }
+    source.href = urlFormat(source);
+    return source;
+  }
+  // if a url ENDs in . or .., then it must get a trailing slash.
+  // however, if it ends in anything else non-slashy,
+  // then it must NOT get a trailing slash.
+  var last = srcPath.slice(-1)[0];
+  var hasTrailingSlash = (
+      (source.host || relative.host) && (last === '.' || last === '..') ||
+      last === '');
+
+  // strip single dots, resolve double dots to parent dir
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = srcPath.length; i >= 0; i--) {
+    last = srcPath[i];
+    if (last == '.') {
+      srcPath.splice(i, 1);
+    } else if (last === '..') {
+      srcPath.splice(i, 1);
+      up++;
+    } else if (up) {
+      srcPath.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (!mustEndAbs && !removeAllDots) {
+    for (; up--; up) {
+      srcPath.unshift('..');
+    }
+  }
+
+  if (mustEndAbs && srcPath[0] !== '' &&
+      (!srcPath[0] || srcPath[0].charAt(0) !== '/')) {
+    srcPath.unshift('');
+  }
+
+  if (hasTrailingSlash && (srcPath.join('/').substr(-1) !== '/')) {
+    srcPath.push('');
+  }
+
+  var isAbsolute = srcPath[0] === '' ||
+      (srcPath[0] && srcPath[0].charAt(0) === '/');
+
+  // put the host back
+  if (psychotic) {
+    source.hostname = source.host = isAbsolute ? '' :
+                                    srcPath.length ? srcPath.shift() : '';
+    //occationaly the auth can get stuck only in host
+    //this especialy happens in cases like
+    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+    var authInHost = source.host && source.host.indexOf('@') > 0 ?
+                     source.host.split('@') : false;
+    if (authInHost) {
+      source.auth = authInHost.shift();
+      source.host = source.hostname = authInHost.shift();
+    }
+  }
+
+  mustEndAbs = mustEndAbs || (source.host && srcPath.length);
+
+  if (mustEndAbs && !isAbsolute) {
+    srcPath.unshift('');
+  }
+
+  source.pathname = srcPath.join('/');
+  //to support request.http
+  if (source.pathname !== undefined || source.search !== undefined) {
+    source.path = (source.pathname ? source.pathname : '') +
+                  (source.search ? source.search : '');
+  }
+  source.auth = relative.auth || source.auth;
+  source.slashes = source.slashes || relative.slashes;
+  source.href = urlFormat(source);
+  return source;
+}
+
+function parseHost(host) {
+  var out = {};
+  var port = portPattern.exec(host);
+  if (port) {
+    port = port[0];
+    out.port = port.substr(1);
+    host = host.substr(0, host.length - port.length);
+  }
+  if (host) out.hostname = host;
+  return out;
+}
+
+});
+
+require.define("querystring", function (require, module, exports, __dirname, __filename) {
+var isArray = typeof Array.isArray === 'function'
+    ? Array.isArray
+    : function (xs) {
+        return Object.toString.call(xs) === '[object Array]'
+    }
+;
+
+/*!
+ * querystring
+ * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
+ * MIT Licensed
+ */
+
+/**
+ * Library version.
+ */
+
+exports.version = '0.3.1';
+
+/**
+ * Object#toString() ref for stringify().
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Cache non-integer test regexp.
+ */
+
+var notint = /[^0-9]/;
+
+/**
+ * Parse the given query `str`, returning an object.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api public
+ */
+
+exports.parse = function(str){
+  if (null == str || '' == str) return {};
+
+  function promote(parent, key) {
+    if (parent[key].length == 0) return parent[key] = {};
+    var t = {};
+    for (var i in parent[key]) t[i] = parent[key][i];
+    parent[key] = t;
+    return t;
+  }
+
+  return String(str)
+    .split('&')
+    .reduce(function(ret, pair){
+      try{ 
+        pair = decodeURIComponent(pair.replace(/\+/g, ' '));
+      } catch(e) {
+        // ignore
+      }
+
+      var eql = pair.indexOf('=')
+        , brace = lastBraceInKey(pair)
+        , key = pair.substr(0, brace || eql)
+        , val = pair.substr(brace || eql, pair.length)
+        , val = val.substr(val.indexOf('=') + 1, val.length)
+        , parent = ret;
+
+      // ?foo
+      if ('' == key) key = pair, val = '';
+
+      // nested
+      if (~key.indexOf(']')) {
+        var parts = key.split('[')
+          , len = parts.length
+          , last = len - 1;
+
+        function parse(parts, parent, key) {
+          var part = parts.shift();
+
+          // end
+          if (!part) {
+            if (isArray(parent[key])) {
+              parent[key].push(val);
+            } else if ('object' == typeof parent[key]) {
+              parent[key] = val;
+            } else if ('undefined' == typeof parent[key]) {
+              parent[key] = val;
+            } else {
+              parent[key] = [parent[key], val];
+            }
+          // array
+          } else {
+            obj = parent[key] = parent[key] || [];
+            if (']' == part) {
+              if (isArray(obj)) {
+                if ('' != val) obj.push(val);
+              } else if ('object' == typeof obj) {
+                obj[Object.keys(obj).length] = val;
+              } else {
+                obj = parent[key] = [parent[key], val];
+              }
+            // prop
+            } else if (~part.indexOf(']')) {
+              part = part.substr(0, part.length - 1);
+              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
+              parse(parts, obj, part);
+            // key
+            } else {
+              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
+              parse(parts, obj, part);
+            }
+          }
+        }
+
+        parse(parts, parent, 'base');
+      // optimize
+      } else {
+        if (notint.test(key) && isArray(parent.base)) {
+          var t = {};
+          for(var k in parent.base) t[k] = parent.base[k];
+          parent.base = t;
+        }
+        set(parent.base, key, val);
+      }
+
+      return ret;
+    }, {base: {}}).base;
+};
+
+/**
+ * Turn the given `obj` into a query string
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api public
+ */
+
+var stringify = exports.stringify = function(obj, prefix) {
+  if (isArray(obj)) {
+    return stringifyArray(obj, prefix);
+  } else if ('[object Object]' == toString.call(obj)) {
+    return stringifyObject(obj, prefix);
+  } else if ('string' == typeof obj) {
+    return stringifyString(obj, prefix);
+  } else {
+    return prefix;
+  }
+};
+
+/**
+ * Stringify the given `str`.
+ *
+ * @param {String} str
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyString(str, prefix) {
+  if (!prefix) throw new TypeError('stringify expects an object');
+  return prefix + '=' + encodeURIComponent(str);
+}
+
+/**
+ * Stringify the given `arr`.
+ *
+ * @param {Array} arr
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyArray(arr, prefix) {
+  var ret = [];
+  if (!prefix) throw new TypeError('stringify expects an object');
+  for (var i = 0; i < arr.length; i++) {
+    ret.push(stringify(arr[i], prefix + '[]'));
+  }
+  return ret.join('&');
+}
+
+/**
+ * Stringify the given `obj`.
+ *
+ * @param {Object} obj
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyObject(obj, prefix) {
+  var ret = []
+    , keys = Object.keys(obj)
+    , key;
+  for (var i = 0, len = keys.length; i < len; ++i) {
+    key = keys[i];
+    ret.push(stringify(obj[key], prefix
+      ? prefix + '[' + encodeURIComponent(key) + ']'
+      : encodeURIComponent(key)));
+  }
+  return ret.join('&');
+}
+
+/**
+ * Set `obj`'s `key` to `val` respecting
+ * the weird and wonderful syntax of a qs,
+ * where "foo=bar&foo=baz" becomes an array.
+ *
+ * @param {Object} obj
+ * @param {String} key
+ * @param {String} val
+ * @api private
+ */
+
+function set(obj, key, val) {
+  var v = obj[key];
+  if (undefined === v) {
+    obj[key] = val;
+  } else if (isArray(v)) {
+    v.push(val);
+  } else {
+    obj[key] = [v, val];
+  }
+}
+
+/**
+ * Locate last brace in `str` within the key.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function lastBraceInKey(str) {
+  var len = str.length
+    , brace
+    , c;
+  for (var i = 0; i < len; ++i) {
+    c = str[i];
+    if (']' == c) brace = false;
+    if ('[' == c) brace = true;
+    if ('=' == c && !brace) return i;
+  }
+}
 
 });
 
@@ -15979,6 +17042,120 @@ Msgboy.run =  function () {
 
 exports.Msgboy = Msgboy;
 
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
+
+});
+
+require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
+var Msgboy = require('./msgboy.js').Msgboy
+
+var Plugins = {
+    all: [],
+
+    register: function (plugin) {
+        this.all.push(plugin);
+    },
+    importSubscriptions: function (callback, done) {
+        var subscriptionsCount = 0;
+        
+        var processNextPlugin = function(plugins) {
+            var plugin = plugins.pop();
+            if(plugin) {
+                Msgboy.log.info("Starting with", plugin.name);
+                plugin.listSubscriptions(function (subscription) {
+                    callback({
+                        url: subscription.url,
+                        title: subscription.title
+                    });
+                }, function (count) {
+                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    subscriptionsCount += count;
+                    processNextPlugin(plugins);
+                });
+            }
+            else {
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+                done(subscriptionsCount);
+            }
+        };
+
+        var plugins = _.clone(Plugins.all); 
+        processNextPlugin(plugins);
+    }
+};
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+Plugins.register(new Blogger());
+
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+Plugins.register(new Bookmarks());
+
+var Digg = require('./plugins/digg.js').Digg;
+Plugins.register(new Digg());
+
+var Disqus = require('./plugins/disqus.js').Disqus;
+Plugins.register(new Disqus());
+
+var Generic = require('./plugins/generic.js').Generic;
+Plugins.register(new Generic());
+
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+Plugins.register(new GoogleReader());
+
+var History = require('./plugins/history.js').History;
+Plugins.register(new History());
+
+var Posterous = require('./plugins/posterous.js').Posterous;
+Plugins.register(new Posterous());
+
+var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
+Plugins.register(new QuoraPeople());
+
+var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
+Plugins.register(new QuoraTopics());
+
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+Plugins.register(new Statusnet());
+
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+Plugins.register(new Tumblr());
+
+var Typepad = require('./plugins/typepad.js').Typepad;
+Plugins.register(new Typepad());
+
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+Plugins.register(new Wordpress());
+
+
+exports.Plugins = Plugins;
+
+// This is the skeleton for the Plugins
+var Plugin = function () {
+    this.name = ''; // Name for this plugin. The user will be asked which plugins he wants to use.
+    this.onSubscriptionPage = function (doc) {
+        // This method needs to returns true if the plugin needs to be applied on this page.
+    };
+
+    this.listSubscriptions = function (callback, done) {
+        // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
+        // Feeds have the following form {url: _, title: _}.
+        callback([]);
+        done(0);
+    };
+
+    this.hijack = function (follow, unfollow) {
+        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
+        // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
+    };
+
+    this.subscribeInBackground = function (callback) {
+        // The callback needs to be called with a feed object {url: _, title: _}
+        // this function is called from the background and used to define a "chrome-wide" callback. It should probably not be used by any plugin specific to a 3rd pary site, but for plugins like History and/or Bookmarks
+    };
+};
 
 });
 
@@ -16688,971 +17865,60 @@ var Wordpress = function () {
 exports.Wordpress = Wordpress;
 });
 
-require.define("/tests/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Blogger = require('../../plugins/blogger.js').Blogger;
-
-describe('Blogger', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the host is www.blogger.com and the pathname is /navbar.g', function() {
-            var docStub = {
-                location: {
-                    host: "www.blogger.com"
-                    , pathname: "/navbar.g"
-                }
-            };
-            var b = new Blogger();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Blogger();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-
-});
-
-});
-
-require.define("/tests/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Bookmarks = require('../../plugins/bookmarks.js').Bookmarks;
-
-describe('Bookmarks', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true', function() {
-            var docStub = {};
-            var b = new Bookmarks();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Bookmarks();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-    
-    describe('subscribeInBackground', function() {
-        
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Digg = require('../../plugins/digg.js').Digg;
-
-describe('Digg', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the user is on digg', function() {
-            var docStub = {
-                location: {
-                    host: "digg.com"
-                }
-            };
-            var b = new Digg();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Digg();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Disqus = require('../../plugins/disqus.js').Disqus;
-
-describe('Disqus', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the page has a disqus_thread', function() {
-            var docStub = {
-                getElementById: function(id) {
-                    return id === "disqus_thread"
-                }
-            };
-            var d = new Disqus();
-            d.onSubscriptionPage(docStub).should.be.true;
-        });
-
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var d = new Disqus();
-            d.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Generic = require('../../plugins/generic.js').Generic;
-
-describe('Generic', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true', function() {
-            var docStub = {};
-            var b = new Generic();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        // Hum. How can we test that?
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            var d = new Generic();
-            d.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                true.should.be.false; // Generic plugin does not have a way to list subscriptions
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var GoogleReader = require('../../plugins/google-reader.js').GoogleReader;
-
-describe('GoogleReader', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if we\'re on a Google Reader page', function() {
-            var docStub = {
-                location: {
-                    host: "www.google.com"
-                    ,pathname: "/reader/view/"
-                }
-            };
-            var b = new GoogleReader();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new GoogleReader();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/history.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var History = require('../../plugins/history.js').History;
-
-describe('History', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true', function() {
-            var docStub = {};
-            var b = new History();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new History();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-    
-    describe('subscribeInBackground', function() {
-        
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Posterous = require('../../plugins/posterous.js').Posterous;
-
-describe('Posterous', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the document as a pbar id', function() {
-            var docStub = {
-                getElementById: function(className) {
-                    return className == "pbar";
-                }
-            };
-            var b = new Posterous();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Posterous();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var QuoraPeople = require('../../plugins/quora-people.js').QuoraPeople;
-
-describe('QuoraPeople', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the location is at www.quora.com', function() {
-            var docStub = {
-                location: {
-                    host: "www.quora.com"
-                }
-            };
-            var b = new QuoraPeople();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new QuoraPeople();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-});
-
-});
-
-require.define("/tests/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var QuoraTopics = require('../../plugins/quora-topics.js').QuoraTopics;
-
-describe('QuoraTopics', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the location is at www.quora.com', function() {
-            var docStub = {
-                location: {
-                    host: "www.quora.com"
-                }
-            };
-            var b = new QuoraTopics();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new QuoraTopics();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-});
-
-});
-
-require.define("/tests/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Statusnet = require('../../plugins/statusnet.js').Statusnet;
-
-describe('Statusnet', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the location is at .*.status.net', function() {
-            var docStub = {
-                location: {
-                    host: "hello.status.net"
-                }
-            };
-            var b = new Statusnet();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Statusnet();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-});
-
-});
-
-require.define("/tests/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Tumblr = require('../../plugins/tumblr.js').Tumblr;
-
-describe('Tumblr', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the location is at www.tumblr.com and the pathname /dashboard/iframe', function() {
-            var docStub = {
-                location: {
-                    host: "www.tumblr.com",
-                    pathname: "/dashboard/iframe"
-                }
-            };
-            var b = new Tumblr();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Tumblr();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-});
-
-});
-
-require.define("/tests/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Typepad = require('../../plugins/typepad.js').Typepad;
-
-describe('Typepad', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the location is at www.typepad.com and the pathname /services/toolbar', function() {
-            var docStub = {
-                location: {
-                    host: "www.typepad.com",
-                    pathname: "/services/toolbar"
-                }
-            };
-            var b = new Typepad();
-            b.onSubscriptionPage(docStub).should.be.true;
-        });
-    });
-    describe('hijack', function() {
-        
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            this.timeout(0); 
-            var b = new Typepad();
-            b.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var Wordpress = require('../../plugins/wordpress.js').Wordpress;
-
-describe('Wordpress', function(){
-    before(function(ready) {
-        ready();
-    });
-
-    beforeEach(function(ready) {
-        ready();
-    });
-
-    describe('onSubscriptionPage', function() {
-        it('should return true if the page has an element whose id is wpadminbar', function() {
-            var docStub = {
-                getElementById: function(id) {
-                    return id === "wpadminbar";
-                }
-            }
-            var w = new Wordpress();
-            w.onSubscriptionPage(docStub).should.equal(true);
-        });
-    });
-    describe('hijack', function() {
-
-    });
-    describe('listSubscriptions', function() {
-        it('should list all feeds to which the user is subscribed', function(done) {
-            var w = new Wordpress();
-            w.listSubscriptions(function(feed) {
-                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-            }, function(count) {
-                // Called when subscribed to many feeds.
-                count.should.not.equal(0);
-                done();
-            });
-        });
-    });
-
-});
-
-});
-
-require.define("/tests/models/subscription.js", function (require, module, exports, __dirname, __filename) {
-var should = require('chai').should();
-var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
-var Subscription = require('../../models/subscription.js').Subscription;
-var Subscriptions = require('../../models/subscription.js').Subscriptions;
-
-describe('Subscription', function(){
-    before(function() {
-        msgboyDatabase = _.clone(msgboyDatabase);
-        msgboyDatabase.id = msgboyDatabase.id + "-test";
-        indexedDB.deleteDatabase(msgboyDatabase.id);
-        Subscription = Subscription.extend({ database: msgboyDatabase});
-        Subscriptions = Subscriptions.extend({ database: msgboyDatabase});
-    });
-
-    beforeEach(function() {
-    });
-    
-    describe('fetchOrCreate', function() {
-        it('should create a subscription that does not exist', function(complete) {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-            s.fetchOrCreate(function() {
-                s.id.should.equal("http://blog.superfeedr.com/atom.xml");
-                complete();
-            });
-        });
-        it('should fetch a subscription that exists', function(complete) {
-            var s = new Subscription({id: "https://github.com/superfeedr.atom"});
-            s.fetchOrCreate(function() {
-                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
-                t.fetchOrCreate(function() {
-                    t.id.should.equal("https://github.com/superfeedr.atom");
-                    complete();
-                });
-            });
-        });
-        
-    });
-
-    describe('needsRefresh', function() {
-        it('should return true if the subscription is older than a week and unsubscription is older than a month and if the feed is not in the blacklist', function() {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
-            s.needsRefresh().should.equal(true);
-        });
-        it('should return false if the subscription is earlier than a week', function() {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 + 1});
-            s.needsRefresh().should.equal(false);
-        });
-        it('should return false if unsubscription is earlier than a month', function() {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 + 1});
-            s.needsRefresh().should.equal(false);
-        });
-        it('should return false if the feed is in the blacklist', function() {
-            var s = new Subscription({id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
-            s.needsRefresh().should.equal(false);
-        });
-    });
-
-    describe('setState', function() {
-        it('should set the state', function(complete) {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-            s.bind('change', function() {
-                s.get('state').should.equal("subscribing");
-                complete();
-            })
-            s.setState("subscribing");
-        });
-        it('should trigger the state', function(complete) {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-            s.bind('unsubscribing', function() {
-                complete();
-            })
-            s.setState("unsubscribing");
-        });
-        
-        describe('when setting the state to subscribed', function() {
-            it('should set the subscribedAt', function(complete) {
-                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-                s.bind('subscribed', function() {
-                    s.get('subscribedAt').should.be.above(new Date().getTime() - 1000);
-                    s.get('subscribedAt').should.be.below(new Date().getTime() + 1000);
-                    complete();
-                })
-                s.setState("subscribed");
-            });
-        });
-        describe('when setting the state to unsubscribed', function() {
-            it('should set the unsubscribedAt', function(complete) {
-                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-                s.bind('unsubscribed', function() {
-                    s.get('unsubscribedAt').should.be.above(new Date().getTime() - 1000);
-                    s.get('unsubscribedAt').should.be.below(new Date().getTime() + 1000);
-                    complete();
-                })
-                s.setState("unsubscribed");
-            });
-        })
-        
-    });
-});
-
-describe('Subscriptions', function(){
-    before(function() {
-        // We need to save a couple fixture messages!
-    });
-
-    beforeEach(function() {
-    });
-
-    describe('pending', function(complete) {
-        it('should yield all subscriptions whose state is "subscrbing"', function(complete) {
-            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
-            s.bind('subscribing', function() {
-                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
-                t.bind('subscribed', function() {
-                    var u = new Subscription({id: "http://push-pub.appspot.com/feed"});
-                    u.bind('subscribed', function() {
-                        var v = new Subscription({id: "http://github.com/julien.atom"});
-                        v.bind('subscribing', function() {
-                            var pendingSubscriptions = new Subscriptions();
-                            pendingSubscriptions.bind('reset',function(subscritions) {
-                                pendingSubscriptions.pluck('id').should.eql([ 'http://blog.superfeedr.com/atom.xml',
-                                  'http://github.com/julien.atom' ]);
-                                complete();
-                            });
-                            pendingSubscriptions.pending();
-                        });
-                        v.setState("subscribing");
-                    });
-                    u.setState("subscribed");
-                });
-                t.setState("subscribed");
-            });
-            s.setState("subscribing");
-            var subscription =  new Subscriptions();
-        });
-    });
-
-});
-
-
-});
-
-require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
-var msgboyDatabase = {
-    id: "msgboy-database",
-    description: "The database for the msgboy",
-    migrations: [{
-        version: 1,
-        migrate: function (transaction, next) {
-            transaction.db.createObjectStore("messages");
-            transaction.db.createObjectStore("inbox");
-            next();
-        }
-    }, {
-        version: 2,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("createdAtIndex", "createdAt", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 3,
-        migrate: function (transaction, next) {
-            var store = transaction.db.createObjectStore("feeds");
-            store.createIndex("urlIndex", "url", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 4,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("sourceLinkIndex", "sourceLink", {
-                unique: false
-            });
-            store.createIndex("hostIndex", "sourceHost", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 5,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("stateIndex", "state", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 6,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("feedIndex", "feed", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 7,
-        migrate: function (transaction, next) {
-            var subscriptions = transaction.db.createObjectStore("subscriptions");
-            subscriptions.createIndex("stateIndex", "state", {unique: false});
-            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
-            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
-            next();
-        }
-    }]
-};
-
-exports.msgboyDatabase = msgboyDatabase
-});
-
-require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
 
-var Subscription = Backbone.Model.extend({
-    storeName: "subscriptions",
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
     database: msgboyDatabase,
     defaults: {
-        subscribedAt: 0,
-        unsubscribedAt: 0,
-        state: "unsubscribed"
+        id: "1",
+        options: {
+            relevance: 1.0,
+            pinMsgboy: false
+        }
     },
-    initialize: function (attributes) {
+    initialize: function () {
     },
-    fetchOrCreate: function (callback) {
-        this.fetch({
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
             success: function () {
-                // The subscription exists!
-                callback();
+                this.trigger("ready", this);
+                this.trigger("new", this);
             }.bind(this),
             error: function () {
-                // There is no such subscription.
-                // Let's save it, then!
-                this.save({}, {
-                    success: function () {
-                        callback();
-                    },
-                    error: function () {
-                        // We're screwed.
-                    }
-                });
+                this.trigger('error');
             }.bind(this)
         });
     },
-    needsRefresh: function () {
-        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
-            for (var i in Blacklist) {
-                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    },
-    setState: function (_state) {
-        switch (_state) {
-        case "subscribed":
-            this.save({state: _state, subscribedAt: new Date().getTime()}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this)
-            });
-            break;
-        case "unsubscribed":
-            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this)
-            });
-            break;
-        default:
-            this.save({state: _state}, {
-                success: function () {
-                    this.trigger(_state);
-                }.bind(this),
-                error: function (o, e) {
-                    // Dang
-                }
-            });
-        }
-    }
-});
 
-var Subscriptions = Backbone.Collection.extend({
-    storeName: "subscriptions",
-    database: msgboyDatabase,
-    model: Subscription,
-    pending: function () {
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
         this.fetch({
-            conditions: {state: "subscribing"},
-            addIndividually: true,
-            limit: 100
+            success: function () {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
         });
     }
 });
 
-var Blacklist = [
-    /.*wikipedia\.org\/.*/
-];
-
-exports.Subscription = Subscription;
-exports.Subscriptions = Subscriptions;
-
+exports.Inbox = Inbox;
 });
 
 require.define("/node_modules/backbone-indexeddb/package.json", function (require, module, exports, __dirname, __filename) {
@@ -19491,124 +19757,78 @@ require.define("/node_modules/Backbone/backbone.js", function (require, module, 
 
 });
 
-require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
-var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
-var Message = require('../../models/message.js').Message;
-var Archive = require('../../models/archive.js').Archive;
-var should = require('chai').should();
-
-describe('Archive', function(){
-    before(function(done) {
-        // We need to use a distinct database and clean it up before performing the tests
-        msgboyDatabase = _.clone(msgboyDatabase);
-        msgboyDatabase.id = msgboyDatabase.id + "-test";
-        indexedDB.deleteDatabase(msgboyDatabase.id);
-        Message = Message.extend({ database: msgboyDatabase});
-        Archive = Archive.extend({ database: msgboyDatabase});
-        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
-        m1.bind('change', function() {
-            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
-            m2.bind('change', function() {
-                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
-                m3.bind('change', function() {
-                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
-                    m4.bind('change', function() {
-                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
-                        m5.bind('change', function() {
-                            done();
-                        });
-                        m5.save();
-                    });
-                    m4.save();
-                });
-                m3.save();
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
             });
-            m2.save();
-        });
-        m1.save();
-    });
-
-    beforeEach(function() {
-    });
-
-    describe('comparator', function() {
-        it('should sort all the messages by createdAt', function(done) {
-            var archive =  new Archive();
-            var twelveHourAgoMessage = new Message({title: "Twelve Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 12});
-            var twentyFourHourAgoMessage = new Message({title: "Twenty-Four Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 24});
-            var sixHourAgoMessage = new Message({title: "Six Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 6});
-            var eighteenHourAgoMessage = new Message({title: "Eighteen Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 18});
-            var threeHourAgoMessage = new Message({title: "Three Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 3});
-            var NineHourAgoMessage = new Message({title: "Nine Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 9});
-            archive.add(twelveHourAgoMessage);
-            archive.add(twentyFourHourAgoMessage);
-            archive.add(threeHourAgoMessage);
-            archive.add(NineHourAgoMessage);
-            archive.add(eighteenHourAgoMessage);
-            archive.add(sixHourAgoMessage);
-            var prev = null;
-            archive.each(function(m) {
-                if(prev) {
-                    m.get('createdAt').should.be.below(prev.get('createdAt'));
-                }
-                prev = m;
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
             });
-            done();
-        });
-    })
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
+            next();
+        }
+    }]
+};
 
-    describe('next', function() {
-        it('should add messages one by one', function(done) {
-            var archive =  new Archive();
-            archive.model = Message;
-            var count = 0;
-            var limit = 3;
-            archive.bind('add', function(message) {
-                count += 1;
-                if(count === limit) {
-                    done();
-                }
-            })
-            archive.next(limit);
-        });
-
-        it('should stick to the conditions on messages added', function(done) {
-            var archive =  new Archive();
-            archive.model = Message;
-            var count = 0;
-            var limit = 3;
-            archive.bind('add', function(message) {
-                count += 1;
-                if(count === limit) {
-                    _.each(archive.pluck('sourceHost'), function(h) {
-                        h.should.equal('superfeedr.com');
-                    });
-                    done();
-                }
-            })
-            archive.next(limit, {sourceHost: "superfeedr.com"});
-        });
-    });
-
-    describe('forFeed', function() {
-        it('should return all the messages for a given feed when called with forFeed', function(done) {
-            var archive =  new Archive();
-            archive.model = Message;
-            archive.bind('reset', function() {
-                archive.length.should.equal(3);
-                archive.at(0).get('title').should.equal("Fourth Message");
-                archive.at(1).get('title').should.equal("Third Message");
-                archive.at(2).get('title').should.equal("First Message");
-                done();
-            })
-            archive.forFeed('http://superfedr.com/dummy.xml');
-        });
-    });
-
-});
-
-
+exports.msgboyDatabase = msgboyDatabase
 });
 
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
@@ -20162,847 +20382,6 @@ exports.WelcomeMessages = WelcomeMessages;
 
 });
 
-require.define("url", function (require, module, exports, __dirname, __filename) {
-var punycode = { encode : function (s) { return s } };
-
-exports.parse = urlParse;
-exports.resolve = urlResolve;
-exports.resolveObject = urlResolveObject;
-exports.format = urlFormat;
-
-// Reference: RFC 3986, RFC 1808, RFC 2396
-
-// define these here so at least they only have to be
-// compiled once on the first module load.
-var protocolPattern = /^([a-z0-9.+-]+:)/i,
-    portPattern = /:[0-9]+$/,
-    // RFC 2396: characters reserved for delimiting URLs.
-    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
-    // RFC 2396: characters not allowed for various reasons.
-    unwise = ['{', '}', '|', '\\', '^', '~', '[', ']', '`'].concat(delims),
-    // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
-    autoEscape = ['\''],
-    // Characters that are never ever allowed in a hostname.
-    // Note that any invalid chars are also handled, but these
-    // are the ones that are *expected* to be seen, so we fast-path
-    // them.
-    nonHostChars = ['%', '/', '?', ';', '#']
-      .concat(unwise).concat(autoEscape),
-    nonAuthChars = ['/', '@', '?', '#'].concat(delims),
-    hostnameMaxLen = 255,
-    hostnamePartPattern = /^[a-zA-Z0-9][a-z0-9A-Z_-]{0,62}$/,
-    hostnamePartStart = /^([a-zA-Z0-9][a-z0-9A-Z_-]{0,62})(.*)$/,
-    // protocols that can allow "unsafe" and "unwise" chars.
-    unsafeProtocol = {
-      'javascript': true,
-      'javascript:': true
-    },
-    // protocols that never have a hostname.
-    hostlessProtocol = {
-      'javascript': true,
-      'javascript:': true
-    },
-    // protocols that always have a path component.
-    pathedProtocol = {
-      'http': true,
-      'https': true,
-      'ftp': true,
-      'gopher': true,
-      'file': true,
-      'http:': true,
-      'ftp:': true,
-      'gopher:': true,
-      'file:': true
-    },
-    // protocols that always contain a // bit.
-    slashedProtocol = {
-      'http': true,
-      'https': true,
-      'ftp': true,
-      'gopher': true,
-      'file': true,
-      'http:': true,
-      'https:': true,
-      'ftp:': true,
-      'gopher:': true,
-      'file:': true
-    },
-    querystring = require('querystring');
-
-function urlParse(url, parseQueryString, slashesDenoteHost) {
-  if (url && typeof(url) === 'object' && url.href) return url;
-
-  if (typeof url !== 'string') {
-    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
-  }
-
-  var out = {},
-      rest = url;
-
-  // cut off any delimiters.
-  // This is to support parse stuff like "<http://foo.com>"
-  for (var i = 0, l = rest.length; i < l; i++) {
-    if (delims.indexOf(rest.charAt(i)) === -1) break;
-  }
-  if (i !== 0) rest = rest.substr(i);
-
-
-  var proto = protocolPattern.exec(rest);
-  if (proto) {
-    proto = proto[0];
-    var lowerProto = proto.toLowerCase();
-    out.protocol = lowerProto;
-    rest = rest.substr(proto.length);
-  }
-
-  // figure out if it's got a host
-  // user@server is *always* interpreted as a hostname, and url
-  // resolution will treat //foo/bar as host=foo,path=bar because that's
-  // how the browser resolves relative URLs.
-  if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
-    var slashes = rest.substr(0, 2) === '//';
-    if (slashes && !(proto && hostlessProtocol[proto])) {
-      rest = rest.substr(2);
-      out.slashes = true;
-    }
-  }
-
-  if (!hostlessProtocol[proto] &&
-      (slashes || (proto && !slashedProtocol[proto]))) {
-    // there's a hostname.
-    // the first instance of /, ?, ;, or # ends the host.
-    // don't enforce full RFC correctness, just be unstupid about it.
-
-    // If there is an @ in the hostname, then non-host chars *are* allowed
-    // to the left of the first @ sign, unless some non-auth character
-    // comes *before* the @-sign.
-    // URLs are obnoxious.
-    var atSign = rest.indexOf('@');
-    if (atSign !== -1) {
-      // there *may be* an auth
-      var hasAuth = true;
-      for (var i = 0, l = nonAuthChars.length; i < l; i++) {
-        var index = rest.indexOf(nonAuthChars[i]);
-        if (index !== -1 && index < atSign) {
-          // not a valid auth.  Something like http://foo.com/bar@baz/
-          hasAuth = false;
-          break;
-        }
-      }
-      if (hasAuth) {
-        // pluck off the auth portion.
-        out.auth = rest.substr(0, atSign);
-        rest = rest.substr(atSign + 1);
-      }
-    }
-
-    var firstNonHost = -1;
-    for (var i = 0, l = nonHostChars.length; i < l; i++) {
-      var index = rest.indexOf(nonHostChars[i]);
-      if (index !== -1 &&
-          (firstNonHost < 0 || index < firstNonHost)) firstNonHost = index;
-    }
-
-    if (firstNonHost !== -1) {
-      out.host = rest.substr(0, firstNonHost);
-      rest = rest.substr(firstNonHost);
-    } else {
-      out.host = rest;
-      rest = '';
-    }
-
-    // pull out port.
-    var p = parseHost(out.host);
-    var keys = Object.keys(p);
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i];
-      out[key] = p[key];
-    }
-
-    // we've indicated that there is a hostname,
-    // so even if it's empty, it has to be present.
-    out.hostname = out.hostname || '';
-
-    // validate a little.
-    if (out.hostname.length > hostnameMaxLen) {
-      out.hostname = '';
-    } else {
-      var hostparts = out.hostname.split(/\./);
-      for (var i = 0, l = hostparts.length; i < l; i++) {
-        var part = hostparts[i];
-        if (!part) continue;
-        if (!part.match(hostnamePartPattern)) {
-          var newpart = '';
-          for (var j = 0, k = part.length; j < k; j++) {
-            if (part.charCodeAt(j) > 127) {
-              // we replace non-ASCII char with a temporary placeholder
-              // we need this to make sure size of hostname is not
-              // broken by replacing non-ASCII by nothing
-              newpart += 'x';
-            } else {
-              newpart += part[j];
-            }
-          }
-          // we test again with ASCII char only
-          if (!newpart.match(hostnamePartPattern)) {
-            var validParts = hostparts.slice(0, i);
-            var notHost = hostparts.slice(i + 1);
-            var bit = part.match(hostnamePartStart);
-            if (bit) {
-              validParts.push(bit[1]);
-              notHost.unshift(bit[2]);
-            }
-            if (notHost.length) {
-              rest = '/' + notHost.join('.') + rest;
-            }
-            out.hostname = validParts.join('.');
-            break;
-          }
-        }
-      }
-    }
-
-    // hostnames are always lower case.
-    out.hostname = out.hostname.toLowerCase();
-
-    // IDNA Support: Returns a puny coded representation of "domain".
-    // It only converts the part of the domain name that
-    // has non ASCII characters. I.e. it dosent matter if
-    // you call it with a domain that already is in ASCII.
-    var domainArray = out.hostname.split('.');
-    var newOut = [];
-    for (var i = 0; i < domainArray.length; ++i) {
-      var s = domainArray[i];
-      newOut.push(s.match(/[^A-Za-z0-9_-]/) ?
-          'xn--' + punycode.encode(s) : s);
-    }
-    out.hostname = newOut.join('.');
-
-    out.host = (out.hostname || '') +
-        ((out.port) ? ':' + out.port : '');
-    out.href += out.host;
-  }
-
-  // now rest is set to the post-host stuff.
-  // chop off any delim chars.
-  if (!unsafeProtocol[lowerProto]) {
-
-    // First, make 100% sure that any "autoEscape" chars get
-    // escaped, even if encodeURIComponent doesn't think they
-    // need to be.
-    for (var i = 0, l = autoEscape.length; i < l; i++) {
-      var ae = autoEscape[i];
-      var esc = encodeURIComponent(ae);
-      if (esc === ae) {
-        esc = escape(ae);
-      }
-      rest = rest.split(ae).join(esc);
-    }
-
-    // Now make sure that delims never appear in a url.
-    var chop = rest.length;
-    for (var i = 0, l = delims.length; i < l; i++) {
-      var c = rest.indexOf(delims[i]);
-      if (c !== -1) {
-        chop = Math.min(c, chop);
-      }
-    }
-    rest = rest.substr(0, chop);
-  }
-
-
-  // chop off from the tail first.
-  var hash = rest.indexOf('#');
-  if (hash !== -1) {
-    // got a fragment string.
-    out.hash = rest.substr(hash);
-    rest = rest.slice(0, hash);
-  }
-  var qm = rest.indexOf('?');
-  if (qm !== -1) {
-    out.search = rest.substr(qm);
-    out.query = rest.substr(qm + 1);
-    if (parseQueryString) {
-      out.query = querystring.parse(out.query);
-    }
-    rest = rest.slice(0, qm);
-  } else if (parseQueryString) {
-    // no query string, but parseQueryString still requested
-    out.search = '';
-    out.query = {};
-  }
-  if (rest) out.pathname = rest;
-  if (slashedProtocol[proto] &&
-      out.hostname && !out.pathname) {
-    out.pathname = '/';
-  }
-
-  //to support http.request
-  if (out.pathname || out.search) {
-    out.path = (out.pathname ? out.pathname : '') +
-               (out.search ? out.search : '');
-  }
-
-  // finally, reconstruct the href based on what has been validated.
-  out.href = urlFormat(out);
-  return out;
-}
-
-// format a parsed object into a url string
-function urlFormat(obj) {
-  // ensure it's an object, and not a string url.
-  // If it's an obj, this is a no-op.
-  // this way, you can call url_format() on strings
-  // to clean up potentially wonky urls.
-  if (typeof(obj) === 'string') obj = urlParse(obj);
-
-  var auth = obj.auth || '';
-  if (auth) {
-    auth = auth.split('@').join('%40');
-    for (var i = 0, l = nonAuthChars.length; i < l; i++) {
-      var nAC = nonAuthChars[i];
-      auth = auth.split(nAC).join(encodeURIComponent(nAC));
-    }
-    auth += '@';
-  }
-
-  var protocol = obj.protocol || '',
-      host = (obj.host !== undefined) ? auth + obj.host :
-          obj.hostname !== undefined ? (
-              auth + obj.hostname +
-              (obj.port ? ':' + obj.port : '')
-          ) :
-          false,
-      pathname = obj.pathname || '',
-      query = obj.query &&
-              ((typeof obj.query === 'object' &&
-                Object.keys(obj.query).length) ?
-                 querystring.stringify(obj.query) :
-                 '') || '',
-      search = obj.search || (query && ('?' + query)) || '',
-      hash = obj.hash || '';
-
-  if (protocol && protocol.substr(-1) !== ':') protocol += ':';
-
-  // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
-  // unless they had them to begin with.
-  if (obj.slashes ||
-      (!protocol || slashedProtocol[protocol]) && host !== false) {
-    host = '//' + (host || '');
-    if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
-  } else if (!host) {
-    host = '';
-  }
-
-  if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
-  if (search && search.charAt(0) !== '?') search = '?' + search;
-
-  return protocol + host + pathname + search + hash;
-}
-
-function urlResolve(source, relative) {
-  return urlFormat(urlResolveObject(source, relative));
-}
-
-function urlResolveObject(source, relative) {
-  if (!source) return relative;
-
-  source = urlParse(urlFormat(source), false, true);
-  relative = urlParse(urlFormat(relative), false, true);
-
-  // hash is always overridden, no matter what.
-  source.hash = relative.hash;
-
-  if (relative.href === '') {
-    source.href = urlFormat(source);
-    return source;
-  }
-
-  // hrefs like //foo/bar always cut to the protocol.
-  if (relative.slashes && !relative.protocol) {
-    relative.protocol = source.protocol;
-    //urlParse appends trailing / to urls like http://www.example.com
-    if (slashedProtocol[relative.protocol] &&
-        relative.hostname && !relative.pathname) {
-      relative.path = relative.pathname = '/';
-    }
-    relative.href = urlFormat(relative);
-    return relative;
-  }
-
-  if (relative.protocol && relative.protocol !== source.protocol) {
-    // if it's a known url protocol, then changing
-    // the protocol does weird things
-    // first, if it's not file:, then we MUST have a host,
-    // and if there was a path
-    // to begin with, then we MUST have a path.
-    // if it is file:, then the host is dropped,
-    // because that's known to be hostless.
-    // anything else is assumed to be absolute.
-    if (!slashedProtocol[relative.protocol]) {
-      relative.href = urlFormat(relative);
-      return relative;
-    }
-    source.protocol = relative.protocol;
-    if (!relative.host && !hostlessProtocol[relative.protocol]) {
-      var relPath = (relative.pathname || '').split('/');
-      while (relPath.length && !(relative.host = relPath.shift()));
-      if (!relative.host) relative.host = '';
-      if (!relative.hostname) relative.hostname = '';
-      if (relPath[0] !== '') relPath.unshift('');
-      if (relPath.length < 2) relPath.unshift('');
-      relative.pathname = relPath.join('/');
-    }
-    source.pathname = relative.pathname;
-    source.search = relative.search;
-    source.query = relative.query;
-    source.host = relative.host || '';
-    source.auth = relative.auth;
-    source.hostname = relative.hostname || relative.host;
-    source.port = relative.port;
-    //to support http.request
-    if (source.pathname !== undefined || source.search !== undefined) {
-      source.path = (source.pathname ? source.pathname : '') +
-                    (source.search ? source.search : '');
-    }
-    source.slashes = source.slashes || relative.slashes;
-    source.href = urlFormat(source);
-    return source;
-  }
-
-  var isSourceAbs = (source.pathname && source.pathname.charAt(0) === '/'),
-      isRelAbs = (
-          relative.host !== undefined ||
-          relative.pathname && relative.pathname.charAt(0) === '/'
-      ),
-      mustEndAbs = (isRelAbs || isSourceAbs ||
-                    (source.host && relative.pathname)),
-      removeAllDots = mustEndAbs,
-      srcPath = source.pathname && source.pathname.split('/') || [],
-      relPath = relative.pathname && relative.pathname.split('/') || [],
-      psychotic = source.protocol &&
-          !slashedProtocol[source.protocol];
-
-  // if the url is a non-slashed url, then relative
-  // links like ../.. should be able
-  // to crawl up to the hostname, as well.  This is strange.
-  // source.protocol has already been set by now.
-  // Later on, put the first path part into the host field.
-  if (psychotic) {
-
-    delete source.hostname;
-    delete source.port;
-    if (source.host) {
-      if (srcPath[0] === '') srcPath[0] = source.host;
-      else srcPath.unshift(source.host);
-    }
-    delete source.host;
-    if (relative.protocol) {
-      delete relative.hostname;
-      delete relative.port;
-      if (relative.host) {
-        if (relPath[0] === '') relPath[0] = relative.host;
-        else relPath.unshift(relative.host);
-      }
-      delete relative.host;
-    }
-    mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
-  }
-
-  if (isRelAbs) {
-    // it's absolute.
-    source.host = (relative.host || relative.host === '') ?
-                      relative.host : source.host;
-    source.hostname = (relative.hostname || relative.hostname === '') ?
-                      relative.hostname : source.hostname;
-    source.search = relative.search;
-    source.query = relative.query;
-    srcPath = relPath;
-    // fall through to the dot-handling below.
-  } else if (relPath.length) {
-    // it's relative
-    // throw away the existing file, and take the new path instead.
-    if (!srcPath) srcPath = [];
-    srcPath.pop();
-    srcPath = srcPath.concat(relPath);
-    source.search = relative.search;
-    source.query = relative.query;
-  } else if ('search' in relative) {
-    // just pull out the search.
-    // like href='?foo'.
-    // Put this after the other two cases because it simplifies the booleans
-    if (psychotic) {
-      source.hostname = source.host = srcPath.shift();
-      //occationaly the auth can get stuck only in host
-      //this especialy happens in cases like
-      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-      var authInHost = source.host && source.host.indexOf('@') > 0 ?
-                       source.host.split('@') : false;
-      if (authInHost) {
-        source.auth = authInHost.shift();
-        source.host = source.hostname = authInHost.shift();
-      }
-    }
-    source.search = relative.search;
-    source.query = relative.query;
-    //to support http.request
-    if (source.pathname !== undefined || source.search !== undefined) {
-      source.path = (source.pathname ? source.pathname : '') +
-                    (source.search ? source.search : '');
-    }
-    source.href = urlFormat(source);
-    return source;
-  }
-  if (!srcPath.length) {
-    // no path at all.  easy.
-    // we've already handled the other stuff above.
-    delete source.pathname;
-    //to support http.request
-    if (!source.search) {
-      source.path = '/' + source.search;
-    } else {
-      delete source.path;
-    }
-    source.href = urlFormat(source);
-    return source;
-  }
-  // if a url ENDs in . or .., then it must get a trailing slash.
-  // however, if it ends in anything else non-slashy,
-  // then it must NOT get a trailing slash.
-  var last = srcPath.slice(-1)[0];
-  var hasTrailingSlash = (
-      (source.host || relative.host) && (last === '.' || last === '..') ||
-      last === '');
-
-  // strip single dots, resolve double dots to parent dir
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = srcPath.length; i >= 0; i--) {
-    last = srcPath[i];
-    if (last == '.') {
-      srcPath.splice(i, 1);
-    } else if (last === '..') {
-      srcPath.splice(i, 1);
-      up++;
-    } else if (up) {
-      srcPath.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (!mustEndAbs && !removeAllDots) {
-    for (; up--; up) {
-      srcPath.unshift('..');
-    }
-  }
-
-  if (mustEndAbs && srcPath[0] !== '' &&
-      (!srcPath[0] || srcPath[0].charAt(0) !== '/')) {
-    srcPath.unshift('');
-  }
-
-  if (hasTrailingSlash && (srcPath.join('/').substr(-1) !== '/')) {
-    srcPath.push('');
-  }
-
-  var isAbsolute = srcPath[0] === '' ||
-      (srcPath[0] && srcPath[0].charAt(0) === '/');
-
-  // put the host back
-  if (psychotic) {
-    source.hostname = source.host = isAbsolute ? '' :
-                                    srcPath.length ? srcPath.shift() : '';
-    //occationaly the auth can get stuck only in host
-    //this especialy happens in cases like
-    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-    var authInHost = source.host && source.host.indexOf('@') > 0 ?
-                     source.host.split('@') : false;
-    if (authInHost) {
-      source.auth = authInHost.shift();
-      source.host = source.hostname = authInHost.shift();
-    }
-  }
-
-  mustEndAbs = mustEndAbs || (source.host && srcPath.length);
-
-  if (mustEndAbs && !isAbsolute) {
-    srcPath.unshift('');
-  }
-
-  source.pathname = srcPath.join('/');
-  //to support request.http
-  if (source.pathname !== undefined || source.search !== undefined) {
-    source.path = (source.pathname ? source.pathname : '') +
-                  (source.search ? source.search : '');
-  }
-  source.auth = relative.auth || source.auth;
-  source.slashes = source.slashes || relative.slashes;
-  source.href = urlFormat(source);
-  return source;
-}
-
-function parseHost(host) {
-  var out = {};
-  var port = portPattern.exec(host);
-  if (port) {
-    port = port[0];
-    out.port = port.substr(1);
-    host = host.substr(0, host.length - port.length);
-  }
-  if (host) out.hostname = host;
-  return out;
-}
-
-});
-
-require.define("querystring", function (require, module, exports, __dirname, __filename) {
-var isArray = typeof Array.isArray === 'function'
-    ? Array.isArray
-    : function (xs) {
-        return Object.toString.call(xs) === '[object Array]'
-    }
-;
-
-/*!
- * querystring
- * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
- * MIT Licensed
- */
-
-/**
- * Library version.
- */
-
-exports.version = '0.3.1';
-
-/**
- * Object#toString() ref for stringify().
- */
-
-var toString = Object.prototype.toString;
-
-/**
- * Cache non-integer test regexp.
- */
-
-var notint = /[^0-9]/;
-
-/**
- * Parse the given query `str`, returning an object.
- *
- * @param {String} str
- * @return {Object}
- * @api public
- */
-
-exports.parse = function(str){
-  if (null == str || '' == str) return {};
-
-  function promote(parent, key) {
-    if (parent[key].length == 0) return parent[key] = {};
-    var t = {};
-    for (var i in parent[key]) t[i] = parent[key][i];
-    parent[key] = t;
-    return t;
-  }
-
-  return String(str)
-    .split('&')
-    .reduce(function(ret, pair){
-      try{ 
-        pair = decodeURIComponent(pair.replace(/\+/g, ' '));
-      } catch(e) {
-        // ignore
-      }
-
-      var eql = pair.indexOf('=')
-        , brace = lastBraceInKey(pair)
-        , key = pair.substr(0, brace || eql)
-        , val = pair.substr(brace || eql, pair.length)
-        , val = val.substr(val.indexOf('=') + 1, val.length)
-        , parent = ret;
-
-      // ?foo
-      if ('' == key) key = pair, val = '';
-
-      // nested
-      if (~key.indexOf(']')) {
-        var parts = key.split('[')
-          , len = parts.length
-          , last = len - 1;
-
-        function parse(parts, parent, key) {
-          var part = parts.shift();
-
-          // end
-          if (!part) {
-            if (isArray(parent[key])) {
-              parent[key].push(val);
-            } else if ('object' == typeof parent[key]) {
-              parent[key] = val;
-            } else if ('undefined' == typeof parent[key]) {
-              parent[key] = val;
-            } else {
-              parent[key] = [parent[key], val];
-            }
-          // array
-          } else {
-            obj = parent[key] = parent[key] || [];
-            if (']' == part) {
-              if (isArray(obj)) {
-                if ('' != val) obj.push(val);
-              } else if ('object' == typeof obj) {
-                obj[Object.keys(obj).length] = val;
-              } else {
-                obj = parent[key] = [parent[key], val];
-              }
-            // prop
-            } else if (~part.indexOf(']')) {
-              part = part.substr(0, part.length - 1);
-              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
-              parse(parts, obj, part);
-            // key
-            } else {
-              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
-              parse(parts, obj, part);
-            }
-          }
-        }
-
-        parse(parts, parent, 'base');
-      // optimize
-      } else {
-        if (notint.test(key) && isArray(parent.base)) {
-          var t = {};
-          for(var k in parent.base) t[k] = parent.base[k];
-          parent.base = t;
-        }
-        set(parent.base, key, val);
-      }
-
-      return ret;
-    }, {base: {}}).base;
-};
-
-/**
- * Turn the given `obj` into a query string
- *
- * @param {Object} obj
- * @return {String}
- * @api public
- */
-
-var stringify = exports.stringify = function(obj, prefix) {
-  if (isArray(obj)) {
-    return stringifyArray(obj, prefix);
-  } else if ('[object Object]' == toString.call(obj)) {
-    return stringifyObject(obj, prefix);
-  } else if ('string' == typeof obj) {
-    return stringifyString(obj, prefix);
-  } else {
-    return prefix;
-  }
-};
-
-/**
- * Stringify the given `str`.
- *
- * @param {String} str
- * @param {String} prefix
- * @return {String}
- * @api private
- */
-
-function stringifyString(str, prefix) {
-  if (!prefix) throw new TypeError('stringify expects an object');
-  return prefix + '=' + encodeURIComponent(str);
-}
-
-/**
- * Stringify the given `arr`.
- *
- * @param {Array} arr
- * @param {String} prefix
- * @return {String}
- * @api private
- */
-
-function stringifyArray(arr, prefix) {
-  var ret = [];
-  if (!prefix) throw new TypeError('stringify expects an object');
-  for (var i = 0; i < arr.length; i++) {
-    ret.push(stringify(arr[i], prefix + '[]'));
-  }
-  return ret.join('&');
-}
-
-/**
- * Stringify the given `obj`.
- *
- * @param {Object} obj
- * @param {String} prefix
- * @return {String}
- * @api private
- */
-
-function stringifyObject(obj, prefix) {
-  var ret = []
-    , keys = Object.keys(obj)
-    , key;
-  for (var i = 0, len = keys.length; i < len; ++i) {
-    key = keys[i];
-    ret.push(stringify(obj[key], prefix
-      ? prefix + '[' + encodeURIComponent(key) + ']'
-      : encodeURIComponent(key)));
-  }
-  return ret.join('&');
-}
-
-/**
- * Set `obj`'s `key` to `val` respecting
- * the weird and wonderful syntax of a qs,
- * where "foo=bar&foo=baz" becomes an array.
- *
- * @param {Object} obj
- * @param {String} key
- * @param {String} val
- * @api private
- */
-
-function set(obj, key, val) {
-  var v = obj[key];
-  if (undefined === v) {
-    obj[key] = val;
-  } else if (isArray(v)) {
-    v.push(val);
-  } else {
-    obj[key] = [v, val];
-  }
-}
-
-/**
- * Locate last brace in `str` within the key.
- *
- * @param {String} str
- * @return {Number}
- * @api private
- */
-
-function lastBraceInKey(str) {
-  var len = str.length
-    , brace
-    , c;
-  for (var i = 0; i < len; ++i) {
-    c = str[i];
-    if (']' == c) brace = false;
-    if ('[' == c) brace = true;
-    if ('=' == c && !brace) return i;
-  }
-}
-
-});
-
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
@@ -21033,6 +20412,3236 @@ var Archive = Backbone.Collection.extend({
 });
 
 exports.Archive = Archive;
+});
+
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    defaults: {
+        subscribedAt: 0,
+        unsubscribedAt: 0,
+        state: "unsubscribed"
+    },
+    initialize: function (attributes) {
+    },
+    fetchOrCreate: function (callback) {
+        this.fetch({
+            success: function () {
+                // The subscription exists!
+                callback();
+            }.bind(this),
+            error: function () {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save({}, {
+                    success: function () {
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
+                    }
+                });
+            }.bind(this)
+        });
+    },
+    needsRefresh: function () {
+        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
+});
+
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
+});
+
+require.define("/strophejs/core.js", function (require, module, exports, __dirname, __filename) {
+var Base64 = require('./base64.js').Base64;
+
+/*
+    This program is distributed under the terms of the MIT license.
+    Please see the LICENSE file for details.
+
+    Copyright 2006-2008, OGG, LLC
+*/
+
+/* jslint configuration: */
+/*global document, window, setTimeout, clearTimeout, console,
+    XMLHttpRequest, ActiveXObject,
+    Base64, MD5,
+    Strophe, $build, $msg, $iq, $pres */
+
+/** File: core.js
+ *  A JavaScript library for XMPP.
+ *
+ *  This is the JavaScript version of the Strophe library.  It relies on
+ *  an underlying protocol.
+ */
+
+/** File: bosh.js
+ *  Since JavaScript has no facilities for persistent TCP connections, this 
+ *  library uses Bidirectional-streams Over Synchronous HTTP (BOSH) to emulate
+ *  a persistent, stateful, two-way connection to an XMPP server.  More
+ *  information on BOSH can be found in XEP 124.
+ */
+
+/** File: websocket.js
+ *	Uses HTML5s websocket as the underlying protocol to allow for fast
+ *  communication from the browser to the XMPP server.
+ *  It needs an Ejabberd server that is able to deal with Websockets.
+ */ 
+
+/** PrivateFunction: Function.prototype.bind
+ *  Bind a function to an instance.
+ *
+ *  This Function object extension method creates a bound method similar
+ *  to those in Python.  This means that the 'this' object will point
+ *  to the instance you want.  See
+ *  <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind'>MDC's bind() documentation</a> and 
+ *  <a href='http://benjamin.smedbergs.us/blog/2007-01-03/bound-functions-and-function-imports-in-javascript/'>Bound Functions and Function Imports in JavaScript</a>
+ *  for a complete explanation.
+ *
+ *  This extension already exists in some browsers (namely, Firefox 3), but
+ *  we provide it to support those that don't.
+ *
+ *  Parameters:
+ *    (Object) obj - The object that will become 'this' in the bound function.
+ *    (Object) argN - An option argument that will be prepended to the 
+ *      arguments given for the function call
+ *
+ *  Returns:
+ *    The bound function.
+ */
+if (!Function.prototype.bind) {
+    Function.prototype.bind = function (obj /*, arg1, arg2, ... */)
+    {
+        var func = this;
+        var _slice = Array.prototype.slice;
+        var _concat = Array.prototype.concat;
+        var _args = _slice.call(arguments, 1);
+        
+        return function () {
+            return func.apply(obj ? obj : this,
+                              _concat.call(_args,
+                                           _slice.call(arguments, 0)));
+        };
+    };
+}
+
+/** PrivateFunction: Array.prototype.indexOf
+ *  Return the index of an object in an array.
+ *
+ *  This function is not supplied by some JavaScript implementations, so
+ *  we provide it if it is missing.  This code is from:
+ *  http://developer.mozilla.org/En/Core_JavaScript_1.5_Reference:Objects:Array:indexOf
+ *
+ *  Parameters:
+ *    (Object) elt - The object to look for.
+ *    (Integer) from - The index from which to start looking. (optional).
+ *
+ *  Returns:
+ *    The index of elt in the array or -1 if not found.
+ */
+if (!Array.prototype.indexOf)
+{
+    Array.prototype.indexOf = function (elt /*, from*/)
+    {
+        var len = this.length;
+
+        var from = Number(arguments[1]) || 0;
+        from = (from < 0) ? Math.ceil(from) : Math.floor(from);
+        if (from < 0) {
+            from += len;
+        }
+
+        for (; from < len; from++) {
+            if (from in this && this[from] === elt) {
+                return from;
+            }
+        }
+
+        return -1;
+    };
+}
+
+/* All of the Strophe globals are defined in this special function below so
+ * that references to the globals become closures.  This will ensure that
+ * on page reload, these references will still be available to callbacks
+ * that are still executing.
+ */
+
+(function (callback) {
+var Strophe;
+
+/** Function: $build
+ *  Create a Strophe.Builder.
+ *  This is an alias for 'new Strophe.Builder(name, attrs)'.
+ *
+ *  Parameters:
+ *    (String) name - The root element name.
+ *    (Object) attrs - The attributes for the root element in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $build(name, attrs) { return new Strophe.Builder(name, attrs); }
+/** Function: $msg
+ *  Create a Strophe.Builder with a <message/> element as the root.
+ *
+ *  Parmaeters:
+ *    (Object) attrs - The <message/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $msg(attrs) { return new Strophe.Builder("message", attrs); }
+/** Function: $iq
+ *  Create a Strophe.Builder with an <iq/> element as the root.
+ *
+ *  Parameters:
+ *    (Object) attrs - The <iq/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $iq(attrs) { return new Strophe.Builder("iq", attrs); }
+/** Function: $pres
+ *  Create a Strophe.Builder with a <presence/> element as the root.
+ *
+ *  Parameters:
+ *    (Object) attrs - The <presence/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $pres(attrs) { return new Strophe.Builder("presence", attrs); }
+
+/** Class: Strophe
+ *  An object container for all Strophe library functions.
+ *
+ *  This class is just a container for all the objects and constants
+ *  used in the library.  It is not meant to be instantiated, but to
+ *  provide a namespace for library objects, constants, and functions.
+ */
+Strophe = {
+    /** Constant: VERSION
+     *  The version of the Strophe library. Unreleased builds will have
+     *  a version of head-HASH where HASH is a partial revision.
+     */
+    VERSION: "@VERSION@",
+
+    /** Constants: XMPP Namespace Constants
+     *  Common namespace constants from the XMPP RFCs and XEPs.
+     *
+     *  NS.CLIENT - Main XMPP client namespace.
+     *  NS.AUTH - Legacy authentication namespace.
+     *  NS.ROSTER - Roster operations namespace.
+     *  NS.PROFILE - Profile namespace.
+     *  NS.DISCO_INFO - Service discovery info namespace from XEP 30.
+     *  NS.DISCO_ITEMS - Service discovery items namespace from XEP 30.
+     *  NS.MUC - Multi-User Chat namespace from XEP 45.
+     *  NS.SASL - XMPP SASL namespace from RFC 3920.
+     *  NS.STREAM - XMPP Streams namespace from RFC 3920.
+     *  NS.BIND - XMPP Binding namespace from RFC 3920.
+     *  NS.SESSION - XMPP Session namespace from RFC 3920.
+     */
+    NS: {
+        CLIENT: "jabber:client",
+        AUTH: "jabber:iq:auth",
+        ROSTER: "jabber:iq:roster",
+        PROFILE: "jabber:iq:profile",
+        DISCO_INFO: "http://jabber.org/protocol/disco#info",
+        DISCO_ITEMS: "http://jabber.org/protocol/disco#items",
+        MUC: "http://jabber.org/protocol/muc",
+        SASL: "urn:ietf:params:xml:ns:xmpp-sasl",
+        STREAM: "http://etherx.jabber.org/streams",
+        BIND: "urn:ietf:params:xml:ns:xmpp-bind",
+        SESSION: "urn:ietf:params:xml:ns:xmpp-session",
+        VERSION: "jabber:iq:version",
+        STANZAS: "urn:ietf:params:xml:ns:xmpp-stanzas"
+    },
+
+    /** Function: addNamespace
+     *  This function is used to extend the current namespaces in
+     *	Strophe.NS.  It takes a key and a value with the key being the
+     *	name of the new namespace, with its actual value.
+     *	For example:
+     *	Strophe.addNamespace('PUBSUB', "http://jabber.org/protocol/pubsub");
+     *
+     *  Parameters:
+     *    (String) name - The name under which the namespace will be
+     *      referenced under Strophe.NS
+     *    (String) value - The actual namespace.
+     */
+    addNamespace: function (name, value)
+    {
+	Strophe.NS[name] = value;
+    },
+
+    /** Constants: Connection Status Constants
+     *  Connection status constants for use by the connection handler
+     *  callback.
+     *
+     *  Status.ERROR - An error has occurred
+     *  Status.CONNECTING - The connection is currently being made
+     *  Status.CONNFAIL - The connection attempt failed
+     *  Status.AUTHENTICATING - The connection is authenticating
+     *  Status.AUTHFAIL - The authentication attempt failed
+     *  Status.CONNECTED - The connection has succeeded
+     *  Status.DISCONNECTED - The connection has been terminated
+     *  Status.DISCONNECTING - The connection is currently being terminated
+     *  Status.ATTACHED - The connection has been attached
+     */
+    Status: {
+        ERROR: 0,
+        CONNECTING: 1,
+        CONNFAIL: 2,
+        AUTHENTICATING: 3,
+        AUTHFAIL: 4,
+        CONNECTED: 5,
+        DISCONNECTED: 6,
+        DISCONNECTING: 7,
+        ATTACHED: 8
+    },
+
+    /** Constants: Log Level Constants
+     *  Logging level indicators.
+     *
+     *  LogLevel.DEBUG - Debug output
+     *  LogLevel.INFO - Informational output
+     *  LogLevel.WARN - Warnings
+     *  LogLevel.ERROR - Errors
+     *  LogLevel.FATAL - Fatal errors
+     */
+    LogLevel: {
+        DEBUG: 0,
+        INFO: 1,
+        WARN: 2,
+        ERROR: 3,
+        FATAL: 4
+    },
+
+    /** PrivateConstants: DOM Element Type Constants
+     *  DOM element types.
+     *
+     *  ElementType.NORMAL - Normal element.
+     *  ElementType.TEXT - Text data element.
+     */
+    ElementType: {
+        NORMAL: 1,
+        TEXT: 3
+    },
+
+
+    /** Function: forEachChild
+     *  Map a function over some or all child elements of a given element.
+     *
+     *  This is a small convenience function for mapping a function over
+     *  some or all of the children of an element.  If elemName is null, all
+     *  children will be passed to the function, otherwise only children
+     *  whose tag names match elemName will be passed.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The element to operate on.
+     *    (String) elemName - The child element tag name filter.
+     *    (Function) func - The function to apply to each child.  This
+     *      function should take a single argument, a DOM element.
+     */
+    forEachChild: function (elem, elemName, func)
+    {
+        var i, childNode;
+
+        for (i = 0; i < elem.childNodes.length; i++) {
+            childNode = elem.childNodes[i];
+            if (childNode.nodeType == Strophe.ElementType.NORMAL &&
+                (!elemName || this.isTagEqual(childNode, elemName))) {
+                func(childNode);
+            }
+        }
+    },
+
+    /** Function: isTagEqual
+     *  Compare an element's tag name with a string.
+     *
+     *  This function is case insensitive.
+     *
+     *  Parameters:
+     *    (XMLElement) el - A DOM element.
+     *    (String) name - The element name.
+     *
+     *  Returns:
+     *    true if the element's tag name matches _el_, and false
+     *    otherwise.
+     */
+    isTagEqual: function (el, name)
+    {
+        return el.tagName.toLowerCase() == name.toLowerCase();
+    },
+
+    /** PrivateVariable: _xmlGenerator
+     *  _Private_ variable that caches a DOM document to
+     *  generate elements.
+     */
+    _xmlGenerator: null,
+
+    /** PrivateFunction: _makeGenerator
+     *  _Private_ function that creates a dummy XML DOM document to serve as
+     *  an element and text node generator.
+     */
+    _makeGenerator: function () {
+        var doc;
+
+        if (window.ActiveXObject) {
+            doc = this._getIEXmlDom();
+            doc.appendChild(doc.createElement('strophe'));
+        } else {
+            doc = document.implementation
+                .createDocument('jabber:client', 'strophe', null);
+        }
+
+        return doc;
+    },
+
+    /** Function: xmlGenerator
+     *  Get the DOM document to generate elements.
+     *
+     *  Returns:
+     *    The currently used DOM document.
+     */
+    xmlGenerator: function () {
+        if (!Strophe._xmlGenerator) {
+            Strophe._xmlGenerator = Strophe._makeGenerator();
+        }
+        return Strophe._xmlGenerator;
+    },
+
+    /** PrivateFunction: _getIEXmlDom
+     *  Gets IE xml doc object
+     *
+     *  Returns:
+     *    A Microsoft XML DOM Object
+     *  See Also:
+     *    http://msdn.microsoft.com/en-us/library/ms757837%28VS.85%29.aspx
+     */
+    _getIEXmlDom : function () {
+        var doc = null;
+        var docStrings = [
+            "Msxml2.DOMDocument.6.0",
+            "Msxml2.DOMDocument.5.0",
+            "Msxml2.DOMDocument.4.0",
+            "MSXML2.DOMDocument.3.0",
+            "MSXML2.DOMDocument",
+            "MSXML.DOMDocument",
+            "Microsoft.XMLDOM"
+        ];
+
+        for (var d = 0; d < docStrings.length; d++) {
+            if (doc === null) {
+                try {
+                    doc = new ActiveXObject(docStrings[d]);
+                } catch (e) {
+                    doc = null;
+                }
+            } else {
+                break;
+            }
+        }
+
+        return doc;
+    },
+
+    /** Function: xmlElement
+     *  Create an XML DOM element.
+     *
+     *  This function creates an XML DOM element correctly across all
+     *  implementations. Note that these are not HTML DOM elements, which
+     *  aren't appropriate for XMPP stanzas.
+     *
+     *  Parameters:
+     *    (String) name - The name for the element.
+     *    (Array|Object) attrs - An optional array or object containing
+     *      key/value pairs to use as element attributes. The object should
+     *      be in the format {'key': 'value'} or {key: 'value'}. The array
+     *      should have the format [['key1', 'value1'], ['key2', 'value2']].
+     *    (String) text - The text child data for the element.
+     *
+     *  Returns:
+     *    A new XML DOM element.
+     */
+    xmlElement: function (name)
+    {
+        if (!name) { return null; }
+
+        var node = Strophe.xmlGenerator().createElement(name);
+
+        // FIXME: this should throw errors if args are the wrong type or
+        // there are more than two optional args
+        var a, i, k;
+        for (a = 1; a < arguments.length; a++) {
+            if (!arguments[a]) { continue; }
+            if (typeof(arguments[a]) == "string" ||
+                typeof(arguments[a]) == "number") {
+                node.appendChild(Strophe.xmlTextNode(arguments[a]));
+            } else if (typeof(arguments[a]) == "object" &&
+                       typeof(arguments[a].sort) == "function") {
+                for (i = 0; i < arguments[a].length; i++) {
+                    if (typeof(arguments[a][i]) == "object" &&
+                        typeof(arguments[a][i].sort) == "function") {
+                        node.setAttribute(arguments[a][i][0],
+                                          arguments[a][i][1]);
+                    }
+                }
+            } else if (typeof(arguments[a]) == "object") {
+                for (k in arguments[a]) {
+                    if (arguments[a].hasOwnProperty(k)) {
+                        node.setAttribute(k, arguments[a][k]);
+                    }
+                }
+            }
+        }
+
+        return node;
+    },
+
+    /*  Function: xmlescape
+     *  Excapes invalid xml characters.
+     *
+     *  Parameters:
+     *     (String) text - text to escape.
+     *
+     *	Returns:
+     *      Escaped text.
+     */
+    xmlescape: function (text)
+    {
+	text = text.replace(/\&/g, "&amp;");
+        text = text.replace(/</g,  "&lt;");
+        text = text.replace(/>/g,  "&gt;");
+        return text;
+    },
+
+    /** Function: xmlTextNode
+     *  Creates an XML DOM text node.
+     *
+     *  Provides a cross implementation version of document.createTextNode.
+     *
+     *  Parameters:
+     *    (String) text - The content of the text node.
+     *
+     *  Returns:
+     *    A new XML DOM text node.
+     */
+    xmlTextNode: function (text)
+    {
+	//ensure text is escaped
+	text = Strophe.xmlescape(text);
+
+        return Strophe.xmlGenerator().createTextNode(text);
+    },
+
+    /** Function: getText
+     *  Get the concatenation of all text children of an element.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    A String with the concatenated text of all text element children.
+     */
+    getText: function (elem)
+    {
+        if (!elem) { return null; }
+
+        var str = "";
+        if (elem.childNodes.length === 0 && elem.nodeType ==
+            Strophe.ElementType.TEXT) {
+            str += elem.nodeValue;
+        }
+
+        for (var i = 0; i < elem.childNodes.length; i++) {
+            if (elem.childNodes[i].nodeType == Strophe.ElementType.TEXT) {
+                str += elem.childNodes[i].nodeValue;
+            }
+        }
+
+        return str;
+    },
+
+    /** Function: copyElement
+     *  Copy an XML DOM element.
+     *
+     *  This function copies a DOM element and all its descendants and returns
+     *  the new copy.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    A new, copied DOM element tree.
+     */
+    copyElement: function (elem)
+    {
+        var i, el;
+        if (elem.nodeType == Strophe.ElementType.NORMAL) {
+            el = Strophe.xmlElement(elem.tagName);
+
+            for (i = 0; i < elem.attributes.length; i++) {
+                el.setAttribute(elem.attributes[i].nodeName.toLowerCase(),
+                                elem.attributes[i].value);
+            }
+
+            for (i = 0; i < elem.childNodes.length; i++) {
+                el.appendChild(Strophe.copyElement(elem.childNodes[i]));
+            }
+        } else if (elem.nodeType == Strophe.ElementType.TEXT) {
+            el = Strophe.xmlTextNode(elem.nodeValue);
+        }
+
+        return el;
+    },
+
+    /** Function: escapeNode
+     *  Escape the node part (also called local part) of a JID.
+     *
+     *  Parameters:
+     *    (String) node - A node (or local part).
+     *
+     *  Returns:
+     *    An escaped node (or local part).
+     */
+    escapeNode: function (node)
+    {
+        return node.replace(/^\s+|\s+$/g, '')
+            .replace(/\\/g,  "\\5c")
+            .replace(/ /g,   "\\20")
+            .replace(/\"/g,  "\\22")
+            .replace(/\&/g,  "\\26")
+            .replace(/\'/g,  "\\27")
+            .replace(/\//g,  "\\2f")
+            .replace(/:/g,   "\\3a")
+            .replace(/</g,   "\\3c")
+            .replace(/>/g,   "\\3e")
+            .replace(/@/g,   "\\40");
+    },
+
+    /** Function: unescapeNode
+     *  Unescape a node part (also called local part) of a JID.
+     *
+     *  Parameters:
+     *    (String) node - A node (or local part).
+     *
+     *  Returns:
+     *    An unescaped node (or local part).
+     */
+    unescapeNode: function (node)
+    {
+        return node.replace(/\\20/g, " ")
+            .replace(/\\22/g, '"')
+            .replace(/\\26/g, "&")
+            .replace(/\\27/g, "'")
+            .replace(/\\2f/g, "/")
+            .replace(/\\3a/g, ":")
+            .replace(/\\3c/g, "<")
+            .replace(/\\3e/g, ">")
+            .replace(/\\40/g, "@")
+            .replace(/\\5c/g, "\\");
+    },
+
+    /** Function: getNodeFromJid
+     *  Get the node portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the node.
+     */
+    getNodeFromJid: function (jid)
+    {
+        if (jid.indexOf("@") < 0) { return null; }
+        return jid.split("@")[0];
+    },
+
+    /** Function: getDomainFromJid
+     *  Get the domain portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the domain.
+     */
+    getDomainFromJid: function (jid)
+    {
+        var bare = Strophe.getBareJidFromJid(jid);
+        if (bare.indexOf("@") < 0) {
+            return bare;
+        } else {
+            var parts = bare.split("@");
+            parts.splice(0, 1);
+            return parts.join('@');
+        }
+    },
+
+    /** Function: getResourceFromJid
+     *  Get the resource portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the resource.
+     */
+    getResourceFromJid: function (jid)
+    {
+        var s = jid.split("/");
+        if (s.length < 2) { return null; }
+        s.splice(0, 1);
+        return s.join('/');
+    },
+
+    /** Function: getBareJidFromJid
+     *  Get the bare JID from a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the bare JID.
+     */
+    getBareJidFromJid: function (jid)
+    {
+        return jid ? jid.split("/")[0] : null;
+    },
+
+    /** Function: log
+     *  User overrideable logging function.
+     *
+     *  This function is called whenever the Strophe library calls any
+     *  of the logging functions.  The default implementation of this
+     *  function does nothing.  If client code wishes to handle the logging
+     *  messages, it should override this with
+     *  > Strophe.log = function (level, msg) {
+     *  >   (user code here)
+     *  > };
+     *
+     *  Please note that data sent and received over the wire is logged
+     *  via Strophe.Connection.rawInput() and Strophe.Connection.rawOutput().
+     *
+     *  The different levels and their meanings are
+     *
+     *    DEBUG - Messages useful for debugging purposes.
+     *    INFO - Informational messages.  This is mostly information like
+     *      'disconnect was called' or 'SASL auth succeeded'.
+     *    WARN - Warnings about potential problems.  This is mostly used
+     *      to report transient connection errors like request timeouts.
+     *    ERROR - Some error occurred.
+     *    FATAL - A non-recoverable fatal error occurred.
+     *
+     *  Parameters:
+     *    (Integer) level - The log level of the log message.  This will
+     *      be one of the values in Strophe.LogLevel.
+     *    (String) msg - The log message.
+     */
+    log: function (level, msg)
+    {
+        return;
+    },
+
+    /** Function: debug
+     *  Log a message at the Strophe.LogLevel.DEBUG level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    debug: function (msg)
+    {
+        this.log(this.LogLevel.DEBUG, msg);
+    },
+
+    /** Function: info
+     *  Log a message at the Strophe.LogLevel.INFO level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    info: function (msg)
+    {
+        this.log(this.LogLevel.INFO, msg);
+    },
+
+    /** Function: warn
+     *  Log a message at the Strophe.LogLevel.WARN level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    warn: function (msg)
+    {
+        this.log(this.LogLevel.WARN, msg);
+    },
+
+    /** Function: error
+     *  Log a message at the Strophe.LogLevel.ERROR level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    error: function (msg)
+    {
+        this.log(this.LogLevel.ERROR, msg);
+    },
+
+    /** Function: fatal
+     *  Log a message at the Strophe.LogLevel.FATAL level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    fatal: function (msg)
+    {
+        this.log(this.LogLevel.FATAL, msg);
+    },
+
+    /** Function: serialize
+     *  Render a DOM element and all descendants to a String.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    The serialized element tree as a String.
+     */
+    serialize: function (elem)
+    {
+        var result;
+
+        if (!elem) { return null; }
+
+        if (typeof(elem.tree) === "function") {
+            elem = elem.tree();
+        }
+
+        var nodeName = elem.nodeName;
+        var i, child;
+
+        if (elem.getAttribute("_realname")) {
+            nodeName = elem.getAttribute("_realname");
+        }
+
+        result = "<" + nodeName;
+        for (i = 0; i < elem.attributes.length; i++) {
+               if (elem.attributes[i].nodeName != "_realname") {
+                 result += " " + elem.attributes[i].nodeName.toLowerCase() +
+                "='" + elem.attributes[i].value
+                    .replace(/&/g, "&amp;")
+                       .replace(/\'/g, "&apos;")
+                       .replace(/</g, "&lt;") + "'";
+               }
+        }
+
+        if (elem.childNodes.length > 0) {
+            result += ">";
+            for (i = 0; i < elem.childNodes.length; i++) {
+                child = elem.childNodes[i];
+                if (child.nodeType == Strophe.ElementType.NORMAL) {
+                    // normal element, so recurse
+                    result += Strophe.serialize(child);
+                } else if (child.nodeType == Strophe.ElementType.TEXT) {
+                    // text element
+                    result += child.nodeValue;
+                }
+            }
+            result += "</" + nodeName + ">";
+        } else {
+            result += "/>";
+        }
+
+        return result;
+    },
+
+    /** PrivateVariable: _requestId
+     *  _Private_ variable that keeps track of the request ids for
+     *  connections.
+     */
+    _requestId: 0,
+
+    /** PrivateVariable: Strophe.connectionPlugins
+     *  _Private_ variable Used to store plugin names that need
+     *  initialization on Strophe.Connection construction.
+     */
+    _connectionPlugins: {},
+
+    /** Function: addConnectionPlugin
+     *  Extends the Strophe.Connection object with the given plugin.
+     *
+     *  Paramaters:
+     *    (String) name - The name of the extension.
+     *    (Object) ptype - The plugin's prototype.
+     */
+    addConnectionPlugin: function (name, ptype)
+    {
+        Strophe._connectionPlugins[name] = ptype;
+    }
+};
+
+/** Class: Strophe.Builder
+ *  XML DOM builder.
+ *
+ *  This object provides an interface similar to JQuery but for building
+ *  DOM element easily and rapidly.  All the functions except for toString()
+ *  and tree() return the object, so calls can be chained.  Here's an
+ *  example using the $iq() builder helper.
+ *  > $iq({to: 'you', from: 'me', type: 'get', id: '1'})
+ *  >     .c('query', {xmlns: 'strophe:example'})
+ *  >     .c('example')
+ *  >     .toString()
+ *  The above generates this XML fragment
+ *  > <iq to='you' from='me' type='get' id='1'>
+ *  >   <query xmlns='strophe:example'>
+ *  >     <example/>
+ *  >   </query>
+ *  > </iq>
+ *  The corresponding DOM manipulations to get a similar fragment would be
+ *  a lot more tedious and probably involve several helper variables.
+ *
+ *  Since adding children makes new operations operate on the child, up()
+ *  is provided to traverse up the tree.  To add two children, do
+ *  > builder.c('child1', ...).up().c('child2', ...)
+ *  The next operation on the Builder will be relative to the second child.
+ */
+
+/** Constructor: Strophe.Builder
+ *  Create a Strophe.Builder object.
+ *
+ *  The attributes should be passed in object notation.  For example
+ *  > var b = new Builder('message', {to: 'you', from: 'me'});
+ *  or
+ *  > var b = new Builder('messsage', {'xml:lang': 'en'});
+ *
+ *  Parameters:
+ *    (String) name - The name of the root element.
+ *    (Object) attrs - The attributes for the root element in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder.
+ */
+Strophe.Builder = function (name, attrs)
+{
+    // Set correct namespace for jabber:client elements
+    if (name == "presence" || name == "message" || name == "iq") {
+        if (attrs && !attrs.xmlns) {
+            attrs.xmlns = Strophe.NS.CLIENT;
+        } else if (!attrs) {
+            attrs = {xmlns: Strophe.NS.CLIENT};
+        }
+    }
+
+    // Holds the tree being built.
+    this.nodeTree = Strophe.xmlElement(name, attrs);
+
+    // Points to the current operation node.
+    this.node = this.nodeTree;
+};
+
+Strophe.Builder.prototype = {
+    /** Function: tree
+     *  Return the DOM tree.
+     *
+     *  This function returns the current DOM tree as an element object.  This
+     *  is suitable for passing to functions like Strophe.Connection.send().
+     *
+     *  Returns:
+     *    The DOM tree as a element object.
+     */
+    tree: function ()
+    {
+        return this.nodeTree;
+    },
+
+    /** Function: toString
+     *  Serialize the DOM tree to a String.
+     *
+     *  This function returns a string serialization of the current DOM
+     *  tree.  It is often used internally to pass data to a
+     *  Strophe.Request object.
+     *
+     *  Returns:
+     *    The serialized DOM tree in a String.
+     */
+    toString: function ()
+    {
+        return Strophe.serialize(this.nodeTree);
+    },
+
+    /** Function: up
+     *  Make the current parent element the new current element.
+     *
+     *  This function is often used after c() to traverse back up the tree.
+     *  For example, to add two children to the same element
+     *  > builder.c('child1', {}).up().c('child2', {});
+     *
+     *  Returns:
+     *    The Stophe.Builder object.
+     */
+    up: function ()
+    {
+        this.node = this.node.parentNode;
+        return this;
+    },
+
+    /** Function: attrs
+     *  Add or modify attributes of the current element.
+     *
+     *  The attributes should be passed in object notation.  This function
+     *  does not move the current element pointer.
+     *
+     *  Parameters:
+     *    (Object) moreattrs - The attributes to add/modify in object notation.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    attrs: function (moreattrs)
+    {
+        for (var k in moreattrs) {
+            if (moreattrs.hasOwnProperty(k)) {
+                this.node.setAttribute(k, moreattrs[k]);
+            }
+        }
+        return this;
+    },
+
+    /** Function: c
+     *  Add a child to the current element and make it the new current
+     *  element.
+     *
+     *  This function moves the current element pointer to the child.  If you
+     *  need to add another child, it is necessary to use up() to go back
+     *  to the parent in the tree.
+     *
+     *  Parameters:
+     *    (String) name - The name of the child.
+     *    (Object) attrs - The attributes of the child in object notation.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    c: function (name, attrs)
+    {
+        var child = Strophe.xmlElement(name, attrs);
+        this.node.appendChild(child);
+        this.node = child;
+        return this;
+    },
+
+    /** Function: cnode
+     *  Add a child to the current element and make it the new current
+     *  element.
+     *
+     *  This function is the same as c() except that instead of using a
+     *  name and an attributes object to create the child it uses an
+     *  existing DOM element object.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    cnode: function (elem)
+    {
+        var xmlGen = Strophe.xmlGenerator();
+        var newElem = xmlGen.importNode ? xmlGen.importNode(elem, true) : Strophe.copyElement(elem);
+        this.node.appendChild(newElem);
+        this.node = newElem;
+        return this;
+    },
+
+    /** Function: t
+     *  Add a child text element.
+     *
+     *  This *does not* make the child the new current element since there
+     *  are no children of text elements.
+     *
+     *  Parameters:
+     *    (String) text - The text data to append to the current element.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    t: function (text)
+    {
+        var child = Strophe.xmlTextNode(text);
+        this.node.appendChild(child);
+        return this;
+    }
+};
+
+
+/** PrivateClass: Strophe.Handler
+ *  _Private_ helper class for managing stanza handlers.
+ *
+ *  A Strophe.Handler encapsulates a user provided callback function to be
+ *  executed when matching stanzas are received by the connection.
+ *  Handlers can be either one-off or persistant depending on their
+ *  return value. Returning true will cause a Handler to remain active, and
+ *  returning false will remove the Handler.
+ *
+ *  Users will not use Strophe.Handler objects directly, but instead they
+ *  will use Strophe.Connection.addHandler() and
+ *  Strophe.Connection.deleteHandler().
+ */
+
+/** PrivateConstructor: Strophe.Handler
+ *  Create and initialize a new Strophe.Handler.
+ *
+ *  Parameters:
+ *    (Function) handler - A function to be executed when the handler is run.
+ *    (String) ns - The namespace to match.
+ *    (String) name - The element name to match.
+ *    (String) type - The element type to match.
+ *    (String) id - The element id attribute to match.
+ *    (String) from - The element from attribute to match.
+ *    (Object) options - Handler options
+ *
+ *  Returns:
+ *    A new Strophe.Handler object.
+ */
+Strophe.Handler = function (handler, ns, name, type, id, from, options)
+{
+    this.handler = handler;
+    this.ns = ns;
+    this.name = name;
+    this.type = type;
+    this.id = id;
+    this.options = options || {matchbare: false};
+
+    // default matchBare to false if undefined
+    if (!this.options.matchBare) {
+        this.options.matchBare = false;
+    }
+
+    if (this.options.matchBare) {
+        this.from = from ? Strophe.getBareJidFromJid(from) : null;
+    } else {
+        this.from = from;
+    }
+
+    // whether the handler is a user handler or a system handler
+    this.user = true;
+};
+
+Strophe.Handler.prototype = {
+    /** PrivateFunction: isMatch
+     *  Tests if a stanza matches the Strophe.Handler.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XML element to test.
+     *
+     *  Returns:
+     *    true if the stanza matches and false otherwise.
+     */
+    isMatch: function (elem)
+    {
+        var nsMatch;
+        var from = null;
+
+        if (this.options.matchBare) {
+            from = Strophe.getBareJidFromJid(elem.getAttribute('from'));
+        } else {
+            from = elem.getAttribute('from');
+        }
+
+        nsMatch = false;
+        if (!this.ns) {
+            nsMatch = true;
+        } else {
+            var that = this;
+            Strophe.forEachChild(elem, null, function (elem) {
+                if (elem.getAttribute("xmlns") == that.ns) {
+                    nsMatch = true;
+                }
+            });
+
+            nsMatch = nsMatch || elem.getAttribute("xmlns") == this.ns;
+        }
+
+        if (nsMatch &&
+            (!this.name || Strophe.isTagEqual(elem, this.name)) &&
+            (!this.type || elem.getAttribute("type") == this.type) &&
+            (!this.id || elem.getAttribute("id") == this.id) &&
+            (!this.from || from == this.from)) {
+                return true;
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: run
+     *  Run the callback on a matching stanza.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The DOM element that triggered the
+     *      Strophe.Handler.
+     *
+     *  Returns:
+     *    A boolean indicating if the handler should remain active.
+     */
+    run: function (elem)
+    {
+        var result = null;
+        // try {
+            result = this.handler(elem);
+        // } catch (e) {
+        //     if (e.sourceURL) {
+        //         Strophe.fatal("error: " + this.handler +
+        //                       " " + e.sourceURL + ":" +
+        //                       e.line + " - " + e.name + ": " + e.message);
+        //     } else if (e.fileName) {
+        //         if (typeof(console) != "undefined") {
+        //             console.trace();
+        //             console.error(this.handler, " - error - ", e, e.message);
+        //         }
+        //         Strophe.fatal("error: " + this.handler + " " +
+        //                       e.fileName + ":" + e.lineNumber + " - " +
+        //                       e.name + ": " + e.message);
+        //     } else {
+        //         Strophe.fatal("error: " + this.handler);
+        //     }
+        // 
+        //     throw e;
+        // }
+
+        return result;
+    },
+
+    /** PrivateFunction: toString
+     *  Get a String representation of the Strophe.Handler object.
+     *
+     *  Returns:
+     *    A String.
+     */
+    toString: function ()
+    {
+        return "{Handler: " + this.handler + "(" + this.name + "," +
+            this.id + "," + this.ns + ")}";
+    }
+};
+
+/** PrivateClass: Strophe.TimedHandler
+ *  _Private_ helper class for managing timed handlers.
+ *
+ *  A Strophe.TimedHandler encapsulates a user provided callback that
+ *  should be called after a certain period of time or at regular
+ *  intervals.  The return value of the callback determines whether the
+ *  Strophe.TimedHandler will continue to fire.
+ *
+ *  Users will not use Strophe.TimedHandler objects directly, but instead
+ *  they will use Strophe.Connection.addTimedHandler() and
+ *  Strophe.Connection.deleteTimedHandler().
+ */
+
+/** PrivateConstructor: Strophe.TimedHandler
+ *  Create and initialize a new Strophe.TimedHandler object.
+ *
+ *  Parameters:
+ *    (Integer) period - The number of milliseconds to wait before the
+ *      handler is called.
+ *    (Function) handler - The callback to run when the handler fires.  This
+ *      function should take no arguments.
+ *
+ *  Returns:
+ *    A new Strophe.TimedHandler object.
+ */
+Strophe.TimedHandler = function (period, handler)
+{
+    this.period = period;
+    this.handler = handler;
+
+    this.lastCalled = new Date().getTime();
+    this.user = true;
+};
+
+Strophe.TimedHandler.prototype = {
+    /** PrivateFunction: run
+     *  Run the callback for the Strophe.TimedHandler.
+     *
+     *  Returns:
+     *    true if the Strophe.TimedHandler should be called again, and false
+     *      otherwise.
+     */
+    run: function ()
+    {
+        this.lastCalled = new Date().getTime();
+        return this.handler();
+    },
+
+    /** PrivateFunction: reset
+     *  Reset the last called time for the Strophe.TimedHandler.
+     */
+    reset: function ()
+    {
+        this.lastCalled = new Date().getTime();
+    },
+
+    /** PrivateFunction: toString
+     *  Get a string representation of the Strophe.TimedHandler object.
+     *
+     *  Returns:
+     *    The string representation.
+     */
+    toString: function ()
+    {
+        return "{TimedHandler: " + this.handler + "(" + this.period +")}";
+    }
+};
+
+
+/** Class: Strophe.Connection
+ *  XMPP Connection manager.
+ *
+ *  Thie class is the main part of Strophe.  It manages the connection
+ *  to an XMPP server and dispatches events to the user callbacks as
+ *  data arrives.  It supports SASL PLAIN, SASL DIGEST-MD5, and legacy
+ *  authentication.
+ *  For the connection to the XMPP server it uses and underlying protocol
+ *  supplied when starting the connection.
+ *
+ *  After creating a Strophe.Connection object, the user will typically
+ *  call connect() with a user supplied callback to handle connection level
+ *  events like authentication failure, disconnection, or connection
+ *  complete.
+ *
+ *  The user will also have several event handlers defined by using
+ *  addHandler() and addTimedHandler().  These will allow the user code to
+ *  respond to interesting stanzas or do something periodically with the
+ *  connection.  These handlers will be active once authentication is
+ *  finished.
+ *
+ *  To send data to the connection, use send().
+ */
+
+/** Constructor: Strophe.Connection
+ *  Create and initialize a Strophe.Connection object.
+ *
+ *  Parameters:
+ *    (Object) params - An Object with a new protocl object.
+ *    For Bosh, connection = new Strophe.Connection({protocol: new Strophe.Bosh(BOSH_SERVICE)});
+ *    Currently supported protocols : Bosh, Websocket.
+ * 	  Coming : XMPP socket (for use in Node.js), Socket.io...
+ *
+ *  Returns:
+ *    A new Strophe.Connection object.
+ */
+Strophe.Connection = function (service)
+{
+	if (service.protocol) {
+		this.protocol = service.protocol;
+	}
+	else {
+		console.log("Warning : this syntax will be deprecated to leave room for othe protocols. Please use new Strophe.Connection({proto : new Strophe.Bosh(BOSH_SERVICE)})" )
+	    /* The path to the httpbind service. */
+	    this.protocol = new Strophe.Bosh(service);
+	}
+
+	/* The connected JID. */
+    this.jid = "";
+    /* stream:features */
+    this.features = null;
+
+    // SASL
+    this.do_session = false;
+    this.do_bind = false;
+
+    // handler lists
+    this.timedHandlers = [];
+    this.handlers = [];
+    this.removeTimeds = [];
+    this.removeHandlers = [];
+    this.addTimeds = [];
+    this.addHandlers = [];
+
+    this.authenticated = false;
+    this.disconnecting = false;
+    this.connected = false;
+	this.status = null;
+	this._stanzas = [];
+
+    this.errors = 0;
+
+    this._uniqueId = Math.round(Math.random() * 10000);
+
+    this._sasl_success_handler = null;
+    this._sasl_failure_handler = null;
+    this._sasl_challenge_handler = null;
+    this._throttle_stanzas_handler = null;
+
+	this.max_stanzas_per_second = 1; // Traffic shaper at 10 stanzas per second, max.
+
+    // initialize plugins
+    for (var k in Strophe._connectionPlugins) {
+        if (Strophe._connectionPlugins.hasOwnProperty(k)) {
+	    var ptype = Strophe._connectionPlugins[k];
+            // jslint complaints about the below line, but this is fine
+            var F = function () {};
+            F.prototype = ptype;
+            this[k] = new F();
+	    this[k].init(this);
+        }
+    }
+};
+
+Strophe.Connection.prototype = {
+    /** Function: reset
+     *  Reset the connection.
+     *
+     *  This function should be called after a connection is disconnected
+     *  before that connection is reused.
+     */
+    reset: function ()
+    {
+        // SASL
+        this.do_session = false;
+        this.do_bind = false;
+
+        // handler lists
+        this.timedHandlers = [];
+        this.handlers = [];
+        this.removeTimeds = [];
+        this.removeHandlers = [];
+        this.addTimeds = [];
+        this.addHandlers = [];
+
+        this.authenticated = false;
+        this.disconnecting = false;
+        this.connected = false;
+		this.status = null;
+
+        this.errors = 0;
+
+        this._uniqueId = Math.round(Math.random()*10000);
+    },
+
+    /** Function: getUniqueId
+     *  Generate a unique ID for use in <iq/> elements.
+     *
+     *  All <iq/> stanzas are required to have unique id attributes.  This
+     *  function makes creating these easy.  Each connection instance has
+     *  a counter which starts from zero, and the value of this counter
+     *  plus a colon followed by the suffix becomes the unique id. If no
+     *  suffix is supplied, the counter is used as the unique id.
+     *
+     *  Suffixes are used to make debugging easier when reading the stream
+     *  data, and their use is recommended.  The counter resets to 0 for
+     *  every new connection for the same reason.  For connections to the
+     *  same server that authenticate the same way, all the ids should be
+     *  the same, which makes it easy to see changes.  This is useful for
+     *  automated testing as well.
+     *
+     *  Parameters:
+     *    (String) suffix - A optional suffix to append to the id.
+     *
+     *  Returns:
+     *    A unique string to be used for the id attribute.
+     */
+    getUniqueId: function (suffix)
+    {
+        if (typeof(suffix) == "string" || typeof(suffix) == "number") {
+            return ++this._uniqueId + ":" + suffix;
+        } else {
+            return ++this._uniqueId + "";
+        }
+    },
+
+    /** Function: connect
+     *  Starts the connection process.
+     *
+     *  As the connection process proceeds, the user supplied callback will
+     *  be triggered multiple times with status updates.  The callback
+     *  should take two arguments - the status code and the error condition.
+     *
+     *  The status code will be one of the values in the Strophe.Status
+     *  constants.  The error condition will be one of the conditions
+     *  defined in RFC 3920 or the condition 'strophe-parsererror'.
+     *
+     *  Please see XEP 124 for a more detailed explanation of the optional
+     *  parameters below.
+     *
+     *  Parameters:
+     *    (String) jid - The user's JID.  This may be a bare JID,
+     *      or a full JID.  If a node is not supplied, SASL ANONYMOUS
+     *      authentication will be attempted.
+     *    (String) pass - The user's password.
+     *    (Function) callback The connect callback function.
+     *    (Integer) wait - The optional HTTPBIND wait value.  This is the
+     *      time the server will wait before returning an empty result for
+     *      a request.  The default setting of 60 seconds is recommended.
+     *      Other settings will require tweaks to the Strophe.TIMEOUT value.
+     *    (Integer) hold - The optional HTTPBIND hold value.  This is the
+     *      number of connections the server will hold at one time.  This
+     *      should almost always be set to 1 (the default).
+     */
+    connect: function (jid, pass, callback, wait, hold)
+    {
+		this.changeConnectStatus(Strophe.Status.CONNECTING, null);
+        this.jid = jid;
+        this.pass = pass;
+        this.connect_callback = callback;
+        this.disconnecting = false;
+        this.connected = false;
+        this.authenticated = false;
+        this.errors = 0;
+
+        // parse jid for domain and resource
+        this.domain = Strophe.getDomainFromJid(this.jid);
+		// Let's start the throttler.
+		this._throttleStanzas();
+		// Let's go.
+		this.protocol.connect(this);
+    },
+
+	/** Function start
+	 * This function initializes the stream
+	 * <stream:stream
+       to='example.com'
+       xmlns='jabber:client'
+       xmlns:stream='http://etherx.jabber.org/streams'
+       version='1.0'>
+	
+	 */
+	start: function () {
+		this.send($build('stream:stream', {
+			to: this.domain,
+			'xmlns': 'jabber:client',
+			'xmlns:stream': 'http://etherx.jabber.org/streams',
+			'version': '1.0'}).tree());
+	},
+
+    /** Function: xmlInput
+     *  User overrideable function that receives XML data coming into the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.xmlInput = function (elem) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XML data received by the connection.
+     */
+    xmlInput: function (elem)
+    {
+        return;
+    },
+
+    /** Function: xmlOutput
+     *  User overrideable function that receives XML data sent to the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.xmlOutput = function (elem) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XMLdata sent by the connection.
+     */
+    xmlOutput: function (elem)
+    {
+        return;
+    },
+
+    /** Function: rawInput
+     *  User overrideable function that receives raw data coming into the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.rawInput = function (data) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (String) data - The data received by the connection.
+     */
+    rawInput: function (data)
+    {
+        return;
+    },
+
+    /** Function: rawOutput
+     *  User overrideable function that receives raw data sent to the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.rawOutput = function (data) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (String) data - The data sent by the connection.
+     */
+    rawOutput: function (data)
+    {
+        return;
+    },
+
+    /** Function: send
+     *  Send a stanza.
+     *
+     *  This function is called to push data to the server through the 
+	 *  protocol object.
+     *
+     *  Parameters:
+     *    (XMLElement |
+     *     [XMLElement] |
+     *     Strophe.Builder) elem - The stanza to send.
+     */
+    send: function (elem)
+    {
+        if (elem === null) { return ; }
+        if (typeof(elem.sort) === "function") {
+            for (var i = 0; i < elem.length; i++) {
+				if (this._ensureDOMElement(elem[i])) {
+					this._stanzas.push(elem[i]);
+				}
+            }
+        } else if (typeof(elem.tree) === "function") {
+			if (this._ensureDOMElement(elem.tree())) {
+				this._stanzas.push(elem.tree());
+				
+			}
+        } else {
+			if (this._ensureDOMElement(elem)) {
+				this._stanzas.push(elem);
+			}
+        }
+    },
+
+    /** Function: sendIQ
+     *  Helper function to send IQ stanzas.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza to send.
+     *    (Function) callback - The callback function for a successful request.
+     *    (Function) errback - The callback function for a failed or timed
+     *      out request.  On timeout, the stanza will be null.
+     *    (Integer) timeout - The time specified in milliseconds for a
+     *      timeout to occur.
+     *
+     *  Returns:
+     *    The id used to send the IQ.
+    */
+    sendIQ: function (elem, callback, errback, timeout) {
+        var timeoutHandler = null;
+        var that = this;
+
+        if (typeof(elem.tree) === "function") {
+            elem = elem.tree();
+        }
+	var id = elem.getAttribute('id');
+
+	// inject id if not found
+	if (!id) {
+	    id = this.getUniqueId("sendIQ");
+	    elem.setAttribute("id", id);
+	}
+
+	var handler = this.addHandler(function (stanza) {
+	    // remove timeout handler if there is one
+            if (timeoutHandler) {
+                that.deleteTimedHandler(timeoutHandler);
+            }
+
+            var iqtype = stanza.getAttribute('type');
+	    if (iqtype == 'result') {
+		if (callback) {
+                    callback(stanza);
+                }
+	    } else if (iqtype == 'error') {
+		if (errback) {
+                    errback(stanza);
+                }
+	    } else {
+                throw {
+                    name: "StropheError",
+                    message: "Got bad IQ type of " + iqtype
+                };
+            }
+	}, null, 'iq', null, id);
+
+	// if timeout specified, setup timeout handler.
+	if (timeout) {
+	    timeoutHandler = this.addTimedHandler(timeout, function () {
+                // get rid of normal handler
+                that.deleteHandler(handler);
+
+	        // call errback on timeout with null stanza
+                if (errback) {
+		    errback(null);
+                }
+		return false;
+	    });
+	}
+
+	this.send(elem);
+
+	return id;
+    },
+
+
+    /** PrivateFunction: _ensureDOMElement
+     *  Ensures that the data is a DOMElement.
+     */
+	_ensureDOMElement: function (element) {
+		if (element === null || !element.tagName || !element.childNodes) {
+			throw {
+				name: "StropheError",
+				message: "Cannot queue non-DOMElement."
+			};
+		}
+		return true;
+	},
+
+
+    /** Function: addTimedHandler
+     *  Add a timed handler to the connection.
+     *
+     *  This function adds a timed handler.  The provided handler will
+     *  be called every period milliseconds until it returns false,
+     *  the connection is terminated, or the handler is removed.  Handlers
+     *  that wish to continue being invoked should return true.
+     *
+     *  Because of method binding it is necessary to save the result of
+     *  this function if you wish to remove a handler with
+     *  deleteTimedHandler().
+     *
+     *  Note that user handlers are not active until authentication is
+     *  successful.
+     *
+     *  Parameters:
+     *    (Integer) period - The period of the handler.
+     *    (Function) handler - The callback function.
+     *
+     *  Returns:
+     *    A reference to the handler that can be used to remove it.
+     */
+    addTimedHandler: function (period, handler)
+    {
+        var thand = new Strophe.TimedHandler(period, handler);
+        this.addTimeds.push(thand);
+        return thand;
+    },
+
+    /** Function: deleteTimedHandler
+     *  Delete a timed handler for a connection.
+     *
+     *  This function removes a timed handler from the connection.  The
+     *  handRef parameter is *not* the function passed to addTimedHandler(),
+     *  but is the reference returned from addTimedHandler().
+     *
+     *  Parameters:
+     *    (Strophe.TimedHandler) handRef - The handler reference.
+     */
+    deleteTimedHandler: function (handRef)
+    {
+        // this must be done in the Idle loop so that we don't change
+        // the handlers during iteration
+        this.removeTimeds.push(handRef);
+    },
+
+    /** Function: addHandler
+     *  Add a stanza handler for the connection.
+     *
+     *  This function adds a stanza handler to the connection.  The
+     *  handler callback will be called for any stanza that matches
+     *  the parameters.  Note that if multiple parameters are supplied,
+     *  they must all match for the handler to be invoked.
+     *
+     *  The handler will receive the stanza that triggered it as its argument.
+     *  The handler should return true if it is to be invoked again;
+     *  returning false will remove the handler after it returns.
+     *
+     *  As a convenience, the ns parameters applies to the top level element
+     *  and also any of its immediate children.  This is primarily to make
+     *  matching /iq/query elements easy.
+     *
+     *  The options argument contains handler matching flags that affect how
+     *  matches are determined. Currently the only flag is matchBare (a
+     *  boolean). When matchBare is true, the from parameter and the from
+     *  attribute on the stanza will be matched as bare JIDs instead of
+     *  full JIDs. To use this, pass {matchBare: true} as the value of
+     *  options. The default value for matchBare is false.
+     *
+     *  The return value should be saved if you wish to remove the handler
+     *  with deleteHandler().
+     *
+     *  Parameters:
+     *    (Function) handler - The user callback.
+     *    (String) ns - The namespace to match.
+     *    (String) name - The stanza name to match.
+     *    (String) type - The stanza type attribute to match.
+     *    (String) id - The stanza id attribute to match.
+     *    (String) from - The stanza from attribute to match.
+     *    (String) options - The handler options
+     *
+     *  Returns:
+     *    A reference to the handler that can be used to remove it.
+     */
+    addHandler: function (handler, ns, name, type, id, from, options)
+    {
+        var hand = new Strophe.Handler(handler, ns, name, type, id, from, options);
+        this.addHandlers.push(hand);
+        return hand;
+    },
+
+    /** Function: deleteHandler
+     *  Delete a stanza handler for a connection.
+     *
+     *  This function removes a stanza handler from the connection.  The
+     *  handRef parameter is *not* the function passed to addHandler(),
+     *  but is the reference returned from addHandler().
+     *
+     *  Parameters:
+     *    (Strophe.Handler) handRef - The handler reference.
+     */
+    deleteHandler: function (handRef) {
+        // this must be done in the Idle loop so that we don't change
+        // the handlers during iteration
+        this.removeHandlers.push(handRef);
+    },
+
+    /** Function: disconnect
+     *  Start the graceful disconnection process.
+     *
+     *  This function starts the disconnection process.  This process starts
+     *  by sending unavailable presence.  
+	 *  A timeout handler makes sure that disconnection happens.
+     *
+     *  The user supplied connection callback will be notified of the
+     *  progress as this process happens.
+     *
+     *  Parameters:
+     *    (String) reason - The reason the disconnect is occuring.
+     */
+    disconnect: function (reason)
+    {
+        Strophe.info("Disconnect was called because: " + reason);
+        this.changeConnectStatus(Strophe.Status.DISCONNECTING, reason);
+        if (this.connected) {
+	        this.disconnecting = true;
+            // setup timeout handler
+            this._disconnectTimeout = this._addSysTimedHandler(3000, this._onDisconnectTimeout.bind(this));
+		 	if (this.authenticated) {
+	            this.send($pres({xmlns: Strophe.NS.CLIENT, type: 'unavailable'}));
+	        }
+			this.protocol.disconnect();
+        }
+    },
+
+    /** PrivateFunction: changeConnectStatus
+     *  _Private_ helper function that makes sure plugins and the user's
+     *  callback are notified of connection status changes.
+     *
+     *  Parameters:
+     *    (Integer) status - the new connection status, one of the values
+     *      in Strophe.Status
+     *    (String) condition - the error condition or null
+     */
+    changeConnectStatus: function (status, condition)
+    {
+		this.status = status;
+        // notify all plugins listening for status changes
+        for (var k in Strophe._connectionPlugins) {
+            if (Strophe._connectionPlugins.hasOwnProperty(k)) {
+                var plugin = this[k];
+                if (plugin.statusChanged) {
+                    try {
+                        plugin.statusChanged(status, condition);
+                    } catch (err) {
+                        Strophe.error("" + k + " plugin caused an exception " +
+                                      "changing status: " + err);
+                    }
+                }
+            }
+        }
+
+        // notify the user's callback
+        if (this.connect_callback) {
+            // try {
+                this.connect_callback(status, condition);
+            // } catch (e) {
+            //     Strophe.error("User connection callback caused an " +
+            //                   "exception: " + e);
+            // }
+        }
+    },
+
+    /** PrivateFunction: _doDisconnect
+     *  _Private_ function to disconnect.
+     *
+     *  This is the last piece of the disconnection logic in the XMPP connection.  
+	 *  This resets the connection and alerts the user's connection callback.
+     */
+    _doDisconnect: function ()
+    {
+        // delete handlers
+        this.handlers = [];
+        this.timedHandlers = [];
+        this.removeTimeds = [];
+        this.removeHandlers = [];
+        this.addTimeds = [];
+        this.addHandlers = [];
+
+        this.connected = false;
+        this.protocol.finish();
+        // tell the parent we disconnected
+        this.changeConnectStatus(Strophe.Status.DISCONNECTED, null);
+    },
+
+    /** Function: receiveData
+     *  Handler to processes incoming stanza from the protocol layer. It should _not_ be called by the user.
+     *
+     *  Parameters:
+     *    (Strophe.Request) elem - The received stanza
+     */
+    receiveData: function (elem) {
+		var do_sasl_plain = false;
+		var do_sasl_digest_md5 = false;
+		var do_sasl_anonymous = false;
+		
+	    this.connected = true; // We're connected since we got data
+        if (elem === null) { return; }
+
+        this.xmlInput(elem);
+
+        // remove handlers scheduled for deletion
+        var i, hand;
+        while (this.removeHandlers.length > 0) {
+            hand = this.removeHandlers.pop();
+            i = this.handlers.indexOf(hand);
+            if (i >= 0) {
+                this.handlers.splice(i, 1);
+            }
+        }
+
+        // add handlers scheduled for addition
+        while (this.addHandlers.length > 0) {
+            this.handlers.push(this.addHandlers.pop());
+        }
+
+		// send each incoming stanza through the handler chain
+		var i, newList;
+		// process handlers
+        newList = this.handlers;
+		this.handlers = [];
+		for (i = 0; i < newList.length; i++) {
+			var hand = newList[i];
+			if (hand.isMatch(elem) && (this.authenticated || !hand.user)) {
+				if (hand.run(elem)) {
+					this.handlers.push(hand);
+				}
+			} else {
+				this.handlers.push(hand);
+            }
+		}
+
+		// Now, the connection stuff. Technically, these should probably be handlers too, but it seems that they're not currently.
+		var mechanisms = elem.getElementsByTagName("mechanism");
+        var i, mech, auth_str, hashed_auth_str;
+        if (mechanisms.length > 0) {
+            for (i = 0; i < mechanisms.length; i++) {
+                mech = Strophe.getText(mechanisms[i]);
+                if (mech == 'DIGEST-MD5') {
+                    do_sasl_digest_md5 = true;
+                } else if (mech == 'PLAIN') {
+                    do_sasl_plain = true;
+                } else if (mech == 'ANONYMOUS') {
+                    do_sasl_anonymous = true;
+                }
+            }
+        } 
+
+
+		if (this.status == Strophe.Status.CONNECTING) {
+			this.changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+			if (Strophe.getNodeFromJid(this.jid) === null && do_sasl_anonymous) {
+	            this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "ANONYMOUS"
+	            }).tree());
+
+	        } else if (Strophe.getNodeFromJid(this.jid) === null) {
+	            // we don't have a node, which is required for non-anonymous
+	            // client connections
+	            this.changeConnectStatus(Strophe.Status.CONNFAIL, 'x-strophe-bad-non-anon-jid');
+	            this.disconnect();
+	        } else if (do_sasl_digest_md5) {
+	            this._sasl_challenge_handler = this._addSysHandler(this._sasl_challenge1_cb.bind(this), null, "challenge", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "DIGEST-MD5"
+	            }).tree());
+	        } else if (do_sasl_plain) {
+	            // Build the plain auth string (barejid null
+	            // username null password) and base 64 encoded.
+	            auth_str = Strophe.getBareJidFromJid(this.jid);
+	            auth_str = auth_str + "\u0000";
+	            auth_str = auth_str + Strophe.getNodeFromJid(this.jid);
+	            auth_str = auth_str + "\u0000";
+	            auth_str = auth_str + this.pass;
+
+	            this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            hashed_auth_str = Base64.encode(auth_str);
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "PLAIN"
+	            }).t(hashed_auth_str).tree());
+	        } else {
+	            this._addSysHandler(this._auth1_cb.bind(this), null, null, null, "_auth_1");
+
+	            this.send($iq({
+	                type: "get",
+	                to: this.domain,
+	                id: "_auth_1"
+	            }).c("query", {
+	                xmlns: Strophe.NS.AUTH
+	            }).c("username", {}).t(Strophe.getNodeFromJid(this.jid)).tree());
+	        }
+		}
+    },
+
+    /** PrivateFunction: _sasl_challenge1_cb
+     *  _Private_ handler for DIGEST-MD5 SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The challenge stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_challenge1_cb: function (elem)
+    {
+        var attribMatch = /([a-z]+)=("[^"]+"|[^,"]+)(?:,|$)/;
+
+        var challenge = Base64.decode(Strophe.getText(elem));
+        var cnonce = MD5.hexdigest(Math.random() * 1234567890);
+        var realm = "";
+        var host = null;
+        var nonce = "";
+        var qop = "";
+        var matches;
+
+        // remove unneeded handlers
+        this.deleteHandler(this._sasl_failure_handler);
+
+        while (challenge.match(attribMatch)) {
+            matches = challenge.match(attribMatch);
+            challenge = challenge.replace(matches[0], "");
+            matches[2] = matches[2].replace(/^"(.+)"$/, "$1");
+            switch (matches[1]) {
+            case "realm":
+                realm = matches[2];
+                break;
+            case "nonce":
+                nonce = matches[2];
+                break;
+            case "qop":
+                qop = matches[2];
+                break;
+            case "host":
+                host = matches[2];
+                break;
+            }
+        }
+
+        var digest_uri = "xmpp/" + this.domain;
+        if (host !== null) {
+            digest_uri = digest_uri + "/" + host;
+        }
+
+        var A1 = MD5.hash(Strophe.getNodeFromJid(this.jid) +
+                          ":" + realm + ":" + this.pass) +
+            ":" + nonce + ":" + cnonce;
+        var A2 = 'AUTHENTICATE:' + digest_uri;
+
+        var responseText = "";
+        responseText += 'username=' +
+            this._quote(Strophe.getNodeFromJid(this.jid)) + ',';
+        responseText += 'realm=' + this._quote(realm) + ',';
+        responseText += 'nonce=' + this._quote(nonce) + ',';
+        responseText += 'cnonce=' + this._quote(cnonce) + ',';
+        responseText += 'nc="00000001",';
+        responseText += 'qop="auth",';
+        responseText += 'digest-uri=' + this._quote(digest_uri) + ',';
+        responseText += 'response=' + this._quote(
+            MD5.hexdigest(MD5.hexdigest(A1) + ":" +
+                          nonce + ":00000001:" +
+                          cnonce + ":auth:" +
+                          MD5.hexdigest(A2))) + ',';
+        responseText += 'charset="utf-8"';
+
+        this._sasl_challenge_handler = this._addSysHandler(this._sasl_challenge2_cb.bind(this), null, "challenge", null, null);
+        this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+        this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+        this.send($build('response', {
+            xmlns: Strophe.NS.SASL
+        }).t(Base64.encode(responseText)).tree());
+
+        return false;
+    },
+
+    /** PrivateFunction: _quote
+     *  _Private_ utility function to backslash escape and quote strings.
+     *
+     *  Parameters:
+     *    (String) str - The string to be quoted.
+     *
+     *  Returns:
+     *    quoted string
+     */
+    _quote: function (str)
+    {
+        return '"' + str.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+        //" end string workaround for emacs
+    },
+
+
+    /** PrivateFunction: _sasl_challenge2_cb
+     *  _Private_ handler for second step of DIGEST-MD5 SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The challenge stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_challenge2_cb: function (elem)
+    {
+        // remove unneeded handlers
+        this.deleteHandler(this._sasl_success_handler);
+        this.deleteHandler(this._sasl_failure_handler);
+
+        this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+        this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+        this.send($build('response', {xmlns: Strophe.NS.SASL}).tree());
+        return false;
+    },
+
+    /** PrivateFunction: _auth1_cb
+     *  _Private_ handler for legacy authentication.
+     *
+     *  This handler is called in response to the initial <iq type='get'/>
+     *  for legacy authentication.  It builds an authentication <iq/> and
+     *  sends it, creating a handler (calling back to _auth2_cb()) to
+     *  handle the result
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza that triggered the callback.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _auth1_cb: function (elem)
+    {
+        // build plaintext auth iq
+        var iq = $iq({type: "set", id: "_auth_2"})
+            .c('query', {xmlns: Strophe.NS.AUTH})
+            .c('username', {}).t(Strophe.getNodeFromJid(this.jid))
+            .up()
+            .c('password').t(this.pass);
+
+        if (!Strophe.getResourceFromJid(this.jid)) {
+            // since the user has not supplied a resource, we pick
+            // a default one here.  unlike other auth methods, the server
+            // cannot do this for us.
+            this.jid = Strophe.getBareJidFromJid(this.jid) + '/strophe';
+        }
+        iq.up().c('resource', {}).t(Strophe.getResourceFromJid(this.jid));
+
+        this._addSysHandler(this._auth2_cb.bind(this), null,
+                            null, null, "_auth_2");
+
+        this.send(iq.tree());
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_success_cb
+     *  _Private_ handler for succesful SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_success_cb: function (elem)
+    {
+        Strophe.info("SASL authentication succeeded.");
+
+        // remove old handlers
+        this.deleteHandler(this._sasl_failure_handler);
+        this._sasl_failure_handler = null;
+        if (this._sasl_challenge_handler) {
+            this.deleteHandler(this._sasl_challenge_handler);
+            this._sasl_challenge_handler = null;
+        }
+
+        this._addSysHandler(this._sasl_auth1_cb.bind(this), null, "stream:features", null, null);
+
+		
+        // we must send an xmpp:restart now
+		this.protocol.restart();
+        
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_auth1_cb
+     *  _Private_ handler to start stream binding.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_auth1_cb: function (elem)
+    {
+        // save stream:features for future usage
+        this.features = elem;
+
+        var i, child;
+
+        for (i = 0; i < elem.childNodes.length; i++) {
+            child = elem.childNodes[i];
+            if (child.nodeName == 'bind') {
+                this.do_bind = true;
+            }
+
+            if (child.nodeName == 'session') {
+                this.do_session = true;
+            }
+        }
+
+        if (!this.do_bind) {
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        } else {
+            this._addSysHandler(this._sasl_bind_cb.bind(this), null, null, null, "_bind_auth_2");
+
+            var resource = Strophe.getResourceFromJid(this.jid);
+            if (resource) {
+                this.send($iq({type: "set", id: "_bind_auth_2"})
+                          .c('bind', {xmlns: Strophe.NS.BIND})
+                          .c('resource', {}).t(resource).tree());
+            } else {
+                this.send($iq({type: "set", id: "_bind_auth_2"})
+                          .c('bind', {xmlns: Strophe.NS.BIND})
+                          .tree());
+            }
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_bind_cb
+     *  _Private_ handler for binding result and session start.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_bind_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "error") {
+            Strophe.info("SASL binding failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+
+        // TODO - need to grab errors
+        var bind = elem.getElementsByTagName("bind");
+        var jidNode;
+        if (bind.length > 0) {
+            // Grab jid
+            jidNode = bind[0].getElementsByTagName("jid");
+            if (jidNode.length > 0) {
+                this.jid = Strophe.getText(jidNode[0]);
+
+                if (this.do_session) {
+                    this._addSysHandler(this._sasl_session_cb.bind(this),
+                                        null, null, null, "_session_auth_2");
+
+                    this.send($iq({type: "set", id: "_session_auth_2"})
+                                  .c('session', {xmlns: Strophe.NS.SESSION})
+                                  .tree());
+                } else {
+                    this.authenticated = true;
+                    this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+                }
+            }
+        } else {
+            Strophe.info("SASL binding failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+    },
+
+    /** PrivateFunction: _sasl_session_cb
+     *  _Private_ handler to finish successful SASL connection.
+     *
+     *  This sets Connection.authenticated to true on success, which
+     *  starts the processing of user handlers.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_session_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "result") {
+            this.authenticated = true;
+            this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+        } else if (elem.getAttribute("type") == "error") {
+            Strophe.info("Session creation failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_failure_cb
+     *  _Private_ handler for SASL authentication failure.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_failure_cb: function (elem)
+    {
+        // delete unneeded handlers
+        if (this._sasl_success_handler) {
+            this.deleteHandler(this._sasl_success_handler);
+            this._sasl_success_handler = null;
+        }
+        if (this._sasl_challenge_handler) {
+            this.deleteHandler(this._sasl_challenge_handler);
+            this._sasl_challenge_handler = null;
+        }
+
+        this._doDisconnect();
+        this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+        return false;
+    },
+
+    /** PrivateFunction: _auth2_cb
+     *  _Private_ handler to finish legacy authentication.
+     *
+     *  This handler is called when the result from the jabber:iq:auth
+     *  <iq/> stanza is returned.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza that triggered the callback.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _auth2_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "result") {
+            this.authenticated = true;
+            this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+        } else if (elem.getAttribute("type") == "error") {
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            this.disconnect();
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _addSysTimedHandler
+     *  _Private_ function to add a system level timed handler.
+     *
+     *  This function is used to add a Strophe.TimedHandler for the
+     *  library code.  System timed handlers are allowed to run before
+     *  authentication is complete.
+     *
+     *  Parameters:
+     *    (Integer) period - The period of the handler.
+     *    (Function) handler - The callback function.
+     */
+    _addSysTimedHandler: function (period, handler)
+    {
+        var thand = new Strophe.TimedHandler(period, handler);
+        thand.user = false;
+        this.addTimeds.push(thand);
+        return thand;
+    },
+
+    /** PrivateFunction: _addSysHandler
+     *  _Private_ function to add a system level stanza handler.
+     *
+     *  This function is used to add a Strophe.Handler for the
+     *  library code.  System stanza handlers are allowed to run before
+     *  authentication is complete.
+     *
+     *  Parameters:
+     *    (Function) handler - The callback function.
+     *    (String) ns - The namespace to match.
+     *    (String) name - The stanza name to match.
+     *    (String) type - The stanza type attribute to match.
+     *    (String) id - The stanza id attribute to match.
+     */
+    _addSysHandler: function (handler, ns, name, type, id)
+    {
+        var hand = new Strophe.Handler(handler, ns, name, type, id);
+        hand.user = false;
+        this.addHandlers.push(hand);
+        return hand;
+    },
+
+    /** PrivateFunction: _onDisconnectTimeout
+     *  _Private_ timeout handler for handling non-graceful disconnection.
+     *
+     *  If the graceful disconnect process does not complete within the
+     *  time allotted, this handler finishes the disconnect anyway.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _onDisconnectTimeout: function ()
+    {
+        Strophe.info("_onDisconnectTimeout was called");
+        // actually disconnect
+        this._doDisconnect();
+        return false;
+    },
+
+	/** PrivateFunction: _throttleStanzas
+	*  _Private_ function to throttle stanzas sent to the protocol.
+	*
+	*  Most servers will implement traffic shapers to ensure that a given client does 
+	*  not consume too many resources.
+	*  This function just picks stanza in the _stanzas FIFO and sends them to the 
+	*  protocol layer. The protocol layer may also very well implement a specific 
+	*  throttling, based on their needs.
+	* 
+	* 
+	* 
+	*/
+	_throttleStanzas: function () {
+		stanza = this._stanzas.shift();
+		if (stanza) {
+			if (this.protocol.send(stanza)) {
+			    // Stanza was sent.
+			}
+			else {
+			    // Stack it back up.
+			    this._stanzas.unshift(stanza);
+			}
+		}
+		this._throttle_stanzas_handler = setTimeout(this._throttleStanzas.bind(this), 100 * 1/this.max_stanzas_per_second); // 
+	}
+
+};
+
+if (callback) {
+    callback(Strophe, $build, $msg, $iq, $pres);
+}
+
+})(function () {
+    window.Strophe = arguments[0];
+    window.$build = arguments[1];
+    window.$msg = arguments[2];
+    window.$iq = arguments[3];
+    window.$pres = arguments[4];
+});
+
+
+/* The Websocket Stuff */
+
+if (typeof(DOMParser) == 'undefined') {
+ DOMParser = function () {}
+ DOMParser.prototype.parseFromString = function (str, contentType) {
+  if (typeof(ActiveXObject) != 'undefined') {
+   var xmldata = new ActiveXObject('MSXML.DomDocument');
+   xmldata.async = false;
+   xmldata.loadXML(str);
+   return xmldata;
+  } else if (typeof(XMLHttpRequest) != 'undefined') {
+   var xmldata = new XMLHttpRequest;
+   if (!contentType) {
+    contentType = 'application/xml';
+   }
+   xmldata.open('GET', 'data:' + contentType + ';charset=utf-8,' + encodeURIComponent(str), false);
+   if (xmldata.overrideMimeType) {
+    xmldata.overrideMimeType(contentType);
+   }
+   xmldata.send(null);
+   return xmldata.responseXML;
+  }
+ }
+}
+
+Strophe.Websocket = function (service)
+{
+	// Connection
+	this._connection = null;
+	this._service	= service;
+	this._socket	= null;
+
+	// Requests stack.
+	this._requests = [];    
+	this.connected = false
+};
+
+Strophe.Websocket.prototype = {
+	
+	/** Function connect 
+	 *  Connects to the server using websockets.
+	 *  It also assigns the connection to this proto
+	 */
+	connect: function (connection) {
+		if (!this._socket) {
+    	    Strophe.log("info", "Websocket connecting to " + this._service);
+			this._connection 		= connection;
+	        this._socket 			= new WebSocket(this._service);
+		    this._socket.onopen     = this._onOpen.bind(this);
+			this._socket.onerror 	= this._onError.bind(this);
+		    this._socket.onclose 	= this._onClose.bind(this);
+		    this._socket.onmessage 	= this._onMessage.bind(this);
+		}
+	},
+	
+	/** Function disconnect 
+	 *  Disconnects from the server
+	 */
+	disconnect: function () {
+		this._connection.xmlOutput(this._endStream());
+		this._sendText(this._endStream());
+		this._socket.close(); // Close the socket
+	},
+
+	/** Function finish 
+	 *  Finishes the connection. It's the last step in the cleanup process.
+	 */
+	finish: function () {
+	    this.connected = false;
+		this._socket = null; // Makes sure we delete the socket.
+	},
+	
+	/** Function send 
+	 *  Sends messages
+	 */
+	send: function (msg) {
+	    if (this._sendText(Strophe.serialize(msg))) {
+    		this._connection.xmlOutput(msg);
+	        return true;
+	    }
+	    else {
+	        return false;
+	    }
+	},
+	
+	/** Function: restart
+     *  Send an xmpp:restart stanza.
+     */
+	restart: function () {
+		this._connection.xmlOutput(this._startStream());
+		this._sendText(this._startStream());
+	},
+	
+	/** PrivateFunction: _onError
+     *  _Private_ function to handle websockets errors.
+     *
+     *  Parameters:
+     *    () error - The websocket error.
+     */
+	_onError: function (error) {
+		Strophe.log("error", "Websocket error " + error);
+	},
+
+	/** PrivateFunction: _onOpen
+     *  _Private_ function to handle websockets connections.
+     *
+     */
+	_onOpen: function () {
+		Strophe.log("info", "Websocket open");
+		this.connected = true;
+		this._connection.xmlOutput(this._startStream());
+		this._sendText(this._startStream());
+		this._keepalive();
+	},
+	
+	/** PrivateFunction: _onClose
+     *  _Private_ function to handle websockets closing.
+     *
+	 */
+	_onClose: function (event) {
+		Strophe.log("info", "Websocket disconnected");
+	    this.connected = false;
+		this._connection._doDisconnect();
+	},
+	
+	/** PrivateFunction: _onError
+     *  _Private_ function to handle websockets messages.
+     *
+	 *  This function parses each of the messages as if they are full documents. [TODO : We may actually want to use a SAX Push parser].
+	 *  
+	 *  Since all XMPP traffic starts with "<stream:stream version='1.0' xml:lang='en' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='3697395463' from='SERVER'>"
+	 *  The first stanza will always fail to be parsed...
+	 *  Addtionnaly, the seconds stanza will always be a <stream:features> with the stream NS defined in the previous stanza... so we need to 'force' the inclusion of the NS in this stanza!
+     * 
+	 *  Parameters:
+     *    (string) message - The websocket message.
+     */
+	_onMessage: function (message) {
+		this._connection.rawInput(message.data);
+		
+		string = message.data.replace("<stream:features>", "<stream:features xmlns:stream='http://etherx.jabber.org/streams'>"); // Ugly hack todeal with the problem of stream ns undefined.
+		
+		parser = new DOMParser();
+		elem = parser.parseFromString(string, "text/xml").documentElement;
+		
+		this._connection.xmlInput(elem);
+
+		if (elem.nodeName == "stream:stream") {
+			// Let's just skip this.
+		}
+		else {
+			this._connection.receiveData(elem);
+		}
+	},
+	
+	_startStream: function () {
+		return "<stream:stream to='" + this._connection.domain + "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0' />";
+	},
+	
+	_endStream:function () {
+		return "</stream:stream>";
+	},
+	
+	_sendText: function (text) {
+	    if (this.connected) {
+    	    if (this._socket && this._socket.readyState == 1) {
+        		this._socket.send(text);
+        		this._connection.rawOutput(text);
+        		return true;
+    	    }
+    	    else if (!this.socket || this.socket.readyState == 3) {
+    	        // We're either not connected, or the connection is not there.
+    	        this._connection._doDisconnect();
+    	        return false;
+    	    }
+    	    else {
+    	        // What do we do. It means we're either disconnecting, or connecting. 
+    	        return false;
+    	    }
+	    } else {
+	        // We're not connected, so we can't send anything.
+	        return false;
+	    }
+	},
+	
+	_keepalive: function () {
+        if (this.connected) {
+    	    setTimeout(function () {
+    	        if (this._sendText("")) {
+        	        this._keepalive();
+    	        }
+    	    }.bind(this), 30000);
+        }
+	}
+	
+}
+
+exports.Strophe = Strophe
+exports.$build = $build
+exports.$msg = $msg
+exports.$iq = $iq
+exports.$pres = $pres
+
+});
+
+require.define("/strophejs/base64.js", function (require, module, exports, __dirname, __filename) {
+// This code was written by Tyler Akins and has been placed in the
+// public domain.  It would be nice if you left this header intact.
+// Base64 code from Tyler Akins -- http://rumkin.com
+
+var Base64 = (function () {
+    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    var obj = {
+        /**
+         * Encodes a string in base64
+         * @param {String} input The string to encode in base64.
+         */
+        encode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            do {
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+
+                output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+                    keyStr.charAt(enc3) + keyStr.charAt(enc4);
+            } while (i < input.length);
+
+            return output;
+        },
+
+        /**
+         * Decodes a base64 string.
+         * @param {String} input The string to decode.
+         */
+        decode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+            do {
+                enc1 = keyStr.indexOf(input.charAt(i++));
+                enc2 = keyStr.indexOf(input.charAt(i++));
+                enc3 = keyStr.indexOf(input.charAt(i++));
+                enc4 = keyStr.indexOf(input.charAt(i++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                output = output + String.fromCharCode(chr1);
+
+                if (enc3 != 64) {
+                    output = output + String.fromCharCode(chr2);
+                }
+                if (enc4 != 64) {
+                    output = output + String.fromCharCode(chr3);
+                }
+            } while (i < input.length);
+
+            return output;
+        }
+    };
+
+    return obj;
+})();
+
+exports.Base64 = Base64
+});
+
+require.define("/strophejs/strophe.superfeedr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery      = require('jquery');
+
+var SuperfeedrPlugin = {
+
+    _connection: null,
+    _firehoser: 'firehoser.superfeedr.com',
+	_handler: null,
+
+    //The plugin must have the init function.
+    init: function (conn) {
+        this._connection = conn;
+        Strophe.addNamespace('PUBSUB', "http://jabber.org/protocol/pubsub");
+    },
+
+    // Subscribes to a feed
+    subscribe: function (feed, callback) {
+        var stanza_id = this._connection.getUniqueId("subscribenode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'set',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('subscribe', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            node: feed
+        });
+        this._connection.addHandler(function (response) {
+            callback(response.getAttribute("type") == "result", {title: Strophe.getText(response.getElementsByTagName("title")[0])});
+            return false;
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // Unsubscribes from a feed
+    unsubscribe: function (feed, callback) {
+        var stanza_id = this._connection.getUniqueId("unsubscribenode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'set',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('unsubscribe', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            node: feed
+        });
+        this._connection.addHandler(function (response) {
+            callback(response.getAttribute("type") == "result");
+            return false;
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // List subscribed feeds
+    list: function (page, callback) {
+        var stanza_id = this._connection.getUniqueId("listnode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'get',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('subscriptions', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            'xmlns:superfeedr': "http://superfeedr.com/xmpp-pubsub-ext",
+            'superfeedr:page': page
+        });
+        this._connection.addHandler(function (response) {
+            var subscriptions = response.getElementsByTagName("subscription");
+            var result = []
+            for (i = 0; i < subscriptions.length; i++) {
+                result.push(subscriptions[i].getAttribute("node"));
+            }
+            callback(result);
+            return false; // Unregisters
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // called when connection status is changed
+	// we set up the handler. If it was previously set, we just unset it, and delete it.
+    statusChanged: function (status) {
+        if (this._handler) {
+            this._connection.deleteHandler(this._handler);
+            this._handler = null;
+        }
+        this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
+    },
+
+    notificationReceived: function (msg) {
+        if (msg.getAttribute('from') == "firehoser.superfeedr.com") {
+            var entries = msg.getElementsByTagName("entry");
+            var status = msg.getElementsByTagName("status")[0];
+            var source = {
+                title: Strophe.getText(status.getElementsByTagName("title")[0]),
+                url: status.getAttribute("feed"),
+                links: this.atomLinksToJson(status.getElementsByTagName("link"))
+            }
+            if(entries.length === 0) {
+                this.onNotificationReceived({payload: null, source: source});
+            }
+            for (i = 0; i < entries.length; i++) {
+                this.onNotificationReceived({payload: this.convertAtomToJson(entries[i]), source: source});
+            }
+        }
+        return true; // We must return true to keep the handler active!
+    },
+
+    atomLinksToJson: function (atom_links) {
+        var links = {};
+        for (j = 0; j < atom_links.length; j++) {
+	        var link = atom_links[j];
+	        l = {
+	            href: link.getAttribute("href"),
+	            rel: link.getAttribute("rel"),
+	            title: link.getAttribute("title"),
+	            type: link.getAttribute("type")
+	        };
+	        links[link.getAttribute("rel")] = (links[link.getAttribute("rel")] ? links[link.getAttribute("rel")] : {});
+	        links[link.getAttribute("rel")][link.getAttribute("type")] = (links[link.getAttribute("rel")][link.getAttribute("type")] ? links[link.getAttribute("rel")][link.getAttribute("type")] : []);
+	        links[link.getAttribute("rel")][link.getAttribute("type")].push(l);
+	    }
+	    return links;
+    },
+
+	convertAtomToJson: function (atom) {
+	    var atom_links = atom.getElementsByTagName("link");
+	    var links = this.atomLinksToJson(atom_links);
+	    return {
+	        id: window.btoa(Strophe.getText(atom.getElementsByTagName("id")[0])),
+	        atomId: Strophe.getText(atom.getElementsByTagName("id")[0]),
+	        published: Strophe.getText(atom.getElementsByTagName("published")[0]),
+	        updated: Strophe.getText(atom.getElementsByTagName("updated")[0]),
+	        title: Strophe.getText(atom.getElementsByTagName("title")[0]),
+	        summary: Strophe.getText(atom.getElementsByTagName("summary")[0]),
+	        content: Strophe.getText(atom.getElementsByTagName("content")[0]),
+	        links: links,
+	    };
+	},
+	
+	onNotificationReceived: function(notification) {
+	    // This method should be overwritten!
+	},
+}
+
+exports.SuperfeedrPlugin = SuperfeedrPlugin;
+
+
+
+});
+
+require.define("/tests/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Subscription = require('../../models/subscription.js').Subscription;
+var Subscriptions = require('../../models/subscription.js').Subscriptions;
+
+describe('Subscription', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Subscription = Subscription.extend({ database: msgboyDatabase});
+        Subscriptions = Subscriptions.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+    
+    describe('fetchOrCreate', function() {
+        it('should create a subscription that does not exist', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.fetchOrCreate(function() {
+                s.id.should.equal("http://blog.superfeedr.com/atom.xml");
+                complete();
+            });
+        });
+        it('should fetch a subscription that exists', function(complete) {
+            var s = new Subscription({id: "https://github.com/superfeedr.atom"});
+            s.fetchOrCreate(function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.fetchOrCreate(function() {
+                    t.id.should.equal("https://github.com/superfeedr.atom");
+                    complete();
+                });
+            });
+        });
+        
+    });
+
+    describe('needsRefresh', function() {
+        it('should return true if the subscription is older than a week and unsubscription is older than a month and if the feed is not in the blacklist', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(true);
+        });
+        it('should return false if the subscription is earlier than a week', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if unsubscription is earlier than a month', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if the feed is in the blacklist', function() {
+            var s = new Subscription({id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(false);
+        });
+    });
+
+    describe('setState', function() {
+        it('should set the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('change', function() {
+                s.get('state').should.equal("subscribing");
+                complete();
+            })
+            s.setState("subscribing");
+        });
+        it('should trigger the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('unsubscribing', function() {
+                complete();
+            })
+            s.setState("unsubscribing");
+        });
+        
+        describe('when setting the state to subscribed', function() {
+            it('should set the subscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('subscribed', function() {
+                    s.get('subscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('subscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("subscribed");
+            });
+        });
+        describe('when setting the state to unsubscribed', function() {
+            it('should set the unsubscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('unsubscribed', function() {
+                    s.get('unsubscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('unsubscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("unsubscribed");
+            });
+        })
+        
+    });
+});
+
+describe('Subscriptions', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('pending', function(complete) {
+        it('should yield all subscriptions whose state is "subscrbing"', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('subscribing', function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.bind('subscribed', function() {
+                    var u = new Subscription({id: "http://push-pub.appspot.com/feed"});
+                    u.bind('subscribed', function() {
+                        var v = new Subscription({id: "http://github.com/julien.atom"});
+                        v.bind('subscribing', function() {
+                            var pendingSubscriptions = new Subscriptions();
+                            pendingSubscriptions.bind('reset',function(subscritions) {
+                                pendingSubscriptions.pluck('id').should.eql([ 'http://blog.superfeedr.com/atom.xml',
+                                  'http://github.com/julien.atom' ]);
+                                complete();
+                            });
+                            pendingSubscriptions.pending();
+                        });
+                        v.setState("subscribing");
+                    });
+                    u.setState("subscribed");
+                });
+                t.setState("subscribed");
+            });
+            s.setState("subscribing");
+            var subscription =  new Subscriptions();
+        });
+    });
+
+});
+
+
+});
+
+require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Message = require('../../models/message.js').Message;
+var Archive = require('../../models/archive.js').Archive;
+var should = require('chai').should();
+
+describe('Archive', function(){
+    before(function(done) {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Message = Message.extend({ database: msgboyDatabase});
+        Archive = Archive.extend({ database: msgboyDatabase});
+        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
+        m1.bind('change', function() {
+            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
+            m2.bind('change', function() {
+                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
+                m3.bind('change', function() {
+                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
+                    m4.bind('change', function() {
+                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
+                        m5.bind('change', function() {
+                            done();
+                        });
+                        m5.save();
+                    });
+                    m4.save();
+                });
+                m3.save();
+            });
+            m2.save();
+        });
+        m1.save();
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('comparator', function() {
+        it('should sort all the messages by createdAt', function(done) {
+            var archive =  new Archive();
+            var twelveHourAgoMessage = new Message({title: "Twelve Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 12});
+            var twentyFourHourAgoMessage = new Message({title: "Twenty-Four Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 24});
+            var sixHourAgoMessage = new Message({title: "Six Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 6});
+            var eighteenHourAgoMessage = new Message({title: "Eighteen Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 18});
+            var threeHourAgoMessage = new Message({title: "Three Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 3});
+            var NineHourAgoMessage = new Message({title: "Nine Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 9});
+            archive.add(twelveHourAgoMessage);
+            archive.add(twentyFourHourAgoMessage);
+            archive.add(threeHourAgoMessage);
+            archive.add(NineHourAgoMessage);
+            archive.add(eighteenHourAgoMessage);
+            archive.add(sixHourAgoMessage);
+            var prev = null;
+            archive.each(function(m) {
+                if(prev) {
+                    m.get('createdAt').should.be.below(prev.get('createdAt'));
+                }
+                prev = m;
+            });
+            done();
+        });
+    })
+
+    describe('next', function() {
+        it('should add messages one by one', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    done();
+                }
+            })
+            archive.next(limit);
+        });
+
+        it('should stick to the conditions on messages added', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    _.each(archive.pluck('sourceHost'), function(h) {
+                        h.should.equal('superfeedr.com');
+                    });
+                    done();
+                }
+            })
+            archive.next(limit, {sourceHost: "superfeedr.com"});
+        });
+    });
+
+    describe('forFeed', function() {
+        it('should return all the messages for a given feed when called with forFeed', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            archive.bind('reset', function() {
+                archive.length.should.equal(3);
+                archive.at(0).get('title').should.equal("Fourth Message");
+                archive.at(1).get('title').should.equal("Third Message");
+                archive.at(2).get('title').should.equal("First Message");
+                done();
+            })
+            archive.forFeed('http://superfedr.com/dummy.xml');
+        });
+    });
+
+});
+
+
 });
 
 require.define("/tests/models/database.js", function (require, module, exports, __dirname, __filename) {
@@ -21134,62 +23743,6 @@ describe('Inbox', function(){
 });
 
 
-});
-
-require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-Backbone.sync = require('backbone-indexeddb').sync;
-var msgboyDatabase = require('./database.js').msgboyDatabase;
-var Message = require('./message.js').Message;
-
-var Inbox = Backbone.Model.extend({
-    storeName: "inbox",
-    database: msgboyDatabase,
-    defaults: {
-        id: "1",
-        options: {
-            relevance: 1.0,
-            pinMsgboy: false
-        }
-    },
-    initialize: function () {
-    },
-
-    setup: function (username, token) {
-        this.save({
-            epoch: new Date().getTime(),
-            jid: username,
-            password: token
-        }, {
-            success: function () {
-                this.trigger("ready", this);
-                this.trigger("new", this);
-            }.bind(this),
-            error: function () {
-                this.trigger('error');
-            }.bind(this)
-        });
-    },
-
-    // Fetches and prepares the inbox if needed.
-    fetchAndPrepare: function () {
-        this.fetch({
-            success: function () {
-                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
-                    this.trigger("ready", this);
-                } else {
-                    this.trigger('error', 'Not Found');
-                }
-            }.bind(this),
-            error: function () {
-                this.trigger('error', 'Not Found');
-            }.bind(this)
-        });
-    }
-});
-
-exports.Inbox = Inbox;
 });
 
 require.define("/tests/models/message.js", function (require, module, exports, __dirname, __filename) {
@@ -21317,19 +23870,853 @@ describe('Message', function(){
 
 });
 
+require.define("/tests/plugins.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Plugins = require('../plugins.js').Plugins;
+
+describe('Plugins', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+    
+    describe('importSubscriptions', function() {
+        beforeEach(function(ready) {
+            Plugins.all = [];
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb({url: "url1", title: "title1"});
+                    cb({url: 'url2', title: "title2"});
+                    cb({url: 'url3', title: "title3"});
+                    done(3)
+                },
+                name: "Stub 1"
+            });
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb({url: "url4", title: "title4"});
+                    cb({url: 'url5', title: "title5"});
+                    done(2)
+                },
+                name: "Stub 2"
+            });
+            ready();
+        });
+        it('should listSubscriptions for each plugin', function(done) {
+            var subscriptionsUrls = []
+            Plugins.importSubscriptions(function(sub) {
+                subscriptionsUrls.push(sub.url)
+            }, function(count) {
+                if(count === 5) {
+                    subscriptionsUrls.should.include('url1');
+                    subscriptionsUrls.should.include('url2');
+                    subscriptionsUrls.should.include('url3');
+                    subscriptionsUrls.should.include('url4');
+                    subscriptionsUrls.should.include('url5');
+                    done();
+                }
+            });
+        });
+    });
+    
+    it("should have a 'Blogger' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === "Blogger") {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Browser Bookmarks' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Browser Bookmarks') {
+                done();
+            }
+        });
+    });
+
+    it("should have a Digg plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Digg') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Disqus Comments' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Disqus Comments') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Generic plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Generic') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Google Reader' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Google Reader') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Browsing History' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Browsing History') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Posterous' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Posterous') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Quora People' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Quora People') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Quora Topics' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Quora Topics') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Status.net' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Status.net') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Tumblr' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Tumblr') {
+                done();
+            }
+        });
+    });
+
+    it("should have a 'Typepad' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Typepad') {
+                done();
+            }
+        });
+    });
+    
+    it("should have a 'Wordpress' plugin", function(done) {
+        _.each(Plugins.all, function(plugin) {
+            if(plugin.name === 'Wordpress') {
+                done();
+            }
+        });
+    });
+    
+    require('./plugins/blogger.js');
+    require('./plugins/bookmarks.js');
+    require('./plugins/digg.js');
+    require('./plugins/disqus.js');
+    require('./plugins/generic.js');
+    require('./plugins/google-reader.js');
+    require('./plugins/history.js');
+    require('./plugins/posterous.js');
+    require('./plugins/quora-people.js');
+    require('./plugins/quora-topics.js');
+    require('./plugins/statusnet.js');
+    require('./plugins/tumblr.js');
+    require('./plugins/typepad.js');
+    require('./plugins/wordpress.js');
+    
+});
+});
+
+require.define("/tests/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Blogger = require('../../plugins/blogger.js').Blogger;
+
+describe('Blogger', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the host is www.blogger.com and the pathname is /navbar.g', function() {
+            var docStub = {
+                location: {
+                    host: "www.blogger.com"
+                    , pathname: "/navbar.g"
+                }
+            };
+            var b = new Blogger();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Blogger();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+
+});
+
+});
+
+require.define("/tests/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Bookmarks = require('../../plugins/bookmarks.js').Bookmarks;
+
+describe('Bookmarks', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true', function() {
+            var docStub = {};
+            var b = new Bookmarks();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Bookmarks();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+    
+    describe('subscribeInBackground', function() {
+        
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Digg = require('../../plugins/digg.js').Digg;
+
+describe('Digg', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the user is on digg', function() {
+            var docStub = {
+                location: {
+                    host: "digg.com"
+                }
+            };
+            var b = new Digg();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Digg();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Disqus = require('../../plugins/disqus.js').Disqus;
+
+describe('Disqus', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the page has a disqus_thread', function() {
+            var docStub = {
+                getElementById: function(id) {
+                    return id === "disqus_thread"
+                }
+            };
+            var d = new Disqus();
+            d.onSubscriptionPage(docStub).should.be.true;
+        });
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var d = new Disqus();
+            d.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Generic = require('../../plugins/generic.js').Generic;
+
+describe('Generic', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true', function() {
+            var docStub = {};
+            var b = new Generic();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        // Hum. How can we test that?
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            var d = new Generic();
+            d.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                true.should.be.false; // Generic plugin does not have a way to list subscriptions
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var GoogleReader = require('../../plugins/google-reader.js').GoogleReader;
+
+describe('GoogleReader', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if we\'re on a Google Reader page', function() {
+            var docStub = {
+                location: {
+                    host: "www.google.com"
+                    ,pathname: "/reader/view/"
+                }
+            };
+            var b = new GoogleReader();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new GoogleReader();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/history.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var History = require('../../plugins/history.js').History;
+
+describe('History', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true', function() {
+            var docStub = {};
+            var b = new History();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new History();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+    
+    describe('subscribeInBackground', function() {
+        
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Posterous = require('../../plugins/posterous.js').Posterous;
+
+describe('Posterous', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the document as a pbar id', function() {
+            var docStub = {
+                getElementById: function(className) {
+                    return className == "pbar";
+                }
+            };
+            var b = new Posterous();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Posterous();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var QuoraPeople = require('../../plugins/quora-people.js').QuoraPeople;
+
+describe('QuoraPeople', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the location is at www.quora.com', function() {
+            var docStub = {
+                location: {
+                    host: "www.quora.com"
+                }
+            };
+            var b = new QuoraPeople();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new QuoraPeople();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+});
+
+});
+
+require.define("/tests/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var QuoraTopics = require('../../plugins/quora-topics.js').QuoraTopics;
+
+describe('QuoraTopics', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the location is at www.quora.com', function() {
+            var docStub = {
+                location: {
+                    host: "www.quora.com"
+                }
+            };
+            var b = new QuoraTopics();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new QuoraTopics();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+});
+
+});
+
+require.define("/tests/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Statusnet = require('../../plugins/statusnet.js').Statusnet;
+
+describe('Statusnet', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the location is at .*.status.net', function() {
+            var docStub = {
+                location: {
+                    host: "hello.status.net"
+                }
+            };
+            var b = new Statusnet();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Statusnet();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+});
+
+});
+
+require.define("/tests/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Tumblr = require('../../plugins/tumblr.js').Tumblr;
+
+describe('Tumblr', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the location is at www.tumblr.com and the pathname /dashboard/iframe', function() {
+            var docStub = {
+                location: {
+                    host: "www.tumblr.com",
+                    pathname: "/dashboard/iframe"
+                }
+            };
+            var b = new Tumblr();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Tumblr();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+});
+
+});
+
+require.define("/tests/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Typepad = require('../../plugins/typepad.js').Typepad;
+
+describe('Typepad', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the location is at www.typepad.com and the pathname /services/toolbar', function() {
+            var docStub = {
+                location: {
+                    host: "www.typepad.com",
+                    pathname: "/services/toolbar"
+                }
+            };
+            var b = new Typepad();
+            b.onSubscriptionPage(docStub).should.be.true;
+        });
+    });
+    describe('hijack', function() {
+        
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            this.timeout(0); 
+            var b = new Typepad();
+            b.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                feed.url.should.exist;
+                feed.title.should.exist;
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
+require.define("/tests/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var Wordpress = require('../../plugins/wordpress.js').Wordpress;
+
+describe('Wordpress', function(){
+    before(function(ready) {
+        ready();
+    });
+
+    beforeEach(function(ready) {
+        ready();
+    });
+
+    describe('onSubscriptionPage', function() {
+        it('should return true if the page has an element whose id is wpadminbar', function() {
+            var docStub = {
+                getElementById: function(id) {
+                    return id === "wpadminbar";
+                }
+            }
+            var w = new Wordpress();
+            w.onSubscriptionPage(docStub).should.equal(true);
+        });
+    });
+    describe('hijack', function() {
+
+    });
+    describe('listSubscriptions', function() {
+        it('should list all feeds to which the user is subscribed', function(done) {
+            var w = new Wordpress();
+            w.listSubscriptions(function(feed) {
+                // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+            }, function(count) {
+                // Called when subscribed to many feeds.
+                count.should.not.equal(0);
+                done();
+            });
+        });
+    });
+
+});
+
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/tests.js", function (require, module, exports, __dirname, __filename) {
     var should = require('chai').should;
-require('./tests/plugins.js');
+require('./tests/background.js');
 require('./tests/models/subscription.js');
 require('./tests/models/archive.js');
 require('./tests/models/database.js');
 require('./tests/models/inbox.js');
 require('./tests/models/message.js');
-// require('./tests/msgboy.js');
+require('./tests/plugins.js');
 // require('./tests/views/.js');
 
 

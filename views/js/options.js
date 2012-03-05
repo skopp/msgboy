@@ -11920,6 +11920,10 @@ Msgboy.run =  function () {
 
 exports.Msgboy = Msgboy;
 
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
 
 });
 
@@ -15408,7 +15412,7 @@ var OptionsView = require('./views/options-view.js').OptionsView;
 Msgboy.bind("loaded", function () {
     var view  = new OptionsView();
 });
-Msgboy.run();
+
 
 });
 require("/options.js");

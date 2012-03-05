@@ -11920,6 +11920,10 @@ Msgboy.run =  function () {
 
 exports.Msgboy = Msgboy;
 
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
 
 });
 
@@ -18828,7 +18832,8 @@ Msgboy.bind("loaded", function () {
         }
     });
 });
-Msgboy.run();
+
+
 
 });
 require("/dashboard.js");

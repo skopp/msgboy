@@ -11920,6 +11920,10 @@ Msgboy.run =  function () {
 
 exports.Msgboy = Msgboy;
 
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
 
 });
 
@@ -15126,6 +15130,6 @@ var SubscriptionsView = require('./views/subscriptions-view.js').SubscriptionsVi
 Msgboy.bind("loaded", function () {
      var view  = new SubscriptionsView({el: "#info"});
 });
-Msgboy.run();
+
 });
 require("/subscriptions.js");

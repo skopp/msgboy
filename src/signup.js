@@ -9,4 +9,4 @@ Msgboy.bind("loaded", function () {
         window.location = chrome.extension.getURL('/views/html/dashboard.html');
     });
 });
-Msgboy.run();
+

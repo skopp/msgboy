@@ -11920,6 +11920,10 @@ Msgboy.run =  function () {
 
 exports.Msgboy = Msgboy;
 
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
 
 });
 
@@ -11939,7 +11943,7 @@ Msgboy.bind("loaded", function () {
         window.location = chrome.extension.getURL('/views/html/dashboard.html');
     });
 });
-Msgboy.run();
+
 
 });
 require("/signup.js");

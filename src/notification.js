@@ -33,5 +33,5 @@ Msgboy.bind("loaded", function () {
     });
 });
 
-Msgboy.run();
+
 
