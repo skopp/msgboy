@@ -15880,40 +15880,44 @@ _.extend(Msgboy, Backbone.Events);
 
 // Logs messages to the console
 console._log = console.log;
+console._debug = console.debug;
+console._info = console.info;
+console._warn = console.warn;
+console._error = console.error;
 Msgboy.log =  {
     levels: {
-        RAW: 0,
         DEBUG: 10,
         INFO: 20,
-        ERROR: 30,
+        WARN: 30,
+        ERROR: 40,
     },
     _log: Function.prototype.bind.call(console._log, console),
-    raw: function () {
-        if (Msgboy.log.debugLevel <= Msgboy.log.levels.RAW) {
-            var args = Array.prototype.slice.call(arguments);  
-            args.unshift('raw');
-            this._log.apply(console, args);
-        }
-    },
+    _debug: Function.prototype.bind.call(console._debug, console),
+    _info: Function.prototype.bind.call(console._info, console),
+    _warn: Function.prototype.bind.call(console._warn, console),
+    _error: Function.prototype.bind.call(console._error, console),
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
             var args = Array.prototype.slice.call(arguments);  
-            args.unshift('debug');
-            this._log.apply(console, args);
+            this._debug.apply(console, args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
             var args = Array.prototype.slice.call(arguments);  
-            args.unshift('info');
-            this._log.apply(console, args);
+            this._info.apply(console, args);
+        }
+    },
+    warn: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._warn.apply(console, args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
             var args = Array.prototype.slice.call(arguments);  
-            args.unshift('error');
-            this._log.apply(console, args);
+            this._error.apply(console, args);
         }
     },
 }
@@ -15921,8 +15925,27 @@ Msgboy.log =  {
 // Also, hijack all console.log messages
 console.log = function() {
     var args = Array.prototype.slice.call(arguments);  
-    args.unshift('debug');
     Msgboy.log.debug.apply(this, args);
+}
+
+console.debug = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.debug.apply(this, args);
+}
+
+console.info = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.info.apply(this, args);
+}
+
+console.warn = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.warn.apply(this, args);
+}
+
+console.error = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.error.apply(this, args);
 }
 
 // Attributes
@@ -15941,7 +15964,7 @@ Msgboy.environment = function () {
 };
 
 if(Msgboy.environment() === "development") {
-    Msgboy.log.debugLevel = Msgboy.log.levels.RAW;
+    Msgboy.log.debugLevel = Msgboy.log.levels.DEBUG;
 }
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)

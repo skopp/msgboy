@@ -65,10 +65,10 @@ Msgboy.bind("loaded", function () {
     // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
     var connect = function () {
         xmppConnection.rawInput = function (data) {
-            Msgboy.log.raw('RECV', data);
+            Msgboy.log.debug('Received', data);
         };
         xmppConnection.rawOutput = function (data) {
-            Msgboy.log.raw('SENT', data);
+            Msgboy.log.debug('Sent', data);
         };
         var password = Msgboy.inbox.attributes.password;
         var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
