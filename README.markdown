@@ -130,3 +130,8 @@ Here are a few tips and tricks to make it easier for people to subscribe.
 - Tricks
     * Listen to msgboy triggered events to keep track of your visitors who use msgboy, or who subscribe to your feeds. Listen to the events  <code>msgboy-subscribed</code> on the body.
 
+
+## Misc
+
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=julien51&url=https://github.com/superfeedr/msgboy&title=Msgboy&language=&tags=github&category=software)
+
