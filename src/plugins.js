@@ -1,32 +1,28 @@
-var Msgboy = require('./msgboy.js').Msgboy
-
 var Plugins = {
     all: [],
 
     register: function (plugin) {
         this.all.push(plugin);
     },
-    importSubscriptions: function (callback, done) {
+    importSubscriptions: function (callback, doneOne, doneAll) {
         var subscriptionsCount = 0;
         
         var processNextPlugin = function(plugins) {
             var plugin = plugins.pop();
             if(plugin) {
-                Msgboy.log.info("Starting with", plugin.name);
                 plugin.listSubscriptions(function (subscription) {
                     callback({
                         url: subscription.url,
                         title: subscription.title
                     });
                 }, function (count) {
-                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    doneOne(plugin, count);
                     subscriptionsCount += count;
                     processNextPlugin(plugins);
                 });
             }
             else {
-                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-                done(subscriptionsCount);
+                doneAll(subscriptionsCount);
             }
         };
 
@@ -90,7 +86,6 @@ var Plugin = function () {
     this.listSubscriptions = function (callback, done) {
         // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
         // Feeds have the following form {url: _, title: _}.
-        callback([]);
         done(0);
     };
 

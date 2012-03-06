@@ -1,10 +1,9 @@
 // Ok. Here, we need to require all the plugins!
-var $ = jQuery      = require('jquery');
 var Plugins         = require('./plugins.js').Plugins;
-var Inbox           = require('./models/inbox.js').Inbox;
 
 // Runs all the plugins
-$.each(Plugins.all, function (index, plugin) {
+for (var i = 0; i < Plugins.all.length; i++) {
+    var plugin = Plugins.all[i];
     if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
         plugin.hijack(function (feed, done) {
             chrome.extension.sendRequest({
@@ -19,4 +18,4 @@ $.each(Plugins.all, function (index, plugin) {
             done();
         });
     }
-});
+}

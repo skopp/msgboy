@@ -333,8 +333,14 @@ Msgboy.bind("loaded", function () {
                 subscribe(subs.url, false, function () {
                     // Cool. Not much to do.
                 });
-            }, function(subscriptionsCount) {
-                // We found subscriptionsCount!
+            }, 
+            function(plugin, subscriptionsCount) {
+                // Called when done with one plugin
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+            },
+            function(subscriptionsCount) {
+                // Called when done with all plugins
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
             });
         });
     });
@@ -446,8 +452,14 @@ Msgboy.bind("loaded", function () {
             subscribe(subs.url, false, function () {
                 // Cool. Not much to do.
             });
-        }, function(subscriptionsCount) {
-            // We found subscriptionsCount!
+        }, 
+        function(plugin, subscriptionsCount) {
+            // Called when done with one plugin
+            Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+        },
+        function(subscriptionsCount) {
+            // Called when done with all plugins
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
         });
     });
     
