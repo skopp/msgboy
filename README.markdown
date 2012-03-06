@@ -78,6 +78,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Add google Analytics tracking in links for referrals.</del>
 * <del>Measure with Google Analytics.</del>
 * <del>Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.</del>
+* <del>Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)</del>
 * Add support for unsubscription in plugins.
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
@@ -102,7 +103,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
 * Make the whole Msgboy lighter. Maybe include less files?
-* Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)
 * Try to merge as many JS files as possible (thanks @beau) to make the msgboy lighter.
 * Open new tabs right _after_ the dashboard, not at the end of the window, so that the user has an indication of it.
 * Create a landing page for each of the "welcome" blocks.

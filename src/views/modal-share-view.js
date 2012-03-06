@@ -1,5 +1,7 @@
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
+var UrlParser = require('url');
+var QueryString = require('querystring');
 Backbone.sync = require('backbone-indexeddb').sync;
 require('../bootstrap-modal.js');
 
@@ -18,25 +20,35 @@ var ModalShareView = Backbone.View.extend({
     
     showForMessage: function(message) {
         $(this.el).data('url', message.get('mainLink'));
-        $('#comment').val(message.get('title') + " - " + message.get('source').title);
+        this.$('#comment').val(message.get('title') + " - " + message.get('source').title);
+        this.$('h2').val(message.get('title'));
         $(this.el).modal('show');
     },
     
     updateCountdown: function() {
-        var lngth = $("#comment").val().length;
-        $("#character-count").text(lngth + " characters");
+        var lngth = this.$("#comment").val().length;
+        this.$("#character-count").text(lngth + " characters");
         if(lngth > 120) {
-            $(".btn.twitter").addClass("disabled");
+            this.$(".btn.twitter").addClass("disabled");
         }
     },
     
     sendShare: function(e) {
-        var url = encodeURI($('#modal-share').data('url'));
+        var url = $('#modal-share').data('url');
         var service = $(e.target).data('service');
-        var comment = encodeURI($('#comment').val());
+        var comment = this.$('#comment').val();
+        var title = this.$('h2').val();
+        var sharingUrl = UrlParser.parse("http://msgboy.com/share/prepare");
+        sharingUrl.query = {
+            service: service,
+            url: url,
+            title: title,
+            comment: comment
+        }
+        console.log(UrlParser.format(sharingUrl));
         chrome.extension.sendRequest({
             signature: "tab",
-            params: {url: "http://msgboy.com/share/prepare?url=" + url + "&comment=" + comment + "&service=" + service, selected: true}
+            params: {url: UrlParser.format(sharingUrl), selected: true}
         });
         $('#modal-share').modal('hide');
     }

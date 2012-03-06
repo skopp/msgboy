@@ -275,7 +275,6 @@ p.darkened {
     float: left;
     width: 16px;
     height: 16px;
-    background-color:red;
     background: url('../icons/twitter.png') no-repeat;
     margin-right: 3px;
 }
@@ -287,10 +286,20 @@ p.darkened {
     width: 16px;
     height: 16px;
     margin-right: 3px;
-    background-color:red;
     background: url('../icons/facebook.png') no-repeat;
-    
 }
+
+.instapaper:before {
+    content: "";
+    top: 1px;
+    float: left;
+    width: 16px;
+    height: 16px;
+    margin-right: 3px;
+    background: url('../icons/instapaper.png') no-repeat;
+}
+
+
 .down {
     background-image: url('../images/minus.png');
 }
