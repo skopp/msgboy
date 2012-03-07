@@ -98,10 +98,10 @@ body {
     background-color: rgba(0, 0, 0, 0.7); }
 
 .down {
-  background-image: url("../images/minus.png"); }
+  background-image: url('../images/minus.png'); }
 
 .up {
-  background-image: url("../images/plus.png"); }
+  background-image: url('../images/plus.png'); }
 
 .share {
   display: none; }

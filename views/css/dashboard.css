@@ -222,7 +222,7 @@ p.darkened {
   float: left;
   width: 16px;
   height: 16px;
-  background: url("../images/icons/twitter.png") no-repeat;
+  background: url('../images/icons/twitter.png') no-repeat;
   margin-right: 3px; }
 
 .facebook:before {
@@ -232,7 +232,7 @@ p.darkened {
   width: 16px;
   height: 16px;
   margin-right: 3px;
-  background: url("../images/icons/facebook.png") no-repeat; }
+  background: url('../images/icons/facebook.png') no-repeat; }
 
 .instapaper:before {
   content: "";
@@ -241,13 +241,13 @@ p.darkened {
   width: 16px;
   height: 16px;
   margin-right: 3px;
-  background: url("../images/icons/instapaper.png") no-repeat; }
+  background: url('../images/icons/instapaper.png') no-repeat; }
 
 .down {
-  background-image: url("../images/minus.png"); }
+  background-image: url('../images/minus.png'); }
 
 .up {
-  background-image: url("../images/plus.png"); }
+  background-image: url('../images/plus.png'); }
 
 .share {
-  background-image: url("../images/share.png"); }
+  background-image: url('../images/share.png'); }
