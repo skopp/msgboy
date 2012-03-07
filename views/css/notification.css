@@ -1,133 +1,107 @@
 html {
-    background: url(../images/page-bg.gif) top left repeat-x;
-}
+  background: url(../images/page-bg.gif) top left repeat-x; }
 
 body {
-    padding: 0;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    color: #eee;
-}
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #eeeeee; }
 
 .message {
-    padding: 0px;
-    margin: 0px;
-    overflow: hidden;
-    /*width: 300px;*/
-    max-height: 150px;
-    min-height: 150px;
-    height: 150px;
-}
-
-.message h1 {
-    background-color: rgba(10,10,10,0.8);
+  padding: 0px;
+  margin: 0px;
+  overflow: hidden;
+  /*width: 300px; */
+  max-height: 150px;
+  min-height: 150px;
+  height: 150px; }
+  .message h1 {
+    background-color: rgba(10, 10, 10, 0.8);
     background-size: 16px 16px;
-    background-repeat:no-repeat;
-    background-position: 7px 50%; 
-    padding:5px 10px 5px 30px;
-    margin:0px;
-    display:block;
+    background-repeat: no-repeat;
+    background-position: 7px 50%;
+    padding: 5px 10px 5px 30px;
+    margin: 0px;
+    display: block;
     position: absolute;
     top: 0px;
-    color: #fff;
-    font-size: .6em;
+    color: white;
+    font-size: 0.6em;
     font-weight: normal;
     width: 210px;
     height: 10px;
-    line-height: 10px;
-}
+    line-height: 10px; }
 
 .page_nav {
-    display:none;
-}
+  display: none; }
 
 .controls {
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-}
+  position: absolute;
+  bottom: 0px;
+  width: 100%; }
 
 .message:hover .controls {
-    display:block;
-    z-index: 10;
-}
+  display: block;
+  z-index: 10; }
 
 .controls button {
-    -webkit-appearance: none;
-    background-color: rgba(0,0,0,.65);
-    background-repeat: no-repeat;
-    background-position:center;
-    border: none;
-    outline: none;
-    width: 49%;
-    margin: 0;
-    color: #fff;
-    height: 44px;
-    padding: 0 6px 2px;
-    font-size: 26px;
-    font-weight: bold;
-    cursor: pointer;
-    position: absolute;
-    bottom: 0;
-}
-
-.controls button:first-child {
+  -webkit-appearance: none;
+  background-color: rgba(0, 0, 0, 0.65);
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  outline: none;
+  width: 49%;
+  margin: 0;
+  color: white;
+  height: 44px;
+  padding: 0 6px 2px;
+  font-size: 26px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  bottom: 0; }
+  .controls button:first-child {
     border-top-right-radius: 4px;
     left: 0;
-    text-align: left;
-}
-.controls button:nth-child(2) {
+    text-align: left; }
+  .controls button:nth-child(2) {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    text-align: center;
-}
-.controls button:last-child {
+    text-align: center; }
+  .controls button:last-child {
     border-top-left-radius: 4px;
     right: 0;
-    text-align: right;
-}
-
-.controls button img {
+    text-align: right; }
+  .controls button img {
     position: absolute;
-    top: 10px;
-}
-.controls button:first-child img {
-    left: 10px;
-}
-
-.controls button:last-child img {
-    right: 10px;
-}
-
-.controls button:hover {
-    background-color: rgba(0,0,0,.92);
-}
+    top: 10px; }
+  .controls button:first-child img {
+    left: 10px; }
+  .controls button:last-child img {
+    right: 10px; }
+  .controls button:hover {
+    background-color: rgba(0, 0, 0, 0.92); }
 
 .text {
-    background-color: #000;
-    color: #E6E6E6;
-}
-
-.text img {
+  background-color: black;
+  color: #e6e6e6; }
+  .text img {
     float: left;
-    padding: 0px 5px 5px 0px;
-}
-
-.text p {
+    padding: 0px 5px 5px 0px; }
+  .text p {
     padding: 5px 10px;
     z-index: 1;
     text-overflow: ellipsis;
     font-size: 1.2em;
     position: absolute;
     top: 20px;
-    background-color: rgba(0,0,0,0.7);
-}
+    background-color: rgba(0, 0, 0, 0.7); }
 
 .down {
-    background-image: url('../images/minus.png');
-}
+  background-image: url("../images/minus.png"); }
+
 .up {
-    background-image: url('../images/plus.png');
-}
+  background-image: url("../images/plus.png"); }
+
 .share {
-    display:none;
-}
+  display: none; }
