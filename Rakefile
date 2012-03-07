@@ -64,9 +64,9 @@ def manifest(destination = "")
     ],
     :background_page => "/views/html/background.html",
     :icons => {
-      16 => "views/icons/icon16.png",
-      48 => "views/icons/icon48.png",
-      128 => "views/icons/icon128.png"
+      16 => "views/images/icons/icon16.png",
+      48 => "views/images/icons/icon48.png",
+      128 => "views/images/icons/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
   }
