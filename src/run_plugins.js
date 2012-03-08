@@ -1,12 +1,30 @@
 // Ok. Here, we need to require all the plugins!
-var $ = jQuery      = require('jquery');
 var Plugins         = require('./plugins.js').Plugins;
-var Inbox           = require('./models/inbox.js').Inbox;
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+new Blogger(Plugins);
+var Disqus = require('./plugins/disqus.js').Disqus;
+new Disqus(Plugins);
+var Generic = require('./plugins/generic.js').Generic;
+new Generic(Plugins);
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+new GoogleReader(Plugins);
+var Posterous = require('./plugins/posterous.js').Posterous;
+new Posterous(Plugins);
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+new Statusnet(Plugins);
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+new Tumblr(Plugins);
+var Typepad = require('./plugins/typepad.js').Typepad;
+new Typepad(Plugins);
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+new Wordpress(Plugins);
 
 // Runs all the plugins
-$.each(Plugins.all, function (index, plugin) {
+for (var i = 0; i < Plugins.all.length; i++) {
+    var plugin = Plugins.all[i];
     if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
-        plugin.hijack(function (feed, done) {
+        plugin.hijack(document, function (feed, done) {
             chrome.extension.sendRequest({
                 signature: "subscribe",
                 params: feed
@@ -19,4 +37,4 @@ $.each(Plugins.all, function (index, plugin) {
             done();
         });
     }
-});
+}

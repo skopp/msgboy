@@ -1,4 +1,5 @@
 var should = require('chai').should();
+var Plugins = require('../../plugins.js').Plugins;
 var Disqus = require('../../plugins/disqus.js').Disqus;
 
 describe('Disqus', function(){
@@ -17,7 +18,7 @@ describe('Disqus', function(){
                     return id === "disqus_thread"
                 }
             };
-            var d = new Disqus();
+            var d = new Disqus(Plugins);
             d.onSubscriptionPage(docStub).should.be.true;
         });
 
@@ -28,7 +29,7 @@ describe('Disqus', function(){
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
             this.timeout(0); 
-            var d = new Disqus();
+            var d = new Disqus(Plugins);
             d.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
                 feed.url.should.exist;

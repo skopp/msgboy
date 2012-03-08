@@ -1,4 +1,5 @@
 var should = require('chai').should();
+var Plugins = require('../../plugins.js').Plugins;
 var Generic = require('../../plugins/generic.js').Generic;
 
 describe('Generic', function(){
@@ -13,7 +14,7 @@ describe('Generic', function(){
     describe('onSubscriptionPage', function() {
         it('should return true', function() {
             var docStub = {};
-            var b = new Generic();
+            var b = new Generic(Plugins);
             b.onSubscriptionPage(docStub).should.be.true;
         });
     });
@@ -22,7 +23,7 @@ describe('Generic', function(){
     });
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
-            var d = new Generic();
+            var d = new Generic(Plugins);
             d.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
                 true.should.be.false; // Generic plugin does not have a way to list subscriptions

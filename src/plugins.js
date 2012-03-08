@@ -1,82 +1,78 @@
-var Msgboy = require('./msgboy.js').Msgboy
-
 var Plugins = {
     all: [],
 
     register: function (plugin) {
         this.all.push(plugin);
     },
-    importSubscriptions: function (callback, done) {
+    
+    importSubscriptions: function (callback, doneOne, doneAll) {
         var subscriptionsCount = 0;
         
-        var processNextPlugin = function(plugins) {
-            var plugin = plugins.pop();
+        var processNextPlugin = function(plugins, idx) {
+            var plugin = plugins[idx];
             if(plugin) {
-                Msgboy.log.info("Starting with", plugin.name);
                 plugin.listSubscriptions(function (subscription) {
                     callback({
                         url: subscription.url,
                         title: subscription.title
                     });
                 }, function (count) {
-                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    doneOne(plugin, count);
                     subscriptionsCount += count;
-                    processNextPlugin(plugins);
+                    processNextPlugin(plugins, idx + 1);
                 });
             }
             else {
-                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-                done(subscriptionsCount);
+                doneAll(subscriptionsCount, idx + 1);
             }
         };
 
-        var plugins = _.clone(Plugins.all); 
-        processNextPlugin(plugins);
+        processNextPlugin(Plugins.all, 0);
+    },
+    
+    httpGet: function(url, success, error) {
+        // this is an implementation of Jquery's get $.get, because we don't want to use jquery just for it.
+        var client = new XMLHttpRequest(); 
+        client.onreadystatechange = function() {
+            if(this.readyState == this.DONE) {
+                success(client.responseText);
+            }
+        };
+        client.open("GET", url, true); // Open up the connection
+        client.send( null ); // Send the request
+    },
+    
+    hasClass: function (elem, selector) {
+        var className = " " + selector + " ";
+        if ((" " + elem.className + " ").indexOf(className) > -1) {
+            return true;
+        }
+        return false;
+    },
+    
+    getFeedLinkInDocWith: function(doc, mimeType) {
+        var links = doc.getElementsByTagName("link");
+        for(var i = 0; i < links.length; i++) {
+            var link = links[i];
+            if(link.getAttribute("rel") === "alternate" && link.getAttribute("type") === mimeType) {
+                return link;
+            }
+        }
+        return null;
+    },
+    
+    buildFragmentDocument: function(str) {
+        var fragment = document.createDocumentFragment();
+        var div = document.createElement('div');
+        div.innerHTML = str;
+        
+        for (var i=0; i < div.childNodes.length; i++) {
+          var node = div.childNodes[i].cloneNode(true);
+          fragment.appendChild(node);
+        };
+        return fragment
     }
 };
-
-var Blogger = require('./plugins/blogger.js').Blogger;
-Plugins.register(new Blogger());
-
-var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
-Plugins.register(new Bookmarks());
-
-var Digg = require('./plugins/digg.js').Digg;
-Plugins.register(new Digg());
-
-var Disqus = require('./plugins/disqus.js').Disqus;
-Plugins.register(new Disqus());
-
-var Generic = require('./plugins/generic.js').Generic;
-Plugins.register(new Generic());
-
-var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
-Plugins.register(new GoogleReader());
-
-var History = require('./plugins/history.js').History;
-Plugins.register(new History());
-
-var Posterous = require('./plugins/posterous.js').Posterous;
-Plugins.register(new Posterous());
-
-var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
-Plugins.register(new QuoraPeople());
-
-var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
-Plugins.register(new QuoraTopics());
-
-var Statusnet = require('./plugins/statusnet.js').Statusnet;
-Plugins.register(new Statusnet());
-
-var Tumblr = require('./plugins/tumblr.js').Tumblr;
-Plugins.register(new Tumblr());
-
-var Typepad = require('./plugins/typepad.js').Typepad;
-Plugins.register(new Typepad());
-
-var Wordpress = require('./plugins/wordpress.js').Wordpress;
-Plugins.register(new Wordpress());
-
 
 exports.Plugins = Plugins;
 
@@ -90,11 +86,10 @@ var Plugin = function () {
     this.listSubscriptions = function (callback, done) {
         // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
         // Feeds have the following form {url: _, title: _}.
-        callback([]);
         done(0);
     };
 
-    this.hijack = function (follow, unfollow) {
+    this.hijack = function (doc, follow, unfollow) {
         // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
         // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
     };

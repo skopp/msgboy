@@ -12769,85 +12769,81 @@ if(typeof window !== "undefined") {
 });
 
 require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
-var Msgboy = require('./msgboy.js').Msgboy
-
 var Plugins = {
     all: [],
 
     register: function (plugin) {
         this.all.push(plugin);
     },
-    importSubscriptions: function (callback, done) {
+    
+    importSubscriptions: function (callback, doneOne, doneAll) {
         var subscriptionsCount = 0;
         
-        var processNextPlugin = function(plugins) {
-            var plugin = plugins.pop();
+        var processNextPlugin = function(plugins, idx) {
+            var plugin = plugins[idx];
             if(plugin) {
-                Msgboy.log.info("Starting with", plugin.name);
                 plugin.listSubscriptions(function (subscription) {
                     callback({
                         url: subscription.url,
                         title: subscription.title
                     });
                 }, function (count) {
-                    Msgboy.log.info("Done with", plugin.name, "and subscribed to", count);
+                    doneOne(plugin, count);
                     subscriptionsCount += count;
-                    processNextPlugin(plugins);
+                    processNextPlugin(plugins, idx + 1);
                 });
             }
             else {
-                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-                done(subscriptionsCount);
+                doneAll(subscriptionsCount, idx + 1);
             }
         };
 
-        var plugins = _.clone(Plugins.all); 
-        processNextPlugin(plugins);
+        processNextPlugin(Plugins.all, 0);
+    },
+    
+    httpGet: function(url, success, error) {
+        // this is an implementation of Jquery's get $.get, because we don't want to use jquery just for it.
+        var client = new XMLHttpRequest(); 
+        client.onreadystatechange = function() {
+            if(this.readyState == this.DONE) {
+                success(client.responseText);
+            }
+        };
+        client.open("GET", url, true); // Open up the connection
+        client.send( null ); // Send the request
+    },
+    
+    hasClass: function (elem, selector) {
+        var className = " " + selector + " ";
+        if ((" " + elem.className + " ").indexOf(className) > -1) {
+            return true;
+        }
+        return false;
+    },
+    
+    getFeedLinkInDocWith: function(doc, mimeType) {
+        var links = doc.getElementsByTagName("link");
+        for(var i = 0; i < links.length; i++) {
+            var link = links[i];
+            if(link.getAttribute("rel") === "alternate" && link.getAttribute("type") === mimeType) {
+                return link;
+            }
+        }
+        return null;
+    },
+    
+    buildFragmentDocument: function(str) {
+        var fragment = document.createDocumentFragment();
+        var div = document.createElement('div');
+        div.innerHTML = str;
+        
+        for (var i=0; i < div.childNodes.length; i++) {
+          var node = div.childNodes[i].cloneNode(true);
+          fragment.appendChild(node);
+        };
+        return fragment
     }
 };
-
-var Blogger = require('./plugins/blogger.js').Blogger;
-Plugins.register(new Blogger());
-
-var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
-Plugins.register(new Bookmarks());
-
-var Digg = require('./plugins/digg.js').Digg;
-Plugins.register(new Digg());
-
-var Disqus = require('./plugins/disqus.js').Disqus;
-Plugins.register(new Disqus());
-
-var Generic = require('./plugins/generic.js').Generic;
-Plugins.register(new Generic());
-
-var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
-Plugins.register(new GoogleReader());
-
-var History = require('./plugins/history.js').History;
-Plugins.register(new History());
-
-var Posterous = require('./plugins/posterous.js').Posterous;
-Plugins.register(new Posterous());
-
-var QuoraPeople = require('./plugins/quora-people.js').QuoraPeople;
-Plugins.register(new QuoraPeople());
-
-var QuoraTopics = require('./plugins/quora-topics.js').QuoraTopics;
-Plugins.register(new QuoraTopics());
-
-var Statusnet = require('./plugins/statusnet.js').Statusnet;
-Plugins.register(new Statusnet());
-
-var Tumblr = require('./plugins/tumblr.js').Tumblr;
-Plugins.register(new Tumblr());
-
-var Typepad = require('./plugins/typepad.js').Typepad;
-Plugins.register(new Typepad());
-
-var Wordpress = require('./plugins/wordpress.js').Wordpress;
-Plugins.register(new Wordpress());
-
 
 exports.Plugins = Plugins;
 
@@ -12861,11 +12857,10 @@ var Plugin = function () {
     this.listSubscriptions = function (callback, done) {
         // This methods will callback with all the subscriptions in this service. It can call the callback several times with more feeds.
         // Feeds have the following form {url: _, title: _}.
-        callback([]);
         done(0);
     };
 
-    this.hijack = function (follow, unfollow) {
+    this.hijack = function (doc, follow, unfollow) {
         // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
         // So actually, we should ask the user if it's fine to subscribe to the feed, and if so, well, that's good, then we will subscribe.
     };
@@ -12876,712 +12871,6 @@ var Plugin = function () {
     };
 };
 
-});
-
-require.define("/plugins/blogger.js", function (require, module, exports, __dirname, __filename) {
-// Blogger
-var $ = jQuery = require('jquery');
-
-Blogger = function () {
-
-    this.name = 'Blogger'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.blogger.com" && doc.location.pathname === '/navbar.g');
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $('a#b-follow-this').click(function (event) {
-            follow({
-                title: "",
-                url: $("#searchthis").attr("action").replace("search", "feeds/posts/default")
-            }, function () {
-                // Done
-            });
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        var subscriptionsCount = 0;
-        $.get("http://www.blogger.com/manage-blogs-following.g", function (data) {
-            var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
-            var match = rex.exec(data);
-            while (match) {
-                subscriptionsCount += 1;
-                callback({
-                    url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
-                    title: match[1].replace(/"/g, '').trim()
-                });
-                match = rex.exec(data);
-            }
-            done(subscriptionsCount);
-        }.bind(this));
-    };
-};
-
-exports.Blogger = Blogger;
-
-});
-
-require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
-var Feediscovery = require('../feediscovery.js').Feediscovery;
-
-var Bookmarks = function () {
-
-    this.name = 'Browser Bookmarks';
-
-    this.onSubscriptionPage = function (doc) {
-        // This method returns true if the plugin needs to be applied on this page.
-        return true;
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // Hum. What?
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        var seen = [];
-        var totalFeeds = 0;
-        chrome.bookmarks.getRecent(1000,
-            function (bookmarks) {
-                if (bookmarks.length === 0) {
-                    done(totalFeeds);
-                }
-                else {
-
-                    var processNext = function(bookmarks) {
-                        var bookmark = bookmarks.pop();
-                        if(bookmark) {
-                            Feediscovery.get(bookmark.url, function (links) {
-                                _.each(links, function (link) {
-                                    totalFeeds++;
-                                    if (seen.indexOf(link.href) === -1) {
-                                        callback({title: link.title || "", url: link.href})
-                                        seen.push(link.href);
-                                    }
-                                });
-                                processNext(bookmarks);
-                            });
-
-                        } else {
-                            done(totalFeeds);
-                        }
-                    };
-                    processNext(bookmarks);
-
-                    var doneOnce = _.after(bookmarks.length, function () {
-                        // We have processed all the bookmarks
-                        done(totalFeeds);
-                    });
-                }
-            }.bind(this)
-        );
-    };
-
-    this.subscribeInBackground = function (callback) {
-        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
-            Feediscovery.get(bookmark.url, function (links) {
-                _.each(links, function (link) {
-                    callback(link);
-                });
-            });
-        }.bind(this));
-    };
-};
-
-exports.Bookmarks = Bookmarks;
-});
-
-require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery      = require('jquery');
-
-// Feediscovery module. The only API that needs to be used is the Feediscovery.get
-Feediscovery = {};
-Feediscovery.stack = [];
-Feediscovery.running = false;
-
-Feediscovery.get = function (_url, _callback) {
-    Feediscovery.stack.push([_url, _callback]);
-    if(!Feediscovery.running) {
-        Feediscovery.running = true;
-        Feediscovery.run();
-    }
-};
-Feediscovery.run = function () {
-    var next = Feediscovery.stack.shift();
-    if (next) {
-        $.ajax({url: "http://feediscovery.appspot.com/",
-            data: {url: next[0]},
-            success: function (data) {
-                next[1](JSON.parse(data));
-                Feediscovery.run();
-            },
-            error: function () {
-                // Let's restack, in the back.
-                Feediscovery.get(next[0], next[1]);
-            }
-        });
-    } else {
-        setTimeout(function () {
-            Feediscovery.run();
-        }, 1000);
-    }
-};
-
-exports.Feediscovery = Feediscovery;
-
-});
-
-require.define("/plugins/digg.js", function (require, module, exports, __dirname, __filename) {
-Digg = function () {
-
-    this.name = 'Digg'; // Name for this plugin. The user will be asked which plugins he wants to use.
-
-    this.onSubscriptionPage = function (doc) {
-        // This method returns true if the plugin needs to be applied on this page.
-        return (doc.location.host === "digg.com");
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // This methods hijacks the susbcription action on the specific website for this plugin.
-        $(".btn-follow").live('click', function (event) {
-            url = $(event.target).attr("href");
-            login =  url.split("/")[1];
-            action = url.split("/")[2];
-            switch (action) {
-            case "follow":
-                follow({
-                    url: "http://digg.com/" + login + ".rss",
-                    title: login + " on Digg"
-                }, function () {
-                    // Done
-                });
-                break;
-            case "unfollow":
-                unfollow({
-                    url: "http://digg.com/" + login + ".rss",
-                    title: login + " on Digg"
-                }, function () {
-                    // Done
-                });
-                break;
-            default:
-            }
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-};
-
-exports.Digg = Digg;
-});
-
-require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-Disqus = function () {
-
-    this.name = 'Disqus Comments';
-
-    this.onSubscriptionPage = function (doc) {
-        // This method returns true if the plugin needs to be applied on this page.
-        return (doc.getElementById("disqus_thread"));
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $("#dsq-post-button").live('click', function (event) {
-            follow({
-                url: $(".dsq-subscribe-rss a").attr("href"),
-                title: document.title + " comments"
-            }, function () {
-                //Done
-            });
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-
-};
-
-exports.Disqus = Disqus;
-});
-
-require.define("/plugins/generic.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-Generic = function () {
-    this.name = 'Generic';
-
-    this.onSubscriptionPage = function (doc) {
-        return true;
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // Adds a listen event on all elements
-        $(".msgboy-follow").click(function (element) {
-            follow({
-                title: $(element.currentTarget).attr("data-msgboy-title"),
-                url: $(element.currentTarget).attr("data-msgboy-url")
-            }, function () {
-                // Done
-            });
-            return false;
-        });
-    };
-};
-
-exports.Generic = Generic;
-});
-
-require.define("/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-GoogleReader = function () {
-
-    this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
-
-    this.onSubscriptionPage = function (doc) {
-        // This method returns true if the plugin needs to be applied on this page.
-        return (doc.location.host === "www.google.com" && doc.location.pathname === '/reader/view/');
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // This methods hijacks the susbcription action on the specific website for this plugin.
-        var submitted = function () {
-            follow({
-                url: $("#quickadd").val(),
-                title: $("#quickadd").val()
-            }, function () {
-                // Done
-            });
-        };
-        $("#quick-add-form .goog-button-body").click(submitted);
-        $("#quick-add-form").submit(submitted);
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        var feedCount = 0;
-        $.get("http://www.google.com/reader/subscriptions/export", function (data) {
-            var subscriptions = [];
-            var urls = $(data).find("outline").each(function () {
-                feedCount += 1;
-                callback({
-                    url:  $(this).attr("xmlUrl"),
-                    title: $(this).attr("title")
-                });
-            });
-            done(feedCount);
-        });
-    };
-};
-
-exports.GoogleReader = GoogleReader;
-});
-
-require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-var Feediscovery = require('../feediscovery.js').Feediscovery;
-var Maths = require("../maths.js").Maths;
-
-var History = function () {
-    this.name = 'Browsing History';
-    this.visitsToBePopular = 3;
-    this.deviation = 1;
-    this.elapsed = 1000 * 60 * 60 * 3;
-    this.onSubscriptionPage = function (doc) {
-        // This method returns true if the plugin needs to be applied on this page.
-        return true;
-    };
-    this.hijack = function (follow, unfollow) {
-        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
-    };
-    this.listSubscriptions = function (callback, done) {
-        var seen = [];
-        var totalFeeds = 0;
-
-        chrome.history.search({
-            'text': '',
-            // Return every history item....
-            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 15),
-            // that was accessed less than 15 days ago, up to 10000 pages.
-            'maxResults': 10000
-        }, function (historyItems) {
-            if (historyItems.length === 0) {
-                done(0);
-            }
-            
-            // Synchrounous 
-            var processNext = function(items) {
-                var item = items.pop();
-                if(item) {
-                    if (item.visitCount > this.visitsToBePopular) {
-                        this.visitsRegularly(item.url, function (result) {
-                            if (result) {
-                                Feediscovery.get(item.url, function (links) {
-                                    _.each(links, function (link) {
-                                        if (seen.indexOf(link.href) === -1) {
-                                            totalFeeds++;
-                                            callback({title: link.title || "", url: link.href});
-                                            seen.push(link.href);
-                                        }
-                                    });
-                                    processNext(items);
-                                });
-                            }
-                            else {
-                                processNext(items); // Not visited regularly.
-                            }
-                        });
-                    }
-                    else {
-                        processNext(items); // Not visited often enough
-                    }
-                }
-                else {
-                    done(totalFeeds);
-                }
-            }.bind(this);
-            // Let's go.
-            processNext(historyItems);
-        }.bind(this));
-    };
-    this.visitsRegularly = function (url, callback) {
-        chrome.history.getVisits({url: url}, function (visits) {
-            var times = $.map(visits, function (visit) {
-                return visit.visitTime;
-                }).slice(-10); // We check the last 10 visits.
-                var diffs = [];
-                for (var i = 0; i < times.length - 1; i++) {
-                    diffs[i] =  times[i + 1] - times[i];
-                }
-                // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
-                if (Maths.normalizedDeviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
-                    callback(true);
-                }
-                else {
-                    callback(false);
-                }
-            }.bind(this));
-        };
-        this.subscribeInBackground = function (callback) {
-            chrome.history.onVisited.addListener(function (historyItem) {
-                if (historyItem.visitCount > this.visitsToBePopular) {
-                    this.visitsRegularly(historyItem.url, function (result) {
-                        Feediscovery.get(historyItem.url, function (links) {
-                            _.each(links, function (link) {
-                                callback(link);
-                            });
-                        });
-                    });
-                }
-            }.bind(this));
-        };
-    };
-
-    exports.History = History;
-});
-
-require.define("/maths.js", function (require, module, exports, __dirname, __filename) {
-// Helpers for maths
-
-Maths = {};
-Maths.normalizedDeviation = function (array) {
-    return Maths.deviation(array) / Maths.average(array);
-};
-Maths.deviation = function (array) {
-    var avg = Maths.average(array);
-    var count = array.length;
-    var i = count - 1;
-    var v = 0;
-    while (i >= 0) {
-        v += Math.pow((array[i] - avg), 2);
-        i = i - 1;
-    }
-    return Math.sqrt(v / count);
-};
-Maths.average = function (array) {
-    var count = array.length;
-    var i = count - 1;
-    var sum = 0;
-    while (i >= 0) {
-        sum += array[i];
-        i = i - 1;
-    }
-    return sum / count;
-};
-
-
-exports.Maths = Maths;
-
-});
-
-require.define("/plugins/posterous.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-Posterous = function () {
-
-    this.name = 'Posterous';
-    this.hijacked = false;
-
-    this.onSubscriptionPage = function (doc) {
-        return (doc.getElementById("pbar") !== null);
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $("a.pbar_login_form").click(function(evt) {
-            follow({
-                title: document.title,
-                url: window.location.href + "/rss.xml"
-            }, function () {
-                // done
-            });
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, 0, callback, done);
-    };
-
-    this.listSubscriptionsPage = function (page, count, callback, done) {
-        var that = this;
-        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
-            var content = $(data);
-            var links = content.find("#subscriptions td.image a");
-            links.each(function (index, link) {
-                callback({
-                    url: $(link).attr("href") + "/rss.xml",
-                    title: $(link).attr("title")
-                });
-                count += 1;
-            });
-            if (links.length > 0) {
-                this.listSubscriptionsPage(page + 1, count, callback, done);
-            } else {
-                done(count);
-            }
-        }.bind(this));
-    };
-};
-
-exports.Posterous = Posterous;
-});
-
-require.define("/plugins/quora-people.js", function (require, module, exports, __dirname, __filename) {
-QuoraPeople = function () {
-
-    this.name = 'Quora People';
-
-    this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.quora.com");
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $(".follow_button").not(".unfollow_button").not(".topic_follow").click(function (event) {
-            if ($.trim($(event.target).html()) !== "Follow Question") {
-                // This is must a button on a user's page. Which we want to follow
-                follow({
-                    title: document.title,
-                    url: window.location.href + "/rss"
-                });
-            }
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-
-};
-
-exports.QuoraPeople = QuoraPeople;
-});
-
-require.define("/plugins/quora-topics.js", function (require, module, exports, __dirname, __filename) {
-QuoraTopics = function () {
-
-    this.name = 'Quora Topics';
-
-    this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.quora.com");
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $(".topic_follow.follow_button").not(".unfollow_button").click(function (event) {
-            url = "";
-            title = "";
-            if ($(event.target).parent().parent().find(".topic_name").length > 0) {
-                link = $(event.target).parent().parent().find(".topic_name")[0];
-                url = "http://www.quora.com" + ($(link).attr("href")) + "/rss";
-                title = $($(link).children()[0]).html() + " on Quora";
-            }
-            else {
-                title = document.title;
-                url = window.location.href + "/rss";
-            }
-            follow({
-                url: url,
-                title: title
-            }, function () {
-                // Done
-            });
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-};
-
-exports.QuoraTopics = QuoraTopics;
-});
-
-require.define("/plugins/statusnet.js", function (require, module, exports, __dirname, __filename) {
-Statusnet = function () {
-
-    this.name = 'Status.net'; // Name for this plugin. The user will be asked which plugins he wants to use.
-
-    this.onSubscriptionPage = function (doc) {
-        // This method needs to returns true if the plugin needs to be applied on this page.
-        return (doc.location.host.match(/status\.net/) !== null);
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-
-    this.hijack = function (follow, unfollow) {
-        // This method will add a callback that hijack a website subscription (or follow, or equivalent) so that msgboy also mirrors this subscription.
-        $('#form_ostatus_connect').live("submit", function () {
-            user = $($(this).find("#nickname")[0]).attr("value");
-            url = "http://" + parseUri(window.location).host + "/api/statuses/user_timeline/1.atom";
-            follow({
-                title:  user + " on Status.net",
-                url: url
-            }, function () {
-                // Done
-            });
-        });
-    };
-};
-
-exports.Statusnet = Statusnet;
-});
-
-require.define("/plugins/tumblr.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-Tumblr = function () {
-
-    this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.tumblr.com" && doc.location.pathname === '/dashboard/iframe');
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $('form[action|="/follow"]').submit(function (event) {
-            follow({
-                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
-                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
-            }, function () {
-                // Done
-            });
-        });
-    };
-
-
-    this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, 0, callback, done);
-    };
-
-    this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
-        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
-            var content = $(data);
-            var links = content.find(".follower .name a");
-            links.each(function (index, link) {
-                callback({
-                    url: $(link).attr("href") + "rss",
-                    title: $(link).html() + " on Tumblr"
-                });
-                subscriptions += 1;
-            });
-            if (links.length > 0) {
-                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
-            } else {
-                done(subscriptions);
-            }
-        }.bind(this));
-    };
-};
-
-exports.Tumblr = Tumblr;
-});
-
-require.define("/plugins/typepad.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-var Typepad = function () {
-
-    this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
-
-    this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.typepad.com" && doc.location.pathname === '/services/toolbar');
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $("#follow-display").click(function () {
-            follow({
-                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
-                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
-            }, function () {
-                // Done
-            });
-            return false;
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        done(0);
-    };
-};
-
-exports.Typepad = Typepad;
-});
-
-require.define("/plugins/wordpress.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-
-var Wordpress = function () {
-
-    this.name = 'Wordpress'; // Name for this plugin. The user will be asked which plugins he wants to use.
-    this.onSubscriptionPage = function (doc) {
-        return (doc.getElementById("wpadminbar"));
-    };
-
-    this.hijack = function (follow, unfollow) {
-        $('#wp-admin-bar-follow').live('click', function (event) {
-            follow({
-                title: $('#wp-admin-bar-blog a.ab-item').text(),
-                url: $('#wp-admin-bar-blog a.ab-item').attr('href') + "feed"
-            }, function () {
-                // Done
-            });
-        });
-    };
-
-    this.listSubscriptions = function (callback, done) {
-        // Looks like WP doesn't allow us to export the list of followed blogs. Boooh.
-        done(0);
-    };
-};
-
-exports.Wordpress = Wordpress;
 });
 
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
@@ -19440,8 +18729,14 @@ Msgboy.bind("loaded", function () {
                 subscribe(subs.url, false, function () {
                     // Cool. Not much to do.
                 });
-            }, function(subscriptionsCount) {
-                // We found subscriptionsCount!
+            }, 
+            function(plugin, subscriptionsCount) {
+                // Called when done with one plugin
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+            },
+            function(subscriptionsCount) {
+                // Called when done with all plugins
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
             });
         });
     });
@@ -19553,8 +18848,14 @@ Msgboy.bind("loaded", function () {
             subscribe(subs.url, false, function () {
                 // Cool. Not much to do.
             });
-        }, function(subscriptionsCount) {
-            // We found subscriptionsCount!
+        }, 
+        function(plugin, subscriptionsCount) {
+            // Called when done with one plugin
+            Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+        },
+        function(subscriptionsCount) {
+            // Called when done with all plugins
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
         });
     });
     

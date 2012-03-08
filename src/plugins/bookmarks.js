@@ -1,6 +1,8 @@
 var Feediscovery = require('../feediscovery.js').Feediscovery;
 
-var Bookmarks = function () {
+var Bookmarks = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
 
     this.name = 'Browser Bookmarks';
 
@@ -9,7 +11,7 @@ var Bookmarks = function () {
         return true;
     };
 
-    this.hijack = function (follow, unfollow) {
+    this.hijack = function (doc, follow, unfollow) {
         // Hum. What?
     };
 
@@ -27,13 +29,14 @@ var Bookmarks = function () {
                         var bookmark = bookmarks.pop();
                         if(bookmark) {
                             Feediscovery.get(bookmark.url, function (links) {
-                                _.each(links, function (link) {
+                                for(var j = 0; j < links.length; j++) {
+                                    var link = links[j];
                                     totalFeeds++;
                                     if (seen.indexOf(link.href) === -1) {
                                         callback({title: link.title || "", url: link.href})
                                         seen.push(link.href);
                                     }
-                                });
+                                }
                                 processNext(bookmarks);
                             });
 
@@ -42,11 +45,6 @@ var Bookmarks = function () {
                         }
                     };
                     processNext(bookmarks);
-
-                    var doneOnce = _.after(bookmarks.length, function () {
-                        // We have processed all the bookmarks
-                        done(totalFeeds);
-                    });
                 }
             }.bind(this)
         );

@@ -1,4 +1,5 @@
 var should = require('chai').should();
+var Plugins = require('../../plugins.js').Plugins;
 var Wordpress = require('../../plugins/wordpress.js').Wordpress;
 
 describe('Wordpress', function(){
@@ -17,7 +18,7 @@ describe('Wordpress', function(){
                     return id === "wpadminbar";
                 }
             }
-            var w = new Wordpress();
+            var w = new Wordpress(Plugins);
             w.onSubscriptionPage(docStub).should.equal(true);
         });
     });
@@ -26,7 +27,7 @@ describe('Wordpress', function(){
     });
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
-            var w = new Wordpress();
+            var w = new Wordpress(Plugins);
             w.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
             }, function(count) {

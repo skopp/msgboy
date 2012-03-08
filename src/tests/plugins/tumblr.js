@@ -1,4 +1,5 @@
 var should = require('chai').should();
+var Plugins = require('../../plugins.js').Plugins;
 var Tumblr = require('../../plugins/tumblr.js').Tumblr;
 
 describe('Tumblr', function(){
@@ -18,7 +19,7 @@ describe('Tumblr', function(){
                     pathname: "/dashboard/iframe"
                 }
             };
-            var b = new Tumblr();
+            var b = new Tumblr(Plugins);
             b.onSubscriptionPage(docStub).should.be.true;
         });
     });
@@ -28,7 +29,7 @@ describe('Tumblr', function(){
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
             this.timeout(0); 
-            var b = new Tumblr();
+            var b = new Tumblr(Plugins);
             b.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
                 feed.url.should.exist;

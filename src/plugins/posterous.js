@@ -1,6 +1,8 @@
-var $ = jQuery = require('jquery');
 
-Posterous = function () {
+Posterous = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
+    
 
     this.name = 'Posterous';
     this.hijacked = false;
@@ -9,14 +11,23 @@ Posterous = function () {
         return (doc.getElementById("pbar") !== null);
     };
 
-    this.hijack = function (follow, unfollow) {
-        $("a.pbar_login_form").click(function(evt) {
-            follow({
-                title: document.title,
-                url: window.location.href + "/rss.xml"
-            }, function () {
-                // done
-            });
+    this.hijack = function (doc, follow, unfollow) {
+        var found = false;
+        var followElem = null;
+        doc.addEventListener('DOMNodeInserted', function(evt) {
+            followElem = doc.querySelectorAll("a.pbar_login_form")[0];
+            if(followElem && !found) {
+                found = true;
+                followElem.addEventListener('click', function(event) {
+                    var feedLink = Plugins.getFeedLinkInDocWith(doc, "application/rss+xml");
+                    follow({
+                        title: doc.title,
+                        url: feedLink.getAttribute('href')
+                    }, function() {
+                        // Done!
+                    });
+                });
+            }
         });
     };
 
@@ -26,16 +37,19 @@ Posterous = function () {
 
     this.listSubscriptionsPage = function (page, count, callback, done) {
         var that = this;
-        $.get("http://posterous.com/users/me/subscriptions?page=" + page, function (data) {
-            var content = $(data);
-            var links = content.find("#subscriptions td.image a");
-            links.each(function (index, link) {
+        
+        Plugins.httpGet("http://posterous.com/users/me/subscriptions?page=" + page, function(data) {
+            // That was successful!
+            var fragment = Plugins.buildFragmentDocument(data);
+            var links = fragment.querySelectorAll("#subscriptions td.image a");
+            for(var i = 0; i< links.length; i++) {
+                var link = links[i];
                 callback({
-                    url: $(link).attr("href") + "/rss.xml",
-                    title: $(link).attr("title")
+                    url: link.getAttribute("href") + "/rss.xml",
+                    title: link.getAttribute("title")
                 });
                 count += 1;
-            });
+            }
             if (links.length > 0) {
                 this.listSubscriptionsPage(page + 1, count, callback, done);
             } else {

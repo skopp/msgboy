@@ -112,6 +112,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * When "resetting" subscriptions, it should indicate a message to the user...
 * We should show something on empty dashboard... but what?
 * Port node-xmpp to the browser! Ask @dodo and @astro for help!
+* In Google Reader plugin, do the discovery.
 
 
 ## Publishers

@@ -1,4 +1,5 @@
 var should = require('chai').should();
+var Plugins = require('../../plugins.js').Plugins;
 var Typepad = require('../../plugins/typepad.js').Typepad;
 
 describe('Typepad', function(){
@@ -18,7 +19,7 @@ describe('Typepad', function(){
                     pathname: "/services/toolbar"
                 }
             };
-            var b = new Typepad();
+            var b = new Typepad(Plugins);
             b.onSubscriptionPage(docStub).should.be.true;
         });
     });
@@ -28,7 +29,7 @@ describe('Typepad', function(){
     describe('listSubscriptions', function() {
         it('should list all feeds to which the user is subscribed', function(done) {
             this.timeout(0); 
-            var b = new Typepad();
+            var b = new Typepad(Plugins);
             b.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
                 feed.url.should.exist;
