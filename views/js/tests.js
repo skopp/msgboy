@@ -15629,118 +15629,7 @@ describe('Plugins', function(){
         });
     });
     
-    it("should have a 'Blogger' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === "Blogger") {
-                done();
-            }
-        });
-    });
     
-    it("should have a 'Browser Bookmarks' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Browser Bookmarks') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a Digg plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Digg') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Disqus Comments' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Disqus Comments') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Generic plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Generic') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Google Reader' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Google Reader') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Browsing History' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Browsing History') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Posterous' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Posterous') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Quora People' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Quora People') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Quora Topics' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Quora Topics') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Status.net' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Status.net') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Tumblr' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Tumblr') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Typepad' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Typepad') {
-                done();
-            }
-        });
-    });
-    
-    it("should have a 'Wordpress' plugin", function(done) {
-        _.each(Plugins.all, function(plugin) {
-            if(plugin.name === 'Wordpress') {
-                done();
-            }
-        });
-    });
-        
     require('./plugins/google-reader.js');
     require('./plugins/blogger.js');
     require('./plugins/bookmarks.js');
@@ -16148,13 +16037,14 @@ var Bookmarks = function (Plugins) {
                         var bookmark = bookmarks.pop();
                         if(bookmark) {
                             Feediscovery.get(bookmark.url, function (links) {
-                                _.each(links, function (link) {
+                                for(var j = 0; j < links.length; j++) {
+                                    var link = links[j];
                                     totalFeeds++;
                                     if (seen.indexOf(link.href) === -1) {
                                         callback({title: link.title || "", url: link.href})
                                         seen.push(link.href);
                                     }
-                                });
+                                }
                                 processNext(bookmarks);
                             });
 
@@ -16163,11 +16053,6 @@ var Bookmarks = function (Plugins) {
                         }
                     };
                     processNext(bookmarks);
-
-                    var doneOnce = _.after(bookmarks.length, function () {
-                        // We have processed all the bookmarks
-                        done(totalFeeds);
-                    });
                 }
             }.bind(this)
         );
@@ -16702,8 +16587,8 @@ describe('Statusnet', function(){
     describe('onSubscriptionPage', function() {
         it('should return true if the location is at .*.status.net', function() {
             var docStub = {
-                location: {
-                    host: "hello.status.net"
+                getElementById: function(el) {
+                    return el === "showstream";
                 }
             };
             var b = new Statusnet(Plugins);

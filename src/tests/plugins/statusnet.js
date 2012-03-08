@@ -14,8 +14,8 @@ describe('Statusnet', function(){
     describe('onSubscriptionPage', function() {
         it('should return true if the location is at .*.status.net', function() {
             var docStub = {
-                location: {
-                    host: "hello.status.net"
+                getElementById: function(el) {
+                    return el === "showstream";
                 }
             };
             var b = new Statusnet(Plugins);
