@@ -28,10 +28,13 @@
   overflow: hidden;
   min-height: 50px;
   color: #e6e6e6; }
+  .message .darkened {
+    width: 100%;
+    background-color: #11232c; }
   .message.msgboy {
     background-color: #dae7ea;
     color: #11232c; }
-    .message.msgboy p.darkened {
+    .message.msgboy .darkened {
       background-color: #dae7ea;
       color: #11232c; }
   .message h1 {
@@ -79,10 +82,6 @@
 .message.stack:hover .ribbon {
   font-size: 1.1em;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.8); }
-
-p.darkened {
-  width: 100%;
-  background-color: #11232c; }
 
 .controls {
   position: absolute;
