@@ -1,6 +1,8 @@
 var Feediscovery = require('../feediscovery.js').Feediscovery;
 
-var Bookmarks = function () {
+var Bookmarks = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
 
     this.name = 'Browser Bookmarks';
 
@@ -9,7 +11,7 @@ var Bookmarks = function () {
         return true;
     };
 
-    this.hijack = function (follow, unfollow) {
+    this.hijack = function (doc, follow, unfollow) {
         // Hum. What?
     };
 

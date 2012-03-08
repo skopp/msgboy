@@ -1,22 +1,35 @@
-var $ = jQuery = require('jquery');
-
-var Typepad = function () {
+var Typepad = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
+    
 
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
     this.onSubscriptionPage = function (doc) {
-        return (doc.location.host === "www.typepad.com" && doc.location.pathname === '/services/toolbar');
+        return (doc.location.host === "www.typepad.com" && doc.location.pathname === '/services/toolbar') || doc.location.host === "profile.typepad.com";
     };
 
-    this.hijack = function (follow, unfollow) {
-        $("#follow-display").click(function () {
+    this.hijack = function (doc, follow, unfollow) {
+        var followDisplay = doc.getElementById('follow-display');
+        followDisplay.addEventListener("click", function() {
+            var profileLink = doc.querySelectorAll("#unfollow-display a")[0];
             follow({
-                title: $.trim($($("#unfollow-display a")[0]).html()) + " on Typepad",
-                href : $($("#unfollow-display a")[0]).attr("href") + "/activity/atom.xml"
+                title: "",
+                url: profileLink.getAttribute("href") + "/activity/atom.xml"
             }, function () {
                 // Done
             });
-            return false;
+        });
+        
+        var followAction = doc.getElementById('follow-action');
+        followAction.addEventListener("click", function() {
+            var feedLink = Plugins.getFeedLinkInDocWith(doc, "application/atom+xml");
+            follow({
+                title: feedLink.getAttribute('title'),
+                url: feedLink.getAttribute('href')
+            }, function() {
+                // Done!
+            });
         });
     };
 

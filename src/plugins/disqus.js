@@ -1,6 +1,6 @@
-var $ = jQuery = require('jquery');
-
-Disqus = function () {
+Disqus = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
 
     this.name = 'Disqus Comments';
 
@@ -9,14 +9,17 @@ Disqus = function () {
         return (doc.getElementById("disqus_thread"));
     };
 
-    this.hijack = function (follow, unfollow) {
-        $("#dsq-post-button").live('click', function (event) {
-            follow({
-                url: $(".dsq-subscribe-rss a").attr("href"),
-                title: document.title + " comments"
-            }, function () {
-                //Done
-            });
+    this.hijack = function (doc, follow, unfollow) {
+        doc.addEventListener("click", function(event) {
+            if(Plugins.hasClass(event.target,  "dsq-button")) {
+                var feedElem = document.querySelectorAll(".dsq-subscribe-rss")[0];
+                follow({
+                    url: feedElem.getAttribute("href"),
+                    title: document.title + " comments"
+                }, function () {
+                    //Done
+                });
+            }
         });
     };
 

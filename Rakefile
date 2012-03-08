@@ -58,7 +58,6 @@ def manifest(destination = "")
         :matches => [
           "*://*/*",
         ],
-        :run_at => "document_end",
         :all_frames => true,
       }
     ],
@@ -83,15 +82,19 @@ def manifest(destination = "")
   end
 end
 
-build_tasks = [:background, :dashboard, :notification, :options, :readme, :signup, :subscribe, :subscriptions, :run_plugins, :tests]
+build_tasks = [:background, :dashboard, :notification, :options, :readme, :signup, :subscribe, :subscriptions, :tests]
 
-task :build => build_tasks.map() { |t| :"build:#{t}"  }
+task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins']
 namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
     task k do
       `browserify --require 'br-jquery' --require 'backbone-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
     end
+  end
+  desc "Building run_plugins.js"
+  task :run_plugins do
+    `browserify ./src/run_plugins.js -o ./views/js/run_plugins.js`
   end
 end
 

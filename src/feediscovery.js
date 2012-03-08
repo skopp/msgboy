@@ -1,5 +1,3 @@
-var $ = jQuery      = require('jquery');
-
 // Feediscovery module. The only API that needs to be used is the Feediscovery.get
 Feediscovery = {};
 Feediscovery.stack = [];
@@ -15,17 +13,15 @@ Feediscovery.get = function (_url, _callback) {
 Feediscovery.run = function () {
     var next = Feediscovery.stack.shift();
     if (next) {
-        $.ajax({url: "http://feediscovery.appspot.com/",
-            data: {url: next[0]},
-            success: function (data) {
-                next[1](JSON.parse(data));
+        var client = new XMLHttpRequest(); 
+        client.onreadystatechange = function() {
+            if(this.readyState == this.DONE) {
+                next[1](JSON.parse(client.responseText));
                 Feediscovery.run();
-            },
-            error: function () {
-                // Let's restack, in the back.
-                Feediscovery.get(next[0], next[1]);
             }
-        });
+        };
+        client.open("GET", "http://feediscovery.appspot.com/?url=" + encodeURI(next[0]) , true); // Open up the connection
+        client.send( null ); // Send the request
     } else {
         setTimeout(function () {
             Feediscovery.run();

@@ -1,8 +1,10 @@
-var $ = jQuery = require('jquery');
 var Feediscovery = require('../feediscovery.js').Feediscovery;
 var Maths = require("../maths.js").Maths;
 
-var History = function () {
+var History = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
+    
     this.name = 'Browsing History';
     this.visitsToBePopular = 3;
     this.deviation = 1;
@@ -11,7 +13,7 @@ var History = function () {
         // This method returns true if the plugin needs to be applied on this page.
         return true;
     };
-    this.hijack = function (follow, unfollow) {
+    this.hijack = function (doc, follow, unfollow) {
         // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
     };
     this.listSubscriptions = function (callback, done) {
@@ -37,13 +39,14 @@ var History = function () {
                         this.visitsRegularly(item.url, function (result) {
                             if (result) {
                                 Feediscovery.get(item.url, function (links) {
-                                    _.each(links, function (link) {
+                                    for(var i = 0; i < links.length; i++) {
+                                        var link = links[i];
                                         if (seen.indexOf(link.href) === -1) {
                                             totalFeeds++;
                                             callback({title: link.title || "", url: link.href});
                                             seen.push(link.href);
                                         }
-                                    });
+                                    }
                                     processNext(items);
                                 });
                             }
@@ -66,35 +69,38 @@ var History = function () {
     };
     this.visitsRegularly = function (url, callback) {
         chrome.history.getVisits({url: url}, function (visits) {
-            var times = $.map(visits, function (visit) {
-                return visit.visitTime;
-                }).slice(-10); // We check the last 10 visits.
-                var diffs = [];
-                for (var i = 0; i < times.length - 1; i++) {
-                    diffs[i] =  times[i + 1] - times[i];
-                }
-                // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
-                if (Maths.normalizedDeviation(diffs) < this.deviation && (times.slice(-1)[0] -  times[0] > this.elapsed)) {
-                    callback(true);
-                }
-                else {
-                    callback(false);
-                }
-            }.bind(this));
-        };
-        this.subscribeInBackground = function (callback) {
-            chrome.history.onVisited.addListener(function (historyItem) {
-                if (historyItem.visitCount > this.visitsToBePopular) {
-                    this.visitsRegularly(historyItem.url, function (result) {
-                        Feediscovery.get(historyItem.url, function (links) {
-                            _.each(links, function (link) {
-                                callback(link);
-                            });
-                        });
-                    });
-                }
-            }.bind(this));
-        };
+            var visitTimes = new Array();
+            for(var j = 0; j < visits.length; j++) {
+                visitTimes.push(visits[j].visitTime);
+            }
+            visitTimes = visitTimes.slice(-10);
+            var diffs = [];
+            for (var i = 0; i < visitTimes.length - 1; i++) {
+                diffs[i] =  visitTimes[i + 1] - visitTimes[i];
+            }
+            
+            // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
+            if (Maths.normalizedDeviation(diffs) < this.deviation && (visitTimes.slice(-1)[0] -  visitTimes[0] > this.elapsed)) {
+                callback(true);
+            }
+            else {
+                callback(false);
+            }
+        }.bind(this));
     };
+    this.subscribeInBackground = function (callback) {
+        chrome.history.onVisited.addListener(function (historyItem) {
+            if (historyItem.visitCount > this.visitsToBePopular) {
+                this.visitsRegularly(historyItem.url, function (result) {
+                    Feediscovery.get(historyItem.url, function (links) {
+                        for(var i = 0; i < links.length; i++) {
+                            callback(links[i]);
+                        }
+                    });
+                });
+            }
+        }.bind(this));
+    };
+};
 
-    exports.History = History;
+exports.History = History;

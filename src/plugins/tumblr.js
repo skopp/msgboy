@@ -1,17 +1,21 @@
-var $ = jQuery = require('jquery');
-
-Tumblr = function () {
-
+Tumblr = function (Plugins) {
+    // Let's register
+    Plugins.register(this);
+    
     this.name = 'Tumblr'; // Name for this plugin. The user will be asked which plugins he wants to use.
     this.onSubscriptionPage = function (doc) {
         return (doc.location.host === "www.tumblr.com" && doc.location.pathname === '/dashboard/iframe');
     };
 
-    this.hijack = function (follow, unfollow) {
-        $('form[action|="/follow"]').submit(function (event) {
+    this.hijack = function (doc, follow, unfollow) {
+        var found = false;
+        var followElem = null;
+        var form = doc.getElementsByTagName("form")[0];
+        form.addEventListener('submit', function() {
+            var tumblr = doc.getElementsByName("id")[0].getAttribute("value");
             follow({
-                title: $('form[action|="/follow"] input[name="id"]').val() + " on Tumblr",
-                url: "http://" + $('form[action|="/follow"] input[name="id"]').val() + ".tumblr.com/rss"
+                title: tumblr + " on Tumblr",
+                url: "http://" + tumblr + ".tumblr.com/rss"
             }, function () {
                 // Done
             });
@@ -24,16 +28,19 @@ Tumblr = function () {
     };
 
     this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
-        $.get("http://www.tumblr.com/following/page/" + page, function (data) {
-            var content = $(data);
-            var links = content.find(".follower .name a");
-            links.each(function (index, link) {
+        
+        Plugins.httpGet("http://www.tumblr.com/following/page/" + page, function(data) {
+            // That was successful!
+            var fragment = Plugins.buildFragmentDocument(data);
+            var links = fragment.querySelectorAll(".follower .name a");
+            for(var i = 0; i < links.length; i++) {
+                var link = links[i];
                 callback({
-                    url: $(link).attr("href") + "rss",
-                    title: $(link).html() + " on Tumblr"
+                    url: link.getAttribute("href") + "rss",
+                    title: link.innerText + " on Tumblr"
                 });
                 subscriptions += 1;
-            });
+            }
             if (links.length > 0) {
                 this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
             } else {
