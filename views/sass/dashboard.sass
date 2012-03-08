@@ -84,10 +84,10 @@
   -webkit-transform: rotate(45deg)
   -webkit-box-shadow: 0 0.1em 0.1em #222
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.9)
+  .message.stack:hover &
+    font-size: 1.1em
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8)
 
-.message.stack:hover .ribbon
-  font-size: 1.1em
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8)
 
 .controls
   position: absolute
@@ -133,8 +133,15 @@
       border-top-left-radius: 2px
       right: 0
       text-align: right
+  .down
+    background-image: image-url("minus.png")
+  .up
+    background-image: image-url("plus.png")
+  .share
+    background-image: image-url("share.png")
 
-.brick-1, .brother
+.brick-1,
+.brother
   /* These shouldn't be displayed anyway...
   display: none
   width: 0
@@ -160,24 +167,23 @@
   width: 440px
   height: 440px
 
-.text p
-  box-sizing: border-box
-  padding: 5% 5% 5% 5%
-  position: absolute
-  text-overflow: ellipsis
-  bottom: 15%
-
-.brick-2 p, .brick-1 p
-  font-size: 0.9em
-  line-height: 12px
-
-.brick-3 p
-  font-size: 1.0em
-  line-height: 20px
-
-.brick-4 p
-  font-size: 1.5em
-  line-height: 26px
+p
+  .text &
+    box-sizing: border-box
+    padding: 5%
+    position: absolute
+    text-overflow: ellipsis
+    bottom: 15%
+  .brick-1 &,
+  .brick-2 &
+    font-size: 0.9em
+    line-height: 12px
+  .brick-3 &
+    font-size: 1.0em
+    line-height: 20px
+  .brick-4 &
+    font-size: 1.5em
+    line-height: 26px
 
 .isotope
   /* change duration value to whatever you like
@@ -196,21 +202,12 @@
     -webkit-transition-duration: 0
   -webkit-transition-property: height, width, top, left, right
 
-#modal-share .btn
-  margin: 5px
-  float: right
 
-.btn img.icon
-  vertical-align: middle
-  margin: 3px
-
-.modal-footer
-  clear: both
-
-.xxlarge
-  width: 460px
-
+// Sharing Modal
 #modal-share
+  .btn
+    margin: 5px
+    float: right
   label
     width: 60px
     margin-right: 10px
@@ -218,39 +215,30 @@
     width: 445px
   .help-block
     margin-left: 70px
+  .modal-footer
+    clear: both
+  .twitter:before
+    content: ""
+    top: 1px
+    float: left
+    width: 16px
+    height: 16px
+    background: image-url("icons/twitter.png") no-repeat
+    margin-right: 3px
+  .facebook:before
+    content: ""
+    top: 1px
+    float: left
+    width: 16px
+    height: 16px
+    margin-right: 3px
+    background: image-url("icons/facebook.png") no-repeat
+  .instapaper:before
+    content: ""
+    top: 1px
+    float: left
+    width: 16px
+    height: 16px
+    margin-right: 3px
+    background: image-url("icons/instapaper.png") no-repeat
 
-.twitter:before
-  content: ""
-  top: 1px
-  float: left
-  width: 16px
-  height: 16px
-  background: image-url("icons/twitter.png") no-repeat
-  margin-right: 3px
-
-.facebook:before
-  content: ""
-  top: 1px
-  float: left
-  width: 16px
-  height: 16px
-  margin-right: 3px
-  background: image-url("icons/facebook.png") no-repeat
-
-.instapaper:before
-  content: ""
-  top: 1px
-  float: left
-  width: 16px
-  height: 16px
-  margin-right: 3px
-  background: image-url("icons/instapaper.png") no-repeat
-
-.down
-  background-image: image-url("minus.png")
-
-.up
-  background-image: image-url("plus.png")
-
-.share
-  background-image: image-url("share.png")

@@ -78,10 +78,9 @@
   -webkit-transform: rotate(45deg);
   -webkit-box-shadow: 0 0.1em 0.1em #222222;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.9); }
-
-.message.stack:hover .ribbon {
-  font-size: 1.1em;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8); }
+  .message.stack:hover .ribbon {
+    font-size: 1.1em;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8); }
 
 .controls {
   position: absolute;
@@ -127,8 +126,15 @@
       border-top-left-radius: 2px;
       right: 0;
       text-align: right; }
+  .controls .down {
+    background-image: url('../images/minus.png'); }
+  .controls .up {
+    background-image: url('../images/plus.png'); }
+  .controls .share {
+    background-image: url('../images/share.png'); }
 
-.brick-1, .brother {
+.brick-1,
+.brother {
   /* These shouldn't be displayed anyway... */
   display: none;
   width: 0;
@@ -156,19 +162,16 @@
 
 .text p {
   box-sizing: border-box;
-  padding: 5% 5% 5% 5%;
+  padding: 5%;
   position: absolute;
   text-overflow: ellipsis;
   bottom: 15%; }
-
-.brick-2 p, .brick-1 p {
+.brick-1 p, .brick-2 p {
   font-size: 0.9em;
   line-height: 12px; }
-
 .brick-3 p {
   font-size: 1em;
   line-height: 20px; }
-
 .brick-4 p {
   font-size: 1.5em;
   line-height: 26px; }
@@ -193,17 +196,6 @@
 #modal-share .btn {
   margin: 5px;
   float: right; }
-
-.btn img.icon {
-  vertical-align: middle;
-  margin: 3px; }
-
-.modal-footer {
-  clear: both; }
-
-.xxlarge {
-  width: 460px; }
-
 #modal-share label {
   width: 60px;
   margin-right: 10px; }
@@ -211,8 +203,9 @@
   width: 445px; }
 #modal-share .help-block {
   margin-left: 70px; }
-
-.twitter:before {
+#modal-share .modal-footer {
+  clear: both; }
+#modal-share .twitter:before {
   content: "";
   top: 1px;
   float: left;
@@ -220,8 +213,7 @@
   height: 16px;
   background: url('../images/icons/twitter.png') no-repeat;
   margin-right: 3px; }
-
-.facebook:before {
+#modal-share .facebook:before {
   content: "";
   top: 1px;
   float: left;
@@ -229,8 +221,7 @@
   height: 16px;
   margin-right: 3px;
   background: url('../images/icons/facebook.png') no-repeat; }
-
-.instapaper:before {
+#modal-share .instapaper:before {
   content: "";
   top: 1px;
   float: left;
@@ -238,12 +229,3 @@
   height: 16px;
   margin-right: 3px;
   background: url('../images/icons/instapaper.png') no-repeat; }
-
-.down {
-  background-image: url('../images/minus.png'); }
-
-.up {
-  background-image: url('../images/plus.png'); }
-
-.share {
-  background-image: url('../images/share.png'); }
