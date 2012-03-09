@@ -17,7 +17,7 @@ var messageStack = [];
 var reconnectDelay = 1;
 var reconnectionTimeout = null;
 var xmppConnection = new Strophe.Connection({
-    protocol: new Strophe.Websocket('ws://msgboy.com:5280')
+    protocol: new Strophe.Websocket('ws://ws.msgboy.com')
 });
 
 // Handles XMPP Connections
