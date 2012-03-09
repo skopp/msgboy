@@ -79,14 +79,15 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Measure with Google Analytics.</del>
 * <del>Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.</del>
 * <del>Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)</del>
+* <del>Run the Msgboy on port 80</del>
 * Add support for unsubscription in plugins.
+* Add support for webintents, as a subscribing app, and calls for "sharing" apps.
+* HTML5 : Custom (web-based) protocol handlers
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
 * Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
-* Add support for webintents, as a subscribing app, and calls for "sharing" apps.
 * Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
-* HTML5 : Custom (web-based) protocol handlers
 * Improve the relevance algorithm by adding the keywords based filtering (Bayes).
 * Integrate with Chartbeat
 * More plugins for websites that have some kind of subscription scheme.
