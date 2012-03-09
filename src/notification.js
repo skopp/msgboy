@@ -1,6 +1,4 @@
-var _ = require('underscore');
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
+var $ = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;
@@ -18,18 +16,18 @@ Msgboy.bind("loaded", function () {
         notificationView.mouseOver = false;
     });
 
+    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+        if (request.signature == "notify" && request.params) {
+            notificationView.showOrBuffer(new Message(request.params));
+        }
+    });
+    
     // Tell everyone we're ready.
     chrome.extension.sendRequest({
         signature: "notificationReady",
         params: {}
     }, function () {
         // Nothing to do.
-    });
-
-    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-        if (request.signature == "notify" && request.params) {
-            notificationView.showOrBuffer(new Message(request.params));
-        }
     });
 });
 

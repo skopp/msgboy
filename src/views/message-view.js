@@ -1,9 +1,7 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
-var Isotope = require('../jquery.color.js');
+var $ = require('jquery');
+require('../jquery.color.js');
 var Backbone = require('backbone');
-Backbone.sync = require('backbone-indexeddb').sync;
-var Sanitizer = require('sanitizer');
 
 var MessageView = Backbone.View.extend({
     tagName: "div",

@@ -1,7 +1,6 @@
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
+var $ = require('jquery');
 var Backbone = require('backbone');
-Backbone.sync = require('backbone-indexeddb').sync;
 var MessageView = require('./message-view.js').MessageView;
 
 var NotificationView = Backbone.View.extend({

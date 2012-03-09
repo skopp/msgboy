@@ -1,4 +1,3 @@
-var $ = jQuery = require('jquery');
 var _ = require('underscore');
 var UrlParser = require('url');
 var Backbone = require('backbone');

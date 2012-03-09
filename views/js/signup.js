@@ -11809,7 +11809,6 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 
 if (typeof Msgboy === "undefined") {
