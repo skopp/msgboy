@@ -62,12 +62,7 @@ var NotificationView = Backbone.View.extend({
             }.bind(this), this.period);
         }
         else {
-            chrome.extension.sendRequest({
-                signature: "close",
-                params: null
-            }, function (response) {
-                window.close();
-            });
+            window.close();
         }
     }
 });

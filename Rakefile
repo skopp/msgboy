@@ -49,17 +49,17 @@ def manifest(destination = "")
       "https://*/"
     ],
     :content_scripts => [
-      {
-        :js => [
-          "/views/js/run_plugins.js"
-        ],
-        :css => [
-        ],
-        :matches => [
-          "*://*/*",
-        ],
-        :all_frames => true,
-      }
+      # {
+      #   :js => [
+      #     "/views/js/run_plugins.js"
+      #   ],
+      #   :css => [
+      #   ],
+      #   :matches => [
+      #     "*://*/*",
+      #   ],
+      #   :all_frames => true,
+      # }
     ],
     :background_page => "/views/html/background.html",
     :icons => {

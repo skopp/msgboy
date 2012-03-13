@@ -18405,7 +18405,8 @@ var Strophe         = require('./strophejs/core.js').Strophe
 var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
 Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
 
-var currentNotification = null;
+var currentNotification = currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+currentNotification.ready = false;
 var messageStack = [];
 var reconnectDelay = 1;
 var reconnectionTimeout = null;
@@ -18470,13 +18471,12 @@ exports.connect = connect;
 // Shows a popup notification
 var notify = function (message, popup) {
     // Open a notification window if needed!
-    if (!currentNotification && popup) {
-        var url = chrome.extension.getURL('/views/html/notification.html');
-        currentNotification = window.webkitNotifications.createHTMLNotification(url);
+    if ((!currentNotification || !currentNotification.ready)  && popup) {
+        currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+        currentNotification.ready = false;
         currentNotification.onclose = function () {
             currentNotification = null;
         };
-        currentNotification.ready = false;
         currentNotification.show();
         messageStack.push(message);
     }
@@ -18488,7 +18488,6 @@ var notify = function (message, popup) {
             // Nothing to do.
         });
     }
-    return currentNotification;
 };
 exports.notify = notify;
 
@@ -18821,14 +18820,6 @@ Msgboy.bind("loaded", function () {
                 options.windowId = windows[0].id;
                 chrome.tabs.create(options);
             }
-        });
-    });
-
-    Msgboy.bind('close', function (params, _sendResponse) {
-        Msgboy.log.debug("request", "close");
-        currentNotification = null;
-        _sendResponse({
-            value: true
         });
     });
 
