@@ -11927,7 +11927,6 @@ if(typeof window !== "undefined") {
 });
 
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -15261,10 +15260,9 @@ function lastBraceInKey(str) {
 
 require.define("/views/archive-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
+var $ = require('jquery');
 var Backbone = require('backbone');
-Backbone.sync = require('backbone-indexeddb').sync;
-var Isotope = require('../jquery.isotope.min.js');
+require('../jquery.isotope.min.js');
 var MessageView = require('./message-view.js').MessageView;
 var Archive = require('../models/archive.js').Archive;
 
@@ -17577,13 +17575,11 @@ require.define("/jquery.color.js", function (require, module, exports, __dirname
 });
 
 require.define("/views/modal-share-view.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
+var $ = require('jquery');
 var Backbone = require('backbone');
 var UrlParser = require('url');
 var QueryString = require('querystring');
-Backbone.sync = require('backbone-indexeddb').sync;
 require('../bootstrap-modal.js');
-
 
 var ModalShareView = Backbone.View.extend({
     events: {

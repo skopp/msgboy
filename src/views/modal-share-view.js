@@ -1,10 +1,8 @@
-var $ = jQuery = require('jquery');
+var $ = require('jquery');
 var Backbone = require('backbone');
 var UrlParser = require('url');
 var QueryString = require('querystring');
-Backbone.sync = require('backbone-indexeddb').sync;
 require('../bootstrap-modal.js');
-
 
 var ModalShareView = Backbone.View.extend({
     events: {

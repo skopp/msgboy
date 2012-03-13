@@ -1,6 +1,6 @@
 var Url = require('url');
 var QueryString = require('querystring');
-var $ = jQuery      = require('jquery');
+var $ = require('jquery');
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
