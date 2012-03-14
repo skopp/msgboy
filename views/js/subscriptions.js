@@ -14412,11 +14412,12 @@ require.alias("br-jquery", "/node_modules/jquery");
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/subscriptions.js", function (require, module, exports, __dirname, __filename) {
-    var Msgboy = require('./msgboy.js').Msgboy;
+    var $ = jQuery = require('jquery');
+var Msgboy = require('./msgboy.js').Msgboy;
 var SubscriptionsView = require('./views/subscriptions-view.js').SubscriptionsView;
 
 Msgboy.bind("loaded", function () {
-     var view  = new SubscriptionsView({el: "#info"});
+     var view  = new SubscriptionsView({el: $("#info")});
 });
 
 });
