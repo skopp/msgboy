@@ -26,7 +26,7 @@ var Plugins = {
                 doneAll(subscriptionsCount, idx + 1);
             }
         };
-
+        
         processNextPlugin(Plugins.all, 0);
     },
     

@@ -12,6 +12,31 @@ var Strophe         = require('./strophejs/core.js').Strophe
 var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
 Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
 
+
+var Blogger = require('./plugins/blogger.js').Blogger;
+new Blogger(Plugins);
+var Bookmarks = require('./plugins/bookmarks.js').Bookmarks;
+new Bookmarks(Plugins);
+var Disqus = require('./plugins/disqus.js').Disqus;
+new Disqus(Plugins);
+var Generic = require('./plugins/generic.js').Generic;
+new Generic(Plugins);
+var GoogleReader = require('./plugins/google-reader.js').GoogleReader;
+new GoogleReader(Plugins);
+var History = require('./plugins/history.js').History;
+new History(Plugins);
+var Posterous = require('./plugins/posterous.js').Posterous;
+new Posterous(Plugins);
+var Statusnet = require('./plugins/statusnet.js').Statusnet;
+new Statusnet(Plugins);
+var Tumblr = require('./plugins/tumblr.js').Tumblr;
+new Tumblr(Plugins);
+var Typepad = require('./plugins/typepad.js').Typepad;
+new Typepad(Plugins);
+var Wordpress = require('./plugins/wordpress.js').Wordpress;
+new Wordpress(Plugins);
+
+
 var currentNotification = currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
 currentNotification.ready = false;
 var messageStack = [];
