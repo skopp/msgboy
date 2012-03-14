@@ -90,6 +90,7 @@ namespace :build do
     desc "Building #{k}.js"
     task k do
       puts "Building #{k}.js"
+      # `browserify --require 'br-jquery' --require 'backbone-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
       `browserify --require 'br-jquery' --require 'backbone-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
     end
   end

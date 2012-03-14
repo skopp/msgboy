@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 
 if (typeof Msgboy === "undefined") {
