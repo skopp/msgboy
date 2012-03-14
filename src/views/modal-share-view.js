@@ -1,4 +1,4 @@
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 var UrlParser = require('url');
 var QueryString = require('querystring');

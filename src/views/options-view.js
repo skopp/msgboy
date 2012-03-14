@@ -1,5 +1,5 @@
-var _ = require('underscore');
 var $ = jQuery = require('jquery');
+var _ = require('underscore');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var Inbox = require('../models/inbox.js').Inbox;
@@ -10,7 +10,6 @@ var OptionsView = Backbone.View.extend({
         "click #resetRusbcriptions": "resetRusbcriptions",
         "click #pinMsgboy": "pinMsgboy"
     },
-    el: "#options",
 
     initialize: function () {
         _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel");

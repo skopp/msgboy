@@ -1,5 +1,5 @@
 var _ = require('underscore');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 require('../jquery.color.js');
 var Backbone = require('backbone');
 

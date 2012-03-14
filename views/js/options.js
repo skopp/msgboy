@@ -11927,8 +11927,8 @@ if(typeof window !== "undefined") {
 });
 
 require.define("/views/options-view.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
 var $ = jQuery = require('jquery');
+var _ = require('underscore');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var Inbox = require('../models/inbox.js').Inbox;
@@ -11939,7 +11939,6 @@ var OptionsView = Backbone.View.extend({
         "click #resetRusbcriptions": "resetRusbcriptions",
         "click #pinMsgboy": "pinMsgboy"
     },
-    el: "#options",
 
     initialize: function () {
         _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel");
@@ -15402,12 +15401,14 @@ require.alias("br-jquery", "/node_modules/jquery");
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/options.js", function (require, module, exports, __dirname, __filename) {
-    var Msgboy = require('./msgboy.js').Msgboy;
-var $ = jQuery = require('jquery');
+    var $ = jQuery = require('jquery');
+var Msgboy = require('./msgboy.js').Msgboy;
 var OptionsView = require('./views/options-view.js').OptionsView;
 
 Msgboy.bind("loaded", function () {
-    var view  = new OptionsView();
+    new OptionsView({
+        el: $("#options")
+    });
 });
 
 

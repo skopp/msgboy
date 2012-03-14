@@ -15260,7 +15260,7 @@ exports.Archive = Archive;
 
 require.define("/views/notification-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 var MessageView = require('./message-view.js').MessageView;
 
@@ -15334,7 +15334,7 @@ exports.NotificationView = NotificationView;
 
 require.define("/views/message-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 require('../jquery.color.js');
 var Backbone = require('backbone');
 
@@ -16156,7 +16156,7 @@ require.alias("br-jquery", "/node_modules/jquery");
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/notification.js", function (require, module, exports, __dirname, __filename) {
-    var $ = require('jquery');
+    var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;

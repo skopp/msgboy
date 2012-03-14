@@ -19067,7 +19067,7 @@ require.alias("backbone-browserify", "/node_modules/backbone");
 require.define("/background.js", function (require, module, exports, __dirname, __filename) {
     var Url = require('url');
 var QueryString = require('querystring');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;

@@ -15260,7 +15260,7 @@ function lastBraceInKey(str) {
 
 require.define("/views/archive-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 require('../jquery.isotope.min.js');
 var MessageView = require('./message-view.js').MessageView;
@@ -16757,7 +16757,7 @@ require.define("/jquery.isotope.min.js", function (require, module, exports, __d
 
 require.define("/views/message-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 require('../jquery.color.js');
 var Backbone = require('backbone');
 
@@ -17575,7 +17575,7 @@ require.define("/jquery.color.js", function (require, module, exports, __dirname
 });
 
 require.define("/views/modal-share-view.js", function (require, module, exports, __dirname, __filename) {
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 var UrlParser = require('url');
 var QueryString = require('querystring');

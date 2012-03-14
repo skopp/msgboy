@@ -11836,19 +11836,17 @@ if (! _$jscoverage['chai.js']) {
   _$jscoverage['chai.js'][23] = 0;
   _$jscoverage['chai.js'][26] = 0;
   _$jscoverage['chai.js'][27] = 0;
-  _$jscoverage['chai.js'][36] = 0;
-  _$jscoverage['chai.js'][37] = 0;
-  _$jscoverage['chai.js'][39] = 0;
-  _$jscoverage['chai.js'][40] = 0;
-  _$jscoverage['chai.js'][42] = 0;
-  _$jscoverage['chai.js'][43] = 0;
+  _$jscoverage['chai.js'][29] = 0;
+  _$jscoverage['chai.js'][30] = 0;
+  _$jscoverage['chai.js'][32] = 0;
+  _$jscoverage['chai.js'][33] = 0;
 }
 _$jscoverage['chai.js'][7]++;
 var used = [];
 _$jscoverage['chai.js'][8]++;
 var exports = module.exports = {};
 _$jscoverage['chai.js'][10]++;
-exports.version = "0.4.2";
+exports.version = "0.5.0";
 _$jscoverage['chai.js'][12]++;
 exports.Assertion = require("./assertion");
 _$jscoverage['chai.js'][13]++;
@@ -11868,23 +11866,18 @@ exports.use = (function (fn) {
   return this;
 });
 _$jscoverage['chai.js'][26]++;
-exports.fail = (function (actual, expected, message, operator, stackStartFunction) {
-  _$jscoverage['chai.js'][27]++;
-  throw new exports.AssertionError({message: message, actual: actual, expected: expected, operator: operator, stackStartFunction: stackStartFunction});
-});
-_$jscoverage['chai.js'][36]++;
 var expect = require("./interface/expect");
-_$jscoverage['chai.js'][37]++;
+_$jscoverage['chai.js'][27]++;
 exports.use(expect);
-_$jscoverage['chai.js'][39]++;
+_$jscoverage['chai.js'][29]++;
 var should = require("./interface/should");
-_$jscoverage['chai.js'][40]++;
+_$jscoverage['chai.js'][30]++;
 exports.use(should);
-_$jscoverage['chai.js'][42]++;
+_$jscoverage['chai.js'][32]++;
 var assert = require("./interface/assert");
-_$jscoverage['chai.js'][43]++;
+_$jscoverage['chai.js'][33]++;
 exports.use(assert);
-_$jscoverage['chai.js'].source = ["/*!"," * chai"," * Copyright(c) 2011-2012 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var used = [];","var exports = module.exports = {};","","exports.version = '0.4.2';","","exports.Assertion = require('./assertion');","exports.AssertionError = require('./error');","","exports.inspect = require('./utils/inspect');","","exports.use = function (fn) {","  if (!~used.indexOf(fn)) {","    fn(this);","    used.push(fn);","  }","","  return this;","};","","exports.fail = function (actual, expected, message, operator, stackStartFunction) {","  throw new exports.AssertionError({","    message: message,","    actual: actual,","    expected: expected,","    operator: operator,","    stackStartFunction: stackStartFunction","  });","};","","var expect = require('./interface/expect');","exports.use(expect);","","var should = require('./interface/should');","exports.use(should);","","var assert = require('./interface/assert');","exports.use(assert);"];
+_$jscoverage['chai.js'].source = ["/*!"," * chai"," * Copyright(c) 2011-2012 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var used = [];","var exports = module.exports = {};","","exports.version = '0.5.0';","","exports.Assertion = require('./assertion');","exports.AssertionError = require('./error');","","exports.inspect = require('./utils/inspect');","","exports.use = function (fn) {","  if (!~used.indexOf(fn)) {","    fn(this);","    used.push(fn);","  }","","  return this;","};","","var expect = require('./interface/expect');","exports.use(expect);","","var should = require('./interface/should');","exports.use(should);","","var assert = require('./interface/assert');","exports.use(assert);"];
 
 });
 
@@ -11902,150 +11895,164 @@ if (! _$jscoverage['assertion.js']) {
   _$jscoverage['assertion.js'][87] = 0;
   _$jscoverage['assertion.js'][101] = 0;
   _$jscoverage['assertion.js'][102] = 0;
-  _$jscoverage['assertion.js'][105] = 0;
+  _$jscoverage['assertion.js'][103] = 0;
   _$jscoverage['assertion.js'][106] = 0;
-  _$jscoverage['assertion.js'][123] = 0;
+  _$jscoverage['assertion.js'][107] = 0;
   _$jscoverage['assertion.js'][125] = 0;
-  _$jscoverage['assertion.js'][139] = 0;
+  _$jscoverage['assertion.js'][127] = 0;
   _$jscoverage['assertion.js'][141] = 0;
-  _$jscoverage['assertion.js'][155] = 0;
+  _$jscoverage['assertion.js'][143] = 0;
   _$jscoverage['assertion.js'][157] = 0;
-  _$jscoverage['assertion.js'][172] = 0;
+  _$jscoverage['assertion.js'][159] = 0;
   _$jscoverage['assertion.js'][174] = 0;
-  _$jscoverage['assertion.js'][175] = 0;
-  _$jscoverage['assertion.js'][189] = 0;
+  _$jscoverage['assertion.js'][176] = 0;
+  _$jscoverage['assertion.js'][177] = 0;
   _$jscoverage['assertion.js'][191] = 0;
-  _$jscoverage['assertion.js'][204] = 0;
+  _$jscoverage['assertion.js'][193] = 0;
   _$jscoverage['assertion.js'][206] = 0;
-  _$jscoverage['assertion.js'][220] = 0;
+  _$jscoverage['assertion.js'][208] = 0;
   _$jscoverage['assertion.js'][222] = 0;
-  _$jscoverage['assertion.js'][236] = 0;
+  _$jscoverage['assertion.js'][224] = 0;
   _$jscoverage['assertion.js'][238] = 0;
-  _$jscoverage['assertion.js'][252] = 0;
+  _$jscoverage['assertion.js'][240] = 0;
   _$jscoverage['assertion.js'][254] = 0;
-  _$jscoverage['assertion.js'][268] = 0;
+  _$jscoverage['assertion.js'][256] = 0;
   _$jscoverage['assertion.js'][270] = 0;
-  _$jscoverage['assertion.js'][271] = 0;
-  _$jscoverage['assertion.js'][290] = 0;
+  _$jscoverage['assertion.js'][272] = 0;
+  _$jscoverage['assertion.js'][273] = 0;
   _$jscoverage['assertion.js'][292] = 0;
-  _$jscoverage['assertion.js'][297] = 0;
-  _$jscoverage['assertion.js'][311] = 0;
+  _$jscoverage['assertion.js'][294] = 0;
+  _$jscoverage['assertion.js'][299] = 0;
   _$jscoverage['assertion.js'][313] = 0;
-  _$jscoverage['assertion.js'][318] = 0;
-  _$jscoverage['assertion.js'][332] = 0;
-  _$jscoverage['assertion.js'][334] = 0;
-  _$jscoverage['assertion.js'][339] = 0;
-  _$jscoverage['assertion.js'][358] = 0;
-  _$jscoverage['assertion.js'][360] = 0;
-  _$jscoverage['assertion.js'][365] = 0;
-  _$jscoverage['assertion.js'][381] = 0;
-  _$jscoverage['assertion.js'][383] = 0;
-  _$jscoverage['assertion.js'][385] = 0;
+  _$jscoverage['assertion.js'][315] = 0;
+  _$jscoverage['assertion.js'][322] = 0;
+  _$jscoverage['assertion.js'][336] = 0;
+  _$jscoverage['assertion.js'][338] = 0;
+  _$jscoverage['assertion.js'][345] = 0;
+  _$jscoverage['assertion.js'][364] = 0;
+  _$jscoverage['assertion.js'][366] = 0;
+  _$jscoverage['assertion.js'][372] = 0;
+  _$jscoverage['assertion.js'][388] = 0;
   _$jscoverage['assertion.js'][390] = 0;
-  _$jscoverage['assertion.js'][408] = 0;
-  _$jscoverage['assertion.js'][410] = 0;
-  _$jscoverage['assertion.js'][415] = 0;
-  _$jscoverage['assertion.js'][432] = 0;
-  _$jscoverage['assertion.js'][433] = 0;
-  _$jscoverage['assertion.js'][438] = 0;
-  _$jscoverage['assertion.js'][453] = 0;
-  _$jscoverage['assertion.js'][454] = 0;
-  _$jscoverage['assertion.js'][458] = 0;
-  _$jscoverage['assertion.js'][473] = 0;
-  _$jscoverage['assertion.js'][474] = 0;
-  _$jscoverage['assertion.js'][479] = 0;
-  _$jscoverage['assertion.js'][494] = 0;
-  _$jscoverage['assertion.js'][495] = 0;
-  _$jscoverage['assertion.js'][500] = 0;
-  _$jscoverage['assertion.js'][516] = 0;
-  _$jscoverage['assertion.js'][517] = 0;
+  _$jscoverage['assertion.js'][392] = 0;
+  _$jscoverage['assertion.js'][393] = 0;
+  _$jscoverage['assertion.js'][394] = 0;
+  _$jscoverage['assertion.js'][395] = 0;
+  _$jscoverage['assertion.js'][398] = 0;
+  _$jscoverage['assertion.js'][403] = 0;
+  _$jscoverage['assertion.js'][421] = 0;
+  _$jscoverage['assertion.js'][423] = 0;
+  _$jscoverage['assertion.js'][431] = 0;
+  _$jscoverage['assertion.js'][448] = 0;
+  _$jscoverage['assertion.js'][449] = 0;
+  _$jscoverage['assertion.js'][455] = 0;
+  _$jscoverage['assertion.js'][470] = 0;
+  _$jscoverage['assertion.js'][471] = 0;
+  _$jscoverage['assertion.js'][477] = 0;
+  _$jscoverage['assertion.js'][492] = 0;
+  _$jscoverage['assertion.js'][493] = 0;
+  _$jscoverage['assertion.js'][498] = 0;
+  _$jscoverage['assertion.js'][513] = 0;
+  _$jscoverage['assertion.js'][514] = 0;
   _$jscoverage['assertion.js'][519] = 0;
-  _$jscoverage['assertion.js'][524] = 0;
-  _$jscoverage['assertion.js'][539] = 0;
-  _$jscoverage['assertion.js'][540] = 0;
-  _$jscoverage['assertion.js'][542] = 0;
-  _$jscoverage['assertion.js'][547] = 0;
-  _$jscoverage['assertion.js'][566] = 0;
-  _$jscoverage['assertion.js'][567] = 0;
-  _$jscoverage['assertion.js'][568] = 0;
-  _$jscoverage['assertion.js'][573] = 0;
-  _$jscoverage['assertion.js'][593] = 0;
-  _$jscoverage['assertion.js'][594] = 0;
+  _$jscoverage['assertion.js'][535] = 0;
+  _$jscoverage['assertion.js'][536] = 0;
+  _$jscoverage['assertion.js'][538] = 0;
+  _$jscoverage['assertion.js'][543] = 0;
+  _$jscoverage['assertion.js'][558] = 0;
+  _$jscoverage['assertion.js'][559] = 0;
+  _$jscoverage['assertion.js'][561] = 0;
+  _$jscoverage['assertion.js'][569] = 0;
+  _$jscoverage['assertion.js'][588] = 0;
+  _$jscoverage['assertion.js'][589] = 0;
+  _$jscoverage['assertion.js'][590] = 0;
   _$jscoverage['assertion.js'][595] = 0;
-  _$jscoverage['assertion.js'][596] = 0;
-  _$jscoverage['assertion.js'][599] = 0;
-  _$jscoverage['assertion.js'][605] = 0;
-  _$jscoverage['assertion.js'][606] = 0;
-  _$jscoverage['assertion.js'][613] = 0;
-  _$jscoverage['assertion.js'][614] = 0;
-  _$jscoverage['assertion.js'][630] = 0;
-  _$jscoverage['assertion.js'][631] = 0;
-  _$jscoverage['assertion.js'][635] = 0;
-  _$jscoverage['assertion.js'][652] = 0;
-  _$jscoverage['assertion.js'][653] = 0;
-  _$jscoverage['assertion.js'][654] = 0;
+  _$jscoverage['assertion.js'][615] = 0;
+  _$jscoverage['assertion.js'][616] = 0;
+  _$jscoverage['assertion.js'][617] = 0;
+  _$jscoverage['assertion.js'][618] = 0;
+  _$jscoverage['assertion.js'][621] = 0;
+  _$jscoverage['assertion.js'][627] = 0;
+  _$jscoverage['assertion.js'][628] = 0;
+  _$jscoverage['assertion.js'][638] = 0;
+  _$jscoverage['assertion.js'][639] = 0;
+  _$jscoverage['assertion.js'][655] = 0;
   _$jscoverage['assertion.js'][656] = 0;
-  _$jscoverage['assertion.js'][661] = 0;
-  _$jscoverage['assertion.js'][676] = 0;
+  _$jscoverage['assertion.js'][660] = 0;
   _$jscoverage['assertion.js'][677] = 0;
-  _$jscoverage['assertion.js'][682] = 0;
-  _$jscoverage['assertion.js'][697] = 0;
-  _$jscoverage['assertion.js'][698] = 0;
-  _$jscoverage['assertion.js'][703] = 0;
-  _$jscoverage['assertion.js'][718] = 0;
-  _$jscoverage['assertion.js'][719] = 0;
-  _$jscoverage['assertion.js'][721] = 0;
+  _$jscoverage['assertion.js'][678] = 0;
+  _$jscoverage['assertion.js'][679] = 0;
+  _$jscoverage['assertion.js'][681] = 0;
+  _$jscoverage['assertion.js'][689] = 0;
+  _$jscoverage['assertion.js'][704] = 0;
+  _$jscoverage['assertion.js'][705] = 0;
+  _$jscoverage['assertion.js'][710] = 0;
+  _$jscoverage['assertion.js'][725] = 0;
   _$jscoverage['assertion.js'][726] = 0;
-  _$jscoverage['assertion.js'][740] = 0;
-  _$jscoverage['assertion.js'][742] = 0;
-  _$jscoverage['assertion.js'][743] = 0;
-  _$jscoverage['assertion.js'][762] = 0;
-  _$jscoverage['assertion.js'][763] = 0;
-  _$jscoverage['assertion.js'][766] = 0;
+  _$jscoverage['assertion.js'][731] = 0;
+  _$jscoverage['assertion.js'][746] = 0;
+  _$jscoverage['assertion.js'][747] = 0;
+  _$jscoverage['assertion.js'][749] = 0;
+  _$jscoverage['assertion.js'][754] = 0;
+  _$jscoverage['assertion.js'][768] = 0;
   _$jscoverage['assertion.js'][770] = 0;
-  _$jscoverage['assertion.js'][772] = 0;
-  _$jscoverage['assertion.js'][776] = 0;
-  _$jscoverage['assertion.js'][777] = 0;
-  _$jscoverage['assertion.js'][781] = 0;
-  _$jscoverage['assertion.js'][782] = 0;
-  _$jscoverage['assertion.js'][786] = 0;
-  _$jscoverage['assertion.js'][787] = 0;
-  _$jscoverage['assertion.js'][788] = 0;
+  _$jscoverage['assertion.js'][771] = 0;
   _$jscoverage['assertion.js'][790] = 0;
   _$jscoverage['assertion.js'][791] = 0;
-  _$jscoverage['assertion.js'][793] = 0;
-  _$jscoverage['assertion.js'][797] = 0;
+  _$jscoverage['assertion.js'][794] = 0;
+  _$jscoverage['assertion.js'][798] = 0;
   _$jscoverage['assertion.js'][800] = 0;
-  _$jscoverage['assertion.js'][803] = 0;
-  _$jscoverage['assertion.js'][808] = 0;
-  _$jscoverage['assertion.js'][827] = 0;
+  _$jscoverage['assertion.js'][804] = 0;
+  _$jscoverage['assertion.js'][805] = 0;
+  _$jscoverage['assertion.js'][809] = 0;
+  _$jscoverage['assertion.js'][810] = 0;
+  _$jscoverage['assertion.js'][814] = 0;
+  _$jscoverage['assertion.js'][815] = 0;
+  _$jscoverage['assertion.js'][816] = 0;
+  _$jscoverage['assertion.js'][818] = 0;
+  _$jscoverage['assertion.js'][819] = 0;
+  _$jscoverage['assertion.js'][821] = 0;
+  _$jscoverage['assertion.js'][825] = 0;
   _$jscoverage['assertion.js'][828] = 0;
-  _$jscoverage['assertion.js'][830] = 0;
-  _$jscoverage['assertion.js'][832] = 0;
-  _$jscoverage['assertion.js'][833] = 0;
-  _$jscoverage['assertion.js'][835] = 0;
-  _$jscoverage['assertion.js'][836] = 0;
-  _$jscoverage['assertion.js'][840] = 0;
-  _$jscoverage['assertion.js'][841] = 0;
-  _$jscoverage['assertion.js'][842] = 0;
-  _$jscoverage['assertion.js'][846] = 0;
-  _$jscoverage['assertion.js'][848] = 0;
-  _$jscoverage['assertion.js'][852] = 0;
-  _$jscoverage['assertion.js'][854] = 0;
-  _$jscoverage['assertion.js'][859] = 0;
+  _$jscoverage['assertion.js'][831] = 0;
+  _$jscoverage['assertion.js'][839] = 0;
+  _$jscoverage['assertion.js'][869] = 0;
+  _$jscoverage['assertion.js'][870] = 0;
+  _$jscoverage['assertion.js'][872] = 0;
+  _$jscoverage['assertion.js'][874] = 0;
   _$jscoverage['assertion.js'][875] = 0;
   _$jscoverage['assertion.js'][876] = 0;
-  _$jscoverage['assertion.js'][880] = 0;
-  _$jscoverage['assertion.js'][885] = 0;
+  _$jscoverage['assertion.js'][877] = 0;
+  _$jscoverage['assertion.js'][878] = 0;
+  _$jscoverage['assertion.js'][879] = 0;
+  _$jscoverage['assertion.js'][882] = 0;
+  _$jscoverage['assertion.js'][883] = 0;
+  _$jscoverage['assertion.js'][886] = 0;
+  _$jscoverage['assertion.js'][887] = 0;
+  _$jscoverage['assertion.js'][891] = 0;
+  _$jscoverage['assertion.js'][894] = 0;
+  _$jscoverage['assertion.js'][895] = 0;
   _$jscoverage['assertion.js'][900] = 0;
   _$jscoverage['assertion.js'][901] = 0;
-  _$jscoverage['assertion.js'][906] = 0;
-  _$jscoverage['assertion.js'][922] = 0;
-  _$jscoverage['assertion.js'][923] = 0;
-  _$jscoverage['assertion.js'][928] = 0;
-  _$jscoverage['assertion.js'][935] = 0;
+  _$jscoverage['assertion.js'][902] = 0;
+  _$jscoverage['assertion.js'][907] = 0;
+  _$jscoverage['assertion.js'][909] = 0;
+  _$jscoverage['assertion.js'][913] = 0;
+  _$jscoverage['assertion.js'][915] = 0;
+  _$jscoverage['assertion.js'][920] = 0;
   _$jscoverage['assertion.js'][936] = 0;
   _$jscoverage['assertion.js'][937] = 0;
+  _$jscoverage['assertion.js'][941] = 0;
+  _$jscoverage['assertion.js'][949] = 0;
+  _$jscoverage['assertion.js'][964] = 0;
+  _$jscoverage['assertion.js'][965] = 0;
+  _$jscoverage['assertion.js'][973] = 0;
+  _$jscoverage['assertion.js'][989] = 0;
+  _$jscoverage['assertion.js'][990] = 0;
+  _$jscoverage['assertion.js'][995] = 0;
+  _$jscoverage['assertion.js'][1002] = 0;
+  _$jscoverage['assertion.js'][1003] = 0;
+  _$jscoverage['assertion.js'][1004] = 0;
 }
 _$jscoverage['assertion.js'][48]++;
 var AssertionError = require("./error"), eql = require("./utils/eql"), toString = Object.prototype.toString, inspect = require("./utils/inspect");
@@ -12063,359 +12070,399 @@ function Assertion(obj, msg, stack) {
 _$jscoverage['assertion.js'][87]++;
 Assertion.includeStack = false;
 _$jscoverage['assertion.js'][101]++;
-Assertion.prototype.assert = (function (expr, msg, negateMsg) {
+Assertion.prototype.assert = (function (expr, msg, negateMsg, expected, actual) {
   _$jscoverage['assertion.js'][102]++;
+  actual = actual || this.obj;
+  _$jscoverage['assertion.js'][103]++;
   var msg = (this.negate? negateMsg: msg), ok = this.negate? ! expr: expr;
-  _$jscoverage['assertion.js'][105]++;
+  _$jscoverage['assertion.js'][106]++;
   if (! ok) {
-    _$jscoverage['assertion.js'][106]++;
-    throw new AssertionError({operator: this.msg, message: msg, stackStartFunction: Assertion.includeStack? this.assert: this.ssfi});
+    _$jscoverage['assertion.js'][107]++;
+    throw new AssertionError({message: this.msg? this.msg + ": " + msg: msg, actual: actual, expected: expected, stackStartFunction: Assertion.includeStack? this.assert: this.ssfi});
   }
 });
-_$jscoverage['assertion.js'][123]++;
+_$jscoverage['assertion.js'][125]++;
 Object.defineProperty(Assertion.prototype, "inspect", {get: (function () {
-  _$jscoverage['assertion.js'][125]++;
+  _$jscoverage['assertion.js'][127]++;
   return inspect(this.obj);
 }), configurable: true});
-_$jscoverage['assertion.js'][139]++;
+_$jscoverage['assertion.js'][141]++;
 Object.defineProperty(Assertion.prototype, "to", {get: (function () {
-  _$jscoverage['assertion.js'][141]++;
+  _$jscoverage['assertion.js'][143]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][155]++;
+_$jscoverage['assertion.js'][157]++;
 Object.defineProperty(Assertion.prototype, "be", {get: (function () {
-  _$jscoverage['assertion.js'][157]++;
+  _$jscoverage['assertion.js'][159]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][172]++;
+_$jscoverage['assertion.js'][174]++;
 Object.defineProperty(Assertion.prototype, "been", {get: (function () {
-  _$jscoverage['assertion.js'][174]++;
+  _$jscoverage['assertion.js'][176]++;
   this.tense = "past";
-  _$jscoverage['assertion.js'][175]++;
+  _$jscoverage['assertion.js'][177]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][189]++;
+_$jscoverage['assertion.js'][191]++;
 Object.defineProperty(Assertion.prototype, "an", {get: (function () {
-  _$jscoverage['assertion.js'][191]++;
+  _$jscoverage['assertion.js'][193]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][204]++;
+_$jscoverage['assertion.js'][206]++;
 Object.defineProperty(Assertion.prototype, "is", {get: (function () {
-  _$jscoverage['assertion.js'][206]++;
+  _$jscoverage['assertion.js'][208]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][220]++;
+_$jscoverage['assertion.js'][222]++;
 Object.defineProperty(Assertion.prototype, "and", {get: (function () {
-  _$jscoverage['assertion.js'][222]++;
+  _$jscoverage['assertion.js'][224]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][236]++;
+_$jscoverage['assertion.js'][238]++;
 Object.defineProperty(Assertion.prototype, "have", {get: (function () {
-  _$jscoverage['assertion.js'][238]++;
+  _$jscoverage['assertion.js'][240]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][252]++;
+_$jscoverage['assertion.js'][254]++;
 Object.defineProperty(Assertion.prototype, "with", {get: (function () {
-  _$jscoverage['assertion.js'][254]++;
+  _$jscoverage['assertion.js'][256]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][268]++;
+_$jscoverage['assertion.js'][270]++;
 Object.defineProperty(Assertion.prototype, "not", {get: (function () {
-  _$jscoverage['assertion.js'][270]++;
+  _$jscoverage['assertion.js'][272]++;
   this.negate = true;
-  _$jscoverage['assertion.js'][271]++;
+  _$jscoverage['assertion.js'][273]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][290]++;
+_$jscoverage['assertion.js'][292]++;
 Object.defineProperty(Assertion.prototype, "ok", {get: (function () {
-  _$jscoverage['assertion.js'][292]++;
+  _$jscoverage['assertion.js'][294]++;
   this.assert(this.obj, "expected " + this.inspect + " to be truthy", "expected " + this.inspect + " to be falsy");
-  _$jscoverage['assertion.js'][297]++;
+  _$jscoverage['assertion.js'][299]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][311]++;
+_$jscoverage['assertion.js'][313]++;
 Object.defineProperty(Assertion.prototype, "true", {get: (function () {
-  _$jscoverage['assertion.js'][313]++;
-  this.assert(true === this.obj, "expected " + this.inspect + " to be true", "expected " + this.inspect + " to be false");
-  _$jscoverage['assertion.js'][318]++;
+  _$jscoverage['assertion.js'][315]++;
+  this.assert(true === this.obj, "expected " + this.inspect + " to be true", "expected " + this.inspect + " to be false", this.negate? false: true);
+  _$jscoverage['assertion.js'][322]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][332]++;
+_$jscoverage['assertion.js'][336]++;
 Object.defineProperty(Assertion.prototype, "false", {get: (function () {
-  _$jscoverage['assertion.js'][334]++;
-  this.assert(false === this.obj, "expected " + this.inspect + " to be false", "expected " + this.inspect + " to be true");
-  _$jscoverage['assertion.js'][339]++;
+  _$jscoverage['assertion.js'][338]++;
+  this.assert(false === this.obj, "expected " + this.inspect + " to be false", "expected " + this.inspect + " to be true", this.negate? true: false);
+  _$jscoverage['assertion.js'][345]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][358]++;
+_$jscoverage['assertion.js'][364]++;
 Object.defineProperty(Assertion.prototype, "exist", {get: (function () {
-  _$jscoverage['assertion.js'][360]++;
+  _$jscoverage['assertion.js'][366]++;
   this.assert(null != this.obj, "expected " + this.inspect + " to exist", "expected " + this.inspect + " to not exist");
-  _$jscoverage['assertion.js'][365]++;
+  _$jscoverage['assertion.js'][372]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][381]++;
+_$jscoverage['assertion.js'][388]++;
 Object.defineProperty(Assertion.prototype, "empty", {get: (function () {
-  _$jscoverage['assertion.js'][383]++;
-  new Assertion(this.obj).to.have.property("length");
-  _$jscoverage['assertion.js'][385]++;
-  this.assert(0 === this.obj.length, "expected " + this.inspect + " to be empty", "expected " + this.inspect + " not to be empty");
   _$jscoverage['assertion.js'][390]++;
+  var expected = this.obj;
+  _$jscoverage['assertion.js'][392]++;
+  if (Array.isArray(this.obj)) {
+    _$jscoverage['assertion.js'][393]++;
+    expected = this.obj.length;
+  }
+  else {
+    _$jscoverage['assertion.js'][394]++;
+    if (typeof this.obj === "object") {
+      _$jscoverage['assertion.js'][395]++;
+      expected = Object.keys(this.obj).length;
+    }
+  }
+  _$jscoverage['assertion.js'][398]++;
+  this.assert(! expected, "expected " + this.inspect + " to be empty", "expected " + this.inspect + " not to be empty");
+  _$jscoverage['assertion.js'][403]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][408]++;
+_$jscoverage['assertion.js'][421]++;
 Object.defineProperty(Assertion.prototype, "arguments", {get: (function () {
-  _$jscoverage['assertion.js'][410]++;
-  this.assert("[object Arguments]" == Object.prototype.toString.call(this.obj), "expected " + this.inspect + " to be arguments", "expected " + this.inspect + " to not be arguments");
-  _$jscoverage['assertion.js'][415]++;
+  _$jscoverage['assertion.js'][423]++;
+  this.assert("[object Arguments]" == Object.prototype.toString.call(this.obj), "expected " + this.inspect + " to be arguments", "expected " + this.inspect + " to not be arguments", "[object Arguments]", Object.prototype.toString.call(this.obj));
+  _$jscoverage['assertion.js'][431]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][432]++;
+_$jscoverage['assertion.js'][448]++;
 Assertion.prototype.equal = (function (val) {
-  _$jscoverage['assertion.js'][433]++;
-  this.assert(val === this.obj, "expected " + this.inspect + " to equal " + inspect(val), "expected " + this.inspect + " to not equal " + inspect(val));
-  _$jscoverage['assertion.js'][438]++;
+  _$jscoverage['assertion.js'][449]++;
+  this.assert(val === this.obj, "expected " + this.inspect + " to equal " + inspect(val), "expected " + this.inspect + " to not equal " + inspect(val), val);
+  _$jscoverage['assertion.js'][455]++;
   return this;
 });
-_$jscoverage['assertion.js'][453]++;
+_$jscoverage['assertion.js'][470]++;
 Assertion.prototype.eql = (function (obj) {
-  _$jscoverage['assertion.js'][454]++;
-  this.assert(eql(obj, this.obj), "expected " + this.inspect + " to equal " + inspect(obj), "expected " + this.inspect + " to not equal " + inspect(obj));
-  _$jscoverage['assertion.js'][458]++;
+  _$jscoverage['assertion.js'][471]++;
+  this.assert(eql(obj, this.obj), "expected " + this.inspect + " to equal " + inspect(obj), "expected " + this.inspect + " to not equal " + inspect(obj), obj);
+  _$jscoverage['assertion.js'][477]++;
   return this;
 });
-_$jscoverage['assertion.js'][473]++;
+_$jscoverage['assertion.js'][492]++;
 Assertion.prototype.above = (function (val) {
-  _$jscoverage['assertion.js'][474]++;
+  _$jscoverage['assertion.js'][493]++;
   this.assert(this.obj > val, "expected " + this.inspect + " to be above " + val, "expected " + this.inspect + " to be below " + val);
-  _$jscoverage['assertion.js'][479]++;
+  _$jscoverage['assertion.js'][498]++;
   return this;
 });
-_$jscoverage['assertion.js'][494]++;
+_$jscoverage['assertion.js'][513]++;
 Assertion.prototype.below = (function (val) {
-  _$jscoverage['assertion.js'][495]++;
+  _$jscoverage['assertion.js'][514]++;
   this.assert(this.obj < val, "expected " + this.inspect + " to be below " + val, "expected " + this.inspect + " to be above " + val);
-  _$jscoverage['assertion.js'][500]++;
-  return this;
-});
-_$jscoverage['assertion.js'][516]++;
-Assertion.prototype.within = (function (start, finish) {
-  _$jscoverage['assertion.js'][517]++;
-  var range = start + ".." + finish;
   _$jscoverage['assertion.js'][519]++;
+  return this;
+});
+_$jscoverage['assertion.js'][535]++;
+Assertion.prototype.within = (function (start, finish) {
+  _$jscoverage['assertion.js'][536]++;
+  var range = start + ".." + finish;
+  _$jscoverage['assertion.js'][538]++;
   this.assert(this.obj >= start && this.obj <= finish, "expected " + this.inspect + " to be within " + range, "expected " + this.inspect + " to not be within " + range);
-  _$jscoverage['assertion.js'][524]++;
+  _$jscoverage['assertion.js'][543]++;
   return this;
 });
-_$jscoverage['assertion.js'][539]++;
+_$jscoverage['assertion.js'][558]++;
 Assertion.prototype.a = (function (type) {
-  _$jscoverage['assertion.js'][540]++;
+  _$jscoverage['assertion.js'][559]++;
   var klass = type.charAt(0).toUpperCase() + type.slice(1);
-  _$jscoverage['assertion.js'][542]++;
-  this.assert("[object " + klass + "]" === toString.call(this.obj), "expected " + this.inspect + " to be a " + type, "expected " + this.inspect + " not to be a " + type);
-  _$jscoverage['assertion.js'][547]++;
+  _$jscoverage['assertion.js'][561]++;
+  this.assert("[object " + klass + "]" === toString.call(this.obj), "expected " + this.inspect + " to be a " + type, "expected " + this.inspect + " not to be a " + type, "[object " + klass + "]", toString.call(this.obj));
+  _$jscoverage['assertion.js'][569]++;
   return this;
 });
-_$jscoverage['assertion.js'][566]++;
+_$jscoverage['assertion.js'][588]++;
 Assertion.prototype["instanceof"] = (function (constructor) {
-  _$jscoverage['assertion.js'][567]++;
+  _$jscoverage['assertion.js'][589]++;
   var name = constructor.name;
-  _$jscoverage['assertion.js'][568]++;
+  _$jscoverage['assertion.js'][590]++;
   this.assert(this.obj instanceof constructor, "expected " + this.inspect + " to be an instance of " + name, "expected " + this.inspect + " to not be an instance of " + name);
-  _$jscoverage['assertion.js'][573]++;
+  _$jscoverage['assertion.js'][595]++;
   return this;
 });
-_$jscoverage['assertion.js'][593]++;
+_$jscoverage['assertion.js'][615]++;
 Assertion.prototype.property = (function (name, val) {
-  _$jscoverage['assertion.js'][594]++;
+  _$jscoverage['assertion.js'][616]++;
   if (this.negate && undefined !== val) {
-    _$jscoverage['assertion.js'][595]++;
+    _$jscoverage['assertion.js'][617]++;
     if (undefined === this.obj[name]) {
-      _$jscoverage['assertion.js'][596]++;
+      _$jscoverage['assertion.js'][618]++;
       throw new Error(this.inspect + " has no property " + inspect(name));
     }
   }
   else {
-    _$jscoverage['assertion.js'][599]++;
+    _$jscoverage['assertion.js'][621]++;
     this.assert(undefined !== this.obj[name], "expected " + this.inspect + " to have a property " + inspect(name), "expected " + this.inspect + " to not have property " + inspect(name));
   }
-  _$jscoverage['assertion.js'][605]++;
+  _$jscoverage['assertion.js'][627]++;
   if (undefined !== val) {
-    _$jscoverage['assertion.js'][606]++;
-    this.assert(val === this.obj[name], "expected " + this.inspect + " to have a property " + inspect(name) + " of " + inspect(val) + ", but got " + inspect(this.obj[name]), "expected " + this.inspect + " to not have a property " + inspect(name) + " of " + inspect(val));
+    _$jscoverage['assertion.js'][628]++;
+    this.assert(val === this.obj[name], "expected " + this.inspect + " to have a property " + inspect(name) + " of " + inspect(val) + ", but got " + inspect(this.obj[name]), "expected " + this.inspect + " to not have a property " + inspect(name) + " of " + inspect(val), val, this.obj[val]);
   }
-  _$jscoverage['assertion.js'][613]++;
+  _$jscoverage['assertion.js'][638]++;
   this.obj = this.obj[name];
-  _$jscoverage['assertion.js'][614]++;
+  _$jscoverage['assertion.js'][639]++;
   return this;
 });
-_$jscoverage['assertion.js'][630]++;
+_$jscoverage['assertion.js'][655]++;
 Assertion.prototype.ownProperty = (function (name) {
-  _$jscoverage['assertion.js'][631]++;
-  this.assert(this.obj.hasOwnProperty(name), "expected " + this.inspect + " to have own property " + inspect(name), "expected " + this.inspect + " to not have own property " + inspect(name));
-  _$jscoverage['assertion.js'][635]++;
-  return this;
-});
-_$jscoverage['assertion.js'][652]++;
-Assertion.prototype.length = (function (n) {
-  _$jscoverage['assertion.js'][653]++;
-  new Assertion(this.obj).to.have.property("length");
-  _$jscoverage['assertion.js'][654]++;
-  var len = this.obj.length;
   _$jscoverage['assertion.js'][656]++;
-  this.assert(len == n, "expected " + this.inspect + " to have a length of " + n + " but got " + len, "expected " + this.inspect + " to not have a length of " + len);
-  _$jscoverage['assertion.js'][661]++;
+  this.assert(this.obj.hasOwnProperty(name), "expected " + this.inspect + " to have own property " + inspect(name), "expected " + this.inspect + " to not have own property " + inspect(name));
+  _$jscoverage['assertion.js'][660]++;
   return this;
 });
-_$jscoverage['assertion.js'][676]++;
+_$jscoverage['assertion.js'][677]++;
+Assertion.prototype.length = (function (n) {
+  _$jscoverage['assertion.js'][678]++;
+  new Assertion(this.obj).to.have.property("length");
+  _$jscoverage['assertion.js'][679]++;
+  var len = this.obj.length;
+  _$jscoverage['assertion.js'][681]++;
+  this.assert(len == n, "expected " + this.inspect + " to have a length of " + n + " but got " + len, "expected " + this.inspect + " to not have a length of " + len, n, len);
+  _$jscoverage['assertion.js'][689]++;
+  return this;
+});
+_$jscoverage['assertion.js'][704]++;
 Assertion.prototype.match = (function (re) {
-  _$jscoverage['assertion.js'][677]++;
+  _$jscoverage['assertion.js'][705]++;
   this.assert(re.exec(this.obj), "expected " + this.inspect + " to match " + re, "expected " + this.inspect + " not to match " + re);
-  _$jscoverage['assertion.js'][682]++;
+  _$jscoverage['assertion.js'][710]++;
   return this;
 });
-_$jscoverage['assertion.js'][697]++;
+_$jscoverage['assertion.js'][725]++;
 Assertion.prototype.include = (function (obj) {
-  _$jscoverage['assertion.js'][698]++;
-  this.assert(~ this.obj.indexOf(obj), "expected " + this.inspect + " to include " + inspect(obj), "expected " + this.inspect + " to not include " + inspect(obj));
-  _$jscoverage['assertion.js'][703]++;
-  return this;
-});
-_$jscoverage['assertion.js'][718]++;
-Assertion.prototype.string = (function (str) {
-  _$jscoverage['assertion.js'][719]++;
-  new Assertion(this.obj).is.a("string");
-  _$jscoverage['assertion.js'][721]++;
-  this.assert(~ this.obj.indexOf(str), "expected " + this.inspect + " to contain " + inspect(str), "expected " + this.inspect + " to not contain " + inspect(str));
   _$jscoverage['assertion.js'][726]++;
+  this.assert(~ this.obj.indexOf(obj), "expected " + this.inspect + " to include " + inspect(obj), "expected " + this.inspect + " to not include " + inspect(obj));
+  _$jscoverage['assertion.js'][731]++;
   return this;
 });
-_$jscoverage['assertion.js'][740]++;
+_$jscoverage['assertion.js'][746]++;
+Assertion.prototype.string = (function (str) {
+  _$jscoverage['assertion.js'][747]++;
+  new Assertion(this.obj).is.a("string");
+  _$jscoverage['assertion.js'][749]++;
+  this.assert(~ this.obj.indexOf(str), "expected " + this.inspect + " to contain " + inspect(str), "expected " + this.inspect + " to not contain " + inspect(str));
+  _$jscoverage['assertion.js'][754]++;
+  return this;
+});
+_$jscoverage['assertion.js'][768]++;
 Object.defineProperty(Assertion.prototype, "contain", {get: (function () {
-  _$jscoverage['assertion.js'][742]++;
+  _$jscoverage['assertion.js'][770]++;
   this.contains = true;
-  _$jscoverage['assertion.js'][743]++;
+  _$jscoverage['assertion.js'][771]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][762]++;
+_$jscoverage['assertion.js'][790]++;
 Assertion.prototype.keys = (function (keys) {
-  _$jscoverage['assertion.js'][763]++;
+  _$jscoverage['assertion.js'][791]++;
   var str, ok = true;
-  _$jscoverage['assertion.js'][766]++;
+  _$jscoverage['assertion.js'][794]++;
   keys = keys instanceof Array? keys: Array.prototype.slice.call(arguments);
-  _$jscoverage['assertion.js'][770]++;
+  _$jscoverage['assertion.js'][798]++;
   if (! keys.length) {
-    _$jscoverage['assertion.js'][770]++;
+    _$jscoverage['assertion.js'][798]++;
     throw new Error("keys required");
   }
-  _$jscoverage['assertion.js'][772]++;
+  _$jscoverage['assertion.js'][800]++;
   var actual = Object.keys(this.obj), len = keys.length;
-  _$jscoverage['assertion.js'][776]++;
+  _$jscoverage['assertion.js'][804]++;
   ok = keys.every((function (key) {
-  _$jscoverage['assertion.js'][777]++;
+  _$jscoverage['assertion.js'][805]++;
   return ~ actual.indexOf(key);
 }));
-  _$jscoverage['assertion.js'][781]++;
+  _$jscoverage['assertion.js'][809]++;
   if (! this.negate && ! this.contains) {
-    _$jscoverage['assertion.js'][782]++;
+    _$jscoverage['assertion.js'][810]++;
     ok = ok && keys.length == actual.length;
   }
-  _$jscoverage['assertion.js'][786]++;
+  _$jscoverage['assertion.js'][814]++;
   if (len > 1) {
-    _$jscoverage['assertion.js'][787]++;
+    _$jscoverage['assertion.js'][815]++;
     keys = keys.map((function (key) {
-  _$jscoverage['assertion.js'][788]++;
+  _$jscoverage['assertion.js'][816]++;
   return inspect(key);
 }));
-    _$jscoverage['assertion.js'][790]++;
+    _$jscoverage['assertion.js'][818]++;
     var last = keys.pop();
-    _$jscoverage['assertion.js'][791]++;
+    _$jscoverage['assertion.js'][819]++;
     str = keys.join(", ") + ", and " + last;
   }
   else {
-    _$jscoverage['assertion.js'][793]++;
+    _$jscoverage['assertion.js'][821]++;
     str = inspect(keys[0]);
   }
-  _$jscoverage['assertion.js'][797]++;
+  _$jscoverage['assertion.js'][825]++;
   str = (len > 1? "keys ": "key ") + str;
-  _$jscoverage['assertion.js'][800]++;
+  _$jscoverage['assertion.js'][828]++;
   str = (this.contains? "contain ": "have ") + str;
-  _$jscoverage['assertion.js'][803]++;
-  this.assert(ok, "expected " + this.inspect + " to " + str, "expected " + this.inspect + " to not " + str);
-  _$jscoverage['assertion.js'][808]++;
+  _$jscoverage['assertion.js'][831]++;
+  this.assert(ok, "expected " + this.inspect + " to " + str, "expected " + this.inspect + " to not " + str, keys, Object.keys(this.obj));
+  _$jscoverage['assertion.js'][839]++;
   return this;
 });
-_$jscoverage['assertion.js'][827]++;
-Assertion.prototype["throw"] = (function (constructor) {
-  _$jscoverage['assertion.js'][828]++;
+_$jscoverage['assertion.js'][869]++;
+Assertion.prototype["throw"] = (function (constructor, msg) {
+  _$jscoverage['assertion.js'][870]++;
   new Assertion(this.obj).is.a("function");
-  _$jscoverage['assertion.js'][830]++;
+  _$jscoverage['assertion.js'][872]++;
   var thrown = false;
-  _$jscoverage['assertion.js'][832]++;
+  _$jscoverage['assertion.js'][874]++;
+  if (arguments.length === 0) {
+    _$jscoverage['assertion.js'][875]++;
+    msg = null;
+    _$jscoverage['assertion.js'][876]++;
+    constructor = null;
+  }
+  else {
+    _$jscoverage['assertion.js'][877]++;
+    if (constructor && (constructor instanceof RegExp || "string" === typeof constructor)) {
+      _$jscoverage['assertion.js'][878]++;
+      msg = constructor;
+      _$jscoverage['assertion.js'][879]++;
+      constructor = null;
+    }
+  }
+  _$jscoverage['assertion.js'][882]++;
   try {
-    _$jscoverage['assertion.js'][833]++;
+    _$jscoverage['assertion.js'][883]++;
     this.obj();
   }
   catch (err) {
-    _$jscoverage['assertion.js'][835]++;
-    if (constructor && "function" === typeof constructor && constructor.constructor != RegExp) {
-      _$jscoverage['assertion.js'][836]++;
+    _$jscoverage['assertion.js'][886]++;
+    if (constructor && "function" === typeof constructor) {
+      _$jscoverage['assertion.js'][887]++;
       this.assert(err instanceof constructor && err.name == constructor.name, "expected " + this.inspect + " to throw " + constructor.name + " but a " + err.name + " was thrown", "expected " + this.inspect + " to not throw " + constructor.name);
-      _$jscoverage['assertion.js'][840]++;
+      _$jscoverage['assertion.js'][891]++;
+      if (! msg) {
+        _$jscoverage['assertion.js'][891]++;
+        return this;
+      }
+    }
+    _$jscoverage['assertion.js'][894]++;
+    if (err.message && msg && msg instanceof RegExp) {
+      _$jscoverage['assertion.js'][895]++;
+      this.assert(msg.exec(err.message), "expected " + this.inspect + " to throw error matching " + msg + " but got " + inspect(err.message), "expected " + this.inspect + " to throw error not matching " + msg);
+      _$jscoverage['assertion.js'][900]++;
       return this;
     }
     else {
-      _$jscoverage['assertion.js'][841]++;
-      if (constructor && constructor instanceof RegExp) {
-        _$jscoverage['assertion.js'][842]++;
-        this.assert(constructor.exec(err.message), "expected " + this.inspect + " to throw error matching " + constructor + " but got " + inspect(err.message), "expected " + this.inspect + " to throw error not matching " + constructor);
-        _$jscoverage['assertion.js'][846]++;
+      _$jscoverage['assertion.js'][901]++;
+      if (err.message && msg && "string" === typeof msg) {
+        _$jscoverage['assertion.js'][902]++;
+        this.assert(~ err.message.indexOf(msg), "expected " + this.inspect + " to throw error including " + inspect(msg) + " but got " + inspect(err.message), "expected " + this.inspect + " to throw error not including " + inspect(msg));
+        _$jscoverage['assertion.js'][907]++;
         return this;
       }
       else {
-        _$jscoverage['assertion.js'][848]++;
+        _$jscoverage['assertion.js'][909]++;
         thrown = true;
       }
     }
   }
-  _$jscoverage['assertion.js'][852]++;
+  _$jscoverage['assertion.js'][913]++;
   var name = (constructor? constructor.name: "an error");
-  _$jscoverage['assertion.js'][854]++;
+  _$jscoverage['assertion.js'][915]++;
   this.assert(thrown === true, "expected " + this.inspect + " to throw " + name, "expected " + this.inspect + " to not throw " + name);
-  _$jscoverage['assertion.js'][859]++;
+  _$jscoverage['assertion.js'][920]++;
   return this;
 });
-_$jscoverage['assertion.js'][875]++;
+_$jscoverage['assertion.js'][936]++;
 Assertion.prototype.respondTo = (function (method) {
-  _$jscoverage['assertion.js'][876]++;
-  var context = ("function" === typeof this.obj)? this.obj.prototype[method]: this.obj[method];
-  _$jscoverage['assertion.js'][880]++;
-  this.assert("function" === typeof context, "expected " + this.inspect + " to respond to " + inspect(method), "expected " + this.inspect + " to not respond to " + inspect(method));
-  _$jscoverage['assertion.js'][885]++;
-  return this;
-});
-_$jscoverage['assertion.js'][900]++;
-Assertion.prototype.satisfy = (function (matcher) {
-  _$jscoverage['assertion.js'][901]++;
-  this.assert(matcher(this.obj), "expected " + this.inspect + " to satisfy " + inspect(matcher), "expected " + this.inspect + " to not satisfy" + inspect(matcher));
-  _$jscoverage['assertion.js'][906]++;
-  return this;
-});
-_$jscoverage['assertion.js'][922]++;
-Assertion.prototype.closeTo = (function (expected, delta) {
-  _$jscoverage['assertion.js'][923]++;
-  this.assert((this.obj - delta === expected) || (this.obj + delta === expected), "expected " + this.inspect + " to be close to " + expected + " +/- " + delta, "expected " + this.inspect + " not to be close to " + expected + " +/- " + delta);
-  _$jscoverage['assertion.js'][928]++;
-  return this;
-});
-_$jscoverage['assertion.js'][935]++;
-(function alias(name, as) {
-  _$jscoverage['assertion.js'][936]++;
-  Assertion.prototype[as] = Assertion.prototype[name];
   _$jscoverage['assertion.js'][937]++;
+  var context = ("function" === typeof this.obj)? this.obj.prototype[method]: this.obj[method];
+  _$jscoverage['assertion.js'][941]++;
+  this.assert("function" === typeof context, "expected " + this.inspect + " to respond to " + inspect(method), "expected " + this.inspect + " to not respond to " + inspect(method), "function", typeof context);
+  _$jscoverage['assertion.js'][949]++;
+  return this;
+});
+_$jscoverage['assertion.js'][964]++;
+Assertion.prototype.satisfy = (function (matcher) {
+  _$jscoverage['assertion.js'][965]++;
+  this.assert(matcher(this.obj), "expected " + this.inspect + " to satisfy " + inspect(matcher), "expected " + this.inspect + " to not satisfy" + inspect(matcher), this.negate? false: true, matcher(this.obj));
+  _$jscoverage['assertion.js'][973]++;
+  return this;
+});
+_$jscoverage['assertion.js'][989]++;
+Assertion.prototype.closeTo = (function (expected, delta) {
+  _$jscoverage['assertion.js'][990]++;
+  this.assert((this.obj - delta === expected) || (this.obj + delta === expected), "expected " + this.inspect + " to be close to " + expected + " +/- " + delta, "expected " + this.inspect + " not to be close to " + expected + " +/- " + delta);
+  _$jscoverage['assertion.js'][995]++;
+  return this;
+});
+_$jscoverage['assertion.js'][1002]++;
+(function alias(name, as) {
+  _$jscoverage['assertion.js'][1003]++;
+  Assertion.prototype[as] = Assertion.prototype[name];
+  _$jscoverage['assertion.js'][1004]++;
   return alias;
 })("length", "lengthOf")("keys", "key")("ownProperty", "haveOwnProperty")("above", "greaterThan")("below", "lessThan")("throw", "throws")("throw", "Throw")("instanceof", "instanceOf");
-_$jscoverage['assertion.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," *"," * Primarily a refactor of: should.js"," * https://github.com/visionmedia/should.js"," * Copyright(c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;"," * MIT Licensed"," */","","/**"," * ### BDD Style Introduction"," *"," * The BDD style is exposed through `expect` or `should` interfaces. In both"," * scenarios, you chain together natural language assertions."," *"," *      // expect"," *      var expect = require('chai').expect;"," *      expect(foo).to.equal('bar');"," *"," *      // should"," *      var should = require('chai').should();"," *      foo.should.equal('bar');"," *"," * #### Differences"," *"," * The `expect` interface provides a function as a starting point for chaining"," * your language assertions. It works on node.js and in all browsers."," *"," * The `should` interface extends `Object.prototype` to provide a single getter as"," * the starting point for your language assertions. It works on node.js and in"," * all browsers except Internet Explorer."," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","/*!"," * Module dependencies."," */","","var AssertionError = require('./error')","  , eql = require('./utils/eql')","  , toString = Object.prototype.toString","  , inspect = require('./utils/inspect');","","/*!"," * Module export."," */","","module.exports = Assertion;","","","/*!"," * # Assertion Constructor"," *"," * Creates object for chaining."," *"," * @api private"," */","","function Assertion (obj, msg, stack) {","  this.ssfi = stack || arguments.callee;","  this.obj = obj;","  this.msg = msg;","}","","/*!","  * ## Assertion.includeStack","  * , toString = Object.prototype.toString ","  *","  * User configurable property, influences whether stack trace","  * is included in Assertion error message. Default of false","  * suppresses stack trace in the error message","  *","  *     Assertion.includeStack = true;  // enable stack on error","  *","  * @api public","  */","","Assertion.includeStack = false;","","/*!"," * # .assert(expression, message, negateMessage)"," *"," * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass."," *"," * @name assert"," * @param {Philosophical} expression to be tested"," * @param {String} message to display if fails"," * @param {String} negatedMessage to display if negated expression fails"," * @api private"," */","","Assertion.prototype.assert = function (expr, msg, negateMsg) {","  var msg = (this.negate ? negateMsg : msg)","    , ok = this.negate ? !expr : expr;","","  if (!ok) {","    throw new AssertionError({","      operator: this.msg,","      message: msg,","      stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi","    });","  }","};","","/*!"," * # inspect"," *"," * Returns the current object stringified."," *"," * @name inspect"," * @api private"," */","","Object.defineProperty(Assertion.prototype, 'inspect',","  { get: function () {","      return inspect(this.obj);","    },","    configurable: true","});","","/**"," * # to"," *"," * Language chain."," *"," * @name to"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'to',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # be"," *"," * Language chain."," *"," * @name be"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'be',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # been"," *"," * Language chain. Also tests `tense` to past for addon"," * modules that use the tense feature."," *"," * @name been"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'been',","  { get: function () {","      this.tense = 'past';","      return this;","    },","    configurable: true","});","","/**"," * # an"," *"," * Language chain."," *"," * @name an"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'an',","  { get: function () {","      return this;","    },","    configurable: true","});","/**"," * # is"," *"," * Language chain."," *"," * @name is"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'is',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # and"," *"," * Language chain."," *"," * @name and"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'and',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # have"," *"," * Language chain."," *"," * @name have"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'have',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # with"," *"," * Language chain."," *"," * @name with"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'with',","  { get: function () {","      return this;","    },","    configurable: true","});","","/**"," * # .not"," *"," * Negates any of assertions following in the chain."," *"," * @name not"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'not',","  { get: function () {","      this.negate = true;","      return this;","    },","    configurable: true","});","","/**"," * # .ok"," *"," * Assert object truthiness."," *"," *      expect('everthing').to.be.ok;"," *      expect(false).to.not.be.ok;"," *      expect(undefined).to.not.be.ok;"," *      expect(null).to.not.be.ok;"," *"," * @name ok"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'ok',","  { get: function () {","      this.assert(","          this.obj","        , 'expected ' + this.inspect + ' to be truthy'","        , 'expected ' + this.inspect + ' to be falsy');","","      return this;","    },","    configurable: true","});","","/**"," * # .true"," *"," * Assert object is true"," *"," * @name true"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'true',","  { get: function () {","      this.assert(","          true === this.obj","        , 'expected ' + this.inspect + ' to be true'","        , 'expected ' + this.inspect + ' to be false');","","      return this;","    },","    configurable: true","});","","/**"," * # .false"," *"," * Assert object is false"," *"," * @name false"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'false',","  { get: function () {","      this.assert(","          false === this.obj","        , 'expected ' + this.inspect + ' to be false'","        , 'expected ' + this.inspect + ' to be true');","","      return this;","    },","    configurable: true","});","","/**"," * # .exist"," *"," * Assert object exists (null)."," *"," *      var foo = 'hi'"," *        , bar;"," *      expect(foo).to.exist;"," *      expect(bar).to.not.exist;"," *"," * @name exist"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'exist',","  { get: function () {","      this.assert(","          null != this.obj","        , 'expected ' + this.inspect + ' to exist'","        , 'expected ' + this.inspect + ' to not exist');","","      return this;","    },","    configurable: true","});","","/**"," * # .empty"," *"," * Assert object's length to be 0."," *"," *      expect([]).to.be.empty;"," *"," * @name empty"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'empty',","  { get: function () {","      new Assertion(this.obj).to.have.property('length');","","      this.assert(","          0 === this.obj.length","        , 'expected ' + this.inspect + ' to be empty'","        , 'expected ' + this.inspect + ' not to be empty');","","      return this;","    },","    configurable: true","});","","/**"," * # .arguments"," *"," * Assert object is an instanceof arguments."," *"," *      function test () {"," *        expect(arguments).to.be.arguments;"," *      }"," *"," * @name arguments"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'arguments',","  { get: function () {","      this.assert(","          '[object Arguments]' == Object.prototype.toString.call(this.obj)","        , 'expected ' + this.inspect + ' to be arguments'","        , 'expected ' + this.inspect + ' to not be arguments');","","      return this;","    },","    configurable: true","});","","/**"," * # .equal(value)"," *"," * Assert strict equality."," *"," *      expect('hello').to.equal('hello');"," *"," * @name equal"," * @param {*} value"," * @api public"," */","","Assertion.prototype.equal = function (val) {","  this.assert(","      val === this.obj","    , 'expected ' + this.inspect + ' to equal ' + inspect(val)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(val));","","  return this;","};","","/**"," * # .eql(value)"," *"," * Assert deep equality."," *"," *      expect({ foo: 'bar' }).to.eql({ foo: 'bar' });"," *"," * @name eql"," * @param {*} value"," * @api public"," */","","Assertion.prototype.eql = function (obj) {","  this.assert(","      eql(obj, this.obj)","    , 'expected ' + this.inspect + ' to equal ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj));","  return this;","};","","/**"," * # .above(value)"," *"," * Assert greater than `value`."," *"," *      expect(10).to.be.above(5);"," *"," * @name above"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.above = function (val) {","  this.assert(","      this.obj &gt; val","    , 'expected ' + this.inspect + ' to be above ' + val","    , 'expected ' + this.inspect + ' to be below ' + val);","","  return this;","};","","/**"," * # .below(value)"," *"," * Assert less than `value`."," *"," *      expect(5).to.be.below(10);"," *"," * @name below"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.below = function (val) {","  this.assert(","      this.obj &lt; val","    , 'expected ' + this.inspect + ' to be below ' + val","    , 'expected ' + this.inspect + ' to be above ' + val);","","  return this;","};","","/**"," * # .within(start, finish)"," *"," * Assert that a number is within a range."," *"," *      expect(7).to.be.within(5,10);"," *"," * @name within"," * @param {Number} start lowerbound inclusive"," * @param {Number} finish upperbound inclusive"," * @api public"," */","","Assertion.prototype.within = function (start, finish) {","  var range = start + '..' + finish;","","  this.assert(","      this.obj &gt;= start &amp;&amp; this.obj &lt;= finish","    , 'expected ' + this.inspect + ' to be within ' + range","    , 'expected ' + this.inspect + ' to not be within ' + range);","","  return this;","};","","/**"," * # .a(type)"," *"," * Assert typeof."," *"," *      expect('test').to.be.a('string');"," *"," * @name a"," * @param {String} type"," * @api public"," */","","Assertion.prototype.a = function (type) {","  var klass = type.charAt(0).toUpperCase() + type.slice(1);","","  this.assert(","      '[object ' + klass + ']' === toString.call(this.obj)","    , 'expected ' + this.inspect + ' to be a ' + type","    , 'expected ' + this.inspect + ' not to be a ' + type);","","  return this;","};","","/**"," * # .instanceof(constructor)"," *"," * Assert instanceof."," *"," *      var Tea = function (name) { this.name = name; }"," *        , Chai = new Tea('chai');"," *"," *      expect(Chai).to.be.an.instanceOf(Tea);"," *"," * @name instanceof"," * @param {Constructor}"," * @alias instanceOf"," * @api public"," */","","Assertion.prototype.instanceof = function (constructor) {","  var name = constructor.name;","  this.assert(","      this.obj instanceof constructor","    , 'expected ' + this.inspect + ' to be an instance of ' + name","    , 'expected ' + this.inspect + ' to not be an instance of ' + name);","","  return this;","};","","/**"," * # .property(name, [value])"," *"," * Assert that property of `name` exists, optionally with `value`."," *"," *      var obj = { foo: 'bar' }"," *      expect(obj).to.have.property('foo');"," *      expect(obj).to.have.property('foo', 'bar');"," *      expect(obj).to.have.property('foo').to.be.a('string');"," *"," * @name property"," * @param {String} name"," * @param {*} value (optional)"," * @returns value of property for chaining"," * @api public"," */","","Assertion.prototype.property = function (name, val) {","  if (this.negate &amp;&amp; undefined !== val) {","    if (undefined === this.obj[name]) {","      throw new Error(this.inspect + ' has no property ' + inspect(name));","    }","  } else {","    this.assert(","        undefined !== this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name)","      , 'expected ' + this.inspect + ' to not have property ' + inspect(name));","  }","","  if (undefined !== val) {","    this.assert(","        val === this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +","          inspect(val) + ', but got ' + inspect(this.obj[name])","      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val));","  }","","  this.obj = this.obj[name];","  return this;","};","","/**"," * # .ownProperty(name)"," *"," * Assert that has own property by `name`."," *"," *      expect('test').to.have.ownProperty('length');"," *"," * @name ownProperty"," * @alias haveOwnProperty"," * @param {String} name"," * @api public"," */","","Assertion.prototype.ownProperty = function (name) {","  this.assert(","      this.obj.hasOwnProperty(name)","    , 'expected ' + this.inspect + ' to have own property ' + inspect(name)","    , 'expected ' + this.inspect + ' to not have own property ' + inspect(name));","  return this;","};","","/**"," * # .length(val)"," *"," * Assert that object has expected length."," *"," *      expect([1,2,3]).to.have.length(3);"," *      expect('foobar').to.have.length(6);"," *"," * @name length"," * @alias lengthOf"," * @param {Number} length"," * @api public"," */","","Assertion.prototype.length = function (n) {","  new Assertion(this.obj).to.have.property('length');","  var len = this.obj.length;","","  this.assert(","      len == n","    , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len","    , 'expected ' + this.inspect + ' to not have a length of ' + len);","","  return this;","};","","/**"," * # .match(regexp)"," *"," * Assert that matches regular expression."," *"," *      expect('foobar').to.match(/^foo/);"," *"," * @name match"," * @param {RegExp} RegularExpression"," * @api public"," */","","Assertion.prototype.match = function (re) {","  this.assert(","      re.exec(this.obj)","    , 'expected ' + this.inspect + ' to match ' + re","    , 'expected ' + this.inspect + ' not to match ' + re);","","  return this;","};","","/**"," * # .include(obj)"," *"," * Assert the inclusion of an object in an Array or substring in string."," *"," *      expect([1,2,3]).to.include(2);"," *"," * @name include"," * @param {Object|String|Number} obj"," * @api public"," */","","Assertion.prototype.include = function (obj) {","  this.assert(","      ~this.obj.indexOf(obj)","    , 'expected ' + this.inspect + ' to include ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not include ' + inspect(obj));","","  return this;","};","","/**"," * # .string(string)"," *"," * Assert inclusion of string in string."," *"," *      expect('foobar').to.have.string('bar');"," *"," * @name string"," * @param {String} string"," * @api public"," */","","Assertion.prototype.string = function (str) {","  new Assertion(this.obj).is.a('string');","","  this.assert(","      ~this.obj.indexOf(str)","    , 'expected ' + this.inspect + ' to contain ' + inspect(str)","    , 'expected ' + this.inspect + ' to not contain ' + inspect(str));","","  return this;","};","","","","/**"," * # contain"," *"," * Toggles the `contain` flag for the `keys` assertion."," *"," * @name contain"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'contain',","  { get: function () {","      this.contains = true;","      return this;","    },","    configurable: true","});","","/**"," * # .keys(key1, [key2], [...])"," *"," * Assert exact keys or the inclusing of keys using the `contain` modifier."," *"," *      expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);"," *      expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');"," *"," * @name keys"," * @alias key"," * @param {String|Array} Keys"," * @api public"," */","","Assertion.prototype.keys = function(keys) {","  var str","    , ok = true;","","  keys = keys instanceof Array","    ? keys","    : Array.prototype.slice.call(arguments);","","  if (!keys.length) throw new Error('keys required');","","  var actual = Object.keys(this.obj)","    , len = keys.length;","","  // Inclusion","  ok = keys.every(function(key){","    return ~actual.indexOf(key);","  });","","  // Strict","  if (!this.negate &amp;&amp; !this.contains) {","    ok = ok &amp;&amp; keys.length == actual.length;","  }","","  // Key string","  if (len &gt; 1) {","    keys = keys.map(function(key){","      return inspect(key);","    });","    var last = keys.pop();","    str = keys.join(', ') + ', and ' + last;","  } else {","    str = inspect(keys[0]);","  }","","  // Form","  str = (len &gt; 1 ? 'keys ' : 'key ') + str;","","  // Have / include","  str = (this.contains ? 'contain ' : 'have ') + str;","","  // Assertion","  this.assert(","      ok","    , 'expected ' + this.inspect + ' to ' + str","    , 'expected ' + this.inspect + ' to not ' + str);","","  return this;","}","","/**"," * # .throw(constructor)"," *"," * Assert that a function will throw a specific type of error."," *"," *      var fn = function () { throw new ReferenceError(''); }"," *      expect(fn).to.throw(ReferenceError);"," *"," * @name throw"," * @alias throws"," * @alias Throw"," * @param {ErrorConstructor} constructor"," * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types"," * @api public"," */","","Assertion.prototype.throw = function (constructor) {","  new Assertion(this.obj).is.a('function');","","  var thrown = false;","","  try {","    this.obj();","  } catch (err) {","    if (constructor &amp;&amp; 'function' === typeof constructor &amp;&amp; constructor.constructor != RegExp) {","      this.assert(","          err instanceof constructor &amp;&amp; err.name == constructor.name","        , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'","        , 'expected ' + this.inspect + ' to not throw ' + constructor.name );","      return this;","    } else if (constructor &amp;&amp; constructor instanceof RegExp) {","      this.assert(","          constructor.exec(err.message)","        , 'expected ' + this.inspect + ' to throw error matching ' + constructor + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not matching ' + constructor);","      return this;","    } else {","      thrown = true;","    }","  }","","  var name = (constructor ? constructor.name : 'an error');","","  this.assert(","      thrown === true","    , 'expected ' + this.inspect + ' to throw ' + name","    , 'expected ' + this.inspect + ' to not throw ' + name);","","  return this;","};","","/**"," * # .respondTo(method)"," *"," * Assert that object/class will respond to a method."," *"," *      expect(Klass).to.respondTo('bar');"," *      expect(obj).to.respondTo('bar');"," *"," * @name respondTo"," * @param {String} method"," * @api public"," */","","Assertion.prototype.respondTo = function (method) {","  var context = ('function' === typeof this.obj)","    ? this.obj.prototype[method]","    : this.obj[method];","","  this.assert(","      'function' === typeof context","    , 'expected ' + this.inspect + ' to respond to ' + inspect(method)","    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method));","","  return this;","};","","/**"," * # .satisfy(method)"," *"," * Assert that passes a truth test."," *"," *      expect(1).to.satisfy(function(num) { return num &gt; 0; });"," *"," * @name satisfy"," * @param {Function} matcher"," * @api public"," */","","Assertion.prototype.satisfy = function (matcher) {","  this.assert(","      matcher(this.obj)","    , 'expected ' + this.inspect + ' to satisfy ' + inspect(matcher)","    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher));","","  return this;","};","","/**"," * # .closeTo(expected, delta)"," *"," * Assert that actual is equal to +/- delta."," *"," *      expect(1.5).to.be.closeTo(1, 0.5);"," *"," * @name closeTo"," * @param {Number} expected"," * @param {Number} delta"," * @api public"," */","","Assertion.prototype.closeTo = function (expected, delta) {","  this.assert(","      (this.obj - delta === expected) || (this.obj + delta === expected)","    , 'expected ' + this.inspect + ' to be close to ' + expected + ' +/- ' + delta","    , 'expected ' + this.inspect + ' not to be close to ' + expected + ' +/- ' + delta);","","  return this;","};","","/*!"," * Aliases."," */","","(function alias(name, as){","  Assertion.prototype[as] = Assertion.prototype[name];","  return alias;","})","('length', 'lengthOf')","('keys', 'key')","('ownProperty', 'haveOwnProperty')","('above', 'greaterThan')","('below', 'lessThan')","('throw', 'throws')","('throw', 'Throw') // for troublesome browsers","('instanceof', 'instanceOf');"];
+_$jscoverage['assertion.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," *"," * Primarily a refactor of: should.js"," * https://github.com/visionmedia/should.js"," * Copyright(c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;"," * MIT Licensed"," */","","/**"," * ### BDD Style Introduction"," *"," * The BDD style is exposed through `expect` or `should` interfaces. In both"," * scenarios, you chain together natural language assertions."," *"," *      // expect"," *      var expect = require('chai').expect;"," *      expect(foo).to.equal('bar');"," *"," *      // should"," *      var should = require('chai').should();"," *      foo.should.equal('bar');"," *"," * #### Differences"," *"," * The `expect` interface provides a function as a starting point for chaining"," * your language assertions. It works on node.js and in all browsers."," *"," * The `should` interface extends `Object.prototype` to provide a single getter as"," * the starting point for your language assertions. It works on node.js and in"," * all browsers except Internet Explorer."," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","/*!"," * Module dependencies."," */","","var AssertionError = require('./error')","  , eql = require('./utils/eql')","  , toString = Object.prototype.toString","  , inspect = require('./utils/inspect');","","/*!"," * Module export."," */","","module.exports = Assertion;","","","/*!"," * # Assertion Constructor"," *"," * Creates object for chaining."," *"," * @api private"," */","","function Assertion (obj, msg, stack) {","  this.ssfi = stack || arguments.callee;","  this.obj = obj;","  this.msg = msg;","}","","/*!","  * ## Assertion.includeStack","  * , toString = Object.prototype.toString","  *","  * User configurable property, influences whether stack trace","  * is included in Assertion error message. Default of false","  * suppresses stack trace in the error message","  *","  *     Assertion.includeStack = true;  // enable stack on error","  *","  * @api public","  */","","Assertion.includeStack = false;","","/*!"," * # .assert(expression, message, negateMessage)"," *"," * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass."," *"," * @name assert"," * @param {Philosophical} expression to be tested"," * @param {String} message to display if fails"," * @param {String} negatedMessage to display if negated expression fails"," * @api private"," */","","Assertion.prototype.assert = function (expr, msg, negateMsg, expected, actual) {","  actual = actual || this.obj;","  var msg = (this.negate ? negateMsg : msg)","    , ok = this.negate ? !expr : expr;","","  if (!ok) {","    throw new AssertionError({","        message: this.msg ? this.msg + ': ' + msg : msg // include custom message if available","      , actual: actual","      , expected: expected","      , stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi","    });","  }","};","","/*!"," * # inspect"," *"," * Returns the current object stringified."," *"," * @name inspect"," * @api private"," */","","Object.defineProperty(Assertion.prototype, 'inspect',","  { get: function () {","      return inspect(this.obj);","    }","  , configurable: true","});","","/**"," * # to"," *"," * Language chain."," *"," * @name to"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'to',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # be"," *"," * Language chain."," *"," * @name be"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'be',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # been"," *"," * Language chain. Also tests `tense` to past for addon"," * modules that use the tense feature."," *"," * @name been"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'been',","  { get: function () {","      this.tense = 'past';","      return this;","    }","  , configurable: true","});","","/**"," * # an"," *"," * Language chain."," *"," * @name an"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'an',","  { get: function () {","      return this;","    }","  , configurable: true","});","/**"," * # is"," *"," * Language chain."," *"," * @name is"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'is',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # and"," *"," * Language chain."," *"," * @name and"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'and',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # have"," *"," * Language chain."," *"," * @name have"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'have',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # with"," *"," * Language chain."," *"," * @name with"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'with',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # .not"," *"," * Negates any of assertions following in the chain."," *"," * @name not"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'not',","  { get: function () {","      this.negate = true;","      return this;","    }","  , configurable: true","});","","/**"," * # .ok"," *"," * Assert object truthiness."," *"," *      expect('everthing').to.be.ok;"," *      expect(false).to.not.be.ok;"," *      expect(undefined).to.not.be.ok;"," *      expect(null).to.not.be.ok;"," *"," * @name ok"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'ok',","  { get: function () {","      this.assert(","          this.obj","        , 'expected ' + this.inspect + ' to be truthy'","        , 'expected ' + this.inspect + ' to be falsy');","","      return this;","    }","  , configurable: true","});","","/**"," * # .true"," *"," * Assert object is true"," *"," * @name true"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'true',","  { get: function () {","      this.assert(","          true === this.obj","        , 'expected ' + this.inspect + ' to be true'","        , 'expected ' + this.inspect + ' to be false'","        , this.negate ? false : true","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .false"," *"," * Assert object is false"," *"," * @name false"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'false',","  { get: function () {","      this.assert(","          false === this.obj","        , 'expected ' + this.inspect + ' to be false'","        , 'expected ' + this.inspect + ' to be true'","        , this.negate ? true : false","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .exist"," *"," * Assert object exists (null)."," *"," *      var foo = 'hi'"," *        , bar;"," *      expect(foo).to.exist;"," *      expect(bar).to.not.exist;"," *"," * @name exist"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'exist',","  { get: function () {","      this.assert(","          null != this.obj","        , 'expected ' + this.inspect + ' to exist'","        , 'expected ' + this.inspect + ' to not exist'","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .empty"," *"," * Assert object's length to be 0."," *"," *      expect([]).to.be.empty;"," *"," * @name empty"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'empty',","  { get: function () {","      var expected = this.obj;","","      if (Array.isArray(this.obj)) {","        expected = this.obj.length;","      } else if (typeof this.obj === 'object') {","        expected = Object.keys(this.obj).length;","      }","","      this.assert(","          !expected","        , 'expected ' + this.inspect + ' to be empty'","        , 'expected ' + this.inspect + ' not to be empty');","","      return this;","    }","  , configurable: true","});","","/**"," * # .arguments"," *"," * Assert object is an instanceof arguments."," *"," *      function test () {"," *        expect(arguments).to.be.arguments;"," *      }"," *"," * @name arguments"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'arguments',","  { get: function () {","      this.assert(","          '[object Arguments]' == Object.prototype.toString.call(this.obj)","        , 'expected ' + this.inspect + ' to be arguments'","        , 'expected ' + this.inspect + ' to not be arguments'","        , '[object Arguments]'","        , Object.prototype.toString.call(this.obj)","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .equal(value)"," *"," * Assert strict equality."," *"," *      expect('hello').to.equal('hello');"," *"," * @name equal"," * @param {*} value"," * @api public"," */","","Assertion.prototype.equal = function (val) {","  this.assert(","      val === this.obj","    , 'expected ' + this.inspect + ' to equal ' + inspect(val)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(val)","    , val );","","  return this;","};","","/**"," * # .eql(value)"," *"," * Assert deep equality."," *"," *      expect({ foo: 'bar' }).to.eql({ foo: 'bar' });"," *"," * @name eql"," * @param {*} value"," * @api public"," */","","Assertion.prototype.eql = function (obj) {","  this.assert(","      eql(obj, this.obj)","    , 'expected ' + this.inspect + ' to equal ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj)","    , obj );","","  return this;","};","","/**"," * # .above(value)"," *"," * Assert greater than `value`."," *"," *      expect(10).to.be.above(5);"," *"," * @name above"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.above = function (val) {","  this.assert(","      this.obj &gt; val","    , 'expected ' + this.inspect + ' to be above ' + val","    , 'expected ' + this.inspect + ' to be below ' + val);","","  return this;","};","","/**"," * # .below(value)"," *"," * Assert less than `value`."," *"," *      expect(5).to.be.below(10);"," *"," * @name below"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.below = function (val) {","  this.assert(","      this.obj &lt; val","    , 'expected ' + this.inspect + ' to be below ' + val","    , 'expected ' + this.inspect + ' to be above ' + val);","","  return this;","};","","/**"," * # .within(start, finish)"," *"," * Assert that a number is within a range."," *"," *      expect(7).to.be.within(5,10);"," *"," * @name within"," * @param {Number} start lowerbound inclusive"," * @param {Number} finish upperbound inclusive"," * @api public"," */","","Assertion.prototype.within = function (start, finish) {","  var range = start + '..' + finish;","","  this.assert(","      this.obj &gt;= start &amp;&amp; this.obj &lt;= finish","    , 'expected ' + this.inspect + ' to be within ' + range","    , 'expected ' + this.inspect + ' to not be within ' + range);","","  return this;","};","","/**"," * # .a(type)"," *"," * Assert typeof."," *"," *      expect('test').to.be.a('string');"," *"," * @name a"," * @param {String} type"," * @api public"," */","","Assertion.prototype.a = function (type) {","  var klass = type.charAt(0).toUpperCase() + type.slice(1);","","  this.assert(","      '[object ' + klass + ']' === toString.call(this.obj)","    , 'expected ' + this.inspect + ' to be a ' + type","    , 'expected ' + this.inspect + ' not to be a ' + type","    , '[object ' + klass + ']'","    , toString.call(this.obj)","  );","","  return this;","};","","/**"," * # .instanceof(constructor)"," *"," * Assert instanceof."," *"," *      var Tea = function (name) { this.name = name; }"," *        , Chai = new Tea('chai');"," *"," *      expect(Chai).to.be.an.instanceOf(Tea);"," *"," * @name instanceof"," * @param {Constructor}"," * @alias instanceOf"," * @api public"," */","","Assertion.prototype.instanceof = function (constructor) {","  var name = constructor.name;","  this.assert(","      this.obj instanceof constructor","    , 'expected ' + this.inspect + ' to be an instance of ' + name","    , 'expected ' + this.inspect + ' to not be an instance of ' + name);","","  return this;","};","","/**"," * # .property(name, [value])"," *"," * Assert that property of `name` exists, optionally with `value`."," *"," *      var obj = { foo: 'bar' }"," *      expect(obj).to.have.property('foo');"," *      expect(obj).to.have.property('foo', 'bar');"," *      expect(obj).to.have.property('foo').to.be.a('string');"," *"," * @name property"," * @param {String} name"," * @param {*} value (optional)"," * @returns value of property for chaining"," * @api public"," */","","Assertion.prototype.property = function (name, val) {","  if (this.negate &amp;&amp; undefined !== val) {","    if (undefined === this.obj[name]) {","      throw new Error(this.inspect + ' has no property ' + inspect(name));","    }","  } else {","    this.assert(","        undefined !== this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name)","      , 'expected ' + this.inspect + ' to not have property ' + inspect(name));","  }","","  if (undefined !== val) {","    this.assert(","        val === this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +","          inspect(val) + ', but got ' + inspect(this.obj[name])","      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val)","      , val","      , this.obj[val]","    );","  }","","  this.obj = this.obj[name];","  return this;","};","","/**"," * # .ownProperty(name)"," *"," * Assert that has own property by `name`."," *"," *      expect('test').to.have.ownProperty('length');"," *"," * @name ownProperty"," * @alias haveOwnProperty"," * @param {String} name"," * @api public"," */","","Assertion.prototype.ownProperty = function (name) {","  this.assert(","      this.obj.hasOwnProperty(name)","    , 'expected ' + this.inspect + ' to have own property ' + inspect(name)","    , 'expected ' + this.inspect + ' to not have own property ' + inspect(name));","  return this;","};","","/**"," * # .length(val)"," *"," * Assert that object has expected length."," *"," *      expect([1,2,3]).to.have.length(3);"," *      expect('foobar').to.have.length(6);"," *"," * @name length"," * @alias lengthOf"," * @param {Number} length"," * @api public"," */","","Assertion.prototype.length = function (n) {","  new Assertion(this.obj).to.have.property('length');","  var len = this.obj.length;","","  this.assert(","      len == n","    , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len","    , 'expected ' + this.inspect + ' to not have a length of ' + len","    , n","    , len","  );","","  return this;","};","","/**"," * # .match(regexp)"," *"," * Assert that matches regular expression."," *"," *      expect('foobar').to.match(/^foo/);"," *"," * @name match"," * @param {RegExp} RegularExpression"," * @api public"," */","","Assertion.prototype.match = function (re) {","  this.assert(","      re.exec(this.obj)","    , 'expected ' + this.inspect + ' to match ' + re","    , 'expected ' + this.inspect + ' not to match ' + re);","","  return this;","};","","/**"," * # .include(obj)"," *"," * Assert the inclusion of an object in an Array or substring in string."," *"," *      expect([1,2,3]).to.include(2);"," *"," * @name include"," * @param {Object|String|Number} obj"," * @api public"," */","","Assertion.prototype.include = function (obj) {","  this.assert(","      ~this.obj.indexOf(obj)","    , 'expected ' + this.inspect + ' to include ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not include ' + inspect(obj));","","  return this;","};","","/**"," * # .string(string)"," *"," * Assert inclusion of string in string."," *"," *      expect('foobar').to.have.string('bar');"," *"," * @name string"," * @param {String} string"," * @api public"," */","","Assertion.prototype.string = function (str) {","  new Assertion(this.obj).is.a('string');","","  this.assert(","      ~this.obj.indexOf(str)","    , 'expected ' + this.inspect + ' to contain ' + inspect(str)","    , 'expected ' + this.inspect + ' to not contain ' + inspect(str));","","  return this;","};","","","","/**"," * # contain"," *"," * Toggles the `contain` flag for the `keys` assertion."," *"," * @name contain"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'contain',","  { get: function () {","      this.contains = true;","      return this;","    },","    configurable: true","});","","/**"," * # .keys(key1, [key2], [...])"," *"," * Assert exact keys or the inclusing of keys using the `contain` modifier."," *"," *      expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);"," *      expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');"," *"," * @name keys"," * @alias key"," * @param {String|Array} Keys"," * @api public"," */","","Assertion.prototype.keys = function(keys) {","  var str","    , ok = true;","","  keys = keys instanceof Array","    ? keys","    : Array.prototype.slice.call(arguments);","","  if (!keys.length) throw new Error('keys required');","","  var actual = Object.keys(this.obj)","    , len = keys.length;","","  // Inclusion","  ok = keys.every(function(key){","    return ~actual.indexOf(key);","  });","","  // Strict","  if (!this.negate &amp;&amp; !this.contains) {","    ok = ok &amp;&amp; keys.length == actual.length;","  }","","  // Key string","  if (len &gt; 1) {","    keys = keys.map(function(key){","      return inspect(key);","    });","    var last = keys.pop();","    str = keys.join(', ') + ', and ' + last;","  } else {","    str = inspect(keys[0]);","  }","","  // Form","  str = (len &gt; 1 ? 'keys ' : 'key ') + str;","","  // Have / include","  str = (this.contains ? 'contain ' : 'have ') + str;","","  // Assertion","  this.assert(","      ok","    , 'expected ' + this.inspect + ' to ' + str","    , 'expected ' + this.inspect + ' to not ' + str","    , keys","    , Object.keys(this.obj)","  );","","  return this;","}","","/**"," * # .throw(constructor)"," *"," * Assert that a function will throw a specific type of error or that error"," * thrown will match a RegExp or include a string."," *"," *      var fn = function () { throw new ReferenceError('This is a bad function.'); }"," *      expect(fn).to.throw(ReferenceError);"," *      expect(fn).to.throw(/bad function/);"," *      expect(fn).to.not.throw('good function');"," *      expect(fn).to.throw(ReferenceError, /bad function/);"," *"," * Please note that when a throw expectation is negated, it will check each"," * parameter independently, starting with Error constructor type. The appropriate way"," * to check for the existence of a type of error but for a message that does not match"," * is to use `and`."," *"," *      expect(fn).to.throw(ReferenceError).and.not.throw(/good function/);"," *"," * @name throw"," * @alias throws"," * @alias Throw"," * @param {ErrorConstructor} constructor"," * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types"," * @api public"," */","","Assertion.prototype.throw = function (constructor, msg) {","  new Assertion(this.obj).is.a('function');","","  var thrown = false;","","  if (arguments.length === 0) {","    msg = null;","    constructor = null;","  } else if (constructor &amp;&amp; (constructor instanceof RegExp || 'string' === typeof constructor)) {","    msg = constructor;","    constructor = null;","  }","","  try {","    this.obj();","  } catch (err) {","    // first, check constructor","    if (constructor &amp;&amp; 'function' === typeof constructor) {","      this.assert(","          err instanceof constructor &amp;&amp; err.name == constructor.name","        , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'","        , 'expected ' + this.inspect + ' to not throw ' + constructor.name );","      if (!msg) return this;","    }","    // next, check message","    if (err.message &amp;&amp; msg &amp;&amp; msg instanceof RegExp) {","      this.assert(","          msg.exec(err.message)","        , 'expected ' + this.inspect + ' to throw error matching ' + msg + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not matching ' + msg","      );","      return this;","    } else if (err.message &amp;&amp; msg &amp;&amp; 'string' === typeof msg) {","      this.assert(","          ~err.message.indexOf(msg)","        , 'expected ' + this.inspect + ' to throw error including ' + inspect(msg) + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not including ' + inspect(msg)","      );","      return this;","    } else {","      thrown = true;","    }","  }","","  var name = (constructor ? constructor.name : 'an error');","","  this.assert(","      thrown === true","    , 'expected ' + this.inspect + ' to throw ' + name","    , 'expected ' + this.inspect + ' to not throw ' + name);","","  return this;","};","","/**"," * # .respondTo(method)"," *"," * Assert that object/class will respond to a method."," *"," *      expect(Klass).to.respondTo('bar');"," *      expect(obj).to.respondTo('bar');"," *"," * @name respondTo"," * @param {String} method"," * @api public"," */","","Assertion.prototype.respondTo = function (method) {","  var context = ('function' === typeof this.obj)","    ? this.obj.prototype[method]","    : this.obj[method];","","  this.assert(","      'function' === typeof context","    , 'expected ' + this.inspect + ' to respond to ' + inspect(method)","    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method)","    , 'function'","    , typeof context","  );","","  return this;","};","","/**"," * # .satisfy(method)"," *"," * Assert that passes a truth test."," *"," *      expect(1).to.satisfy(function(num) { return num &gt; 0; });"," *"," * @name satisfy"," * @param {Function} matcher"," * @api public"," */","","Assertion.prototype.satisfy = function (matcher) {","  this.assert(","      matcher(this.obj)","    , 'expected ' + this.inspect + ' to satisfy ' + inspect(matcher)","    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher)","    , this.negate ? false : true","    , matcher(this.obj)","  );","","  return this;","};","","/**"," * # .closeTo(expected, delta)"," *"," * Assert that actual is equal to +/- delta."," *"," *      expect(1.5).to.be.closeTo(1, 0.5);"," *"," * @name closeTo"," * @param {Number} expected"," * @param {Number} delta"," * @api public"," */","","Assertion.prototype.closeTo = function (expected, delta) {","  this.assert(","      (this.obj - delta === expected) || (this.obj + delta === expected)","    , 'expected ' + this.inspect + ' to be close to ' + expected + ' +/- ' + delta","    , 'expected ' + this.inspect + ' not to be close to ' + expected + ' +/- ' + delta);","","  return this;","};","","/*!"," * Aliases."," */","","(function alias(name, as){","  Assertion.prototype[as] = Assertion.prototype[name];","  return alias;","})","('length', 'lengthOf')","('keys', 'key')","('ownProperty', 'haveOwnProperty')","('above', 'greaterThan')","('below', 'lessThan')","('throw', 'throws')","('throw', 'Throw') // for troublesome browsers","('instanceof', 'instanceOf');"];
 
 });
 
@@ -12439,14 +12486,6 @@ if (! _$jscoverage['error.js']) {
   _$jscoverage['error.js'][29] = 0;
   _$jscoverage['error.js'][31] = 0;
   _$jscoverage['error.js'][32] = 0;
-  _$jscoverage['error.js'][34] = 0;
-  _$jscoverage['error.js'][35] = 0;
-  _$jscoverage['error.js'][38] = 0;
-  _$jscoverage['error.js'][40] = 0;
-  _$jscoverage['error.js'][43] = 0;
-  _$jscoverage['error.js'][44] = 0;
-  _$jscoverage['error.js'][47] = 0;
-  _$jscoverage['error.js'][48] = 0;
 }
 _$jscoverage['error.js'][7]++;
 var fail = require("./chai").fail;
@@ -12477,30 +12516,11 @@ function AssertionError(options) {
 _$jscoverage['error.js'][29]++;
 AssertionError.prototype.__proto__ = Error.prototype;
 _$jscoverage['error.js'][31]++;
-AssertionError.prototype.summary = (function () {
-  _$jscoverage['error.js'][32]++;
-  var str = "";
-  _$jscoverage['error.js'][34]++;
-  if (this.operator) {
-    _$jscoverage['error.js'][35]++;
-    str += "In: '" + this.operator + "'\n\t";
-  }
-  _$jscoverage['error.js'][38]++;
-  str += "" + this.name + (this.message? ": " + this.message: "");
-  _$jscoverage['error.js'][40]++;
-  return str;
-});
-_$jscoverage['error.js'][43]++;
-AssertionError.prototype.details = (function () {
-  _$jscoverage['error.js'][44]++;
-  return this.summary();
-});
-_$jscoverage['error.js'][47]++;
 AssertionError.prototype.toString = (function () {
-  _$jscoverage['error.js'][48]++;
-  return this.summary();
+  _$jscoverage['error.js'][32]++;
+  return this.message;
 });
-_$jscoverage['error.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var fail = require('./chai').fail;","","module.exports = AssertionError;","","/*!"," * Inspired by node.js assert module"," * https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/assert.js"," */","function AssertionError (options) {","  options = options || {};","  this.name = 'AssertionError';","  this.message = options.message;","  this.actual = options.actual;","  this.expected = options.expected;","  this.operator = options.operator;","  var stackStartFunction = options.stackStartFunction || fail;","","  if (Error.captureStackTrace) {","    Error.captureStackTrace(this, stackStartFunction);","  }","}","","AssertionError.prototype.__proto__ = Error.prototype;","","AssertionError.prototype.summary = function() {","  var str = '';","","  if (this.operator) {","    str += 'In: \\'' + this.operator + '\\'\\n\\t';","  }","","  str += '' + this.name + (this.message ? ': ' + this.message : '');","","  return str;","};","","AssertionError.prototype.details = function() {","  return this.summary();","};","","AssertionError.prototype.toString = function() {","  return this.summary();","};"];
+_$jscoverage['error.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var fail = require('./chai').fail;","","module.exports = AssertionError;","","/*!"," * Inspired by node.js assert module"," * https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/assert.js"," */","function AssertionError (options) {","  options = options || {};","  this.name = 'AssertionError';","  this.message = options.message;","  this.actual = options.actual;","  this.expected = options.expected;","  this.operator = options.operator;","  var stackStartFunction = options.stackStartFunction || fail;","","  if (Error.captureStackTrace) {","    Error.captureStackTrace(this, stackStartFunction);","  }","}","","AssertionError.prototype.__proto__ = Error.prototype;","","AssertionError.prototype.toString = function() {","  return this.message;","};"];
 
 });
 
@@ -13230,9 +13250,9 @@ module.exports = (function (chai) {
   new Assertion(val1).to.equal(val2);
 });
   _$jscoverage['interface/should.js'][31]++;
-  should["throw"] = (function (fn, err) {
+  should["throw"] = (function (fn, errt, errs) {
   _$jscoverage['interface/should.js'][32]++;
-  new Assertion(fn).to["throw"](err);
+  new Assertion(fn).to["throw"](errt, errs);
 });
   _$jscoverage['interface/should.js'][35]++;
   should.exist = (function (val) {
@@ -13247,9 +13267,9 @@ module.exports = (function (chai) {
   new Assertion(val1).to.not.equal(val2);
 });
   _$jscoverage['interface/should.js'][46]++;
-  should.not["throw"] = (function (fn, err) {
+  should.not["throw"] = (function (fn, errt, errs) {
   _$jscoverage['interface/should.js'][47]++;
-  new Assertion(fn).to.not["throw"](err);
+  new Assertion(fn).to.not["throw"](errt, errs);
 });
   _$jscoverage['interface/should.js'][50]++;
   should.not.exist = (function (val) {
@@ -13260,7 +13280,7 @@ module.exports = (function (chai) {
   return should;
 });
 });
-_$jscoverage['interface/should.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","module.exports = function (chai) {","  var Assertion = chai.Assertion;","","  chai.should = function () {","    // modify Object.prototype to have `should`","    Object.defineProperty(Object.prototype, 'should', {","      set: function(){},","      get: function(){","        if (this instanceof String || this instanceof Number) {","          return new Assertion(this.constructor(this));","        } else if (this instanceof Boolean) {","          return new Assertion(this == true);","        }","        return new Assertion(this);","      },","      configurable: true","    });","","    var should = {};","","    should.equal = function (val1, val2) {","      new Assertion(val1).to.equal(val2);","    };","","    should.throw = function (fn, err) {","      new Assertion(fn).to.throw(err);","    };","","    should.exist = function (val) {","      new Assertion(val).to.exist;","    }","","    // negation","    should.not = {}","","    should.not.equal = function (val1, val2) {","      new Assertion(val1).to.not.equal(val2);","    };","","    should.not.throw = function (fn, err) {","      new Assertion(fn).to.not.throw(err);","    };","","    should.not.exist = function (val) {","      new Assertion(val).to.not.exist;","    }","","    return should;","  };","};"];
+_$jscoverage['interface/should.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","module.exports = function (chai) {","  var Assertion = chai.Assertion;","","  chai.should = function () {","    // modify Object.prototype to have `should`","    Object.defineProperty(Object.prototype, 'should', {","      set: function(){},","      get: function(){","        if (this instanceof String || this instanceof Number) {","          return new Assertion(this.constructor(this));","        } else if (this instanceof Boolean) {","          return new Assertion(this == true);","        }","        return new Assertion(this);","      },","      configurable: true","    });","","    var should = {};","","    should.equal = function (val1, val2) {","      new Assertion(val1).to.equal(val2);","    };","","    should.throw = function (fn, errt, errs) {","      new Assertion(fn).to.throw(errt, errs);","    };","","    should.exist = function (val) {","      new Assertion(val).to.exist;","    }","","    // negation","    should.not = {}","","    should.not.equal = function (val1, val2) {","      new Assertion(val1).to.not.equal(val2);","    };","","    should.not.throw = function (fn, errt, errs) {","      new Assertion(fn).to.not.throw(errt, errs);","    };","","    should.not.exist = function (val) {","      new Assertion(val).to.not.exist;","    }","","    return should;","  };","};"];
 
 });
 
@@ -13334,11 +13354,15 @@ if (! _$jscoverage['interface/assert.js']) {
   _$jscoverage['interface/assert.js'][526] = 0;
   _$jscoverage['interface/assert.js'][527] = 0;
   _$jscoverage['interface/assert.js'][530] = 0;
-  _$jscoverage['interface/assert.js'][537] = 0;
-  _$jscoverage['interface/assert.js'][538] = 0;
-  _$jscoverage['interface/assert.js'][545] = 0;
-  _$jscoverage['interface/assert.js'][546] = 0;
-  _$jscoverage['interface/assert.js'][547] = 0;
+  _$jscoverage['interface/assert.js'][549] = 0;
+  _$jscoverage['interface/assert.js'][550] = 0;
+  _$jscoverage['interface/assert.js'][551] = 0;
+  _$jscoverage['interface/assert.js'][553] = 0;
+  _$jscoverage['interface/assert.js'][560] = 0;
+  _$jscoverage['interface/assert.js'][561] = 0;
+  _$jscoverage['interface/assert.js'][568] = 0;
+  _$jscoverage['interface/assert.js'][569] = 0;
+  _$jscoverage['interface/assert.js'][570] = 0;
 }
 _$jscoverage['interface/assert.js'][31]++;
 module.exports = (function (chai) {
@@ -13501,20 +13525,30 @@ module.exports = (function (chai) {
   _$jscoverage['interface/assert.js'][530]++;
   new Assertion(fn, msg).to.not["throw"](type);
 });
-  _$jscoverage['interface/assert.js'][537]++;
+  _$jscoverage['interface/assert.js'][549]++;
+  assert.operator = (function (val, operator, val2, msg) {
+  _$jscoverage['interface/assert.js'][550]++;
+  if (! ~ ["==", "===", ">", ">=", "<", "<=", "!=", "!=="].indexOf(operator)) {
+    _$jscoverage['interface/assert.js'][551]++;
+    throw new Error("Invalid operator \"" + operator + "\"");
+  }
+  _$jscoverage['interface/assert.js'][553]++;
+  new Assertion(eval(val + operator + val2), msg).to.be["true"];
+});
+  _$jscoverage['interface/assert.js'][560]++;
   assert.ifError = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][538]++;
+  _$jscoverage['interface/assert.js'][561]++;
   new Assertion(val, msg).to.not.be.ok;
 });
-  _$jscoverage['interface/assert.js'][545]++;
+  _$jscoverage['interface/assert.js'][568]++;
   (function alias(name, as) {
-  _$jscoverage['interface/assert.js'][546]++;
+  _$jscoverage['interface/assert.js'][569]++;
   assert[as] = assert[name];
-  _$jscoverage['interface/assert.js'][547]++;
+  _$jscoverage['interface/assert.js'][570]++;
   return alias;
 })("length", "lengthOf")("throws", "throw");
 });
-_$jscoverage['interface/assert.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","/**"," * ### TDD Style Introduction"," *"," * The TDD style is exposed through `assert` interfaces. This provides"," * the classic assert.`test` notation, similiar to that packaged with"," * node.js. This assert module, however, provides several additional"," * tests and is browser compatible."," *"," *      // assert"," *      var assert = require('chai').assert;"," *        , foo = 'bar';"," *"," *      assert.typeOf(foo, 'string');"," *      assert.equal(foo, 'bar');"," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","module.exports = function (chai) {","  /*!","   * Chai dependencies.","   */","  var Assertion = chai.Assertion","    , inspect = chai.inspect;","","  /*!","   * Module export.","   */","","  var assert = chai.assert = {};","","  /**","   * # .ok(object, [message])","   *","   * Assert object is truthy.","   *","   *      assert.ok('everthing', 'everything is ok');","   *      assert.ok(false, 'this will fail');","   *","   * @name ok","   * @param {*} object to test","   * @param {String} message","   * @api public","   */","","  assert.ok = function (val, msg) {","    new Assertion(val, msg).is.ok;","  };","","  /**","   * # .equal(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.equal(3, 3, 'these numbers are equal');","   *","   * @name equal","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.equal = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp == test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .notEqual(actual, expected, [message])","   *","   * Assert not equal.","   *","   *      assert.notEqual(3, 4, 'these numbers are not equal');","   *","   * @name notEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notEqual = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp != test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .strictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.strictEqual(true, true, 'these booleans are strictly equal');","   *","   * @name strictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.strictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.equal(exp);","  };","","  /**","   * # .notStrictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.notStrictEqual(1, true, 'these booleans are not strictly equal');","   *","   * @name notStrictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notStrictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.equal(exp);","  };","","  /**","   * # .deepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.deepEqual({ tea: 'green' }, { tea: 'green' });","   *","   * @name deepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.deepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.eql(exp);","  };","","  /**","   * # .notDeepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });","   *","   * @name notDeepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notDeepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.eql(exp);","  };","","  /**","   * # .isTrue(value, [message])","   *","   * Assert `value` is true.","   *","   *      var tea_served = true;","   *      assert.isTrue(tea_served, 'the tea has been served');","   *","   * @name isTrue","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isTrue = function (val, msg) {","    new Assertion(val, msg).is.true;","  };","","  /**","   * # .isFalse(value, [message])","   *","   * Assert `value` is false.","   *","   *      var tea_served = false;","   *      assert.isFalse(tea_served, 'no tea yet? hmm...');","   *","   * @name isFalse","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isFalse = function (val, msg) {","    new Assertion(val, msg).is.false;","  };","","  /**","   * # .isNull(value, [message])","   *","   * Assert `value` is null.","   *","   *      assert.isNull(err, 'no errors');","   *","   * @name isNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNull = function (val, msg) {","    new Assertion(val, msg).to.equal(null);","  };","","  /**","   * # .isNotNull(value, [message])","   *","   * Assert `value` is not null.","   *","   *      var tea = 'tasty chai';","   *      assert.isNotNull(tea, 'great, time for tea!');","   *","   * @name isNotNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNotNull = function (val, msg) {","    new Assertion(val, msg).to.not.equal(null);","  };","","  /**","   * # .isUndefined(value, [message])","   *","   * Assert `value` is undefined.","   *","   *      assert.isUndefined(tea, 'no tea defined');","   *","   * @name isUndefined","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isUndefined = function (val, msg) {","    new Assertion(val, msg).to.equal(undefined);","  };","","  /**","   * # .isFunction(value, [message])","   *","   * Assert `value` is a function.","   *","   *      var serve_tea = function () { return 'cup of tea'; };","   *      assert.isFunction(serve_tea, 'great, we can have tea now');","   *","   * @name isFunction","   * @param {Function} value","   * @param {String} message","   * @api public","   */","","  assert.isFunction = function (val, msg) {","    new Assertion(val, msg).to.be.a('function');","  };","","  /**","   * # .isObject(value, [message])","   *","   * Assert `value` is an object.","   *","   *      var selection = { name: 'Chai', serve: 'with spices' };","   *      assert.isObject(selection, 'tea selection is an object');","   *","   * @name isObject","   * @param {Object} value","   * @param {String} message","   * @api public","   */","","  assert.isObject = function (val, msg) {","    new Assertion(val, msg).to.be.a('object');","  };","","  /**","   * # .isArray(value, [message])","   *","   * Assert `value` is an instance of Array.","   *","   *      var menu = [ 'green', 'chai', 'oolong' ];","   *      assert.isArray(menu, 'what kind of tea do we want?');","   *","   * @name isArray","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isArray = function (val, msg) {","    new Assertion(val, msg).to.be.instanceof(Array);","  };","","  /**","   * # .isString(value, [message])","   *","   * Assert `value` is a string.","   *","   *      var teaorder = 'chai';","   *      assert.isString(tea_order, 'order placed');","   *","   * @name isString","   * @param {String} value","   * @param {String} message","   * @api public","   */","","  assert.isString = function (val, msg) {","    new Assertion(val, msg).to.be.a('string');","  };","","  /**","   * # .isNumber(value, [message])","   *","   * Assert `value` is a number","   *","   *      var cups = 2;","   *      assert.isNumber(cups, 'how many cups');","   *","   * @name isNumber","   * @param {Number} value","   * @param {String} message","   * @api public","   */","","  assert.isNumber = function (val, msg) {","    new Assertion(val, msg).to.be.a('number');","  };","","  /**","   * # .isBoolean(value, [message])","   *","   * Assert `value` is a boolean","   *","   *      var teaready = true","   *        , teaserved = false;","   *","   *      assert.isBoolean(tea_ready, 'is the tea ready');","   *      assert.isBoolean(tea_served, 'has tea been served');","   *","   * @name isBoolean","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isBoolean = function (val, msg) {","    new Assertion(val, msg).to.be.a('boolean');","  };","","  /**","   * # .typeOf(value, name, [message])","   *","   * Assert typeof `value` is `name`.","   *","   *      assert.typeOf('tea', 'string', 'we have a string');","   *","   * @name typeOf","   * @param {*} value","   * @param {String} typeof name","   * @param {String} message","   * @api public","   */","","  assert.typeOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.a(type);","  };","","  /**","   * # .instanceOf(object, constructor, [message])","   *","   * Assert `value` is instanceof `constructor`.","   *","   *      var Tea = function (name) { this.name = name; }","   *        , Chai = new Tea('chai');","   *","   *      assert.instanceOf(Chai, Tea, 'chai is an instance of tea');","   *","   * @name instanceOf","   * @param {Object} object","   * @param {Constructor} constructor","   * @param {String} message","   * @api public","   */","","  assert.instanceOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.instanceof(type);","  };","","  /**","   * # .include(value, includes, [message])","   *","   * Assert the inclusion of an object in another. Works","   * for strings and arrays.","   *","   *      assert.include('foobar', 'bar', 'foobar contains string `var`);","   *      assert.include([ 1, 2, 3], 3, 'array contains value);","   *","   * @name include","   * @param {Array|String} value","   * @param {*} includes","   * @param {String} message","   * @api public","   */","","  assert.include = function (exp, inc, msg) {","    var obj = new Assertion(exp, msg);","","    if (Array.isArray(exp)) {","      obj.to.include(inc);","    } else if ('string' === typeof exp) {","      obj.to.contain.string(inc);","    }","  };","","  /**","   * # .match(value, regex, [message])","   *","   * Assert that `value` matches regular expression.","   *","   *      assert.match('foobar', /^foo/, 'Regexp matches');","   *","   * @name match","   * @param {*} value","   * @param {RegExp} RegularExpression","   * @param {String} message","   * @api public","   */","","  assert.match = function (exp, re, msg) {","    new Assertion(exp, msg).to.match(re);","  };","","  /**","   * # .length(value, constructor, [message])","   *","   * Assert that object has expected length.","   *","   *      assert.length([1,2,3], 3, 'Array has length of 3');","   *      assert.length('foobar', 5, 'String has length of 6');","   *","   * @name length","   * @param {*} value","   * @param {Number} length","   * @param {String} message","   * @api public","   */","","  assert.length = function (exp, len, msg) {","    new Assertion(exp, msg).to.have.length(len);","  };","","  /**","   * # .throws(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      assert.throw(fn, ReferenceError, 'function throw reference error');","   *","   * @name throws","   * @alias throw","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.throws = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.throw(type);","  };","","  /**","   * # .doesNotThrow(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      var fn = function (err) { if (err) throw Error(err) };","   *      assert.doesNotThrow(fn, Error, 'function throw reference error');","   *","   * @name doesNotThrow","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.doesNotThrow = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.not.throw(type);","  };","","  /*!","   * Undocumented / untested","   */","","  assert.ifError = function (val, msg) {","    new Assertion(val, msg).to.not.be.ok;","  };","","  /*!","   * Aliases.","   */","","  (function alias(name, as){","    assert[as] = assert[name];","    return alias;","  })","  ('length', 'lengthOf')","  ('throws', 'throw');","};"];
+_$jscoverage['interface/assert.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","/**"," * ### TDD Style Introduction"," *"," * The TDD style is exposed through `assert` interfaces. This provides"," * the classic assert.`test` notation, similiar to that packaged with"," * node.js. This assert module, however, provides several additional"," * tests and is browser compatible."," *"," *      // assert"," *      var assert = require('chai').assert;"," *        , foo = 'bar';"," *"," *      assert.typeOf(foo, 'string');"," *      assert.equal(foo, 'bar');"," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","module.exports = function (chai) {","  /*!","   * Chai dependencies.","   */","  var Assertion = chai.Assertion","    , inspect = chai.inspect;","","  /*!","   * Module export.","   */","","  var assert = chai.assert = {};","","  /**","   * # .ok(object, [message])","   *","   * Assert object is truthy.","   *","   *      assert.ok('everthing', 'everything is ok');","   *      assert.ok(false, 'this will fail');","   *","   * @name ok","   * @param {*} object to test","   * @param {String} message","   * @api public","   */","","  assert.ok = function (val, msg) {","    new Assertion(val, msg).is.ok;","  };","","  /**","   * # .equal(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.equal(3, 3, 'these numbers are equal');","   *","   * @name equal","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.equal = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp == test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .notEqual(actual, expected, [message])","   *","   * Assert not equal.","   *","   *      assert.notEqual(3, 4, 'these numbers are not equal');","   *","   * @name notEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notEqual = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp != test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .strictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.strictEqual(true, true, 'these booleans are strictly equal');","   *","   * @name strictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.strictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.equal(exp);","  };","","  /**","   * # .notStrictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.notStrictEqual(1, true, 'these booleans are not strictly equal');","   *","   * @name notStrictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notStrictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.equal(exp);","  };","","  /**","   * # .deepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.deepEqual({ tea: 'green' }, { tea: 'green' });","   *","   * @name deepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.deepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.eql(exp);","  };","","  /**","   * # .notDeepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });","   *","   * @name notDeepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notDeepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.eql(exp);","  };","","  /**","   * # .isTrue(value, [message])","   *","   * Assert `value` is true.","   *","   *      var tea_served = true;","   *      assert.isTrue(tea_served, 'the tea has been served');","   *","   * @name isTrue","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isTrue = function (val, msg) {","    new Assertion(val, msg).is.true;","  };","","  /**","   * # .isFalse(value, [message])","   *","   * Assert `value` is false.","   *","   *      var tea_served = false;","   *      assert.isFalse(tea_served, 'no tea yet? hmm...');","   *","   * @name isFalse","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isFalse = function (val, msg) {","    new Assertion(val, msg).is.false;","  };","","  /**","   * # .isNull(value, [message])","   *","   * Assert `value` is null.","   *","   *      assert.isNull(err, 'no errors');","   *","   * @name isNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNull = function (val, msg) {","    new Assertion(val, msg).to.equal(null);","  };","","  /**","   * # .isNotNull(value, [message])","   *","   * Assert `value` is not null.","   *","   *      var tea = 'tasty chai';","   *      assert.isNotNull(tea, 'great, time for tea!');","   *","   * @name isNotNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNotNull = function (val, msg) {","    new Assertion(val, msg).to.not.equal(null);","  };","","  /**","   * # .isUndefined(value, [message])","   *","   * Assert `value` is undefined.","   *","   *      assert.isUndefined(tea, 'no tea defined');","   *","   * @name isUndefined","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isUndefined = function (val, msg) {","    new Assertion(val, msg).to.equal(undefined);","  };","","  /**","   * # .isFunction(value, [message])","   *","   * Assert `value` is a function.","   *","   *      var serve_tea = function () { return 'cup of tea'; };","   *      assert.isFunction(serve_tea, 'great, we can have tea now');","   *","   * @name isFunction","   * @param {Function} value","   * @param {String} message","   * @api public","   */","","  assert.isFunction = function (val, msg) {","    new Assertion(val, msg).to.be.a('function');","  };","","  /**","   * # .isObject(value, [message])","   *","   * Assert `value` is an object.","   *","   *      var selection = { name: 'Chai', serve: 'with spices' };","   *      assert.isObject(selection, 'tea selection is an object');","   *","   * @name isObject","   * @param {Object} value","   * @param {String} message","   * @api public","   */","","  assert.isObject = function (val, msg) {","    new Assertion(val, msg).to.be.a('object');","  };","","  /**","   * # .isArray(value, [message])","   *","   * Assert `value` is an instance of Array.","   *","   *      var menu = [ 'green', 'chai', 'oolong' ];","   *      assert.isArray(menu, 'what kind of tea do we want?');","   *","   * @name isArray","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isArray = function (val, msg) {","    new Assertion(val, msg).to.be.instanceof(Array);","  };","","  /**","   * # .isString(value, [message])","   *","   * Assert `value` is a string.","   *","   *      var teaorder = 'chai';","   *      assert.isString(tea_order, 'order placed');","   *","   * @name isString","   * @param {String} value","   * @param {String} message","   * @api public","   */","","  assert.isString = function (val, msg) {","    new Assertion(val, msg).to.be.a('string');","  };","","  /**","   * # .isNumber(value, [message])","   *","   * Assert `value` is a number","   *","   *      var cups = 2;","   *      assert.isNumber(cups, 'how many cups');","   *","   * @name isNumber","   * @param {Number} value","   * @param {String} message","   * @api public","   */","","  assert.isNumber = function (val, msg) {","    new Assertion(val, msg).to.be.a('number');","  };","","  /**","   * # .isBoolean(value, [message])","   *","   * Assert `value` is a boolean","   *","   *      var teaready = true","   *        , teaserved = false;","   *","   *      assert.isBoolean(tea_ready, 'is the tea ready');","   *      assert.isBoolean(tea_served, 'has tea been served');","   *","   * @name isBoolean","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isBoolean = function (val, msg) {","    new Assertion(val, msg).to.be.a('boolean');","  };","","  /**","   * # .typeOf(value, name, [message])","   *","   * Assert typeof `value` is `name`.","   *","   *      assert.typeOf('tea', 'string', 'we have a string');","   *","   * @name typeOf","   * @param {*} value","   * @param {String} typeof name","   * @param {String} message","   * @api public","   */","","  assert.typeOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.a(type);","  };","","  /**","   * # .instanceOf(object, constructor, [message])","   *","   * Assert `value` is instanceof `constructor`.","   *","   *      var Tea = function (name) { this.name = name; }","   *        , Chai = new Tea('chai');","   *","   *      assert.instanceOf(Chai, Tea, 'chai is an instance of tea');","   *","   * @name instanceOf","   * @param {Object} object","   * @param {Constructor} constructor","   * @param {String} message","   * @api public","   */","","  assert.instanceOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.instanceof(type);","  };","","  /**","   * # .include(value, includes, [message])","   *","   * Assert the inclusion of an object in another. Works","   * for strings and arrays.","   *","   *      assert.include('foobar', 'bar', 'foobar contains string `var`);","   *      assert.include([ 1, 2, 3], 3, 'array contains value);","   *","   * @name include","   * @param {Array|String} value","   * @param {*} includes","   * @param {String} message","   * @api public","   */","","  assert.include = function (exp, inc, msg) {","    var obj = new Assertion(exp, msg);","","    if (Array.isArray(exp)) {","      obj.to.include(inc);","    } else if ('string' === typeof exp) {","      obj.to.contain.string(inc);","    }","  };","","  /**","   * # .match(value, regex, [message])","   *","   * Assert that `value` matches regular expression.","   *","   *      assert.match('foobar', /^foo/, 'Regexp matches');","   *","   * @name match","   * @param {*} value","   * @param {RegExp} RegularExpression","   * @param {String} message","   * @api public","   */","","  assert.match = function (exp, re, msg) {","    new Assertion(exp, msg).to.match(re);","  };","","  /**","   * # .length(value, constructor, [message])","   *","   * Assert that object has expected length.","   *","   *      assert.length([1,2,3], 3, 'Array has length of 3');","   *      assert.length('foobar', 5, 'String has length of 6');","   *","   * @name length","   * @param {*} value","   * @param {Number} length","   * @param {String} message","   * @api public","   */","","  assert.length = function (exp, len, msg) {","    new Assertion(exp, msg).to.have.length(len);","  };","","  /**","   * # .throws(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      assert.throw(fn, ReferenceError, 'function throw reference error');","   *","   * @name throws","   * @alias throw","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.throws = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.throw(type);","  };","","  /**","   * # .doesNotThrow(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      var fn = function (err) { if (err) throw Error(err) };","   *      assert.doesNotThrow(fn, Error, 'function throw reference error');","   *","   * @name doesNotThrow","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.doesNotThrow = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.not.throw(type);","  };","","  /**","   * # .operator(val, operator, val2, [message])","   *","   * Compare two values using operator.","   *","   *      assert.operator(1, '&lt;', 2, 'everything is ok');","   *      assert.operator(1, '&gt;', 2, 'this will fail');","   *","   * @name operator","   * @param {*} object to test","   * @param {String} operator","   * @param {*} second object","   * @param {String} message","   * @api public","   */","","  assert.operator = function (val, operator, val2, msg) {","    if (!~['==', '===', '&gt;', '&gt;=', '&lt;', '&lt;=', '!=', '!=='].indexOf(operator)) {","      throw new Error('Invalid operator \"' + operator + '\"');","    }","    new Assertion(eval(val + operator + val2), msg).to.be.true;","  };","","  /*!","   * Undocumented / untested","   */","","  assert.ifError = function (val, msg) {","    new Assertion(val, msg).to.not.be.ok;","  };","","  /*!","   * Aliases.","   */","","  (function alias(name, as){","    assert[as] = assert[name];","    return alias;","  })","  ('length', 'lengthOf')","  ('throws', 'throw');","};"];
 
 });
 
@@ -13528,7 +13562,7 @@ require.define("/node_modules/chai/lib/chai.js", function (require, module, expo
 var used = [];
 var exports = module.exports = {};
 
-exports.version = '0.4.2';
+exports.version = '0.5.0';
 
 exports.Assertion = require('./assertion');
 exports.AssertionError = require('./error');
@@ -13542,16 +13576,6 @@ exports.use = function (fn) {
   }
 
   return this;
-};
-
-exports.fail = function (actual, expected, message, operator, stackStartFunction) {
-  throw new exports.AssertionError({
-    message: message,
-    actual: actual,
-    expected: expected,
-    operator: operator,
-    stackStartFunction: stackStartFunction
-  });
 };
 
 var expect = require('./interface/expect');
@@ -13641,7 +13665,7 @@ function Assertion (obj, msg, stack) {
 
 /*!
   * ## Assertion.includeStack
-  * , toString = Object.prototype.toString 
+  * , toString = Object.prototype.toString
   *
   * User configurable property, influences whether stack trace
   * is included in Assertion error message. Default of false
@@ -13666,15 +13690,17 @@ Assertion.includeStack = false;
  * @api private
  */
 
-Assertion.prototype.assert = function (expr, msg, negateMsg) {
+Assertion.prototype.assert = function (expr, msg, negateMsg, expected, actual) {
+  actual = actual || this.obj;
   var msg = (this.negate ? negateMsg : msg)
     , ok = this.negate ? !expr : expr;
 
   if (!ok) {
     throw new AssertionError({
-      operator: this.msg,
-      message: msg,
-      stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi
+        message: this.msg ? this.msg + ': ' + msg : msg // include custom message if available
+      , actual: actual
+      , expected: expected
+      , stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi
     });
   }
 };
@@ -13691,8 +13717,8 @@ Assertion.prototype.assert = function (expr, msg, negateMsg) {
 Object.defineProperty(Assertion.prototype, 'inspect',
   { get: function () {
       return inspect(this.obj);
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13707,8 +13733,8 @@ Object.defineProperty(Assertion.prototype, 'inspect',
 Object.defineProperty(Assertion.prototype, 'to',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13723,8 +13749,8 @@ Object.defineProperty(Assertion.prototype, 'to',
 Object.defineProperty(Assertion.prototype, 'be',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13741,8 +13767,8 @@ Object.defineProperty(Assertion.prototype, 'been',
   { get: function () {
       this.tense = 'past';
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13757,8 +13783,8 @@ Object.defineProperty(Assertion.prototype, 'been',
 Object.defineProperty(Assertion.prototype, 'an',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 /**
  * # is
@@ -13772,8 +13798,8 @@ Object.defineProperty(Assertion.prototype, 'an',
 Object.defineProperty(Assertion.prototype, 'is',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13788,8 +13814,8 @@ Object.defineProperty(Assertion.prototype, 'is',
 Object.defineProperty(Assertion.prototype, 'and',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13804,8 +13830,8 @@ Object.defineProperty(Assertion.prototype, 'and',
 Object.defineProperty(Assertion.prototype, 'have',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13820,8 +13846,8 @@ Object.defineProperty(Assertion.prototype, 'have',
 Object.defineProperty(Assertion.prototype, 'with',
   { get: function () {
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13837,8 +13863,8 @@ Object.defineProperty(Assertion.prototype, 'not',
   { get: function () {
       this.negate = true;
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13863,8 +13889,8 @@ Object.defineProperty(Assertion.prototype, 'ok',
         , 'expected ' + this.inspect + ' to be falsy');
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13881,11 +13907,13 @@ Object.defineProperty(Assertion.prototype, 'true',
       this.assert(
           true === this.obj
         , 'expected ' + this.inspect + ' to be true'
-        , 'expected ' + this.inspect + ' to be false');
+        , 'expected ' + this.inspect + ' to be false'
+        , this.negate ? false : true
+      );
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13902,11 +13930,13 @@ Object.defineProperty(Assertion.prototype, 'false',
       this.assert(
           false === this.obj
         , 'expected ' + this.inspect + ' to be false'
-        , 'expected ' + this.inspect + ' to be true');
+        , 'expected ' + this.inspect + ' to be true'
+        , this.negate ? true : false
+      );
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13928,11 +13958,12 @@ Object.defineProperty(Assertion.prototype, 'exist',
       this.assert(
           null != this.obj
         , 'expected ' + this.inspect + ' to exist'
-        , 'expected ' + this.inspect + ' to not exist');
+        , 'expected ' + this.inspect + ' to not exist'
+      );
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13948,16 +13979,22 @@ Object.defineProperty(Assertion.prototype, 'exist',
 
 Object.defineProperty(Assertion.prototype, 'empty',
   { get: function () {
-      new Assertion(this.obj).to.have.property('length');
+      var expected = this.obj;
+
+      if (Array.isArray(this.obj)) {
+        expected = this.obj.length;
+      } else if (typeof this.obj === 'object') {
+        expected = Object.keys(this.obj).length;
+      }
 
       this.assert(
-          0 === this.obj.length
+          !expected
         , 'expected ' + this.inspect + ' to be empty'
         , 'expected ' + this.inspect + ' not to be empty');
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -13978,11 +14015,14 @@ Object.defineProperty(Assertion.prototype, 'arguments',
       this.assert(
           '[object Arguments]' == Object.prototype.toString.call(this.obj)
         , 'expected ' + this.inspect + ' to be arguments'
-        , 'expected ' + this.inspect + ' to not be arguments');
+        , 'expected ' + this.inspect + ' to not be arguments'
+        , '[object Arguments]'
+        , Object.prototype.toString.call(this.obj)
+      );
 
       return this;
-    },
-    configurable: true
+    }
+  , configurable: true
 });
 
 /**
@@ -14001,7 +14041,8 @@ Assertion.prototype.equal = function (val) {
   this.assert(
       val === this.obj
     , 'expected ' + this.inspect + ' to equal ' + inspect(val)
-    , 'expected ' + this.inspect + ' to not equal ' + inspect(val));
+    , 'expected ' + this.inspect + ' to not equal ' + inspect(val)
+    , val );
 
   return this;
 };
@@ -14022,7 +14063,9 @@ Assertion.prototype.eql = function (obj) {
   this.assert(
       eql(obj, this.obj)
     , 'expected ' + this.inspect + ' to equal ' + inspect(obj)
-    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj));
+    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj)
+    , obj );
+
   return this;
 };
 
@@ -14110,7 +14153,10 @@ Assertion.prototype.a = function (type) {
   this.assert(
       '[object ' + klass + ']' === toString.call(this.obj)
     , 'expected ' + this.inspect + ' to be a ' + type
-    , 'expected ' + this.inspect + ' not to be a ' + type);
+    , 'expected ' + this.inspect + ' not to be a ' + type
+    , '[object ' + klass + ']'
+    , toString.call(this.obj)
+  );
 
   return this;
 };
@@ -14175,7 +14221,10 @@ Assertion.prototype.property = function (name, val) {
         val === this.obj[name]
       , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +
           inspect(val) + ', but got ' + inspect(this.obj[name])
-      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val));
+      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val)
+      , val
+      , this.obj[val]
+    );
   }
 
   this.obj = this.obj[name];
@@ -14224,7 +14273,10 @@ Assertion.prototype.length = function (n) {
   this.assert(
       len == n
     , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len
-    , 'expected ' + this.inspect + ' to not have a length of ' + len);
+    , 'expected ' + this.inspect + ' to not have a length of ' + len
+    , n
+    , len
+  );
 
   return this;
 };
@@ -14371,7 +14423,10 @@ Assertion.prototype.keys = function(keys) {
   this.assert(
       ok
     , 'expected ' + this.inspect + ' to ' + str
-    , 'expected ' + this.inspect + ' to not ' + str);
+    , 'expected ' + this.inspect + ' to not ' + str
+    , keys
+    , Object.keys(this.obj)
+  );
 
   return this;
 }
@@ -14379,10 +14434,21 @@ Assertion.prototype.keys = function(keys) {
 /**
  * # .throw(constructor)
  *
- * Assert that a function will throw a specific type of error.
+ * Assert that a function will throw a specific type of error or that error
+ * thrown will match a RegExp or include a string.
  *
- *      var fn = function () { throw new ReferenceError(''); }
+ *      var fn = function () { throw new ReferenceError('This is a bad function.'); }
  *      expect(fn).to.throw(ReferenceError);
+ *      expect(fn).to.throw(/bad function/);
+ *      expect(fn).to.not.throw('good function');
+ *      expect(fn).to.throw(ReferenceError, /bad function/);
+ *
+ * Please note that when a throw expectation is negated, it will check each
+ * parameter independently, starting with Error constructor type. The appropriate way
+ * to check for the existence of a type of error but for a message that does not match
+ * is to use `and`.
+ *
+ *      expect(fn).to.throw(ReferenceError).and.not.throw(/good function/);
  *
  * @name throw
  * @alias throws
@@ -14392,25 +14458,44 @@ Assertion.prototype.keys = function(keys) {
  * @api public
  */
 
-Assertion.prototype.throw = function (constructor) {
+Assertion.prototype.throw = function (constructor, msg) {
   new Assertion(this.obj).is.a('function');
 
   var thrown = false;
 
+  if (arguments.length === 0) {
+    msg = null;
+    constructor = null;
+  } else if (constructor && (constructor instanceof RegExp || 'string' === typeof constructor)) {
+    msg = constructor;
+    constructor = null;
+  }
+
   try {
     this.obj();
   } catch (err) {
-    if (constructor && 'function' === typeof constructor && constructor.constructor != RegExp) {
+    // first, check constructor
+    if (constructor && 'function' === typeof constructor) {
       this.assert(
           err instanceof constructor && err.name == constructor.name
         , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'
         , 'expected ' + this.inspect + ' to not throw ' + constructor.name );
-      return this;
-    } else if (constructor && constructor instanceof RegExp) {
+      if (!msg) return this;
+    }
+    // next, check message
+    if (err.message && msg && msg instanceof RegExp) {
       this.assert(
-          constructor.exec(err.message)
-        , 'expected ' + this.inspect + ' to throw error matching ' + constructor + ' but got ' + inspect(err.message)
-        , 'expected ' + this.inspect + ' to throw error not matching ' + constructor);
+          msg.exec(err.message)
+        , 'expected ' + this.inspect + ' to throw error matching ' + msg + ' but got ' + inspect(err.message)
+        , 'expected ' + this.inspect + ' to throw error not matching ' + msg
+      );
+      return this;
+    } else if (err.message && msg && 'string' === typeof msg) {
+      this.assert(
+          ~err.message.indexOf(msg)
+        , 'expected ' + this.inspect + ' to throw error including ' + inspect(msg) + ' but got ' + inspect(err.message)
+        , 'expected ' + this.inspect + ' to throw error not including ' + inspect(msg)
+      );
       return this;
     } else {
       thrown = true;
@@ -14448,7 +14533,10 @@ Assertion.prototype.respondTo = function (method) {
   this.assert(
       'function' === typeof context
     , 'expected ' + this.inspect + ' to respond to ' + inspect(method)
-    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method));
+    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method)
+    , 'function'
+    , typeof context
+  );
 
   return this;
 };
@@ -14469,7 +14557,10 @@ Assertion.prototype.satisfy = function (matcher) {
   this.assert(
       matcher(this.obj)
     , 'expected ' + this.inspect + ' to satisfy ' + inspect(matcher)
-    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher));
+    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher)
+    , this.negate ? false : true
+    , matcher(this.obj)
+  );
 
   return this;
 };
@@ -14546,25 +14637,10 @@ function AssertionError (options) {
 
 AssertionError.prototype.__proto__ = Error.prototype;
 
-AssertionError.prototype.summary = function() {
-  var str = '';
-
-  if (this.operator) {
-    str += 'In: \'' + this.operator + '\'\n\t';
-  }
-
-  str += '' + this.name + (this.message ? ': ' + this.message : '');
-
-  return str;
-};
-
-AssertionError.prototype.details = function() {
-  return this.summary();
-};
-
 AssertionError.prototype.toString = function() {
-  return this.summary();
+  return this.message;
 };
+
 });
 
 require.define("/node_modules/chai/lib/utils/eql.js", function (require, module, exports, __dirname, __filename) {
@@ -14990,8 +15066,8 @@ module.exports = function (chai) {
       new Assertion(val1).to.equal(val2);
     };
 
-    should.throw = function (fn, err) {
-      new Assertion(fn).to.throw(err);
+    should.throw = function (fn, errt, errs) {
+      new Assertion(fn).to.throw(errt, errs);
     };
 
     should.exist = function (val) {
@@ -15005,8 +15081,8 @@ module.exports = function (chai) {
       new Assertion(val1).to.not.equal(val2);
     };
 
-    should.not.throw = function (fn, err) {
-      new Assertion(fn).to.not.throw(err);
+    should.not.throw = function (fn, errt, errs) {
+      new Assertion(fn).to.not.throw(errt, errs);
     };
 
     should.not.exist = function (val) {
@@ -15552,6 +15628,29 @@ module.exports = function (chai) {
     new Assertion(fn, msg).to.not.throw(type);
   };
 
+  /**
+   * # .operator(val, operator, val2, [message])
+   *
+   * Compare two values using operator.
+   *
+   *      assert.operator(1, '<', 2, 'everything is ok');
+   *      assert.operator(1, '>', 2, 'this will fail');
+   *
+   * @name operator
+   * @param {*} object to test
+   * @param {String} operator
+   * @param {*} second object
+   * @param {String} message
+   * @api public
+   */
+
+  assert.operator = function (val, operator, val2, msg) {
+    if (!~['==', '===', '>', '>=', '<', '<=', '!=', '!=='].indexOf(operator)) {
+      throw new Error('Invalid operator "' + operator + '"');
+    }
+    new Assertion(eval(val + operator + val2), msg).to.be.true;
+  };
+
   /*!
    * Undocumented / untested
    */
@@ -15619,7 +15718,7 @@ describe('Msgboy', function(){
 require.define("/background.js", function (require, module, exports, __dirname, __filename) {
 var Url = require('url');
 var QueryString = require('querystring');
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;

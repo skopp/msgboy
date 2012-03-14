@@ -1,4 +1,4 @@
-var $ = require('jquery');
+var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;
