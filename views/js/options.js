@@ -14110,12 +14110,12 @@ require.define("/options.js", function (require, module, exports, __dirname, __f
 var Msgboy = require('./msgboy.js').Msgboy;
 var OptionsView = require('./views/options-view.js').OptionsView;
 
-// Msgboy.bind("loaded", function () {
-//     new OptionsView({
-//         el: $("#options")
-//     });
-// });
-// 
+Msgboy.bind("loaded", function () {
+    new OptionsView({
+        el: $("#options")
+    });
+});
+
 
 });
 require("/options.js");
