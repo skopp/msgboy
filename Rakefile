@@ -49,17 +49,17 @@ def manifest(destination = "")
       "https://*/"
     ],
     :content_scripts => [
-      # {
-      #   :js => [
-      #     "/views/js/run_plugins.js"
-      #   ],
-      #   :css => [
-      #   ],
-      #   :matches => [
-      #     "*://*/*",
-      #   ],
-      #   :all_frames => true,
-      # }
+      {
+        :js => [
+          "/views/js/run_plugins.js"
+        ],
+        :css => [
+        ],
+        :matches => [
+          "*://*/*",
+        ],
+        :all_frames => true,
+      }
     ],
     :background_page => "/views/html/background.html",
     :icons => {
@@ -89,6 +89,7 @@ namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
     task k do
+      puts "Building #{k}.js"
       `browserify --require 'br-jquery' --require 'backbone-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
     end
   end

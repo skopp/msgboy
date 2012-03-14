@@ -15574,75 +15574,1508 @@ module.exports = function (chai) {
 
 });
 
-require.define("/tests/plugins.js", function (require, module, exports, __dirname, __filename) {
+require.define("/tests/background.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var should = require('chai').should();
-var Plugins = require('../plugins.js').Plugins;
+var Background = require('../background.js');
 
-describe('Plugins', function(){
-    before(function(ready) {
-        ready();
-    });
-    
-    beforeEach(function(ready) {
-        ready();
-    });
-    
-    describe('importSubscriptions', function() {
-        beforeEach(function(ready) {
-            Plugins.all = [];
-            Plugins.register({
-                listSubscriptions: function(cb, done) {
-                    cb({url: "url1", title: "title1"});
-                    cb({url: 'url2', title: "title2"});
-                    cb({url: 'url3', title: "title3"});
-                    done(3)
-                },
-                name: "Stub 1"
-            });
-            Plugins.register({
-                listSubscriptions: function(cb, done) {
-                    cb({url: "url4", title: "title4"});
-                    cb({url: 'url5', title: "title5"});
-                    done(2)
-                },
-                name: "Stub 2"
-            });
-            ready();
+describe('Msgboy', function(){
+    describe('extractLargestImage', function() {
+        it('should return null if there was none', function(done) {
+            Background.extractLargestImage("This is a text sample with no image at all.", null, function(image) {
+                done();
+            })
         });
-        it('should listSubscriptions for each plugin', function(done) {
-            var subscriptionsUrls = []
-            Plugins.importSubscriptions(function(sub) {
-                subscriptionsUrls.push(sub.url)
-            }, function() {
-    
-            }, function(count) {
-                if(count === 5) {
-                    subscriptionsUrls.should.include('url1');
-                    subscriptionsUrls.should.include('url2');
-                    subscriptionsUrls.should.include('url3');
-                    subscriptionsUrls.should.include('url4');
-                    subscriptionsUrls.should.include('url5');
-                    done();
-                }
+        
+        it('should return an object with src, width and height if there was one', function(done) {
+            var blob = '<p><a href="http://ffffound.com/image/0d9c9495fccbf85ec19ad087e3de1e255f83e518"><img src="http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="0" width="480" height="480"></a></p><p>via <a href="http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg">http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg</a></p>';
+            Background.extractLargestImage(blob, null, function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
+            });
+        });
+        
+        it('should return the largest one', function(done) {
+            var blob = '<p><a href="http://ffffound.com/image/0d9c9495fccbf85ec19ad087e3de1e255f83e518"><img src="http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="0" width="480" height="480"></a></p><p>via <a href="http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg">http://30.media.tumblr.com/tumblr_l0f7hzF3Xd1qzuyswo1_500.jpg</a></p>';
+            Background.extractLargestImage(blob, null, function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
+            });
+        });
+
+        it('should return the absolute url based on the base if the url of the image is relative', function(done) {
+            var blob = '<table border="0" cellpadding="2" cellspacing="7" style="vertical-align:top;"><tr><td width="80" align="center" valign="top"><font style="font-size:85%;font-family:arial,sans-serif"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFZlT7-WfGbQvBdlb3CTCuWWGc_kA&amp;url=http://www.theglobeandmail.com/news/world/powerful-storms-destroy-us-towns-kill-at-least-29/article2357253/"><img src="/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg" alt="" border="1" width="80" height="80" /><br /><font size="-2">Globe and Mail</font></a></font></td><td valign="top" class="j"><font style="font-size:85%;font-family:arial,sans-serif"><br /><div style="padding-top:0.8em;"><img alt="" height="1" width="1" /></div><div class="lh"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNGflW9pZurmRUryNrispwwpWtC5MQ&amp;url=http://www.washingtonpost.com/national/health-science/henryville-twister-caught-on-tape-140/2012/03/05/gIQAVUtTsR_video.html"><b>Henryville twister caught on tape (1:40)</b></a><br /><font size="-1"><b><font color="#6f6f6f">Washington Post</font></b></font><br /><font size="-1">Mar. 5, 2012 - Sam Lashley, a National Weather Service meteorologist, recorded video of the tornado that hit Henryville, Indiana on Friday. The overall death toll from Friday&#39;s weather is 39, including a toddler who was found in a field.</font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNHJQVT--fmHFLwxuz-O1s5k7Y-Oig&amp;url=http://www.chicagotribune.com/news/local/sns-ap-in--severeweather-indianasnow,0,6707049.story">Wet snow blankets tornado-ravaged S. Ind.; 2 to 4 inches reported in heavily <b>...</b></a><font size="-1" color="#6f6f6f"><nobr>Chicago Tribune</nobr></font></font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFYA02T8-8vs5YPGdeFM_4M_8nVLQ&amp;url=http://articles.cnn.com/2012-03-04/us/us_severe-weather_1_tornado-victims-ef-4-alabama-town?_s%3DPM:US">Grief, resilience after storms rip through states, killing 39</a><font size="-1" color="#6f6f6f"><nobr>CNN</nobr></font></font><br /><font size="-1"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNFiX2lNXPTwm3lml8zFWPeDKhzc-A&amp;url=http://edition.cnn.com/2012/03/02/us/severe-weather/?hpt%3Dus_c1">28 dead as &#39;enormous outbreak&#39; of tornadoes tears through US</a><font size="-1" color="#6f6f6f"><nobr>CNN International</nobr></font></font><br /><font size="-1" class="p"><a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNHBXbNnSdIY95atQihXvVJKYbnEqA&amp;url=http://usnews.msnbc.msn.com/_news/2012/03/05/10580677-snowy-weather-adds-to-tornado-survivors-misery"><nobr>msnbc.com</nobr></a>&nbsp;-<a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNEfbNBdF-vjSqb-sV6J0xZK9PGEew&amp;url=http://www.wvnstv.com/story/17079238/search-for-tornado-survivors-continues-in-midwest-and-south"><nobr>WVNS-TV</nobr></a>&nbsp;-<a href="http://news.google.com/news/url?sa=t&amp;fd=R&amp;usg=AFQjCNGn3eTSmJJRBrgnmNJrtwyT003uDw&amp;url=http://www.google.com/hostednews/ap/article/ALeqM5gyz7FSxCAbrAylfyaGNAAsDjKBhA?docId%3D02bc49f9c2284618aab33afeb2e4eec1"><nobr>The Associated Press</nobr></a><link rel="syndication-source" href="www.ap.org/02bc49f9c2284618aab33afeb2e4eec1" /></font><br /><font class="p" size="-1"><a class="p" href="http://news.google.com/news/more?pz=1&amp;ned=us&amp;topic=h&amp;num=3&amp;ncl=dNSd1trbK_xkJwMSQJ-gwNagUq1EM"><nobr><b>all 5,372 news articles&nbsp;&raquo;</b></nobr></a></font></div></font></td></tr></table>';
+            Background.extractLargestImage(blob, "http://img.ffffound.com/hello/world", function(image) {
+                image.should.equal("http://img.ffffound.com/static-data/assets/6/0d9c9495fccbf85ec19ad087e3de1e255f83e518_m.jpg");
+                done();
             });
         });
     });
-    
-    
-    require('./plugins/google-reader.js');
-    require('./plugins/blogger.js');
-    require('./plugins/bookmarks.js');
-    require('./plugins/disqus.js');
-    require('./plugins/generic.js');
-    require('./plugins/history.js');
-    require('./plugins/posterous.js');
-    require('./plugins/statusnet.js');
-    require('./plugins/tumblr.js');
-    require('./plugins/typepad.js');
-    require('./plugins/wordpress.js');
-    
 });
+
+
+});
+
+require.define("/background.js", function (require, module, exports, __dirname, __filename) {
+var Url = require('url');
+var QueryString = require('querystring');
+var $ = require('jquery');
+var Msgboy          = require('./msgboy.js').Msgboy;
+var Plugins         = require('./plugins.js').Plugins;
+var Inbox           = require('./models/inbox.js').Inbox;
+var Message         = require('./models/message.js').Message;
+var WelcomeMessages = require('./models/message.js').WelcomeMessages;
+var Subscriptions   = require('./models/subscription.js').Subscriptions;
+var Subscription    = require('./models/subscription.js').Subscription;
+var Strophe         = require('./strophejs/core.js').Strophe
+var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
+Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
+
+var currentNotification = currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+currentNotification.ready = false;
+var messageStack = [];
+var reconnectDelay = 1;
+var reconnectionTimeout = null;
+var xmppConnection = new Strophe.Connection({
+    protocol: new Strophe.Websocket('ws://ws.msgboy.com')
+});
+
+// Handles XMPP Connections
+var onConnect = function (status) {
+    var msg = '';
+    if (status === Strophe.Status.CONNECTING) {
+        msg = 'Msgboy is connecting.';
+    } else if (status === Strophe.Status.CONNFAIL) {
+        msg = 'Msgboy failed to connect.';
+        reconnectDelay = 1;
+        reconnect();
+    } else if (status === Strophe.Status.AUTHFAIL) {
+        // This should never happen since we register with Msgboy for an account.
+    } else if (status === Strophe.Status.DISCONNECTING) {
+        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
+    } else if (status === Strophe.Status.DISCONNECTED) {
+        reconnect();
+        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(reconnectDelay, 2) + ' seconds.';
+    } else if (status === Strophe.Status.CONNECTED) {
+        msg = 'Msgboy is connected.';
+        reconnectDelay = 1;
+        xmppConnection.send($pres().tree()); // Send presence!
+        Msgboy.trigger('connected');
+    }
+    Msgboy.log.debug(msg);
+};
+exports.onConnect = onConnect;
+
+// Reconnects the Msgboy
+var reconnect = function () {
+    reconnectDelay = Math.min(reconnectDelay + 1, 10); // We max at one attempt every minute.
+    if (!reconnectionTimeout) {
+        reconnectionTimeout = setTimeout(function () {
+            reconnectionTimeout = null;
+            xmppConnection.reset();
+            connect();
+        }, Math.pow(reconnectDelay, 2) * 1000);
+    }
+};
+exports.reconnect = reconnect;
+
+// Connects the XMPP Client
+// It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
+var connect = function () {
+    xmppConnection.rawInput = function (data) {
+        Msgboy.log.debug('Received', data);
+    };
+    xmppConnection.rawOutput = function (data) {
+        Msgboy.log.debug('Sent', data);
+    };
+    var password = Msgboy.inbox.attributes.password;
+    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
+    xmppConnection.connect(jid, password, onConnect);
+};
+exports.connect = connect;
+
+// Shows a popup notification
+var notify = function (message, popup) {
+    // Open a notification window if needed!
+    if ((!currentNotification || !currentNotification.ready)  && popup) {
+        currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+        currentNotification.ready = false;
+        currentNotification.onclose = function () {
+            currentNotification = null;
+        };
+        currentNotification.show();
+        messageStack.push(message);
+    }
+    else {
+        chrome.extension.sendRequest({
+            signature: "notify",
+            params: message
+        }, function (response) {
+            // Nothing to do.
+        });
+    }
+};
+exports.notify = notify;
+
+// Subscribes to a feed.
+var subscribe = function (url, force, callback) {
+    // First, let's check if we have a subscription for this.
+    var subscription = new Subscription({id: url});
+
+    subscription.fetchOrCreate(function () {
+        // Looks like there is a subscription.
+        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
+            subscription.setState("subscribing");
+            subscription.bind("subscribing", function () {
+                Msgboy.log.debug("subscribing to", url);
+                xmppConnection.superfeedr.subscribe(url, function (result, feed) {
+                    Msgboy.log.debug("subscribed to", url);
+                    subscription.setState("subscribed");
+                });
+            });
+            subscription.bind("subscribed", function () {
+                callback(true);
+            });
+        }
+        else {
+            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
+            callback(false);
+        }
+    });
+};
+exports.subscribe = subscribe;
+
+// Unsubscribes from a feed.
+var unsubscribe = function (url, callback) {
+    var subscription = new Subscription({id: url});
+    subscription.fetchOrCreate(function () {
+        subscription.setState("unsubscribing");
+        subscription.bind("unsubscribing", function () {
+            Msgboy.log.debug("unsubscribing from", url);
+            xmppConnection.superfeedr.unsubscribe(url, function (result) {
+                Msgboy.log.debug("unsubscribed", url);
+                subscription.setState("unsubscribed");
+            });
+        });
+        subscription.bind("unsubscribed", function () {
+            callback(true);
+        });
+    });
+};
+exports.unsubscribe = unsubscribe;
+
+// Makes sure there is no 'pending' susbcriptions.
+var resumeSubscriptions = function () {
+    var subscriptions = new Subscriptions();
+    subscriptions.bind("add", function (subs) {
+        Msgboy.log.debug("subscribing to", subs.id);
+        xmppConnection.superfeedr.subscribe(subs.id, function (result, feed) {
+            Msgboy.log.debug("subscribed to", subs.id);
+            subs.setState("subscribed");
+        });
+    });
+    subscriptions.pending();
+    setTimeout(function () {
+        resumeSubscriptions(); // Let's retry in 10 minutes.
+    }, 1000 * 60 * 10);
+};
+exports.resumeSubscriptions = resumeSubscriptions;
+
+
+// Gets the size of an image based on src
+var imgSize = function(src, mainLink, callback) {
+    var height = 0, width = 0, img = null;
+    var done = null, timeout = null, loadImg = null;
+    var parsed = Url.parse(src);
+    var base = Url.parse(mainLink);
+    
+    done = function(s, height, width) {
+        img = null;
+        clearTimeout(timeout);
+        callback(s, height, width);
+    }
+    
+    timeout = setTimeout(function() {
+        done(src, 0, 0);
+    }, 3000); // We allow for 3 seconds to extract the image.
+    
+    loadImg = function(s) {
+        img = new Image();
+        img.onload = function() {
+            done(s, img.height, img.width);
+        }
+        img.src = s;
+    }
+    
+    if(typeof parsed.host === "undefined") {
+        if(typeof base.host === "undefined") {
+            done(src, 0, 0);
+        } 
+        else {
+            loadImg(Url.resolve(base, parsed).toString())
+        }
+    } 
+    else {
+        loadImg(src);
+    }
+}
+exports.imgSize = imgSize;
+
+// Extracts the largest image of an HTML content
+var extractLargestImage = function(blob, mainLink, callback) {
+    var container = document.createElement("div");
+    var largestImg = null;
+    var largestImgSize = null;
+    var content = null;
+    var imgLoaded = null;
+    var images = [];
+    var done = function() {
+        container.innerHTML = "";
+        imgLoaded = null;
+        images.length = 0;
+        callback(largestImg);
+    } 
+
+    container.innerHTML = blob;
+    images = container.getElementsByTagName("img");
+
+    if(images.length > 0) {
+        // Let's try to extract the image for this message.
+        imgLoaded = _.after(images.length, function() {
+            done();
+        });
+
+        _.each(images, function(image) {
+            if(typeof image.src === "undefined") {
+                imgLoaded();
+            }
+            else {
+                imgSize(image.src, mainLink || "", function(src, height, width) {
+                    if((!largestImgSize || largestImgSize < height * width) && 
+                    !(height === 250 && width === 300) && 
+                    !(height < 100  || width < 100) &&
+                    !src.match('/doubleclick.net/')) {
+                        largestImgSize = height * width;
+                        largestImg = src;
+                    }
+                    imgLoaded();
+                });
+            }
+        });
+    }
+    else {
+        // No image!
+        done();
+    }
+}
+exports.extractLargestImage = extractLargestImage;
+
+// Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
+var rewriteOutboundUrl = function(url) {
+    var parsed = Url.parse(url);
+    parsed.href = parsed.search = ""; // Deletes the href and search, which are to be re-composed with the new qs.
+    var qs = QueryString.parse(parsed.query);
+    qs.utm_source = 'msgboy'; // Source is Msgboy
+    qs.utm_medium = 'feed'; // Medium is feed
+    qs.utm_campaign = qs.utm_campaign || 'msgboy'; // Campaign is persisted or msgboy
+    parsed.query = qs; // Re-assign the query
+    return Url.format(parsed);
+}
+exports.rewriteOutboundUrl = rewriteOutboundUrl;
+
+SuperfeedrPlugin.onNotificationReceived = function (notification) {
+    Msgboy.log.debug("Notification received from " + notification.source.url);
+    if(notification.payload) {
+        var msg = notification.payload;
+        msg.source = notification.source;
+        msg.feed = notification.source.url;
+
+        var message = new Message(msg);
+
+        extractLargestImage(message.get('text'), message.get('mainLink'), function(largestImg) {
+            var attributes = {};
+
+            if(largestImg) {
+                attributes.image = largestImg;
+            }
+
+            message.calculateRelevance(function (_relevance) {
+                attributes.relevance = _relevance;
+                message.save(attributes, {
+                    success: function() {
+                        Msgboy.log.debug("Saved message", msg.id);
+                        Msgboy.inbox.trigger("messages:added", message);
+                    }.bind(this),
+                    error: function() {
+                        Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
+                    }.bind(this)
+                }); 
+            }.bind(this));
+        }.bind(this));
+    }
+    else {
+        // Notification with no payload. Not good. We should unsubscribe as it's useless!
+        unsubscribe(notification.source.url, function (result) {
+            Msgboy.log.debug("Unsubscribed from ", notification.source.url);
+        });
+    }
+}
+
+Msgboy.bind("loaded", function () {
+    
+    Msgboy.inbox = new Inbox();
+    
+    // When a new message was added to the inbox
+    Msgboy.inbox.bind("messages:added", function (message) {
+        notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
+    });
+
+    // When the inbox is ready
+    Msgboy.inbox.bind("ready", function () {
+        Msgboy.log.debug("Inbox ready");
+        connect(Msgboy.inbox);
+        // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
+        if(Msgboy.inbox.attributes.options.pinMsgboy) {
+            chrome.tabs.getAllInWindow(undefined, function(tabs) {
+                for (var i = 0, tab; tab = tabs[i]; i++) {
+                    if (tab.url && tab.url.match(/chrome-extension:\/\/.*\/views\/html\/dashboard\.html/)) {
+                        // Fine, the tab is opened. No need to do much more.
+                        return;
+                    }
+                }
+                chrome.tabs.create({
+                    url: chrome.extension.getURL('/views/html/dashboard.html'),
+                    selected: true,
+                    pinned: true
+                });
+
+            });
+        }
+    });
+
+    // When the inbox is new.
+    Msgboy.inbox.bind("new", function () {
+        Msgboy.log.debug("New Inbox");
+        // Add a couple boxes for the example!
+        for(var i in WelcomeMessages) {
+            var msg = new Message(WelcomeMessages[i]);
+            msg.save({}, {
+                success: function () {
+                    Msgboy.log.debug("Saved message " + msg.id);
+                }.bind(this),
+                error: function (object, error) {
+                    // Message was not saved... probably a dupe
+                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg.toJSON()));
+                    Msgboy.log.debug(error);
+                }.bind(this)
+            });
+        }
+        
+        Msgboy.bind("connected", function(){
+            // And import all plugins.
+            Plugins.importSubscriptions(function (subs) {
+                subscribe(subs.url, false, function () {
+                    // Cool. Not much to do.
+                });
+            }, 
+            function(plugin, subscriptionsCount) {
+                // Called when done with one plugin
+                Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+            },
+            function(subscriptionsCount) {
+                // Called when done with all plugins
+                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+            });
+        });
+    });
+    
+    // When there is no such inbox there.
+    Msgboy.inbox.bind("error", function (error) {
+        // Ok, no such inbox... So we need to create an account!
+        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
+    });
+    
+    // Triggered when connected
+    Msgboy.bind("connected", function() {
+        // When a new notification was received from XMPP line.
+        resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
+    });
+
+    // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
+    chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
+        Msgboy.trigger(_request.signature, _request.params, _sendResponse);
+    });
+    
+    Msgboy.bind('register', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "register", params.username);
+        Msgboy.inbox.bind("new", function() {
+            _sendResponse({
+                value: true
+            });
+        });
+        Msgboy.inbox.setup(params.username, params.token);
+    });
+
+    Msgboy.bind('subscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "subscribe", params.url);
+        subscribe(params.url, params.force || false, function (result) {
+            _sendResponse({
+                value: result
+            });
+        });
+    });
+
+    Msgboy.bind('unsubscribe', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "unsubscribe", params.url);
+        unsubscribe(params.url, function (result) {
+            _sendResponse({
+                value: result
+            });
+        });
+    });
+
+    Msgboy.bind('notify', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notify", params);
+        notify(params, true);
+        // Nothing to do.
+    });
+
+    Msgboy.bind('notificationReady', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "notificationReady");
+        currentNotification.ready = true;
+        // We should then start sending all notifications.
+        while (messageStack.length > 0) {
+            chrome.extension.sendRequest({
+                signature:"notify",
+                params: messageStack.pop()
+            }, function (response) {
+                // Nothing to do.
+            });
+        }
+    });
+
+    Msgboy.bind('tab', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "tab", params.url);
+        var active_window = null;
+        params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
+        chrome.windows.getAll({}, function (windows) {
+            windows = _.select(windows, function (win) {
+                return win.type ==="normal" && win.focused;
+            }, this);
+            // If no window is focused and"normal"
+            if (windows.length === 0) {
+                window.open(params.url); // Can't use Chrome's API as it's buggy :(
+            }
+            else {
+                // Just open an extra tab.
+                options = params;
+                options.windowId = windows[0].id;
+                chrome.tabs.create(options);
+            }
+        });
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    Msgboy.bind('reload', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "reload");
+        Msgboy.inbox.fetch();
+    });
+
+    // When reloading the inbox is needed (after a change in settings eg)
+    Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "resetRusbcriptions");
+        Plugins.importSubscriptions(function (subs) {
+            subscribe(subs.url, false, function () {
+                // Cool. Not much to do.
+            });
+        }, 
+        function(plugin, subscriptionsCount) {
+            // Called when done with one plugin
+            Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
+        },
+        function(subscriptionsCount) {
+            // Called when done with all plugins
+            Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
+        });
+    });
+    
+    // Plugins management for those who use the Chrome API to subscribe in background.
+    for(var j = 0; j < Plugins.all.length; j++) {
+        var plugin = Plugins.all[j];
+        if (typeof (plugin.subscribeInBackground) != "undefined") {
+            plugin.subscribeInBackground(function (feed) {
+                Msgboy.trigger('subscribe', {url: feed.href}, function() {
+                    // Nothing.
+                });
+            });
+        }
+    }
+    
+    // Let's go.
+    Msgboy.inbox.fetchAndPrepare();
+ });
+
+
+});
+
+require.define("url", function (require, module, exports, __dirname, __filename) {
+var punycode = { encode : function (s) { return s } };
+
+exports.parse = urlParse;
+exports.resolve = urlResolve;
+exports.resolveObject = urlResolveObject;
+exports.format = urlFormat;
+
+// Reference: RFC 3986, RFC 1808, RFC 2396
+
+// define these here so at least they only have to be
+// compiled once on the first module load.
+var protocolPattern = /^([a-z0-9.+-]+:)/i,
+    portPattern = /:[0-9]+$/,
+    // RFC 2396: characters reserved for delimiting URLs.
+    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
+    // RFC 2396: characters not allowed for various reasons.
+    unwise = ['{', '}', '|', '\\', '^', '~', '[', ']', '`'].concat(delims),
+    // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
+    autoEscape = ['\''],
+    // Characters that are never ever allowed in a hostname.
+    // Note that any invalid chars are also handled, but these
+    // are the ones that are *expected* to be seen, so we fast-path
+    // them.
+    nonHostChars = ['%', '/', '?', ';', '#']
+      .concat(unwise).concat(autoEscape),
+    nonAuthChars = ['/', '@', '?', '#'].concat(delims),
+    hostnameMaxLen = 255,
+    hostnamePartPattern = /^[a-zA-Z0-9][a-z0-9A-Z_-]{0,62}$/,
+    hostnamePartStart = /^([a-zA-Z0-9][a-z0-9A-Z_-]{0,62})(.*)$/,
+    // protocols that can allow "unsafe" and "unwise" chars.
+    unsafeProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that never have a hostname.
+    hostlessProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that always have a path component.
+    pathedProtocol = {
+      'http': true,
+      'https': true,
+      'ftp': true,
+      'gopher': true,
+      'file': true,
+      'http:': true,
+      'ftp:': true,
+      'gopher:': true,
+      'file:': true
+    },
+    // protocols that always contain a // bit.
+    slashedProtocol = {
+      'http': true,
+      'https': true,
+      'ftp': true,
+      'gopher': true,
+      'file': true,
+      'http:': true,
+      'https:': true,
+      'ftp:': true,
+      'gopher:': true,
+      'file:': true
+    },
+    querystring = require('querystring');
+
+function urlParse(url, parseQueryString, slashesDenoteHost) {
+  if (url && typeof(url) === 'object' && url.href) return url;
+
+  if (typeof url !== 'string') {
+    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
+  }
+
+  var out = {},
+      rest = url;
+
+  // cut off any delimiters.
+  // This is to support parse stuff like "<http://foo.com>"
+  for (var i = 0, l = rest.length; i < l; i++) {
+    if (delims.indexOf(rest.charAt(i)) === -1) break;
+  }
+  if (i !== 0) rest = rest.substr(i);
+
+
+  var proto = protocolPattern.exec(rest);
+  if (proto) {
+    proto = proto[0];
+    var lowerProto = proto.toLowerCase();
+    out.protocol = lowerProto;
+    rest = rest.substr(proto.length);
+  }
+
+  // figure out if it's got a host
+  // user@server is *always* interpreted as a hostname, and url
+  // resolution will treat //foo/bar as host=foo,path=bar because that's
+  // how the browser resolves relative URLs.
+  if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
+    var slashes = rest.substr(0, 2) === '//';
+    if (slashes && !(proto && hostlessProtocol[proto])) {
+      rest = rest.substr(2);
+      out.slashes = true;
+    }
+  }
+
+  if (!hostlessProtocol[proto] &&
+      (slashes || (proto && !slashedProtocol[proto]))) {
+    // there's a hostname.
+    // the first instance of /, ?, ;, or # ends the host.
+    // don't enforce full RFC correctness, just be unstupid about it.
+
+    // If there is an @ in the hostname, then non-host chars *are* allowed
+    // to the left of the first @ sign, unless some non-auth character
+    // comes *before* the @-sign.
+    // URLs are obnoxious.
+    var atSign = rest.indexOf('@');
+    if (atSign !== -1) {
+      // there *may be* an auth
+      var hasAuth = true;
+      for (var i = 0, l = nonAuthChars.length; i < l; i++) {
+        var index = rest.indexOf(nonAuthChars[i]);
+        if (index !== -1 && index < atSign) {
+          // not a valid auth.  Something like http://foo.com/bar@baz/
+          hasAuth = false;
+          break;
+        }
+      }
+      if (hasAuth) {
+        // pluck off the auth portion.
+        out.auth = rest.substr(0, atSign);
+        rest = rest.substr(atSign + 1);
+      }
+    }
+
+    var firstNonHost = -1;
+    for (var i = 0, l = nonHostChars.length; i < l; i++) {
+      var index = rest.indexOf(nonHostChars[i]);
+      if (index !== -1 &&
+          (firstNonHost < 0 || index < firstNonHost)) firstNonHost = index;
+    }
+
+    if (firstNonHost !== -1) {
+      out.host = rest.substr(0, firstNonHost);
+      rest = rest.substr(firstNonHost);
+    } else {
+      out.host = rest;
+      rest = '';
+    }
+
+    // pull out port.
+    var p = parseHost(out.host);
+    var keys = Object.keys(p);
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i];
+      out[key] = p[key];
+    }
+
+    // we've indicated that there is a hostname,
+    // so even if it's empty, it has to be present.
+    out.hostname = out.hostname || '';
+
+    // validate a little.
+    if (out.hostname.length > hostnameMaxLen) {
+      out.hostname = '';
+    } else {
+      var hostparts = out.hostname.split(/\./);
+      for (var i = 0, l = hostparts.length; i < l; i++) {
+        var part = hostparts[i];
+        if (!part) continue;
+        if (!part.match(hostnamePartPattern)) {
+          var newpart = '';
+          for (var j = 0, k = part.length; j < k; j++) {
+            if (part.charCodeAt(j) > 127) {
+              // we replace non-ASCII char with a temporary placeholder
+              // we need this to make sure size of hostname is not
+              // broken by replacing non-ASCII by nothing
+              newpart += 'x';
+            } else {
+              newpart += part[j];
+            }
+          }
+          // we test again with ASCII char only
+          if (!newpart.match(hostnamePartPattern)) {
+            var validParts = hostparts.slice(0, i);
+            var notHost = hostparts.slice(i + 1);
+            var bit = part.match(hostnamePartStart);
+            if (bit) {
+              validParts.push(bit[1]);
+              notHost.unshift(bit[2]);
+            }
+            if (notHost.length) {
+              rest = '/' + notHost.join('.') + rest;
+            }
+            out.hostname = validParts.join('.');
+            break;
+          }
+        }
+      }
+    }
+
+    // hostnames are always lower case.
+    out.hostname = out.hostname.toLowerCase();
+
+    // IDNA Support: Returns a puny coded representation of "domain".
+    // It only converts the part of the domain name that
+    // has non ASCII characters. I.e. it dosent matter if
+    // you call it with a domain that already is in ASCII.
+    var domainArray = out.hostname.split('.');
+    var newOut = [];
+    for (var i = 0; i < domainArray.length; ++i) {
+      var s = domainArray[i];
+      newOut.push(s.match(/[^A-Za-z0-9_-]/) ?
+          'xn--' + punycode.encode(s) : s);
+    }
+    out.hostname = newOut.join('.');
+
+    out.host = (out.hostname || '') +
+        ((out.port) ? ':' + out.port : '');
+    out.href += out.host;
+  }
+
+  // now rest is set to the post-host stuff.
+  // chop off any delim chars.
+  if (!unsafeProtocol[lowerProto]) {
+
+    // First, make 100% sure that any "autoEscape" chars get
+    // escaped, even if encodeURIComponent doesn't think they
+    // need to be.
+    for (var i = 0, l = autoEscape.length; i < l; i++) {
+      var ae = autoEscape[i];
+      var esc = encodeURIComponent(ae);
+      if (esc === ae) {
+        esc = escape(ae);
+      }
+      rest = rest.split(ae).join(esc);
+    }
+
+    // Now make sure that delims never appear in a url.
+    var chop = rest.length;
+    for (var i = 0, l = delims.length; i < l; i++) {
+      var c = rest.indexOf(delims[i]);
+      if (c !== -1) {
+        chop = Math.min(c, chop);
+      }
+    }
+    rest = rest.substr(0, chop);
+  }
+
+
+  // chop off from the tail first.
+  var hash = rest.indexOf('#');
+  if (hash !== -1) {
+    // got a fragment string.
+    out.hash = rest.substr(hash);
+    rest = rest.slice(0, hash);
+  }
+  var qm = rest.indexOf('?');
+  if (qm !== -1) {
+    out.search = rest.substr(qm);
+    out.query = rest.substr(qm + 1);
+    if (parseQueryString) {
+      out.query = querystring.parse(out.query);
+    }
+    rest = rest.slice(0, qm);
+  } else if (parseQueryString) {
+    // no query string, but parseQueryString still requested
+    out.search = '';
+    out.query = {};
+  }
+  if (rest) out.pathname = rest;
+  if (slashedProtocol[proto] &&
+      out.hostname && !out.pathname) {
+    out.pathname = '/';
+  }
+
+  //to support http.request
+  if (out.pathname || out.search) {
+    out.path = (out.pathname ? out.pathname : '') +
+               (out.search ? out.search : '');
+  }
+
+  // finally, reconstruct the href based on what has been validated.
+  out.href = urlFormat(out);
+  return out;
+}
+
+// format a parsed object into a url string
+function urlFormat(obj) {
+  // ensure it's an object, and not a string url.
+  // If it's an obj, this is a no-op.
+  // this way, you can call url_format() on strings
+  // to clean up potentially wonky urls.
+  if (typeof(obj) === 'string') obj = urlParse(obj);
+
+  var auth = obj.auth || '';
+  if (auth) {
+    auth = auth.split('@').join('%40');
+    for (var i = 0, l = nonAuthChars.length; i < l; i++) {
+      var nAC = nonAuthChars[i];
+      auth = auth.split(nAC).join(encodeURIComponent(nAC));
+    }
+    auth += '@';
+  }
+
+  var protocol = obj.protocol || '',
+      host = (obj.host !== undefined) ? auth + obj.host :
+          obj.hostname !== undefined ? (
+              auth + obj.hostname +
+              (obj.port ? ':' + obj.port : '')
+          ) :
+          false,
+      pathname = obj.pathname || '',
+      query = obj.query &&
+              ((typeof obj.query === 'object' &&
+                Object.keys(obj.query).length) ?
+                 querystring.stringify(obj.query) :
+                 '') || '',
+      search = obj.search || (query && ('?' + query)) || '',
+      hash = obj.hash || '';
+
+  if (protocol && protocol.substr(-1) !== ':') protocol += ':';
+
+  // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
+  // unless they had them to begin with.
+  if (obj.slashes ||
+      (!protocol || slashedProtocol[protocol]) && host !== false) {
+    host = '//' + (host || '');
+    if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
+  } else if (!host) {
+    host = '';
+  }
+
+  if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
+  if (search && search.charAt(0) !== '?') search = '?' + search;
+
+  return protocol + host + pathname + search + hash;
+}
+
+function urlResolve(source, relative) {
+  return urlFormat(urlResolveObject(source, relative));
+}
+
+function urlResolveObject(source, relative) {
+  if (!source) return relative;
+
+  source = urlParse(urlFormat(source), false, true);
+  relative = urlParse(urlFormat(relative), false, true);
+
+  // hash is always overridden, no matter what.
+  source.hash = relative.hash;
+
+  if (relative.href === '') {
+    source.href = urlFormat(source);
+    return source;
+  }
+
+  // hrefs like //foo/bar always cut to the protocol.
+  if (relative.slashes && !relative.protocol) {
+    relative.protocol = source.protocol;
+    //urlParse appends trailing / to urls like http://www.example.com
+    if (slashedProtocol[relative.protocol] &&
+        relative.hostname && !relative.pathname) {
+      relative.path = relative.pathname = '/';
+    }
+    relative.href = urlFormat(relative);
+    return relative;
+  }
+
+  if (relative.protocol && relative.protocol !== source.protocol) {
+    // if it's a known url protocol, then changing
+    // the protocol does weird things
+    // first, if it's not file:, then we MUST have a host,
+    // and if there was a path
+    // to begin with, then we MUST have a path.
+    // if it is file:, then the host is dropped,
+    // because that's known to be hostless.
+    // anything else is assumed to be absolute.
+    if (!slashedProtocol[relative.protocol]) {
+      relative.href = urlFormat(relative);
+      return relative;
+    }
+    source.protocol = relative.protocol;
+    if (!relative.host && !hostlessProtocol[relative.protocol]) {
+      var relPath = (relative.pathname || '').split('/');
+      while (relPath.length && !(relative.host = relPath.shift()));
+      if (!relative.host) relative.host = '';
+      if (!relative.hostname) relative.hostname = '';
+      if (relPath[0] !== '') relPath.unshift('');
+      if (relPath.length < 2) relPath.unshift('');
+      relative.pathname = relPath.join('/');
+    }
+    source.pathname = relative.pathname;
+    source.search = relative.search;
+    source.query = relative.query;
+    source.host = relative.host || '';
+    source.auth = relative.auth;
+    source.hostname = relative.hostname || relative.host;
+    source.port = relative.port;
+    //to support http.request
+    if (source.pathname !== undefined || source.search !== undefined) {
+      source.path = (source.pathname ? source.pathname : '') +
+                    (source.search ? source.search : '');
+    }
+    source.slashes = source.slashes || relative.slashes;
+    source.href = urlFormat(source);
+    return source;
+  }
+
+  var isSourceAbs = (source.pathname && source.pathname.charAt(0) === '/'),
+      isRelAbs = (
+          relative.host !== undefined ||
+          relative.pathname && relative.pathname.charAt(0) === '/'
+      ),
+      mustEndAbs = (isRelAbs || isSourceAbs ||
+                    (source.host && relative.pathname)),
+      removeAllDots = mustEndAbs,
+      srcPath = source.pathname && source.pathname.split('/') || [],
+      relPath = relative.pathname && relative.pathname.split('/') || [],
+      psychotic = source.protocol &&
+          !slashedProtocol[source.protocol];
+
+  // if the url is a non-slashed url, then relative
+  // links like ../.. should be able
+  // to crawl up to the hostname, as well.  This is strange.
+  // source.protocol has already been set by now.
+  // Later on, put the first path part into the host field.
+  if (psychotic) {
+
+    delete source.hostname;
+    delete source.port;
+    if (source.host) {
+      if (srcPath[0] === '') srcPath[0] = source.host;
+      else srcPath.unshift(source.host);
+    }
+    delete source.host;
+    if (relative.protocol) {
+      delete relative.hostname;
+      delete relative.port;
+      if (relative.host) {
+        if (relPath[0] === '') relPath[0] = relative.host;
+        else relPath.unshift(relative.host);
+      }
+      delete relative.host;
+    }
+    mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
+  }
+
+  if (isRelAbs) {
+    // it's absolute.
+    source.host = (relative.host || relative.host === '') ?
+                      relative.host : source.host;
+    source.hostname = (relative.hostname || relative.hostname === '') ?
+                      relative.hostname : source.hostname;
+    source.search = relative.search;
+    source.query = relative.query;
+    srcPath = relPath;
+    // fall through to the dot-handling below.
+  } else if (relPath.length) {
+    // it's relative
+    // throw away the existing file, and take the new path instead.
+    if (!srcPath) srcPath = [];
+    srcPath.pop();
+    srcPath = srcPath.concat(relPath);
+    source.search = relative.search;
+    source.query = relative.query;
+  } else if ('search' in relative) {
+    // just pull out the search.
+    // like href='?foo'.
+    // Put this after the other two cases because it simplifies the booleans
+    if (psychotic) {
+      source.hostname = source.host = srcPath.shift();
+      //occationaly the auth can get stuck only in host
+      //this especialy happens in cases like
+      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+      var authInHost = source.host && source.host.indexOf('@') > 0 ?
+                       source.host.split('@') : false;
+      if (authInHost) {
+        source.auth = authInHost.shift();
+        source.host = source.hostname = authInHost.shift();
+      }
+    }
+    source.search = relative.search;
+    source.query = relative.query;
+    //to support http.request
+    if (source.pathname !== undefined || source.search !== undefined) {
+      source.path = (source.pathname ? source.pathname : '') +
+                    (source.search ? source.search : '');
+    }
+    source.href = urlFormat(source);
+    return source;
+  }
+  if (!srcPath.length) {
+    // no path at all.  easy.
+    // we've already handled the other stuff above.
+    delete source.pathname;
+    //to support http.request
+    if (!source.search) {
+      source.path = '/' + source.search;
+    } else {
+      delete source.path;
+    }
+    source.href = urlFormat(source);
+    return source;
+  }
+  // if a url ENDs in . or .., then it must get a trailing slash.
+  // however, if it ends in anything else non-slashy,
+  // then it must NOT get a trailing slash.
+  var last = srcPath.slice(-1)[0];
+  var hasTrailingSlash = (
+      (source.host || relative.host) && (last === '.' || last === '..') ||
+      last === '');
+
+  // strip single dots, resolve double dots to parent dir
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = srcPath.length; i >= 0; i--) {
+    last = srcPath[i];
+    if (last == '.') {
+      srcPath.splice(i, 1);
+    } else if (last === '..') {
+      srcPath.splice(i, 1);
+      up++;
+    } else if (up) {
+      srcPath.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (!mustEndAbs && !removeAllDots) {
+    for (; up--; up) {
+      srcPath.unshift('..');
+    }
+  }
+
+  if (mustEndAbs && srcPath[0] !== '' &&
+      (!srcPath[0] || srcPath[0].charAt(0) !== '/')) {
+    srcPath.unshift('');
+  }
+
+  if (hasTrailingSlash && (srcPath.join('/').substr(-1) !== '/')) {
+    srcPath.push('');
+  }
+
+  var isAbsolute = srcPath[0] === '' ||
+      (srcPath[0] && srcPath[0].charAt(0) === '/');
+
+  // put the host back
+  if (psychotic) {
+    source.hostname = source.host = isAbsolute ? '' :
+                                    srcPath.length ? srcPath.shift() : '';
+    //occationaly the auth can get stuck only in host
+    //this especialy happens in cases like
+    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+    var authInHost = source.host && source.host.indexOf('@') > 0 ?
+                     source.host.split('@') : false;
+    if (authInHost) {
+      source.auth = authInHost.shift();
+      source.host = source.hostname = authInHost.shift();
+    }
+  }
+
+  mustEndAbs = mustEndAbs || (source.host && srcPath.length);
+
+  if (mustEndAbs && !isAbsolute) {
+    srcPath.unshift('');
+  }
+
+  source.pathname = srcPath.join('/');
+  //to support request.http
+  if (source.pathname !== undefined || source.search !== undefined) {
+    source.path = (source.pathname ? source.pathname : '') +
+                  (source.search ? source.search : '');
+  }
+  source.auth = relative.auth || source.auth;
+  source.slashes = source.slashes || relative.slashes;
+  source.href = urlFormat(source);
+  return source;
+}
+
+function parseHost(host) {
+  var out = {};
+  var port = portPattern.exec(host);
+  if (port) {
+    port = port[0];
+    out.port = port.substr(1);
+    host = host.substr(0, host.length - port.length);
+  }
+  if (host) out.hostname = host;
+  return out;
+}
+
+});
+
+require.define("querystring", function (require, module, exports, __dirname, __filename) {
+var isArray = typeof Array.isArray === 'function'
+    ? Array.isArray
+    : function (xs) {
+        return Object.toString.call(xs) === '[object Array]'
+    }
+;
+
+/*!
+ * querystring
+ * Copyright(c) 2010 TJ Holowaychuk <tj@vision-media.ca>
+ * MIT Licensed
+ */
+
+/**
+ * Library version.
+ */
+
+exports.version = '0.3.1';
+
+/**
+ * Object#toString() ref for stringify().
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Cache non-integer test regexp.
+ */
+
+var notint = /[^0-9]/;
+
+/**
+ * Parse the given query `str`, returning an object.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api public
+ */
+
+exports.parse = function(str){
+  if (null == str || '' == str) return {};
+
+  function promote(parent, key) {
+    if (parent[key].length == 0) return parent[key] = {};
+    var t = {};
+    for (var i in parent[key]) t[i] = parent[key][i];
+    parent[key] = t;
+    return t;
+  }
+
+  return String(str)
+    .split('&')
+    .reduce(function(ret, pair){
+      try{ 
+        pair = decodeURIComponent(pair.replace(/\+/g, ' '));
+      } catch(e) {
+        // ignore
+      }
+
+      var eql = pair.indexOf('=')
+        , brace = lastBraceInKey(pair)
+        , key = pair.substr(0, brace || eql)
+        , val = pair.substr(brace || eql, pair.length)
+        , val = val.substr(val.indexOf('=') + 1, val.length)
+        , parent = ret;
+
+      // ?foo
+      if ('' == key) key = pair, val = '';
+
+      // nested
+      if (~key.indexOf(']')) {
+        var parts = key.split('[')
+          , len = parts.length
+          , last = len - 1;
+
+        function parse(parts, parent, key) {
+          var part = parts.shift();
+
+          // end
+          if (!part) {
+            if (isArray(parent[key])) {
+              parent[key].push(val);
+            } else if ('object' == typeof parent[key]) {
+              parent[key] = val;
+            } else if ('undefined' == typeof parent[key]) {
+              parent[key] = val;
+            } else {
+              parent[key] = [parent[key], val];
+            }
+          // array
+          } else {
+            obj = parent[key] = parent[key] || [];
+            if (']' == part) {
+              if (isArray(obj)) {
+                if ('' != val) obj.push(val);
+              } else if ('object' == typeof obj) {
+                obj[Object.keys(obj).length] = val;
+              } else {
+                obj = parent[key] = [parent[key], val];
+              }
+            // prop
+            } else if (~part.indexOf(']')) {
+              part = part.substr(0, part.length - 1);
+              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
+              parse(parts, obj, part);
+            // key
+            } else {
+              if(notint.test(part) && isArray(obj)) obj = promote(parent, key);
+              parse(parts, obj, part);
+            }
+          }
+        }
+
+        parse(parts, parent, 'base');
+      // optimize
+      } else {
+        if (notint.test(key) && isArray(parent.base)) {
+          var t = {};
+          for(var k in parent.base) t[k] = parent.base[k];
+          parent.base = t;
+        }
+        set(parent.base, key, val);
+      }
+
+      return ret;
+    }, {base: {}}).base;
+};
+
+/**
+ * Turn the given `obj` into a query string
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api public
+ */
+
+var stringify = exports.stringify = function(obj, prefix) {
+  if (isArray(obj)) {
+    return stringifyArray(obj, prefix);
+  } else if ('[object Object]' == toString.call(obj)) {
+    return stringifyObject(obj, prefix);
+  } else if ('string' == typeof obj) {
+    return stringifyString(obj, prefix);
+  } else {
+    return prefix;
+  }
+};
+
+/**
+ * Stringify the given `str`.
+ *
+ * @param {String} str
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyString(str, prefix) {
+  if (!prefix) throw new TypeError('stringify expects an object');
+  return prefix + '=' + encodeURIComponent(str);
+}
+
+/**
+ * Stringify the given `arr`.
+ *
+ * @param {Array} arr
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyArray(arr, prefix) {
+  var ret = [];
+  if (!prefix) throw new TypeError('stringify expects an object');
+  for (var i = 0; i < arr.length; i++) {
+    ret.push(stringify(arr[i], prefix + '[]'));
+  }
+  return ret.join('&');
+}
+
+/**
+ * Stringify the given `obj`.
+ *
+ * @param {Object} obj
+ * @param {String} prefix
+ * @return {String}
+ * @api private
+ */
+
+function stringifyObject(obj, prefix) {
+  var ret = []
+    , keys = Object.keys(obj)
+    , key;
+  for (var i = 0, len = keys.length; i < len; ++i) {
+    key = keys[i];
+    ret.push(stringify(obj[key], prefix
+      ? prefix + '[' + encodeURIComponent(key) + ']'
+      : encodeURIComponent(key)));
+  }
+  return ret.join('&');
+}
+
+/**
+ * Set `obj`'s `key` to `val` respecting
+ * the weird and wonderful syntax of a qs,
+ * where "foo=bar&foo=baz" becomes an array.
+ *
+ * @param {Object} obj
+ * @param {String} key
+ * @param {String} val
+ * @api private
+ */
+
+function set(obj, key, val) {
+  var v = obj[key];
+  if (undefined === v) {
+    obj[key] = val;
+  } else if (isArray(v)) {
+    v.push(val);
+  } else {
+    obj[key] = [v, val];
+  }
+}
+
+/**
+ * Locate last brace in `str` within the key.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function lastBraceInKey(str) {
+  var len = str.length
+    , brace
+    , c;
+  for (var i = 0; i < len; ++i) {
+    c = str[i];
+    if (']' == c) brace = false;
+    if ('[' == c) brace = true;
+    if ('=' == c && !brace) return i;
+  }
+}
+
+});
+
+require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var Backbone = require('backbone');
+
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Extending Msgboy with the Backbone events
+_.extend(Msgboy, Backbone.Events);
+
+// Logs messages to the console
+console._log = console.log;
+console._debug = console.debug;
+console._info = console.info;
+console._warn = console.warn;
+console._error = console.error;
+Msgboy.log =  {
+    levels: {
+        DEBUG: 10,
+        INFO: 20,
+        WARN: 30,
+        ERROR: 40,
+    },
+    _log: Function.prototype.bind.call(console._log, console),
+    _debug: Function.prototype.bind.call(console._debug, console),
+    _info: Function.prototype.bind.call(console._info, console),
+    _warn: Function.prototype.bind.call(console._warn, console),
+    _error: Function.prototype.bind.call(console._error, console),
+    debug: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._debug.apply(console, args);
+        }
+    },
+    info: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._info.apply(console, args);
+        }
+    },
+    warn: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._warn.apply(console, args);
+        }
+    },
+    error: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._error.apply(console, args);
+        }
+    },
+}
+
+// Also, hijack all console.log messages
+console.log = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.debug.apply(this, args);
+}
+
+console.debug = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.debug.apply(this, args);
+}
+
+console.info = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.info.apply(this, args);
+}
+
+console.warn = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.warn.apply(this, args);
+}
+
+console.error = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.error.apply(this, args);
+}
+
+// Attributes
+Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
+Msgboy.infos = {};
+Msgboy.inbox = null;
+
+// Returns the environment in which this msgboy is running
+Msgboy.environment = function () {
+    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
+        return "production";
+    }
+    else {
+        return "development";
+    }
+};
+
+if(Msgboy.environment() === "development") {
+    Msgboy.log.debugLevel = Msgboy.log.levels.DEBUG;
+}
+
+// Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
+Msgboy.run =  function () {
+    window.onload = function () {
+        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+            Msgboy.infos = extension_infos;
+            Msgboy.trigger("loaded");
+        });
+    }
+};
+
+exports.Msgboy = Msgboy;
+
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
+
 });
 
 require.define("/plugins.js", function (require, module, exports, __dirname, __filename) {
@@ -15748,6 +17181,6152 @@ var Plugin = function () {
     };
 };
 
+});
+
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 1.0,
+            pinMsgboy: false
+        }
+    },
+    initialize: function () {
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                this.trigger('error');
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
+        });
+    }
+});
+
+exports.Inbox = Inbox;
+});
+
+require.define("/node_modules/backbone-indexeddb/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"backbone-indexeddb.js"}
+});
+
+require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
+(function () { /*global _: false, Backbone: false */
+    // Generate four random hex digits.
+    function S4() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+    }
+
+    // Generate a pseudo-GUID by concatenating random hexadecimal.
+    function guid() {
+        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+    }
+
+    if(typeof exports !== 'undefined'){
+        _ = require('underscore');
+        Backbone = require('Backbone');
+    }
+    
+    
+     // Naming is a mess!
+     var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB ;
+     var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction; // No prefix in moz
+     var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange ; // No prefix in moz
+
+     /* Horrible Hack to prevent ' Expected an identifier and instead saw 'continue' (a reserved word).'*/
+     if (window.indexedDB) {
+         indexedDB.prototype._continue =  indexedDB.prototype.continue;
+     } else if (window.webkitIDBRequest) {
+         webkitIDBRequest.prototype._continue = webkitIDBRequest.prototype.continue;
+     }
+
+     window.indexedDB = indexedDB;
+     window.IDBCursor = window.IDBCursor || window.webkitIDBCursor ||  window.mozIDBCursor ||  window.msIDBCursor ;
+    
+
+    // Driver object
+    // That's the interesting part.
+    // There is a driver for each schema provided. The schema is a te combination of name (for the database), a version as well as migrations to reach that 
+    // version of the database.
+    function Driver(schema, ready) {
+        this.schema         = schema;
+        this.ready          = ready;
+        this.error          = null;
+        this.transactions   = []; // Used to list all transactions and keep track of active ones.
+        this.db             = null;
+        this.supportOnUpgradeNeeded = false;
+        var lastMigrationPathVersion = _.last(this.schema.migrations).version;
+        debugLog("opening database " + this.schema.id + " in version #" + lastMigrationPathVersion);
+        this.dbRequest      = indexedDB.open(this.schema.id,lastMigrationPathVersion); //schema version need to be an unsigned long
+
+        this.launchMigrationPath = function(dbVersion) {
+            var clonedMigrations = _.clone(schema.migrations);
+            this.migrate(clonedMigrations, dbVersion, {
+                success: function () {
+                    this.ready();
+                }.bind(this),
+                error: function () {
+                    this.error = "Database not up to date. " + dbVersion + " expected was " + lastMigrationPathVersion;
+                }.bind(this)
+            });
+        };
+
+        this.dbRequest.onblocked = function(event){
+            debugLog("blocked");
+        }
+
+        this.dbRequest.onsuccess = function (e) {
+            this.db = e.target.result; // Attach the connection ot the queue.
+
+            if(!this.supportOnUpgradeNeeded)
+            {
+                var currentIntDBVersion = (parseInt(this.db.version) ||  0); // we need convert beacuse chrome store in integer and ie10 DP4+ in int;
+
+                if (currentIntDBVersion === lastMigrationPathVersion) { //if support new event onupgradeneeded will trigger the ready function
+                    // No migration to perform!
+                    this.ready();
+                } else if (currentIntDBVersion < lastMigrationPathVersion ) {
+                    // We need to migrate up to the current migration defined in the database
+                    this.launchMigrationPath(currentIntDBVersion);
+                } else {
+                    // Looks like the IndexedDB is at a higher version than the current driver schema.
+                    this.error = "Database version is greater than current code " + currentIntDBVersion + " expected was " + lastMigrationPathVersion;
+                }
+            };
+        }.bind(this);
+
+
+
+        this.dbRequest.onerror = function (e) {
+            // Failed to open the database
+            this.error = "Couldn't not connect to the database"
+        }.bind(this);
+
+        this.dbRequest.onabort = function (e) {
+            // Failed to open the database
+            this.error = "Connection to the database aborted"
+        }.bind(this);
+
+
+
+        this.dbRequest.onupgradeneeded = function(iDBVersionChangeEvent){
+            this.db =iDBVersionChangeEvent.target.transaction.db;
+
+            this.supportOnUpgradeNeeded = true;
+
+            debugLog("onupgradeneeded = " + iDBVersionChangeEvent.oldVersion + " => " + iDBVersionChangeEvent.newVersion);
+            this.launchMigrationPath(iDBVersionChangeEvent.oldVersion);
+
+
+        }.bind(this);
+    }
+
+    function debugLog(str) {
+        if (typeof window !== "undefined" && typeof window.console !== "undefined" && typeof window.console.log !== "undefined") {
+            window.console.log(str);
+        }
+        else if(console.log !== "undefined") {
+            console.log(str)
+        }
+    }
+
+    // Driver Prototype
+    Driver.prototype = {
+
+        // Tracks transactions. Mostly for debugging purposes. TO-IMPROVE
+        _track_transaction: function(transaction) {
+            this.transactions.push(transaction);
+            function removeIt() {
+                var idx = this.transactions.indexOf(transaction);
+                if (idx !== -1) {this.transactions.splice(idx); }
+            };
+            transaction.oncomplete = removeIt.bind(this);
+            transaction.onabort = removeIt.bind(this);
+            transaction.onerror = removeIt.bind(this);
+        },
+
+        // Performs all the migrations to reach the right version of the database.
+        migrate: function (migrations, version, options) {
+            debugLog("Starting migrations from " + version);
+            this._migrate_next(migrations, version, options);
+        },
+
+        // Performs the next migrations. This method is private and should probably not be called.
+        _migrate_next: function (migrations, version, options) {
+            debugLog("_migrate_next begin version from #" + version);
+            var that = this;
+            var migration = migrations.shift();
+            if (migration) {
+                if (!version || version < migration.version) {
+                    // We need to apply this migration-
+                    if (typeof migration.before == "undefined") {
+                        migration.before = function (next) {
+                            next();
+                        };
+                    }
+                    if (typeof migration.after == "undefined") {
+                        migration.after = function (next) {
+                            next();
+                        };
+                    }
+                    // First, let's run the before script
+                    debugLog("_migrate_next begin before version #" + migration.version);
+                    migration.before(function () {
+                        debugLog("_migrate_next done before version #" + migration.version);
+
+                        var continueMigration = function (e) {
+                            debugLog("_migrate_next continueMigration version #" + migration.version);
+
+                            var transaction = this.dbRequest.transaction || versionRequest.result;
+                            debugLog("_migrate_next begin migrate version #" + migration.version);
+
+                            migration.migrate(transaction, function () {
+                                debugLog("_migrate_next done migrate version #" + migration.version);
+                                // Migration successfully appliedn let's go to the next one!
+                                debugLog("_migrate_next begin after version #" + migration.version);
+                                migration.after(function () {
+                                    debugLog("_migrate_next done after version #" + migration.version);
+                                    debugLog("Migrated to " + migration.version);
+
+                                    //last modification occurred, need finish
+                                    if(migrations.length ==0) {
+                                        /*if(this.supportOnUpgradeNeeded){
+                                            debugLog("Done migrating");
+                                            // No more migration
+                                            options.success();
+                                        }
+                                        else{*/
+                                            debugLog("_migrate_next setting transaction.oncomplete to finish  version #" + migration.version);
+                                            transaction.oncomplete = function() {
+                                                debugLog("_migrate_next done transaction.oncomplete version #" + migration.version);
+
+                                                debugLog("Done migrating");
+                                                // No more migration
+                                                options.success();
+                                            }
+                                        //}
+                                    }
+                                    else
+                                    {
+                                        debugLog("_migrate_next setting transaction.oncomplete to recursive _migrate_next  version #" + migration.version);
+                                        transaction.oncomplete = function() {
+                                           debugLog("_migrate_next end from version #" + version + " to " + migration.version);
+                                           that._migrate_next(migrations, version, options);
+                                       }
+                                    }
+
+                                }.bind(this));
+                            }.bind(this));
+                        }.bind(this);
+
+                        if(!this.supportOnUpgradeNeeded){
+                            debugLog("_migrate_next begin setVersion version #" + migration.version);
+                            var versionRequest = this.db.setVersion(migration.version);
+                            versionRequest.onsuccess = continueMigration;
+                            versionRequest.onerror = options.error;
+                        }
+                        else {
+                            continueMigration();
+                        }
+
+                    }.bind(this));
+                } else {
+                    // No need to apply this migration
+                    debugLog("Skipping migration " + migration.version);
+                    this._migrate_next(migrations, version, options);
+                }
+            }
+        },
+
+        // This is the main method, called by the ExecutionQueue when the driver is ready (database open and migration performed)
+        execute: function (storeName, method, object, options) {
+            debugLog("execute : " + method +  " on " + storeName + " for " + object.id);
+            switch (method) {
+            case "create":
+                this.write(storeName, object, options);
+                break;
+            case "read":
+                if (object.id || object.cid) {
+                    this.read(storeName, object, options); // It's a model
+                } else {
+                    this.query(storeName, object, options); // It's a collection
+                }
+                break;
+            case "update":
+                this.write(storeName, object, options); // We may want to check that this is not a collection. TOFIX
+                break;
+            case "delete":
+                this.delete(storeName, object, options); // We may want to check that this is not a collection. TOFIX
+                break;
+            default:
+                // Hum what?
+            }
+        },
+
+        // Writes the json to the storeName in db.
+        // options are just success and error callbacks.
+        write: function (storeName, object, options) {
+            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(writeTransaction);
+            var store = writeTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            if (!json.id) json.id = guid();
+
+            var writeRequest = store.put(json, json.id);
+
+            writeRequest.onerror = function (e) {
+                options.error(e);
+            };
+            writeRequest.onsuccess = function (e) {
+                options.success(json);
+            };
+        },
+
+        // Reads from storeName in db with json.id if it's there of with any json.xxxx as long as xxx is an index in storeName 
+        read: function (storeName, object, options) {
+            var readTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
+            this._track_transaction(readTransaction);
+
+            var store = readTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+
+            var getRequest = null;
+            if (json.id) {
+                getRequest = store.get(json.id);
+            } else {
+                // We need to find which index we have
+                _.each(store.indexNames, function (key, index) {
+                    index = store.index(key);
+                    if (json[index.keyPath] && !getRequest) {
+                        getRequest = index.get(json[index.keyPath]);
+                    }
+                });
+            }
+            if (getRequest) {
+                getRequest.onsuccess = function (event) {
+                    if (event.target.result) {
+                        options.success(event.target.result);
+                    } else {
+                        options.error("Not Found");
+                    }
+                };
+                getRequest.onerror = function () {
+                    options.error("Not Found"); // We couldn't find the record.
+                }
+            } else {
+                options.error("Not Found"); // We couldn't even look for it, as we don't have enough data.
+            }
+        },
+
+        // Deletes the json.id key and value in storeName from db.
+        delete: function (storeName, object, options) {
+            var deleteTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(deleteTransaction);
+
+            var store = deleteTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            var deleteRequest = store.delete(json.id);
+            deleteRequest.onsuccess = function (event) {
+                options.success(null);
+            };
+            deleteRequest.onerror = function (event) {
+                options.error("Not Deleted");
+            };
+        },
+
+        // Performs a query on storeName in db.
+        // options may include :
+        // - conditions : value of an index, or range for an index
+        // - range : range for the primary key
+        // - limit : max number of elements to be yielded
+        // - offset : skipped items.
+        query: function (storeName, collection, options) {
+            var elements = [];
+            var skipped = 0, processed = 0;
+            var queryTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
+            //this._track_transaction(queryTransaction);
+
+            var readCursor = null;
+            var store = queryTransaction.objectStore(storeName);
+            var index = null,
+                lower = null,
+                upper = null,
+                bounds = null;
+
+            if (options.conditions) {
+                // We have a condition, we need to use it for the cursor
+                _.each(store.indexNames, function (key) {
+                    if (!readCursor) {
+                        index = store.index(key);
+                        if (options.conditions[index.keyPath] instanceof Array) {
+                            lower = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][1] : options.conditions[index.keyPath][0];
+                            upper = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][0] : options.conditions[index.keyPath][1];
+                            bounds = IDBKeyRange.bound(lower, upper, true, true);
+
+                            if (options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1]) {
+                                // Looks like we want the DESC order
+                                readCursor = index.openCursor(bounds, window.IDBCursor.PREV);
+                            } else {
+                                // We want ASC order
+                                readCursor = index.openCursor(bounds, window.IDBCursor.NEXT);
+                            }
+                        } else if (options.conditions[index.keyPath]) {
+                            bounds = IDBKeyRange.only(options.conditions[index.keyPath]);
+                            readCursor = index.openCursor(bounds);
+                        }
+                    }
+                });
+            } else {
+                // No conditions, use the index
+                if (options.range) {
+                    lower = options.range[0] > options.range[1] ? options.range[1] : options.range[0];
+                    upper = options.range[0] > options.range[1] ? options.range[0] : options.range[1];
+                    bounds = IDBKeyRange.bound(lower, upper);
+                    if (options.range[0] > options.range[1]) {
+                        readCursor = store.openCursor(bounds, window.IDBCursor.PREV);
+                    } else {
+                        readCursor = store.openCursor(bounds, window.IDBCursor.NEXT);
+                    }
+                } else {
+                    readCursor = store.openCursor();
+                }
+            }
+
+            if (typeof (readCursor) == "undefined" || !readCursor) {
+                options.error("No Cursor");
+            } else {
+                readCursor.onerror = function(e){
+                    options.error("readCursor error", e);
+                };
+                // Setup a handler for the cursor’s `success` event:
+                readCursor.onsuccess = function (e) {
+                    var cursor = e.target.result;
+                    if (!cursor) {
+                        if (options.addIndividually || options.clear) {
+                            // nothing!
+                            // We need to indicate that we're done. But, how?
+                            collection.trigger("reset");
+                        } else {
+                            options.success(elements); // We're done. No more elements.
+                        }
+                    }
+                    else {
+                        // Cursor is not over yet.
+                        if (options.limit && processed >= options.limit) {
+                            // Yet, we have processed enough elements. So, let's just skip.
+                            if (bounds && options.conditions[index.keyPath]) {
+                                cursor.continue(options.conditions[index.keyPath][1] + 1); /* We need to 'terminate' the cursor cleany, by moving to the end */
+                            } else {
+                                cursor.continue(); /* We need to 'terminate' the cursor cleany, by moving to the end */
+                            }
+                        }
+                        else if (options.offset && options.offset > skipped) {
+                            skipped++;
+                            cursor.continue(); /* We need to Moving the cursor forward */
+                        } else {
+                            // This time, it looks like it's good!
+                            if (options.addIndividually) {
+                                collection.add(cursor.value);
+                            } else if (options.clear) {
+                                var deleteRequest = store.delete(cursor.value.id);
+                                deleteRequest.onsuccess = function (event) {
+                                    elements.push(cursor.value);
+                                };
+                                deleteRequest.onerror = function (event) {
+                                    elements.push(cursor.value);
+                                };
+
+                            } else {
+                                elements.push(cursor.value);
+                            }
+                            processed++;
+                            cursor.continue();
+                        }
+                    }
+                };
+            }
+        },
+        close :function(){
+            if(this.db){
+                this.db.close()
+;            }
+        }
+    };
+
+    // ExecutionQueue object
+    // The execution queue is an abstraction to buffer up requests to the database.
+    // It holds a "driver". When the driver is ready, it just fires up the queue and executes in sync.
+    function ExecutionQueue(schema,next) {
+        this.driver     = new Driver(schema, this.ready.bind(this));
+        this.started    = false;
+        this.stack      = [];
+        this.version    = _.last(schema.migrations).version;
+        this.next = next;
+    }
+
+    // ExecutionQueue Prototype
+    ExecutionQueue.prototype = {
+        // Called when the driver is ready
+        // It just loops over the elements in the queue and executes them.
+        ready: function () {
+            this.started = true;
+            _.each(this.stack, function (message) {
+                this.execute(message);
+            }.bind(this));
+            this.next();
+        },
+
+        // Executes a given command on the driver. If not started, just stacks up one more element.
+        execute: function (message) {
+            if (this.started) {
+                this.driver.execute(message[1].storeName, message[0], message[1], message[2]); // Upon messages, we execute the query
+            } else {
+                this.stack.push(message);
+            }
+        },
+
+        close : function(){
+            this.driver.close();
+        }
+    };
+
+    // Method used by Backbone for sync of data with data store. It was initially designed to work with "server side" APIs, This wrapper makes 
+    // it work with the local indexedDB stuff. It uses the schema attribute provided by the object.
+    // The wrapper keeps an active Executuon Queue for each "schema", and executes querues agains it, based on the object type (collection or
+    // single model), but also the method... etc.
+    // Keeps track of the connections
+    var Databases = {};
+
+    function sync(method, object, options) {
+
+        if(method=="closeall"){
+            _.each(Databases,function(database){
+                database.close();
+            });
+
+            return;
+        }
+
+        var schema = object.database;
+        if (Databases[schema.id]) {
+            if(Databases[schema.id].version != _.last(schema.migrations).version){
+                Databases[schema.id].close();
+                delete Databases[schema.id];
+            }
+        }
+
+        var next = function(){
+            Databases[schema.id].execute([method, object, options]);
+        };
+
+        if (!Databases[schema.id]) {
+              Databases[schema.id] = new ExecutionQueue(schema,next);
+            }else
+        {
+            next();
+        }
+
+
+    };
+
+    if(typeof exports == 'undefined'){
+        Backbone.sync = sync;
+    }
+    else {
+        exports.sync = sync;
+        exports.debugLog = debugLog;
+    }
+    
+    //window.addEventListener("unload",function(){Backbone.sync("closeall")})
+})();
+});
+
+require.define("/node_modules/Backbone/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"backbone.js"}
+});
+
+require.define("/node_modules/Backbone/backbone.js", function (require, module, exports, __dirname, __filename) {
+//     Backbone.js 0.9.1
+
+//     (c) 2010-2012 Jeremy Ashkenas, DocumentCloud Inc.
+//     Backbone may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://backbonejs.org
+
+(function(){
+
+  // Initial Setup
+  // -------------
+
+  // Save a reference to the global object (`window` in the browser, `global`
+  // on the server).
+  var root = this;
+
+  // Save the previous value of the `Backbone` variable, so that it can be
+  // restored later on, if `noConflict` is used.
+  var previousBackbone = root.Backbone;
+
+  // Create a local reference to slice/splice.
+  var slice = Array.prototype.slice;
+  var splice = Array.prototype.splice;
+
+  // The top-level namespace. All public Backbone classes and modules will
+  // be attached to this. Exported for both CommonJS and the browser.
+  var Backbone;
+  if (typeof exports !== 'undefined') {
+    Backbone = exports;
+  } else {
+    Backbone = root.Backbone = {};
+  }
+
+  // Current version of the library. Keep in sync with `package.json`.
+  Backbone.VERSION = '0.9.1';
+
+  // Require Underscore, if we're on the server, and it's not already present.
+  var _ = root._;
+  if (!_ && (typeof require !== 'undefined')) _ = require('underscore');
+
+  // For Backbone's purposes, jQuery, Zepto, or Ender owns the `$` variable.
+  var $ = root.jQuery || root.Zepto || root.ender;
+
+  // Set the JavaScript library that will be used for DOM manipulation and
+  // Ajax calls (a.k.a. the `$` variable). By default Backbone will use: jQuery,
+  // Zepto, or Ender; but the `setDomLibrary()` method lets you inject an
+  // alternate JavaScript library (or a mock library for testing your views
+  // outside of a browser).
+  Backbone.setDomLibrary = function(lib) {
+    $ = lib;
+  };
+
+  // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
+  // to its previous owner. Returns a reference to this Backbone object.
+  Backbone.noConflict = function() {
+    root.Backbone = previousBackbone;
+    return this;
+  };
+
+  // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
+  // will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
+  // set a `X-Http-Method-Override` header.
+  Backbone.emulateHTTP = false;
+
+  // Turn on `emulateJSON` to support legacy servers that can't deal with direct
+  // `application/json` requests ... will encode the body as
+  // `application/x-www-form-urlencoded` instead and will send the model in a
+  // form param named `model`.
+  Backbone.emulateJSON = false;
+
+  // Backbone.Events
+  // -----------------
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may bind with `on` or remove with `off` callback functions
+  // to an event; trigger`-ing an event fires all callbacks in succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.on('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+  Backbone.Events = {
+
+    // Bind an event, specified by a string name, `ev`, to a `callback`
+    // function. Passing `"all"` will bind the callback to all events fired.
+    on: function(events, callback, context) {
+      var ev;
+      events = events.split(/\s+/);
+      var calls = this._callbacks || (this._callbacks = {});
+      while (ev = events.shift()) {
+        // Create an immutable callback list, allowing traversal during
+        // modification.  The tail is an empty object that will always be used
+        // as the next node.
+        var list  = calls[ev] || (calls[ev] = {});
+        var tail = list.tail || (list.tail = list.next = {});
+        tail.callback = callback;
+        tail.context = context;
+        list.tail = tail.next = {};
+      }
+      return this;
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all callbacks
+    // with that function. If `callback` is null, removes all callbacks for the
+    // event. If `ev` is null, removes all bound callbacks for all events.
+    off: function(events, callback, context) {
+      var ev, calls, node;
+      if (!events) {
+        delete this._callbacks;
+      } else if (calls = this._callbacks) {
+        events = events.split(/\s+/);
+        while (ev = events.shift()) {
+          node = calls[ev];
+          delete calls[ev];
+          if (!callback || !node) continue;
+          // Create a new list, omitting the indicated event/context pairs.
+          while ((node = node.next) && node.next) {
+            if (node.callback === callback &&
+              (!context || node.context === context)) continue;
+            this.on(ev, node.callback, node.context);
+          }
+        }
+      }
+      return this;
+    },
+
+    // Trigger an event, firing all bound callbacks. Callbacks are passed the
+    // same arguments as `trigger` is, apart from the event name.
+    // Listening for `"all"` passes the true event name as the first argument.
+    trigger: function(events) {
+      var event, node, calls, tail, args, all, rest;
+      if (!(calls = this._callbacks)) return this;
+      all = calls['all'];
+      (events = events.split(/\s+/)).push(null);
+      // Save references to the current heads & tails.
+      while (event = events.shift()) {
+        if (all) events.push({next: all.next, tail: all.tail, event: event});
+        if (!(node = calls[event])) continue;
+        events.push({next: node.next, tail: node.tail});
+      }
+      // Traverse each list, stopping when the saved tail is reached.
+      rest = slice.call(arguments, 1);
+      while (node = events.pop()) {
+        tail = node.tail;
+        args = node.event ? [node.event].concat(rest) : rest;
+        while ((node = node.next) !== tail) {
+          node.callback.apply(node.context || this, args);
+        }
+      }
+      return this;
+    }
+
+  };
+
+  // Aliases for backwards compatibility.
+  Backbone.Events.bind   = Backbone.Events.on;
+  Backbone.Events.unbind = Backbone.Events.off;
+
+  // Backbone.Model
+  // --------------
+
+  // Create a new model, with defined attributes. A client id (`cid`)
+  // is automatically generated and assigned for you.
+  Backbone.Model = function(attributes, options) {
+    var defaults;
+    attributes || (attributes = {});
+    if (options && options.parse) attributes = this.parse(attributes);
+    if (defaults = getValue(this, 'defaults')) {
+      attributes = _.extend({}, defaults, attributes);
+    }
+    if (options && options.collection) this.collection = options.collection;
+    this.attributes = {};
+    this._escapedAttributes = {};
+    this.cid = _.uniqueId('c');
+    if (!this.set(attributes, {silent: true})) {
+      throw new Error("Can't create an invalid model");
+    }
+    delete this._changed;
+    this._previousAttributes = _.clone(this.attributes);
+    this.initialize.apply(this, arguments);
+  };
+
+  // Attach all inheritable methods to the Model prototype.
+  _.extend(Backbone.Model.prototype, Backbone.Events, {
+
+    // The default name for the JSON `id` attribute is `"id"`. MongoDB and
+    // CouchDB users may want to set this to `"_id"`.
+    idAttribute: 'id',
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // Return a copy of the model's `attributes` object.
+    toJSON: function() {
+      return _.clone(this.attributes);
+    },
+
+    // Get the value of an attribute.
+    get: function(attr) {
+      return this.attributes[attr];
+    },
+
+    // Get the HTML-escaped value of an attribute.
+    escape: function(attr) {
+      var html;
+      if (html = this._escapedAttributes[attr]) return html;
+      var val = this.attributes[attr];
+      return this._escapedAttributes[attr] = _.escape(val == null ? '' : '' + val);
+    },
+
+    // Returns `true` if the attribute contains a value that is not null
+    // or undefined.
+    has: function(attr) {
+      return this.attributes[attr] != null;
+    },
+
+    // Set a hash of model attributes on the object, firing `"change"` unless
+    // you choose to silence it.
+    set: function(key, value, options) {
+      var attrs, attr, val;
+      if (_.isObject(key) || key == null) {
+        attrs = key;
+        options = value;
+      } else {
+        attrs = {};
+        attrs[key] = value;
+      }
+
+      // Extract attributes and options.
+      options || (options = {});
+      if (!attrs) return this;
+      if (attrs instanceof Backbone.Model) attrs = attrs.attributes;
+      if (options.unset) for (attr in attrs) attrs[attr] = void 0;
+
+      // Run validation.
+      if (!this._validate(attrs, options)) return false;
+
+      // Check for changes of `id`.
+      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
+
+      var now = this.attributes;
+      var escaped = this._escapedAttributes;
+      var prev = this._previousAttributes || {};
+      var alreadySetting = this._setting;
+      this._changed || (this._changed = {});
+      this._setting = true;
+
+      // Update attributes.
+      for (attr in attrs) {
+        val = attrs[attr];
+        if (!_.isEqual(now[attr], val)) delete escaped[attr];
+        options.unset ? delete now[attr] : now[attr] = val;
+        if (this._changing && !_.isEqual(this._changed[attr], val)) {
+          this.trigger('change:' + attr, this, val, options);
+          this._moreChanges = true;
+        }
+        delete this._changed[attr];
+        if (!_.isEqual(prev[attr], val) || (_.has(now, attr) != _.has(prev, attr))) {
+          this._changed[attr] = val;
+        }
+      }
+
+      // Fire the `"change"` events, if the model has been changed.
+      if (!alreadySetting) {
+        if (!options.silent && this.hasChanged()) this.change(options);
+        this._setting = false;
+      }
+      return this;
+    },
+
+    // Remove an attribute from the model, firing `"change"` unless you choose
+    // to silence it. `unset` is a noop if the attribute doesn't exist.
+    unset: function(attr, options) {
+      (options || (options = {})).unset = true;
+      return this.set(attr, null, options);
+    },
+
+    // Clear all attributes on the model, firing `"change"` unless you choose
+    // to silence it.
+    clear: function(options) {
+      (options || (options = {})).unset = true;
+      return this.set(_.clone(this.attributes), options);
+    },
+
+    // Fetch the model from the server. If the server's representation of the
+    // model differs from its current attributes, they will be overriden,
+    // triggering a `"change"` event.
+    fetch: function(options) {
+      options = options ? _.clone(options) : {};
+      var model = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        if (!model.set(model.parse(resp, xhr), options)) return false;
+        if (success) success(model, resp);
+      };
+      options.error = Backbone.wrapError(options.error, model, options);
+      return (this.sync || Backbone.sync).call(this, 'read', this, options);
+    },
+
+    // Set a hash of model attributes, and sync the model to the server.
+    // If the server returns an attributes hash that differs, the model's
+    // state will be `set` again.
+    save: function(key, value, options) {
+      var attrs, current;
+      if (_.isObject(key) || key == null) {
+        attrs = key;
+        options = value;
+      } else {
+        attrs = {};
+        attrs[key] = value;
+      }
+
+      options = options ? _.clone(options) : {};
+      if (options.wait) current = _.clone(this.attributes);
+      var silentOptions = _.extend({}, options, {silent: true});
+      if (attrs && !this.set(attrs, options.wait ? silentOptions : options)) {
+        return false;
+      }
+      var model = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        var serverAttrs = model.parse(resp, xhr);
+        if (options.wait) serverAttrs = _.extend(attrs || {}, serverAttrs);
+        if (!model.set(serverAttrs, options)) return false;
+        if (success) {
+          success(model, resp);
+        } else {
+          model.trigger('sync', model, resp, options);
+        }
+      };
+      options.error = Backbone.wrapError(options.error, model, options);
+      var method = this.isNew() ? 'create' : 'update';
+      var xhr = (this.sync || Backbone.sync).call(this, method, this, options);
+      if (options.wait) this.set(current, silentOptions);
+      return xhr;
+    },
+
+    // Destroy this model on the server if it was already persisted.
+    // Optimistically removes the model from its collection, if it has one.
+    // If `wait: true` is passed, waits for the server to respond before removal.
+    destroy: function(options) {
+      options = options ? _.clone(options) : {};
+      var model = this;
+      var success = options.success;
+
+      var triggerDestroy = function() {
+        model.trigger('destroy', model, model.collection, options);
+      };
+
+      if (this.isNew()) return triggerDestroy();
+      options.success = function(resp) {
+        if (options.wait) triggerDestroy();
+        if (success) {
+          success(model, resp);
+        } else {
+          model.trigger('sync', model, resp, options);
+        }
+      };
+      options.error = Backbone.wrapError(options.error, model, options);
+      var xhr = (this.sync || Backbone.sync).call(this, 'delete', this, options);
+      if (!options.wait) triggerDestroy();
+      return xhr;
+    },
+
+    // Default URL for the model's representation on the server -- if you're
+    // using Backbone's restful methods, override this to change the endpoint
+    // that will be called.
+    url: function() {
+      var base = getValue(this.collection, 'url') || getValue(this, 'urlRoot') || urlError();
+      if (this.isNew()) return base;
+      return base + (base.charAt(base.length - 1) == '/' ? '' : '/') + encodeURIComponent(this.id);
+    },
+
+    // **parse** converts a response into the hash of attributes to be `set` on
+    // the model. The default implementation is just to pass the response along.
+    parse: function(resp, xhr) {
+      return resp;
+    },
+
+    // Create a new model with identical attributes to this one.
+    clone: function() {
+      return new this.constructor(this.attributes);
+    },
+
+    // A model is new if it has never been saved to the server, and lacks an id.
+    isNew: function() {
+      return this.id == null;
+    },
+
+    // Call this method to manually fire a `"change"` event for this model and
+    // a `"change:attribute"` event for each changed attribute.
+    // Calling this will cause all objects observing the model to update.
+    change: function(options) {
+      if (this._changing || !this.hasChanged()) return this;
+      this._changing = true;
+      this._moreChanges = true;
+      for (var attr in this._changed) {
+        this.trigger('change:' + attr, this, this._changed[attr], options);
+      }
+      while (this._moreChanges) {
+        this._moreChanges = false;
+        this.trigger('change', this, options);
+      }
+      this._previousAttributes = _.clone(this.attributes);
+      delete this._changed;
+      this._changing = false;
+      return this;
+    },
+
+    // Determine if the model has changed since the last `"change"` event.
+    // If you specify an attribute name, determine if that attribute has changed.
+    hasChanged: function(attr) {
+      if (!arguments.length) return !_.isEmpty(this._changed);
+      return this._changed && _.has(this._changed, attr);
+    },
+
+    // Return an object containing all the attributes that have changed, or
+    // false if there are no changed attributes. Useful for determining what
+    // parts of a view need to be updated and/or what attributes need to be
+    // persisted to the server. Unset attributes will be set to undefined.
+    // You can also pass an attributes object to diff against the model,
+    // determining if there *would be* a change.
+    changedAttributes: function(diff) {
+      if (!diff) return this.hasChanged() ? _.clone(this._changed) : false;
+      var val, changed = false, old = this._previousAttributes;
+      for (var attr in diff) {
+        if (_.isEqual(old[attr], (val = diff[attr]))) continue;
+        (changed || (changed = {}))[attr] = val;
+      }
+      return changed;
+    },
+
+    // Get the previous value of an attribute, recorded at the time the last
+    // `"change"` event was fired.
+    previous: function(attr) {
+      if (!arguments.length || !this._previousAttributes) return null;
+      return this._previousAttributes[attr];
+    },
+
+    // Get all of the attributes of the model at the time of the previous
+    // `"change"` event.
+    previousAttributes: function() {
+      return _.clone(this._previousAttributes);
+    },
+
+    // Check if the model is currently in a valid state. It's only possible to
+    // get into an *invalid* state if you're using silent changes.
+    isValid: function() {
+      return !this.validate(this.attributes);
+    },
+
+    // Run validation against a set of incoming attributes, returning `true`
+    // if all is well. If a specific `error` callback has been passed,
+    // call that instead of firing the general `"error"` event.
+    _validate: function(attrs, options) {
+      if (options.silent || !this.validate) return true;
+      attrs = _.extend({}, this.attributes, attrs);
+      var error = this.validate(attrs, options);
+      if (!error) return true;
+      if (options && options.error) {
+        options.error(this, error, options);
+      } else {
+        this.trigger('error', this, error, options);
+      }
+      return false;
+    }
+
+  });
+
+  // Backbone.Collection
+  // -------------------
+
+  // Provides a standard collection class for our sets of models, ordered
+  // or unordered. If a `comparator` is specified, the Collection will maintain
+  // its models in sort order, as they're added and removed.
+  Backbone.Collection = function(models, options) {
+    options || (options = {});
+    if (options.comparator) this.comparator = options.comparator;
+    this._reset();
+    this.initialize.apply(this, arguments);
+    if (models) this.reset(models, {silent: true, parse: options.parse});
+  };
+
+  // Define the Collection's inheritable methods.
+  _.extend(Backbone.Collection.prototype, Backbone.Events, {
+
+    // The default model for a collection is just a **Backbone.Model**.
+    // This should be overridden in most cases.
+    model: Backbone.Model,
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // The JSON representation of a Collection is an array of the
+    // models' attributes.
+    toJSON: function() {
+      return this.map(function(model){ return model.toJSON(); });
+    },
+
+    // Add a model, or list of models to the set. Pass **silent** to avoid
+    // firing the `add` event for every new model.
+    add: function(models, options) {
+      var i, index, length, model, cid, id, cids = {}, ids = {};
+      options || (options = {});
+      models = _.isArray(models) ? models.slice() : [models];
+
+      // Begin by turning bare objects into model references, and preventing
+      // invalid models or duplicate models from being added.
+      for (i = 0, length = models.length; i < length; i++) {
+        if (!(model = models[i] = this._prepareModel(models[i], options))) {
+          throw new Error("Can't add an invalid model to a collection");
+        }
+        if (cids[cid = model.cid] || this._byCid[cid] ||
+          (((id = model.id) != null) && (ids[id] || this._byId[id]))) {
+          throw new Error("Can't add the same model to a collection twice");
+        }
+        cids[cid] = ids[id] = model;
+      }
+
+      // Listen to added models' events, and index models for lookup by
+      // `id` and by `cid`.
+      for (i = 0; i < length; i++) {
+        (model = models[i]).on('all', this._onModelEvent, this);
+        this._byCid[model.cid] = model;
+        if (model.id != null) this._byId[model.id] = model;
+      }
+
+      // Insert models into the collection, re-sorting if needed, and triggering
+      // `add` events unless silenced.
+      this.length += length;
+      index = options.at != null ? options.at : this.models.length;
+      splice.apply(this.models, [index, 0].concat(models));
+      if (this.comparator) this.sort({silent: true});
+      if (options.silent) return this;
+      for (i = 0, length = this.models.length; i < length; i++) {
+        if (!cids[(model = this.models[i]).cid]) continue;
+        options.index = i;
+        model.trigger('add', model, this, options);
+      }
+      return this;
+    },
+
+    // Remove a model, or a list of models from the set. Pass silent to avoid
+    // firing the `remove` event for every model removed.
+    remove: function(models, options) {
+      var i, l, index, model;
+      options || (options = {});
+      models = _.isArray(models) ? models.slice() : [models];
+      for (i = 0, l = models.length; i < l; i++) {
+        model = this.getByCid(models[i]) || this.get(models[i]);
+        if (!model) continue;
+        delete this._byId[model.id];
+        delete this._byCid[model.cid];
+        index = this.indexOf(model);
+        this.models.splice(index, 1);
+        this.length--;
+        if (!options.silent) {
+          options.index = index;
+          model.trigger('remove', model, this, options);
+        }
+        this._removeReference(model);
+      }
+      return this;
+    },
+
+    // Get a model from the set by id.
+    get: function(id) {
+      if (id == null) return null;
+      return this._byId[id.id != null ? id.id : id];
+    },
+
+    // Get a model from the set by client id.
+    getByCid: function(cid) {
+      return cid && this._byCid[cid.cid || cid];
+    },
+
+    // Get the model at the given index.
+    at: function(index) {
+      return this.models[index];
+    },
+
+    // Force the collection to re-sort itself. You don't need to call this under
+    // normal circumstances, as the set will maintain sort order as each item
+    // is added.
+    sort: function(options) {
+      options || (options = {});
+      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
+      var boundComparator = _.bind(this.comparator, this);
+      if (this.comparator.length == 1) {
+        this.models = this.sortBy(boundComparator);
+      } else {
+        this.models.sort(boundComparator);
+      }
+      if (!options.silent) this.trigger('reset', this, options);
+      return this;
+    },
+
+    // Pluck an attribute from each model in the collection.
+    pluck: function(attr) {
+      return _.map(this.models, function(model){ return model.get(attr); });
+    },
+
+    // When you have more items than you want to add or remove individually,
+    // you can reset the entire set with a new list of models, without firing
+    // any `add` or `remove` events. Fires `reset` when finished.
+    reset: function(models, options) {
+      models  || (models = []);
+      options || (options = {});
+      for (var i = 0, l = this.models.length; i < l; i++) {
+        this._removeReference(this.models[i]);
+      }
+      this._reset();
+      this.add(models, {silent: true, parse: options.parse});
+      if (!options.silent) this.trigger('reset', this, options);
+      return this;
+    },
+
+    // Fetch the default set of models for this collection, resetting the
+    // collection when they arrive. If `add: true` is passed, appends the
+    // models to the collection instead of resetting.
+    fetch: function(options) {
+      options = options ? _.clone(options) : {};
+      if (options.parse === undefined) options.parse = true;
+      var collection = this;
+      var success = options.success;
+      options.success = function(resp, status, xhr) {
+        collection[options.add ? 'add' : 'reset'](collection.parse(resp, xhr), options);
+        if (success) success(collection, resp);
+      };
+      options.error = Backbone.wrapError(options.error, collection, options);
+      return (this.sync || Backbone.sync).call(this, 'read', this, options);
+    },
+
+    // Create a new instance of a model in this collection. Add the model to the
+    // collection immediately, unless `wait: true` is passed, in which case we
+    // wait for the server to agree.
+    create: function(model, options) {
+      var coll = this;
+      options = options ? _.clone(options) : {};
+      model = this._prepareModel(model, options);
+      if (!model) return false;
+      if (!options.wait) coll.add(model, options);
+      var success = options.success;
+      options.success = function(nextModel, resp, xhr) {
+        if (options.wait) coll.add(nextModel, options);
+        if (success) {
+          success(nextModel, resp);
+        } else {
+          nextModel.trigger('sync', model, resp, options);
+        }
+      };
+      model.save(null, options);
+      return model;
+    },
+
+    // **parse** converts a response into a list of models to be added to the
+    // collection. The default implementation is just to pass it through.
+    parse: function(resp, xhr) {
+      return resp;
+    },
+
+    // Proxy to _'s chain. Can't be proxied the same way the rest of the
+    // underscore methods are proxied because it relies on the underscore
+    // constructor.
+    chain: function () {
+      return _(this.models).chain();
+    },
+
+    // Reset all internal state. Called when the collection is reset.
+    _reset: function(options) {
+      this.length = 0;
+      this.models = [];
+      this._byId  = {};
+      this._byCid = {};
+    },
+
+    // Prepare a model or hash of attributes to be added to this collection.
+    _prepareModel: function(model, options) {
+      if (!(model instanceof Backbone.Model)) {
+        var attrs = model;
+        options.collection = this;
+        model = new this.model(attrs, options);
+        if (!model._validate(model.attributes, options)) model = false;
+      } else if (!model.collection) {
+        model.collection = this;
+      }
+      return model;
+    },
+
+    // Internal method to remove a model's ties to a collection.
+    _removeReference: function(model) {
+      if (this == model.collection) {
+        delete model.collection;
+      }
+      model.off('all', this._onModelEvent, this);
+    },
+
+    // Internal method called every time a model in the set fires an event.
+    // Sets need to update their indexes when models change ids. All other
+    // events simply proxy through. "add" and "remove" events that originate
+    // in other collections are ignored.
+    _onModelEvent: function(ev, model, collection, options) {
+      if ((ev == 'add' || ev == 'remove') && collection != this) return;
+      if (ev == 'destroy') {
+        this.remove(model, options);
+      }
+      if (model && ev === 'change:' + model.idAttribute) {
+        delete this._byId[model.previous(model.idAttribute)];
+        this._byId[model.id] = model;
+      }
+      this.trigger.apply(this, arguments);
+    }
+
+  });
+
+  // Underscore methods that we want to implement on the Collection.
+  var methods = ['forEach', 'each', 'map', 'reduce', 'reduceRight', 'find',
+    'detect', 'filter', 'select', 'reject', 'every', 'all', 'some', 'any',
+    'include', 'contains', 'invoke', 'max', 'min', 'sortBy', 'sortedIndex',
+    'toArray', 'size', 'first', 'initial', 'rest', 'last', 'without', 'indexOf',
+    'shuffle', 'lastIndexOf', 'isEmpty', 'groupBy'];
+
+  // Mix in each Underscore method as a proxy to `Collection#models`.
+  _.each(methods, function(method) {
+    Backbone.Collection.prototype[method] = function() {
+      return _[method].apply(_, [this.models].concat(_.toArray(arguments)));
+    };
+  });
+
+  // Backbone.Router
+  // -------------------
+
+  // Routers map faux-URLs to actions, and fire events when routes are
+  // matched. Creating a new one sets its `routes` hash, if not set statically.
+  Backbone.Router = function(options) {
+    options || (options = {});
+    if (options.routes) this.routes = options.routes;
+    this._bindRoutes();
+    this.initialize.apply(this, arguments);
+  };
+
+  // Cached regular expressions for matching named param parts and splatted
+  // parts of route strings.
+  var namedParam    = /:\w+/g;
+  var splatParam    = /\*\w+/g;
+  var escapeRegExp  = /[-[\]{}()+?.,\\^$|#\s]/g;
+
+  // Set up all inheritable **Backbone.Router** properties and methods.
+  _.extend(Backbone.Router.prototype, Backbone.Events, {
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // Manually bind a single named route to a callback. For example:
+    //
+    //     this.route('search/:query/p:num', 'search', function(query, num) {
+    //       ...
+    //     });
+    //
+    route: function(route, name, callback) {
+      Backbone.history || (Backbone.history = new Backbone.History);
+      if (!_.isRegExp(route)) route = this._routeToRegExp(route);
+      if (!callback) callback = this[name];
+      Backbone.history.route(route, _.bind(function(fragment) {
+        var args = this._extractParameters(route, fragment);
+        callback && callback.apply(this, args);
+        this.trigger.apply(this, ['route:' + name].concat(args));
+        Backbone.history.trigger('route', this, name, args);
+      }, this));
+      return this;
+    },
+
+    // Simple proxy to `Backbone.history` to save a fragment into the history.
+    navigate: function(fragment, options) {
+      Backbone.history.navigate(fragment, options);
+    },
+
+    // Bind all defined routes to `Backbone.history`. We have to reverse the
+    // order of the routes here to support behavior where the most general
+    // routes can be defined at the bottom of the route map.
+    _bindRoutes: function() {
+      if (!this.routes) return;
+      var routes = [];
+      for (var route in this.routes) {
+        routes.unshift([route, this.routes[route]]);
+      }
+      for (var i = 0, l = routes.length; i < l; i++) {
+        this.route(routes[i][0], routes[i][1], this[routes[i][1]]);
+      }
+    },
+
+    // Convert a route string into a regular expression, suitable for matching
+    // against the current location hash.
+    _routeToRegExp: function(route) {
+      route = route.replace(escapeRegExp, '\\$&')
+                   .replace(namedParam, '([^\/]+)')
+                   .replace(splatParam, '(.*?)');
+      return new RegExp('^' + route + '$');
+    },
+
+    // Given a route, and a URL fragment that it matches, return the array of
+    // extracted parameters.
+    _extractParameters: function(route, fragment) {
+      return route.exec(fragment).slice(1);
+    }
+
+  });
+
+  // Backbone.History
+  // ----------------
+
+  // Handles cross-browser history management, based on URL fragments. If the
+  // browser does not support `onhashchange`, falls back to polling.
+  Backbone.History = function() {
+    this.handlers = [];
+    _.bindAll(this, 'checkUrl');
+  };
+
+  // Cached regex for cleaning leading hashes and slashes .
+  var routeStripper = /^[#\/]/;
+
+  // Cached regex for detecting MSIE.
+  var isExplorer = /msie [\w.]+/;
+
+  // Has the history handling already been started?
+  var historyStarted = false;
+
+  // Set up all inheritable **Backbone.History** properties and methods.
+  _.extend(Backbone.History.prototype, Backbone.Events, {
+
+    // The default interval to poll for hash changes, if necessary, is
+    // twenty times a second.
+    interval: 50,
+
+    // Get the cross-browser normalized URL fragment, either from the URL,
+    // the hash, or the override.
+    getFragment: function(fragment, forcePushState) {
+      if (fragment == null) {
+        if (this._hasPushState || forcePushState) {
+          fragment = window.location.pathname;
+          var search = window.location.search;
+          if (search) fragment += search;
+        } else {
+          fragment = window.location.hash;
+        }
+      }
+      fragment = decodeURIComponent(fragment);
+      if (!fragment.indexOf(this.options.root)) fragment = fragment.substr(this.options.root.length);
+      return fragment.replace(routeStripper, '');
+    },
+
+    // Start the hash change handling, returning `true` if the current URL matches
+    // an existing route, and `false` otherwise.
+    start: function(options) {
+
+      // Figure out the initial configuration. Do we need an iframe?
+      // Is pushState desired ... is it available?
+      if (historyStarted) throw new Error("Backbone.history has already been started");
+      this.options          = _.extend({}, {root: '/'}, this.options, options);
+      this._wantsHashChange = this.options.hashChange !== false;
+      this._wantsPushState  = !!this.options.pushState;
+      this._hasPushState    = !!(this.options.pushState && window.history && window.history.pushState);
+      var fragment          = this.getFragment();
+      var docMode           = document.documentMode;
+      var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
+      if (oldIE) {
+        this.iframe = $('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
+        this.navigate(fragment);
+      }
+
+      // Depending on whether we're using pushState or hashes, and whether
+      // 'onhashchange' is supported, determine how we check the URL state.
+      if (this._hasPushState) {
+        $(window).bind('popstate', this.checkUrl);
+      } else if (this._wantsHashChange && ('onhashchange' in window) && !oldIE) {
+        $(window).bind('hashchange', this.checkUrl);
+      } else if (this._wantsHashChange) {
+        this._checkUrlInterval = setInterval(this.checkUrl, this.interval);
+      }
+
+      // Determine if we need to change the base url, for a pushState link
+      // opened by a non-pushState browser.
+      this.fragment = fragment;
+      historyStarted = true;
+      var loc = window.location;
+      var atRoot  = loc.pathname == this.options.root;
+
+      // If we've started off with a route from a `pushState`-enabled browser,
+      // but we're currently in a browser that doesn't support it...
+      if (this._wantsHashChange && this._wantsPushState && !this._hasPushState && !atRoot) {
+        this.fragment = this.getFragment(null, true);
+        window.location.replace(this.options.root + '#' + this.fragment);
+        // Return immediately as browser will do redirect to new url
+        return true;
+
+      // Or if we've started out with a hash-based route, but we're currently
+      // in a browser where it could be `pushState`-based instead...
+      } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
+        this.fragment = loc.hash.replace(routeStripper, '');
+        window.history.replaceState({}, document.title, loc.protocol + '//' + loc.host + this.options.root + this.fragment);
+      }
+
+      if (!this.options.silent) {
+        return this.loadUrl();
+      }
+    },
+
+    // Disable Backbone.history, perhaps temporarily. Not useful in a real app,
+    // but possibly useful for unit testing Routers.
+    stop: function() {
+      $(window).unbind('popstate', this.checkUrl).unbind('hashchange', this.checkUrl);
+      clearInterval(this._checkUrlInterval);
+      historyStarted = false;
+    },
+
+    // Add a route to be tested when the fragment changes. Routes added later
+    // may override previous routes.
+    route: function(route, callback) {
+      this.handlers.unshift({route: route, callback: callback});
+    },
+
+    // Checks the current URL to see if it has changed, and if it has,
+    // calls `loadUrl`, normalizing across the hidden iframe.
+    checkUrl: function(e) {
+      var current = this.getFragment();
+      if (current == this.fragment && this.iframe) current = this.getFragment(this.iframe.location.hash);
+      if (current == this.fragment || current == decodeURIComponent(this.fragment)) return false;
+      if (this.iframe) this.navigate(current);
+      this.loadUrl() || this.loadUrl(window.location.hash);
+    },
+
+    // Attempt to load the current URL fragment. If a route succeeds with a
+    // match, returns `true`. If no defined routes matches the fragment,
+    // returns `false`.
+    loadUrl: function(fragmentOverride) {
+      var fragment = this.fragment = this.getFragment(fragmentOverride);
+      var matched = _.any(this.handlers, function(handler) {
+        if (handler.route.test(fragment)) {
+          handler.callback(fragment);
+          return true;
+        }
+      });
+      return matched;
+    },
+
+    // Save a fragment into the hash history, or replace the URL state if the
+    // 'replace' option is passed. You are responsible for properly URL-encoding
+    // the fragment in advance.
+    //
+    // The options object can contain `trigger: true` if you wish to have the
+    // route callback be fired (not usually desirable), or `replace: true`, if
+    // you which to modify the current URL without adding an entry to the history.
+    navigate: function(fragment, options) {
+      if (!historyStarted) return false;
+      if (!options || options === true) options = {trigger: options};
+      var frag = (fragment || '').replace(routeStripper, '');
+      if (this.fragment == frag || this.fragment == decodeURIComponent(frag)) return;
+
+      // If pushState is available, we use it to set the fragment as a real URL.
+      if (this._hasPushState) {
+        if (frag.indexOf(this.options.root) != 0) frag = this.options.root + frag;
+        this.fragment = frag;
+        window.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, frag);
+
+      // If hash changes haven't been explicitly disabled, update the hash
+      // fragment to store history.
+      } else if (this._wantsHashChange) {
+        this.fragment = frag;
+        this._updateHash(window.location, frag, options.replace);
+        if (this.iframe && (frag != this.getFragment(this.iframe.location.hash))) {
+          // Opening and closing the iframe tricks IE7 and earlier to push a history entry on hash-tag change.
+          // When replace is true, we don't want this.
+          if(!options.replace) this.iframe.document.open().close();
+          this._updateHash(this.iframe.location, frag, options.replace);
+        }
+
+      // If you've told us that you explicitly don't want fallback hashchange-
+      // based history, then `navigate` becomes a page refresh.
+      } else {
+        window.location.assign(this.options.root + fragment);
+      }
+      if (options.trigger) this.loadUrl(fragment);
+    },
+
+    // Update the hash location, either replacing the current entry, or adding
+    // a new one to the browser history.
+    _updateHash: function(location, fragment, replace) {
+      if (replace) {
+        location.replace(location.toString().replace(/(javascript:|#).*$/, '') + '#' + fragment);
+      } else {
+        location.hash = fragment;
+      }
+    }
+  });
+
+  // Backbone.View
+  // -------------
+
+  // Creating a Backbone.View creates its initial element outside of the DOM,
+  // if an existing element is not provided...
+  Backbone.View = function(options) {
+    this.cid = _.uniqueId('view');
+    this._configure(options || {});
+    this._ensureElement();
+    this.initialize.apply(this, arguments);
+    this.delegateEvents();
+  };
+
+  // Cached regex to split keys for `delegate`.
+  var eventSplitter = /^(\S+)\s*(.*)$/;
+
+  // List of view options to be merged as properties.
+  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName'];
+
+  // Set up all inheritable **Backbone.View** properties and methods.
+  _.extend(Backbone.View.prototype, Backbone.Events, {
+
+    // The default `tagName` of a View's element is `"div"`.
+    tagName: 'div',
+
+    // jQuery delegate for element lookup, scoped to DOM elements within the
+    // current view. This should be prefered to global lookups where possible.
+    $: function(selector) {
+      return this.$el.find(selector);
+    },
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // **render** is the core function that your view should override, in order
+    // to populate its element (`this.el`), with the appropriate HTML. The
+    // convention is for **render** to always return `this`.
+    render: function() {
+      return this;
+    },
+
+    // Remove this view from the DOM. Note that the view isn't present in the
+    // DOM by default, so calling this method may be a no-op.
+    remove: function() {
+      this.$el.remove();
+      return this;
+    },
+
+    // For small amounts of DOM Elements, where a full-blown template isn't
+    // needed, use **make** to manufacture elements, one at a time.
+    //
+    //     var el = this.make('li', {'class': 'row'}, this.model.escape('title'));
+    //
+    make: function(tagName, attributes, content) {
+      var el = document.createElement(tagName);
+      if (attributes) $(el).attr(attributes);
+      if (content) $(el).html(content);
+      return el;
+    },
+
+    // Change the view's element (`this.el` property), including event
+    // re-delegation.
+    setElement: function(element, delegate) {
+      this.$el = $(element);
+      this.el = this.$el[0];
+      if (delegate !== false) this.delegateEvents();
+      return this;
+    },
+
+    // Set callbacks, where `this.events` is a hash of
+    //
+    // *{"event selector": "callback"}*
+    //
+    //     {
+    //       'mousedown .title':  'edit',
+    //       'click .button':     'save'
+    //       'click .open':       function(e) { ... }
+    //     }
+    //
+    // pairs. Callbacks will be bound to the view, with `this` set properly.
+    // Uses event delegation for efficiency.
+    // Omitting the selector binds the event to `this.el`.
+    // This only works for delegate-able events: not `focus`, `blur`, and
+    // not `change`, `submit`, and `reset` in Internet Explorer.
+    delegateEvents: function(events) {
+      if (!(events || (events = getValue(this, 'events')))) return;
+      this.undelegateEvents();
+      for (var key in events) {
+        var method = events[key];
+        if (!_.isFunction(method)) method = this[events[key]];
+        if (!method) throw new Error('Event "' + events[key] + '" does not exist');
+        var match = key.match(eventSplitter);
+        var eventName = match[1], selector = match[2];
+        method = _.bind(method, this);
+        eventName += '.delegateEvents' + this.cid;
+        if (selector === '') {
+          this.$el.bind(eventName, method);
+        } else {
+          this.$el.delegate(selector, eventName, method);
+        }
+      }
+    },
+
+    // Clears all callbacks previously bound to the view with `delegateEvents`.
+    // You usually don't need to use this, but may wish to if you have multiple
+    // Backbone views attached to the same DOM element.
+    undelegateEvents: function() {
+      this.$el.unbind('.delegateEvents' + this.cid);
+    },
+
+    // Performs the initial configuration of a View with a set of options.
+    // Keys with special meaning *(model, collection, id, className)*, are
+    // attached directly to the view.
+    _configure: function(options) {
+      if (this.options) options = _.extend({}, this.options, options);
+      for (var i = 0, l = viewOptions.length; i < l; i++) {
+        var attr = viewOptions[i];
+        if (options[attr]) this[attr] = options[attr];
+      }
+      this.options = options;
+    },
+
+    // Ensure that the View has a DOM element to render into.
+    // If `this.el` is a string, pass it through `$()`, take the first
+    // matching element, and re-assign it to `el`. Otherwise, create
+    // an element from the `id`, `className` and `tagName` properties.
+    _ensureElement: function() {
+      if (!this.el) {
+        var attrs = getValue(this, 'attributes') || {};
+        if (this.id) attrs.id = this.id;
+        if (this.className) attrs['class'] = this.className;
+        this.setElement(this.make(this.tagName, attrs), false);
+      } else {
+        this.setElement(this.el, false);
+      }
+    }
+
+  });
+
+  // The self-propagating extend function that Backbone classes use.
+  var extend = function (protoProps, classProps) {
+    var child = inherits(this, protoProps, classProps);
+    child.extend = this.extend;
+    return child;
+  };
+
+  // Set up inheritance for the model, collection, and view.
+  Backbone.Model.extend = Backbone.Collection.extend =
+    Backbone.Router.extend = Backbone.View.extend = extend;
+
+  // Backbone.sync
+  // -------------
+
+  // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
+  var methodMap = {
+    'create': 'POST',
+    'update': 'PUT',
+    'delete': 'DELETE',
+    'read':   'GET'
+  };
+
+  // Override this function to change the manner in which Backbone persists
+  // models to the server. You will be passed the type of request, and the
+  // model in question. By default, makes a RESTful Ajax request
+  // to the model's `url()`. Some possible customizations could be:
+  //
+  // * Use `setTimeout` to batch rapid-fire updates into a single request.
+  // * Send up the models as XML instead of JSON.
+  // * Persist models via WebSockets instead of Ajax.
+  //
+  // Turn on `Backbone.emulateHTTP` in order to send `PUT` and `DELETE` requests
+  // as `POST`, with a `_method` parameter containing the true HTTP method,
+  // as well as all requests with the body as `application/x-www-form-urlencoded`
+  // instead of `application/json` with the model in a param named `model`.
+  // Useful when interfacing with server-side languages like **PHP** that make
+  // it difficult to read the body of `PUT` requests.
+  Backbone.sync = function(method, model, options) {
+    var type = methodMap[method];
+
+    // Default JSON-request options.
+    var params = {type: type, dataType: 'json'};
+
+    // Ensure that we have a URL.
+    if (!options.url) {
+      params.url = getValue(model, 'url') || urlError();
+    }
+
+    // Ensure that we have the appropriate request data.
+    if (!options.data && model && (method == 'create' || method == 'update')) {
+      params.contentType = 'application/json';
+      params.data = JSON.stringify(model.toJSON());
+    }
+
+    // For older servers, emulate JSON by encoding the request into an HTML-form.
+    if (Backbone.emulateJSON) {
+      params.contentType = 'application/x-www-form-urlencoded';
+      params.data = params.data ? {model: params.data} : {};
+    }
+
+    // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+    // And an `X-HTTP-Method-Override` header.
+    if (Backbone.emulateHTTP) {
+      if (type === 'PUT' || type === 'DELETE') {
+        if (Backbone.emulateJSON) params.data._method = type;
+        params.type = 'POST';
+        params.beforeSend = function(xhr) {
+          xhr.setRequestHeader('X-HTTP-Method-Override', type);
+        };
+      }
+    }
+
+    // Don't process data on a non-GET request.
+    if (params.type !== 'GET' && !Backbone.emulateJSON) {
+      params.processData = false;
+    }
+
+    // Make the request, allowing the user to override any Ajax options.
+    return $.ajax(_.extend(params, options));
+  };
+
+  // Wrap an optional error callback with a fallback error event.
+  Backbone.wrapError = function(onError, originalModel, options) {
+    return function(model, resp) {
+      resp = model === originalModel ? resp : model;
+      if (onError) {
+        onError(originalModel, resp, options);
+      } else {
+        originalModel.trigger('error', originalModel, resp, options);
+      }
+    };
+  };
+
+  // Helpers
+  // -------
+
+  // Shared empty constructor function to aid in prototype-chain creation.
+  var ctor = function(){};
+
+  // Helper function to correctly set up the prototype chain, for subclasses.
+  // Similar to `goog.inherits`, but uses a hash of prototype properties and
+  // class properties to be extended.
+  var inherits = function(parent, protoProps, staticProps) {
+    var child;
+
+    // The constructor function for the new subclass is either defined by you
+    // (the "constructor" property in your `extend` definition), or defaulted
+    // by us to simply call the parent's constructor.
+    if (protoProps && protoProps.hasOwnProperty('constructor')) {
+      child = protoProps.constructor;
+    } else {
+      child = function(){ parent.apply(this, arguments); };
+    }
+
+    // Inherit class (static) properties from parent.
+    _.extend(child, parent);
+
+    // Set the prototype chain to inherit from `parent`, without calling
+    // `parent`'s constructor function.
+    ctor.prototype = parent.prototype;
+    child.prototype = new ctor();
+
+    // Add prototype properties (instance properties) to the subclass,
+    // if supplied.
+    if (protoProps) _.extend(child.prototype, protoProps);
+
+    // Add static properties to the constructor function, if supplied.
+    if (staticProps) _.extend(child, staticProps);
+
+    // Correctly set child's `prototype.constructor`.
+    child.prototype.constructor = child;
+
+    // Set a convenience property in case the parent's prototype is needed later.
+    child.__super__ = parent.prototype;
+
+    return child;
+  };
+
+  // Helper function to get a value from a Backbone object as a property
+  // or as a function.
+  var getValue = function(object, prop) {
+    if (!(object && object[prop])) return null;
+    return _.isFunction(object[prop]) ? object[prop]() : object[prop];
+  };
+
+  // Throw an error when a URL is needed, and none is supplied.
+  var urlError = function() {
+    throw new Error('A "url" property or function must be specified');
+  };
+
+}).call(this);
+
+});
+
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
+            next();
+        }
+    }]
+};
+
+exports.msgboyDatabase = msgboyDatabase
+});
+
+require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var UrlParser = require('url');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Archive = require('./archive.js').Archive;
+
+var Message = Backbone.Model.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+    defaults: {
+        "url":          "",
+        "title":        null,
+        "atomId":       null,
+        "summary":      null,
+        "content":      null,
+        "links":        {},
+        "createdAt":    0,
+        "source":       {},
+        "sourceHost":   "",
+        "sourceLink":   "",
+        "state":        "new",
+        "feed":         "",
+        "relevance":    0.6
+    },
+    /* Initializes the messages */
+    initialize: function (params) {
+        if(typeof params === "undefined") {
+            params = {}; // Default params
+        }
+        // Setting up the source attributes
+        if (params.source && params.source.links) {
+            if(params.source.links.alternate) {
+                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                    params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
+                    params.sourceHost = params.sourceHost || UrlParser.parse(params.sourceLink).hostname;
+                }
+                else {
+                    params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                    params.sourceHost = params.sourceHost || "";
+                }
+            }
+            else {
+                params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                params.sourceHost = params.sourceHost || "";
+            }
+        }
+        else {
+            params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+            params.sourceHost = params.sourceHost || "";
+        }
+        
+        // Setting up the createdAt
+        if (!params.createdAt) {
+            params.createdAt = new Date().getTime();
+        }
+        
+        
+        // Setting up the mainLink
+        if (params.links && params.links.alternate) {
+            if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
+                params.mainLink = params.links.alternate["text/html"][0].href;
+            }
+            else {
+                // Hum, let's see what other types we have!
+                params.mainLink = "";
+            }
+        }
+        else {
+            params.mainLink = "";
+        }
+        
+        // Setting up the text, as the longest between the summary and the content.
+        if (params.content) {
+            if (params.summary && params.summary.length > params.content.length) {
+                params.text =  params.summary;
+            }
+            else {
+                params.text =  params.content;
+            }
+        }
+        else if (params.summary) {
+            params.text =  params.summary;
+        }
+        else {
+            params.text = "";
+        }
+        
+        
+        // Setting up the params
+        this.set(params);
+        
+        this.related = new Backbone.Collection(); // create container for similar messages
+        this.related.comparator = function(message) {
+            return -message.get('createdAt');
+        }
+        return this;
+    },
+    /* Votes the message up */
+    voteUp: function () {
+        this.setState("up-ed");
+    },
+    /* Votes the message down */
+    voteDown: function () {
+        this.setState("down-ed", function (result) {
+            // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
+            var brothers = new Archive();
+            brothers.forFeed(this.attributes.feed);
+            
+            brothers.bind('reset', function () {
+                var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
+                    return 1;
+                });
+                var counts = relevanceMath.counts(brothers.pluck("state"));
+                if (brothers.length >= 3 && (!states["up-ed"] || states["up-ed"] < 0.05) && (states["down-ed"] > 0.5 || counts["down-ed"] >= 5)) {
+                    this.trigger('unsubscribe');
+                }
+            }.bind(this));
+        }.bind(this));
+    },
+    /* Skip the message */
+    skip: function () {
+        this.setState("skipped");
+    },
+    /* Sets the state for the message */
+    setState: function (_state, callback) {
+        this.save({
+            state: _state
+        }, {
+            success: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(true);
+                }
+                this.trigger(_state, this);
+            }.bind(this),
+            error: function () {
+                if (typeof(callback) !== "undefined" && callback) {
+                    callback(false);
+                }
+            }.bind(this)
+        });
+    },
+    /* This calculates the relevance for this message and sets it. */
+    /* It just calculates the relevance and does not save it. */
+    calculateRelevance: function (callback) {
+        // See Section 6.3 in Product Requirement Document.
+        // We need to get all the messages from this source.
+        // Count how many have been voted up, how many have been voted down.
+        // First, let's pull all the messages from the same source.
+        var brothers = new Archive();
+        brothers.comparator = function (brother) {
+            return brother.attributes.createdAt;
+        };
+        brothers.forFeed(this.attributes.feed);
+        brothers.bind('reset', function () {
+            var relevance = 0.7; // This is the default relevance
+            if (brothers.length > 0) {
+                // So, now, we need to check the ratio of up-ed and down-ed. [TODO : limit the subset?].
+                relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
+            }
+            // Keywords [TODO]
+            // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
+            if (typeof(callback) !== "undefined" && callback) {
+                callback(relevance);
+            }
+        }.bind(this));
+    },
+    relevanceBasedOnBrothers: function (states) {
+        if (states.length === 0) {
+            return 1;
+        }
+        else {
+            var percentages = relevanceMath.percentages(states, ["new", "up-ed", "down-ed", "skipped"]);
+
+            return relevanceMath.average(percentages, {
+                "new" : 0.6,
+                "up-ed": 1.0,
+                "down-ed": 0.0,
+                "skipped": 0.4
+            });
+        }
+    },
+    faviconUrl: function () {
+        return "http://g.etfv.co/" + this.get('sourceLink') + "?defaulticon=lightpng";
+    }
+});
+
+exports.Message = Message;
+
+var relevanceMath = {
+    counts: function (array, defaults, weight) {
+        var counts = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            if (typeof(weight) !== "undefined") {
+                counts[element] += weight(element, index);
+            }
+            else {
+                counts[element] += 1;
+            }
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        return counts;
+    },
+    // Returns the percentages of each element in an array.
+    percentages: function (array) {
+        var counts = {}, percentages = {}, sum = 0;
+        _.each(array, function (element, index, list) {
+            if (!counts[element]) {
+                counts[element] = 0;
+            }
+            counts[element] += 1;
+        });
+        sum = _.reduce(counts, function (memo, num) {
+            return memo + num;
+        }, 0);
+        _.each(_.keys(counts), function (key) {
+            percentages[key] = counts[key] / sum;
+        });
+        return percentages;
+    },
+    // Returns the average based on the weights and the percentages.
+    average: function (percentages, weights) {
+        var sum = 0, norm = 0;
+        _.each(_.keys(percentages), function (key) {
+            sum += percentages[key] * weights[key];
+            norm += percentages[key];
+        });
+        if (norm === 0) {
+            return sum;
+        } else {
+            return sum / norm;
+        }
+        return sum;
+    }
+};
+
+exports.relevanceMath = relevanceMath;
+
+// Welcome messages
+var WelcomeMessages = [{
+    "title": "Welcome to msgboy! He will show you the web you care about.",
+    "ungroup": true,
+    "summary": 'Welcome to msgboy! It will show you the web you care about.',
+    "image": '/views/images/msgboy-help-screen-1.png',
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime(),
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 1.0,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Bookmark or come back to sites you love.",
+    "ungroup": true,
+    "image": "/views/images/msgboy-help-screen-2.png",
+    "summary": "Bookmark sites you love. The msgboy will show you messages when they update",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 1000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Newly posted stories appear in realtime.",
+    "ungroup": true,
+    "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
+    "image": "/views/images/msgboy-help-screen-3.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 2000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Train msgboy to give you what you want.",
+    "ungroup": true,
+    "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
+    "image": "/views/images/msgboy-help-screen-5.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 3000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Click '+' for more like this.",
+    "ungroup": true,
+    "summary": "Vote stories up if you want more like them",
+    "image": "/views/images/msgboy-help-screen-6.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 4000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.8,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Click '-' if you're not interested.",
+    "ungroup": true,
+    "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
+    "image": "/views/images/msgboy-help-screen-7.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 5000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "Follow and rate stories with notifications.",
+    "ungroup": true,
+    "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
+    "image": "/views/images/msgboy-help-screen-8.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 6000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}, {
+    "title": "You can throttle notifications in settings.",
+    "ungroup": true,
+    "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+    "image": "/views/images/msgboy-help-screen-9.png",
+    "content": null,
+    "links": {
+        "alternate": {
+            "text/html": [{
+                "href": '/views/html/help.html',
+                "rel": "alternate",
+                "title": "Welcome to Msgboy",
+                "type": "text/html"
+            }]
+        }
+    },
+    "createdAt": new Date().getTime() - 7000,
+    "source": {
+        "title": "Msgboy",
+        "url": "http://blog.msgboy.com/",
+        "links": {
+            "alternate": {
+                "text/html": [{
+                    "href": "http://blog.msgboy.com/",
+                    "rel": "alternate",
+                    "title": "",
+                    "type": "text/html"
+                }]
+            }
+        }
+    },
+    "sourceHost": "msgboy.com",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.6,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+}
+];
+
+exports.WelcomeMessages = WelcomeMessages;
+
+});
+
+require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Archive = Backbone.Collection.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+
+    initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
+    },
+    comparator: function (message) {
+        return - (message.get('createdAt'));
+    },
+    next: function (number, condition) {
+        var options = {
+            conditions: condition,
+            limit: number,
+            addIndividually: true
+        };
+        this.fetch(options);
+    },
+    forFeed: function (_feed) {
+        this.fetch({conditions: {feed: _feed}});
+    }
+});
+
+exports.Archive = Archive;
+});
+
+require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Subscription = Backbone.Model.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    defaults: {
+        subscribedAt: 0,
+        unsubscribedAt: 0,
+        state: "unsubscribed"
+    },
+    initialize: function (attributes) {
+    },
+    fetchOrCreate: function (callback) {
+        this.fetch({
+            success: function () {
+                // The subscription exists!
+                callback();
+            }.bind(this),
+            error: function () {
+                // There is no such subscription.
+                // Let's save it, then!
+                this.save({}, {
+                    success: function () {
+                        callback();
+                    },
+                    error: function () {
+                        // We're screwed.
+                    }
+                });
+            }.bind(this)
+        });
+    },
+    needsRefresh: function () {
+        if (this.attributes.subscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 7 && this.attributes.unsubscribedAt < new Date().getTime() - 1000 * 60 * 60 * 24 * 31) {
+            for (var i in Blacklist) {
+                if (!this.attributes.id || this.attributes.id.match(Blacklist[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    },
+    setState: function (_state) {
+        switch (_state) {
+        case "subscribed":
+            this.save({state: _state, subscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        case "unsubscribed":
+            this.save({state: _state, unsubscribedAt: new Date().getTime()}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this)
+            });
+            break;
+        default:
+            this.save({state: _state}, {
+                success: function () {
+                    this.trigger(_state);
+                }.bind(this),
+                error: function (o, e) {
+                    // Dang
+                }
+            });
+        }
+    }
+});
+
+var Subscriptions = Backbone.Collection.extend({
+    storeName: "subscriptions",
+    database: msgboyDatabase,
+    model: Subscription,
+    pending: function () {
+        this.fetch({
+            conditions: {state: "subscribing"},
+            addIndividually: true,
+            limit: 100
+        });
+    }
+});
+
+var Blacklist = [
+    /.*wikipedia\.org\/.*/
+];
+
+exports.Subscription = Subscription;
+exports.Subscriptions = Subscriptions;
+
+});
+
+require.define("/strophejs/core.js", function (require, module, exports, __dirname, __filename) {
+var Base64 = require('./base64.js').Base64;
+
+/*
+    This program is distributed under the terms of the MIT license.
+    Please see the LICENSE file for details.
+
+    Copyright 2006-2008, OGG, LLC
+*/
+
+/* jslint configuration: */
+/*global document, window, setTimeout, clearTimeout, console,
+    XMLHttpRequest, ActiveXObject,
+    Base64, MD5,
+    Strophe, $build, $msg, $iq, $pres */
+
+/** File: core.js
+ *  A JavaScript library for XMPP.
+ *
+ *  This is the JavaScript version of the Strophe library.  It relies on
+ *  an underlying protocol.
+ */
+
+/** File: bosh.js
+ *  Since JavaScript has no facilities for persistent TCP connections, this 
+ *  library uses Bidirectional-streams Over Synchronous HTTP (BOSH) to emulate
+ *  a persistent, stateful, two-way connection to an XMPP server.  More
+ *  information on BOSH can be found in XEP 124.
+ */
+
+/** File: websocket.js
+ *	Uses HTML5s websocket as the underlying protocol to allow for fast
+ *  communication from the browser to the XMPP server.
+ *  It needs an Ejabberd server that is able to deal with Websockets.
+ */ 
+
+/** PrivateFunction: Function.prototype.bind
+ *  Bind a function to an instance.
+ *
+ *  This Function object extension method creates a bound method similar
+ *  to those in Python.  This means that the 'this' object will point
+ *  to the instance you want.  See
+ *  <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind'>MDC's bind() documentation</a> and 
+ *  <a href='http://benjamin.smedbergs.us/blog/2007-01-03/bound-functions-and-function-imports-in-javascript/'>Bound Functions and Function Imports in JavaScript</a>
+ *  for a complete explanation.
+ *
+ *  This extension already exists in some browsers (namely, Firefox 3), but
+ *  we provide it to support those that don't.
+ *
+ *  Parameters:
+ *    (Object) obj - The object that will become 'this' in the bound function.
+ *    (Object) argN - An option argument that will be prepended to the 
+ *      arguments given for the function call
+ *
+ *  Returns:
+ *    The bound function.
+ */
+if (!Function.prototype.bind) {
+    Function.prototype.bind = function (obj /*, arg1, arg2, ... */)
+    {
+        var func = this;
+        var _slice = Array.prototype.slice;
+        var _concat = Array.prototype.concat;
+        var _args = _slice.call(arguments, 1);
+        
+        return function () {
+            return func.apply(obj ? obj : this,
+                              _concat.call(_args,
+                                           _slice.call(arguments, 0)));
+        };
+    };
+}
+
+/** PrivateFunction: Array.prototype.indexOf
+ *  Return the index of an object in an array.
+ *
+ *  This function is not supplied by some JavaScript implementations, so
+ *  we provide it if it is missing.  This code is from:
+ *  http://developer.mozilla.org/En/Core_JavaScript_1.5_Reference:Objects:Array:indexOf
+ *
+ *  Parameters:
+ *    (Object) elt - The object to look for.
+ *    (Integer) from - The index from which to start looking. (optional).
+ *
+ *  Returns:
+ *    The index of elt in the array or -1 if not found.
+ */
+if (!Array.prototype.indexOf)
+{
+    Array.prototype.indexOf = function (elt /*, from*/)
+    {
+        var len = this.length;
+
+        var from = Number(arguments[1]) || 0;
+        from = (from < 0) ? Math.ceil(from) : Math.floor(from);
+        if (from < 0) {
+            from += len;
+        }
+
+        for (; from < len; from++) {
+            if (from in this && this[from] === elt) {
+                return from;
+            }
+        }
+
+        return -1;
+    };
+}
+
+/* All of the Strophe globals are defined in this special function below so
+ * that references to the globals become closures.  This will ensure that
+ * on page reload, these references will still be available to callbacks
+ * that are still executing.
+ */
+
+(function (callback) {
+var Strophe;
+
+/** Function: $build
+ *  Create a Strophe.Builder.
+ *  This is an alias for 'new Strophe.Builder(name, attrs)'.
+ *
+ *  Parameters:
+ *    (String) name - The root element name.
+ *    (Object) attrs - The attributes for the root element in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $build(name, attrs) { return new Strophe.Builder(name, attrs); }
+/** Function: $msg
+ *  Create a Strophe.Builder with a <message/> element as the root.
+ *
+ *  Parmaeters:
+ *    (Object) attrs - The <message/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $msg(attrs) { return new Strophe.Builder("message", attrs); }
+/** Function: $iq
+ *  Create a Strophe.Builder with an <iq/> element as the root.
+ *
+ *  Parameters:
+ *    (Object) attrs - The <iq/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $iq(attrs) { return new Strophe.Builder("iq", attrs); }
+/** Function: $pres
+ *  Create a Strophe.Builder with a <presence/> element as the root.
+ *
+ *  Parameters:
+ *    (Object) attrs - The <presence/> element attributes in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder object.
+ */
+function $pres(attrs) { return new Strophe.Builder("presence", attrs); }
+
+/** Class: Strophe
+ *  An object container for all Strophe library functions.
+ *
+ *  This class is just a container for all the objects and constants
+ *  used in the library.  It is not meant to be instantiated, but to
+ *  provide a namespace for library objects, constants, and functions.
+ */
+Strophe = {
+    /** Constant: VERSION
+     *  The version of the Strophe library. Unreleased builds will have
+     *  a version of head-HASH where HASH is a partial revision.
+     */
+    VERSION: "@VERSION@",
+
+    /** Constants: XMPP Namespace Constants
+     *  Common namespace constants from the XMPP RFCs and XEPs.
+     *
+     *  NS.CLIENT - Main XMPP client namespace.
+     *  NS.AUTH - Legacy authentication namespace.
+     *  NS.ROSTER - Roster operations namespace.
+     *  NS.PROFILE - Profile namespace.
+     *  NS.DISCO_INFO - Service discovery info namespace from XEP 30.
+     *  NS.DISCO_ITEMS - Service discovery items namespace from XEP 30.
+     *  NS.MUC - Multi-User Chat namespace from XEP 45.
+     *  NS.SASL - XMPP SASL namespace from RFC 3920.
+     *  NS.STREAM - XMPP Streams namespace from RFC 3920.
+     *  NS.BIND - XMPP Binding namespace from RFC 3920.
+     *  NS.SESSION - XMPP Session namespace from RFC 3920.
+     */
+    NS: {
+        CLIENT: "jabber:client",
+        AUTH: "jabber:iq:auth",
+        ROSTER: "jabber:iq:roster",
+        PROFILE: "jabber:iq:profile",
+        DISCO_INFO: "http://jabber.org/protocol/disco#info",
+        DISCO_ITEMS: "http://jabber.org/protocol/disco#items",
+        MUC: "http://jabber.org/protocol/muc",
+        SASL: "urn:ietf:params:xml:ns:xmpp-sasl",
+        STREAM: "http://etherx.jabber.org/streams",
+        BIND: "urn:ietf:params:xml:ns:xmpp-bind",
+        SESSION: "urn:ietf:params:xml:ns:xmpp-session",
+        VERSION: "jabber:iq:version",
+        STANZAS: "urn:ietf:params:xml:ns:xmpp-stanzas"
+    },
+
+    /** Function: addNamespace
+     *  This function is used to extend the current namespaces in
+     *	Strophe.NS.  It takes a key and a value with the key being the
+     *	name of the new namespace, with its actual value.
+     *	For example:
+     *	Strophe.addNamespace('PUBSUB', "http://jabber.org/protocol/pubsub");
+     *
+     *  Parameters:
+     *    (String) name - The name under which the namespace will be
+     *      referenced under Strophe.NS
+     *    (String) value - The actual namespace.
+     */
+    addNamespace: function (name, value)
+    {
+	Strophe.NS[name] = value;
+    },
+
+    /** Constants: Connection Status Constants
+     *  Connection status constants for use by the connection handler
+     *  callback.
+     *
+     *  Status.ERROR - An error has occurred
+     *  Status.CONNECTING - The connection is currently being made
+     *  Status.CONNFAIL - The connection attempt failed
+     *  Status.AUTHENTICATING - The connection is authenticating
+     *  Status.AUTHFAIL - The authentication attempt failed
+     *  Status.CONNECTED - The connection has succeeded
+     *  Status.DISCONNECTED - The connection has been terminated
+     *  Status.DISCONNECTING - The connection is currently being terminated
+     *  Status.ATTACHED - The connection has been attached
+     */
+    Status: {
+        ERROR: 0,
+        CONNECTING: 1,
+        CONNFAIL: 2,
+        AUTHENTICATING: 3,
+        AUTHFAIL: 4,
+        CONNECTED: 5,
+        DISCONNECTED: 6,
+        DISCONNECTING: 7,
+        ATTACHED: 8
+    },
+
+    /** Constants: Log Level Constants
+     *  Logging level indicators.
+     *
+     *  LogLevel.DEBUG - Debug output
+     *  LogLevel.INFO - Informational output
+     *  LogLevel.WARN - Warnings
+     *  LogLevel.ERROR - Errors
+     *  LogLevel.FATAL - Fatal errors
+     */
+    LogLevel: {
+        DEBUG: 0,
+        INFO: 1,
+        WARN: 2,
+        ERROR: 3,
+        FATAL: 4
+    },
+
+    /** PrivateConstants: DOM Element Type Constants
+     *  DOM element types.
+     *
+     *  ElementType.NORMAL - Normal element.
+     *  ElementType.TEXT - Text data element.
+     */
+    ElementType: {
+        NORMAL: 1,
+        TEXT: 3
+    },
+
+
+    /** Function: forEachChild
+     *  Map a function over some or all child elements of a given element.
+     *
+     *  This is a small convenience function for mapping a function over
+     *  some or all of the children of an element.  If elemName is null, all
+     *  children will be passed to the function, otherwise only children
+     *  whose tag names match elemName will be passed.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The element to operate on.
+     *    (String) elemName - The child element tag name filter.
+     *    (Function) func - The function to apply to each child.  This
+     *      function should take a single argument, a DOM element.
+     */
+    forEachChild: function (elem, elemName, func)
+    {
+        var i, childNode;
+
+        for (i = 0; i < elem.childNodes.length; i++) {
+            childNode = elem.childNodes[i];
+            if (childNode.nodeType == Strophe.ElementType.NORMAL &&
+                (!elemName || this.isTagEqual(childNode, elemName))) {
+                func(childNode);
+            }
+        }
+    },
+
+    /** Function: isTagEqual
+     *  Compare an element's tag name with a string.
+     *
+     *  This function is case insensitive.
+     *
+     *  Parameters:
+     *    (XMLElement) el - A DOM element.
+     *    (String) name - The element name.
+     *
+     *  Returns:
+     *    true if the element's tag name matches _el_, and false
+     *    otherwise.
+     */
+    isTagEqual: function (el, name)
+    {
+        return el.tagName.toLowerCase() == name.toLowerCase();
+    },
+
+    /** PrivateVariable: _xmlGenerator
+     *  _Private_ variable that caches a DOM document to
+     *  generate elements.
+     */
+    _xmlGenerator: null,
+
+    /** PrivateFunction: _makeGenerator
+     *  _Private_ function that creates a dummy XML DOM document to serve as
+     *  an element and text node generator.
+     */
+    _makeGenerator: function () {
+        var doc;
+
+        if (window.ActiveXObject) {
+            doc = this._getIEXmlDom();
+            doc.appendChild(doc.createElement('strophe'));
+        } else {
+            doc = document.implementation
+                .createDocument('jabber:client', 'strophe', null);
+        }
+
+        return doc;
+    },
+
+    /** Function: xmlGenerator
+     *  Get the DOM document to generate elements.
+     *
+     *  Returns:
+     *    The currently used DOM document.
+     */
+    xmlGenerator: function () {
+        if (!Strophe._xmlGenerator) {
+            Strophe._xmlGenerator = Strophe._makeGenerator();
+        }
+        return Strophe._xmlGenerator;
+    },
+
+    /** PrivateFunction: _getIEXmlDom
+     *  Gets IE xml doc object
+     *
+     *  Returns:
+     *    A Microsoft XML DOM Object
+     *  See Also:
+     *    http://msdn.microsoft.com/en-us/library/ms757837%28VS.85%29.aspx
+     */
+    _getIEXmlDom : function () {
+        var doc = null;
+        var docStrings = [
+            "Msxml2.DOMDocument.6.0",
+            "Msxml2.DOMDocument.5.0",
+            "Msxml2.DOMDocument.4.0",
+            "MSXML2.DOMDocument.3.0",
+            "MSXML2.DOMDocument",
+            "MSXML.DOMDocument",
+            "Microsoft.XMLDOM"
+        ];
+
+        for (var d = 0; d < docStrings.length; d++) {
+            if (doc === null) {
+                try {
+                    doc = new ActiveXObject(docStrings[d]);
+                } catch (e) {
+                    doc = null;
+                }
+            } else {
+                break;
+            }
+        }
+
+        return doc;
+    },
+
+    /** Function: xmlElement
+     *  Create an XML DOM element.
+     *
+     *  This function creates an XML DOM element correctly across all
+     *  implementations. Note that these are not HTML DOM elements, which
+     *  aren't appropriate for XMPP stanzas.
+     *
+     *  Parameters:
+     *    (String) name - The name for the element.
+     *    (Array|Object) attrs - An optional array or object containing
+     *      key/value pairs to use as element attributes. The object should
+     *      be in the format {'key': 'value'} or {key: 'value'}. The array
+     *      should have the format [['key1', 'value1'], ['key2', 'value2']].
+     *    (String) text - The text child data for the element.
+     *
+     *  Returns:
+     *    A new XML DOM element.
+     */
+    xmlElement: function (name)
+    {
+        if (!name) { return null; }
+
+        var node = Strophe.xmlGenerator().createElement(name);
+
+        // FIXME: this should throw errors if args are the wrong type or
+        // there are more than two optional args
+        var a, i, k;
+        for (a = 1; a < arguments.length; a++) {
+            if (!arguments[a]) { continue; }
+            if (typeof(arguments[a]) == "string" ||
+                typeof(arguments[a]) == "number") {
+                node.appendChild(Strophe.xmlTextNode(arguments[a]));
+            } else if (typeof(arguments[a]) == "object" &&
+                       typeof(arguments[a].sort) == "function") {
+                for (i = 0; i < arguments[a].length; i++) {
+                    if (typeof(arguments[a][i]) == "object" &&
+                        typeof(arguments[a][i].sort) == "function") {
+                        node.setAttribute(arguments[a][i][0],
+                                          arguments[a][i][1]);
+                    }
+                }
+            } else if (typeof(arguments[a]) == "object") {
+                for (k in arguments[a]) {
+                    if (arguments[a].hasOwnProperty(k)) {
+                        node.setAttribute(k, arguments[a][k]);
+                    }
+                }
+            }
+        }
+
+        return node;
+    },
+
+    /*  Function: xmlescape
+     *  Excapes invalid xml characters.
+     *
+     *  Parameters:
+     *     (String) text - text to escape.
+     *
+     *	Returns:
+     *      Escaped text.
+     */
+    xmlescape: function (text)
+    {
+	text = text.replace(/\&/g, "&amp;");
+        text = text.replace(/</g,  "&lt;");
+        text = text.replace(/>/g,  "&gt;");
+        return text;
+    },
+
+    /** Function: xmlTextNode
+     *  Creates an XML DOM text node.
+     *
+     *  Provides a cross implementation version of document.createTextNode.
+     *
+     *  Parameters:
+     *    (String) text - The content of the text node.
+     *
+     *  Returns:
+     *    A new XML DOM text node.
+     */
+    xmlTextNode: function (text)
+    {
+	//ensure text is escaped
+	text = Strophe.xmlescape(text);
+
+        return Strophe.xmlGenerator().createTextNode(text);
+    },
+
+    /** Function: getText
+     *  Get the concatenation of all text children of an element.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    A String with the concatenated text of all text element children.
+     */
+    getText: function (elem)
+    {
+        if (!elem) { return null; }
+
+        var str = "";
+        if (elem.childNodes.length === 0 && elem.nodeType ==
+            Strophe.ElementType.TEXT) {
+            str += elem.nodeValue;
+        }
+
+        for (var i = 0; i < elem.childNodes.length; i++) {
+            if (elem.childNodes[i].nodeType == Strophe.ElementType.TEXT) {
+                str += elem.childNodes[i].nodeValue;
+            }
+        }
+
+        return str;
+    },
+
+    /** Function: copyElement
+     *  Copy an XML DOM element.
+     *
+     *  This function copies a DOM element and all its descendants and returns
+     *  the new copy.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    A new, copied DOM element tree.
+     */
+    copyElement: function (elem)
+    {
+        var i, el;
+        if (elem.nodeType == Strophe.ElementType.NORMAL) {
+            el = Strophe.xmlElement(elem.tagName);
+
+            for (i = 0; i < elem.attributes.length; i++) {
+                el.setAttribute(elem.attributes[i].nodeName.toLowerCase(),
+                                elem.attributes[i].value);
+            }
+
+            for (i = 0; i < elem.childNodes.length; i++) {
+                el.appendChild(Strophe.copyElement(elem.childNodes[i]));
+            }
+        } else if (elem.nodeType == Strophe.ElementType.TEXT) {
+            el = Strophe.xmlTextNode(elem.nodeValue);
+        }
+
+        return el;
+    },
+
+    /** Function: escapeNode
+     *  Escape the node part (also called local part) of a JID.
+     *
+     *  Parameters:
+     *    (String) node - A node (or local part).
+     *
+     *  Returns:
+     *    An escaped node (or local part).
+     */
+    escapeNode: function (node)
+    {
+        return node.replace(/^\s+|\s+$/g, '')
+            .replace(/\\/g,  "\\5c")
+            .replace(/ /g,   "\\20")
+            .replace(/\"/g,  "\\22")
+            .replace(/\&/g,  "\\26")
+            .replace(/\'/g,  "\\27")
+            .replace(/\//g,  "\\2f")
+            .replace(/:/g,   "\\3a")
+            .replace(/</g,   "\\3c")
+            .replace(/>/g,   "\\3e")
+            .replace(/@/g,   "\\40");
+    },
+
+    /** Function: unescapeNode
+     *  Unescape a node part (also called local part) of a JID.
+     *
+     *  Parameters:
+     *    (String) node - A node (or local part).
+     *
+     *  Returns:
+     *    An unescaped node (or local part).
+     */
+    unescapeNode: function (node)
+    {
+        return node.replace(/\\20/g, " ")
+            .replace(/\\22/g, '"')
+            .replace(/\\26/g, "&")
+            .replace(/\\27/g, "'")
+            .replace(/\\2f/g, "/")
+            .replace(/\\3a/g, ":")
+            .replace(/\\3c/g, "<")
+            .replace(/\\3e/g, ">")
+            .replace(/\\40/g, "@")
+            .replace(/\\5c/g, "\\");
+    },
+
+    /** Function: getNodeFromJid
+     *  Get the node portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the node.
+     */
+    getNodeFromJid: function (jid)
+    {
+        if (jid.indexOf("@") < 0) { return null; }
+        return jid.split("@")[0];
+    },
+
+    /** Function: getDomainFromJid
+     *  Get the domain portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the domain.
+     */
+    getDomainFromJid: function (jid)
+    {
+        var bare = Strophe.getBareJidFromJid(jid);
+        if (bare.indexOf("@") < 0) {
+            return bare;
+        } else {
+            var parts = bare.split("@");
+            parts.splice(0, 1);
+            return parts.join('@');
+        }
+    },
+
+    /** Function: getResourceFromJid
+     *  Get the resource portion of a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the resource.
+     */
+    getResourceFromJid: function (jid)
+    {
+        var s = jid.split("/");
+        if (s.length < 2) { return null; }
+        s.splice(0, 1);
+        return s.join('/');
+    },
+
+    /** Function: getBareJidFromJid
+     *  Get the bare JID from a JID String.
+     *
+     *  Parameters:
+     *    (String) jid - A JID.
+     *
+     *  Returns:
+     *    A String containing the bare JID.
+     */
+    getBareJidFromJid: function (jid)
+    {
+        return jid ? jid.split("/")[0] : null;
+    },
+
+    /** Function: log
+     *  User overrideable logging function.
+     *
+     *  This function is called whenever the Strophe library calls any
+     *  of the logging functions.  The default implementation of this
+     *  function does nothing.  If client code wishes to handle the logging
+     *  messages, it should override this with
+     *  > Strophe.log = function (level, msg) {
+     *  >   (user code here)
+     *  > };
+     *
+     *  Please note that data sent and received over the wire is logged
+     *  via Strophe.Connection.rawInput() and Strophe.Connection.rawOutput().
+     *
+     *  The different levels and their meanings are
+     *
+     *    DEBUG - Messages useful for debugging purposes.
+     *    INFO - Informational messages.  This is mostly information like
+     *      'disconnect was called' or 'SASL auth succeeded'.
+     *    WARN - Warnings about potential problems.  This is mostly used
+     *      to report transient connection errors like request timeouts.
+     *    ERROR - Some error occurred.
+     *    FATAL - A non-recoverable fatal error occurred.
+     *
+     *  Parameters:
+     *    (Integer) level - The log level of the log message.  This will
+     *      be one of the values in Strophe.LogLevel.
+     *    (String) msg - The log message.
+     */
+    log: function (level, msg)
+    {
+        return;
+    },
+
+    /** Function: debug
+     *  Log a message at the Strophe.LogLevel.DEBUG level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    debug: function (msg)
+    {
+        this.log(this.LogLevel.DEBUG, msg);
+    },
+
+    /** Function: info
+     *  Log a message at the Strophe.LogLevel.INFO level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    info: function (msg)
+    {
+        this.log(this.LogLevel.INFO, msg);
+    },
+
+    /** Function: warn
+     *  Log a message at the Strophe.LogLevel.WARN level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    warn: function (msg)
+    {
+        this.log(this.LogLevel.WARN, msg);
+    },
+
+    /** Function: error
+     *  Log a message at the Strophe.LogLevel.ERROR level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    error: function (msg)
+    {
+        this.log(this.LogLevel.ERROR, msg);
+    },
+
+    /** Function: fatal
+     *  Log a message at the Strophe.LogLevel.FATAL level.
+     *
+     *  Parameters:
+     *    (String) msg - The log message.
+     */
+    fatal: function (msg)
+    {
+        this.log(this.LogLevel.FATAL, msg);
+    },
+
+    /** Function: serialize
+     *  Render a DOM element and all descendants to a String.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    The serialized element tree as a String.
+     */
+    serialize: function (elem)
+    {
+        var result;
+
+        if (!elem) { return null; }
+
+        if (typeof(elem.tree) === "function") {
+            elem = elem.tree();
+        }
+
+        var nodeName = elem.nodeName;
+        var i, child;
+
+        if (elem.getAttribute("_realname")) {
+            nodeName = elem.getAttribute("_realname");
+        }
+
+        result = "<" + nodeName;
+        for (i = 0; i < elem.attributes.length; i++) {
+               if (elem.attributes[i].nodeName != "_realname") {
+                 result += " " + elem.attributes[i].nodeName.toLowerCase() +
+                "='" + elem.attributes[i].value
+                    .replace(/&/g, "&amp;")
+                       .replace(/\'/g, "&apos;")
+                       .replace(/</g, "&lt;") + "'";
+               }
+        }
+
+        if (elem.childNodes.length > 0) {
+            result += ">";
+            for (i = 0; i < elem.childNodes.length; i++) {
+                child = elem.childNodes[i];
+                if (child.nodeType == Strophe.ElementType.NORMAL) {
+                    // normal element, so recurse
+                    result += Strophe.serialize(child);
+                } else if (child.nodeType == Strophe.ElementType.TEXT) {
+                    // text element
+                    result += child.nodeValue;
+                }
+            }
+            result += "</" + nodeName + ">";
+        } else {
+            result += "/>";
+        }
+
+        return result;
+    },
+
+    /** PrivateVariable: _requestId
+     *  _Private_ variable that keeps track of the request ids for
+     *  connections.
+     */
+    _requestId: 0,
+
+    /** PrivateVariable: Strophe.connectionPlugins
+     *  _Private_ variable Used to store plugin names that need
+     *  initialization on Strophe.Connection construction.
+     */
+    _connectionPlugins: {},
+
+    /** Function: addConnectionPlugin
+     *  Extends the Strophe.Connection object with the given plugin.
+     *
+     *  Paramaters:
+     *    (String) name - The name of the extension.
+     *    (Object) ptype - The plugin's prototype.
+     */
+    addConnectionPlugin: function (name, ptype)
+    {
+        Strophe._connectionPlugins[name] = ptype;
+    }
+};
+
+/** Class: Strophe.Builder
+ *  XML DOM builder.
+ *
+ *  This object provides an interface similar to JQuery but for building
+ *  DOM element easily and rapidly.  All the functions except for toString()
+ *  and tree() return the object, so calls can be chained.  Here's an
+ *  example using the $iq() builder helper.
+ *  > $iq({to: 'you', from: 'me', type: 'get', id: '1'})
+ *  >     .c('query', {xmlns: 'strophe:example'})
+ *  >     .c('example')
+ *  >     .toString()
+ *  The above generates this XML fragment
+ *  > <iq to='you' from='me' type='get' id='1'>
+ *  >   <query xmlns='strophe:example'>
+ *  >     <example/>
+ *  >   </query>
+ *  > </iq>
+ *  The corresponding DOM manipulations to get a similar fragment would be
+ *  a lot more tedious and probably involve several helper variables.
+ *
+ *  Since adding children makes new operations operate on the child, up()
+ *  is provided to traverse up the tree.  To add two children, do
+ *  > builder.c('child1', ...).up().c('child2', ...)
+ *  The next operation on the Builder will be relative to the second child.
+ */
+
+/** Constructor: Strophe.Builder
+ *  Create a Strophe.Builder object.
+ *
+ *  The attributes should be passed in object notation.  For example
+ *  > var b = new Builder('message', {to: 'you', from: 'me'});
+ *  or
+ *  > var b = new Builder('messsage', {'xml:lang': 'en'});
+ *
+ *  Parameters:
+ *    (String) name - The name of the root element.
+ *    (Object) attrs - The attributes for the root element in object notation.
+ *
+ *  Returns:
+ *    A new Strophe.Builder.
+ */
+Strophe.Builder = function (name, attrs)
+{
+    // Set correct namespace for jabber:client elements
+    if (name == "presence" || name == "message" || name == "iq") {
+        if (attrs && !attrs.xmlns) {
+            attrs.xmlns = Strophe.NS.CLIENT;
+        } else if (!attrs) {
+            attrs = {xmlns: Strophe.NS.CLIENT};
+        }
+    }
+
+    // Holds the tree being built.
+    this.nodeTree = Strophe.xmlElement(name, attrs);
+
+    // Points to the current operation node.
+    this.node = this.nodeTree;
+};
+
+Strophe.Builder.prototype = {
+    /** Function: tree
+     *  Return the DOM tree.
+     *
+     *  This function returns the current DOM tree as an element object.  This
+     *  is suitable for passing to functions like Strophe.Connection.send().
+     *
+     *  Returns:
+     *    The DOM tree as a element object.
+     */
+    tree: function ()
+    {
+        return this.nodeTree;
+    },
+
+    /** Function: toString
+     *  Serialize the DOM tree to a String.
+     *
+     *  This function returns a string serialization of the current DOM
+     *  tree.  It is often used internally to pass data to a
+     *  Strophe.Request object.
+     *
+     *  Returns:
+     *    The serialized DOM tree in a String.
+     */
+    toString: function ()
+    {
+        return Strophe.serialize(this.nodeTree);
+    },
+
+    /** Function: up
+     *  Make the current parent element the new current element.
+     *
+     *  This function is often used after c() to traverse back up the tree.
+     *  For example, to add two children to the same element
+     *  > builder.c('child1', {}).up().c('child2', {});
+     *
+     *  Returns:
+     *    The Stophe.Builder object.
+     */
+    up: function ()
+    {
+        this.node = this.node.parentNode;
+        return this;
+    },
+
+    /** Function: attrs
+     *  Add or modify attributes of the current element.
+     *
+     *  The attributes should be passed in object notation.  This function
+     *  does not move the current element pointer.
+     *
+     *  Parameters:
+     *    (Object) moreattrs - The attributes to add/modify in object notation.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    attrs: function (moreattrs)
+    {
+        for (var k in moreattrs) {
+            if (moreattrs.hasOwnProperty(k)) {
+                this.node.setAttribute(k, moreattrs[k]);
+            }
+        }
+        return this;
+    },
+
+    /** Function: c
+     *  Add a child to the current element and make it the new current
+     *  element.
+     *
+     *  This function moves the current element pointer to the child.  If you
+     *  need to add another child, it is necessary to use up() to go back
+     *  to the parent in the tree.
+     *
+     *  Parameters:
+     *    (String) name - The name of the child.
+     *    (Object) attrs - The attributes of the child in object notation.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    c: function (name, attrs)
+    {
+        var child = Strophe.xmlElement(name, attrs);
+        this.node.appendChild(child);
+        this.node = child;
+        return this;
+    },
+
+    /** Function: cnode
+     *  Add a child to the current element and make it the new current
+     *  element.
+     *
+     *  This function is the same as c() except that instead of using a
+     *  name and an attributes object to create the child it uses an
+     *  existing DOM element object.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - A DOM element.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    cnode: function (elem)
+    {
+        var xmlGen = Strophe.xmlGenerator();
+        var newElem = xmlGen.importNode ? xmlGen.importNode(elem, true) : Strophe.copyElement(elem);
+        this.node.appendChild(newElem);
+        this.node = newElem;
+        return this;
+    },
+
+    /** Function: t
+     *  Add a child text element.
+     *
+     *  This *does not* make the child the new current element since there
+     *  are no children of text elements.
+     *
+     *  Parameters:
+     *    (String) text - The text data to append to the current element.
+     *
+     *  Returns:
+     *    The Strophe.Builder object.
+     */
+    t: function (text)
+    {
+        var child = Strophe.xmlTextNode(text);
+        this.node.appendChild(child);
+        return this;
+    }
+};
+
+
+/** PrivateClass: Strophe.Handler
+ *  _Private_ helper class for managing stanza handlers.
+ *
+ *  A Strophe.Handler encapsulates a user provided callback function to be
+ *  executed when matching stanzas are received by the connection.
+ *  Handlers can be either one-off or persistant depending on their
+ *  return value. Returning true will cause a Handler to remain active, and
+ *  returning false will remove the Handler.
+ *
+ *  Users will not use Strophe.Handler objects directly, but instead they
+ *  will use Strophe.Connection.addHandler() and
+ *  Strophe.Connection.deleteHandler().
+ */
+
+/** PrivateConstructor: Strophe.Handler
+ *  Create and initialize a new Strophe.Handler.
+ *
+ *  Parameters:
+ *    (Function) handler - A function to be executed when the handler is run.
+ *    (String) ns - The namespace to match.
+ *    (String) name - The element name to match.
+ *    (String) type - The element type to match.
+ *    (String) id - The element id attribute to match.
+ *    (String) from - The element from attribute to match.
+ *    (Object) options - Handler options
+ *
+ *  Returns:
+ *    A new Strophe.Handler object.
+ */
+Strophe.Handler = function (handler, ns, name, type, id, from, options)
+{
+    this.handler = handler;
+    this.ns = ns;
+    this.name = name;
+    this.type = type;
+    this.id = id;
+    this.options = options || {matchbare: false};
+
+    // default matchBare to false if undefined
+    if (!this.options.matchBare) {
+        this.options.matchBare = false;
+    }
+
+    if (this.options.matchBare) {
+        this.from = from ? Strophe.getBareJidFromJid(from) : null;
+    } else {
+        this.from = from;
+    }
+
+    // whether the handler is a user handler or a system handler
+    this.user = true;
+};
+
+Strophe.Handler.prototype = {
+    /** PrivateFunction: isMatch
+     *  Tests if a stanza matches the Strophe.Handler.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XML element to test.
+     *
+     *  Returns:
+     *    true if the stanza matches and false otherwise.
+     */
+    isMatch: function (elem)
+    {
+        var nsMatch;
+        var from = null;
+
+        if (this.options.matchBare) {
+            from = Strophe.getBareJidFromJid(elem.getAttribute('from'));
+        } else {
+            from = elem.getAttribute('from');
+        }
+
+        nsMatch = false;
+        if (!this.ns) {
+            nsMatch = true;
+        } else {
+            var that = this;
+            Strophe.forEachChild(elem, null, function (elem) {
+                if (elem.getAttribute("xmlns") == that.ns) {
+                    nsMatch = true;
+                }
+            });
+
+            nsMatch = nsMatch || elem.getAttribute("xmlns") == this.ns;
+        }
+
+        if (nsMatch &&
+            (!this.name || Strophe.isTagEqual(elem, this.name)) &&
+            (!this.type || elem.getAttribute("type") == this.type) &&
+            (!this.id || elem.getAttribute("id") == this.id) &&
+            (!this.from || from == this.from)) {
+                return true;
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: run
+     *  Run the callback on a matching stanza.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The DOM element that triggered the
+     *      Strophe.Handler.
+     *
+     *  Returns:
+     *    A boolean indicating if the handler should remain active.
+     */
+    run: function (elem)
+    {
+        var result = null;
+        // try {
+            result = this.handler(elem);
+        // } catch (e) {
+        //     if (e.sourceURL) {
+        //         Strophe.fatal("error: " + this.handler +
+        //                       " " + e.sourceURL + ":" +
+        //                       e.line + " - " + e.name + ": " + e.message);
+        //     } else if (e.fileName) {
+        //         if (typeof(console) != "undefined") {
+        //             console.trace();
+        //             console.error(this.handler, " - error - ", e, e.message);
+        //         }
+        //         Strophe.fatal("error: " + this.handler + " " +
+        //                       e.fileName + ":" + e.lineNumber + " - " +
+        //                       e.name + ": " + e.message);
+        //     } else {
+        //         Strophe.fatal("error: " + this.handler);
+        //     }
+        // 
+        //     throw e;
+        // }
+
+        return result;
+    },
+
+    /** PrivateFunction: toString
+     *  Get a String representation of the Strophe.Handler object.
+     *
+     *  Returns:
+     *    A String.
+     */
+    toString: function ()
+    {
+        return "{Handler: " + this.handler + "(" + this.name + "," +
+            this.id + "," + this.ns + ")}";
+    }
+};
+
+/** PrivateClass: Strophe.TimedHandler
+ *  _Private_ helper class for managing timed handlers.
+ *
+ *  A Strophe.TimedHandler encapsulates a user provided callback that
+ *  should be called after a certain period of time or at regular
+ *  intervals.  The return value of the callback determines whether the
+ *  Strophe.TimedHandler will continue to fire.
+ *
+ *  Users will not use Strophe.TimedHandler objects directly, but instead
+ *  they will use Strophe.Connection.addTimedHandler() and
+ *  Strophe.Connection.deleteTimedHandler().
+ */
+
+/** PrivateConstructor: Strophe.TimedHandler
+ *  Create and initialize a new Strophe.TimedHandler object.
+ *
+ *  Parameters:
+ *    (Integer) period - The number of milliseconds to wait before the
+ *      handler is called.
+ *    (Function) handler - The callback to run when the handler fires.  This
+ *      function should take no arguments.
+ *
+ *  Returns:
+ *    A new Strophe.TimedHandler object.
+ */
+Strophe.TimedHandler = function (period, handler)
+{
+    this.period = period;
+    this.handler = handler;
+
+    this.lastCalled = new Date().getTime();
+    this.user = true;
+};
+
+Strophe.TimedHandler.prototype = {
+    /** PrivateFunction: run
+     *  Run the callback for the Strophe.TimedHandler.
+     *
+     *  Returns:
+     *    true if the Strophe.TimedHandler should be called again, and false
+     *      otherwise.
+     */
+    run: function ()
+    {
+        this.lastCalled = new Date().getTime();
+        return this.handler();
+    },
+
+    /** PrivateFunction: reset
+     *  Reset the last called time for the Strophe.TimedHandler.
+     */
+    reset: function ()
+    {
+        this.lastCalled = new Date().getTime();
+    },
+
+    /** PrivateFunction: toString
+     *  Get a string representation of the Strophe.TimedHandler object.
+     *
+     *  Returns:
+     *    The string representation.
+     */
+    toString: function ()
+    {
+        return "{TimedHandler: " + this.handler + "(" + this.period +")}";
+    }
+};
+
+
+/** Class: Strophe.Connection
+ *  XMPP Connection manager.
+ *
+ *  Thie class is the main part of Strophe.  It manages the connection
+ *  to an XMPP server and dispatches events to the user callbacks as
+ *  data arrives.  It supports SASL PLAIN, SASL DIGEST-MD5, and legacy
+ *  authentication.
+ *  For the connection to the XMPP server it uses and underlying protocol
+ *  supplied when starting the connection.
+ *
+ *  After creating a Strophe.Connection object, the user will typically
+ *  call connect() with a user supplied callback to handle connection level
+ *  events like authentication failure, disconnection, or connection
+ *  complete.
+ *
+ *  The user will also have several event handlers defined by using
+ *  addHandler() and addTimedHandler().  These will allow the user code to
+ *  respond to interesting stanzas or do something periodically with the
+ *  connection.  These handlers will be active once authentication is
+ *  finished.
+ *
+ *  To send data to the connection, use send().
+ */
+
+/** Constructor: Strophe.Connection
+ *  Create and initialize a Strophe.Connection object.
+ *
+ *  Parameters:
+ *    (Object) params - An Object with a new protocl object.
+ *    For Bosh, connection = new Strophe.Connection({protocol: new Strophe.Bosh(BOSH_SERVICE)});
+ *    Currently supported protocols : Bosh, Websocket.
+ * 	  Coming : XMPP socket (for use in Node.js), Socket.io...
+ *
+ *  Returns:
+ *    A new Strophe.Connection object.
+ */
+Strophe.Connection = function (service)
+{
+	if (service.protocol) {
+		this.protocol = service.protocol;
+	}
+	else {
+		console.log("Warning : this syntax will be deprecated to leave room for othe protocols. Please use new Strophe.Connection({proto : new Strophe.Bosh(BOSH_SERVICE)})" )
+	    /* The path to the httpbind service. */
+	    this.protocol = new Strophe.Bosh(service);
+	}
+
+	/* The connected JID. */
+    this.jid = "";
+    /* stream:features */
+    this.features = null;
+
+    // SASL
+    this.do_session = false;
+    this.do_bind = false;
+
+    // handler lists
+    this.timedHandlers = [];
+    this.handlers = [];
+    this.removeTimeds = [];
+    this.removeHandlers = [];
+    this.addTimeds = [];
+    this.addHandlers = [];
+
+    this.authenticated = false;
+    this.disconnecting = false;
+    this.connected = false;
+	this.status = null;
+	this._stanzas = [];
+
+    this.errors = 0;
+
+    this._uniqueId = Math.round(Math.random() * 10000);
+
+    this._sasl_success_handler = null;
+    this._sasl_failure_handler = null;
+    this._sasl_challenge_handler = null;
+    this._throttle_stanzas_handler = null;
+
+	this.max_stanzas_per_second = 1; // Traffic shaper at 10 stanzas per second, max.
+
+    // initialize plugins
+    for (var k in Strophe._connectionPlugins) {
+        if (Strophe._connectionPlugins.hasOwnProperty(k)) {
+	    var ptype = Strophe._connectionPlugins[k];
+            // jslint complaints about the below line, but this is fine
+            var F = function () {};
+            F.prototype = ptype;
+            this[k] = new F();
+	    this[k].init(this);
+        }
+    }
+};
+
+Strophe.Connection.prototype = {
+    /** Function: reset
+     *  Reset the connection.
+     *
+     *  This function should be called after a connection is disconnected
+     *  before that connection is reused.
+     */
+    reset: function ()
+    {
+        // SASL
+        this.do_session = false;
+        this.do_bind = false;
+
+        // handler lists
+        this.timedHandlers = [];
+        this.handlers = [];
+        this.removeTimeds = [];
+        this.removeHandlers = [];
+        this.addTimeds = [];
+        this.addHandlers = [];
+
+        this.authenticated = false;
+        this.disconnecting = false;
+        this.connected = false;
+		this.status = null;
+
+        this.errors = 0;
+
+        this._uniqueId = Math.round(Math.random()*10000);
+    },
+
+    /** Function: getUniqueId
+     *  Generate a unique ID for use in <iq/> elements.
+     *
+     *  All <iq/> stanzas are required to have unique id attributes.  This
+     *  function makes creating these easy.  Each connection instance has
+     *  a counter which starts from zero, and the value of this counter
+     *  plus a colon followed by the suffix becomes the unique id. If no
+     *  suffix is supplied, the counter is used as the unique id.
+     *
+     *  Suffixes are used to make debugging easier when reading the stream
+     *  data, and their use is recommended.  The counter resets to 0 for
+     *  every new connection for the same reason.  For connections to the
+     *  same server that authenticate the same way, all the ids should be
+     *  the same, which makes it easy to see changes.  This is useful for
+     *  automated testing as well.
+     *
+     *  Parameters:
+     *    (String) suffix - A optional suffix to append to the id.
+     *
+     *  Returns:
+     *    A unique string to be used for the id attribute.
+     */
+    getUniqueId: function (suffix)
+    {
+        if (typeof(suffix) == "string" || typeof(suffix) == "number") {
+            return ++this._uniqueId + ":" + suffix;
+        } else {
+            return ++this._uniqueId + "";
+        }
+    },
+
+    /** Function: connect
+     *  Starts the connection process.
+     *
+     *  As the connection process proceeds, the user supplied callback will
+     *  be triggered multiple times with status updates.  The callback
+     *  should take two arguments - the status code and the error condition.
+     *
+     *  The status code will be one of the values in the Strophe.Status
+     *  constants.  The error condition will be one of the conditions
+     *  defined in RFC 3920 or the condition 'strophe-parsererror'.
+     *
+     *  Please see XEP 124 for a more detailed explanation of the optional
+     *  parameters below.
+     *
+     *  Parameters:
+     *    (String) jid - The user's JID.  This may be a bare JID,
+     *      or a full JID.  If a node is not supplied, SASL ANONYMOUS
+     *      authentication will be attempted.
+     *    (String) pass - The user's password.
+     *    (Function) callback The connect callback function.
+     *    (Integer) wait - The optional HTTPBIND wait value.  This is the
+     *      time the server will wait before returning an empty result for
+     *      a request.  The default setting of 60 seconds is recommended.
+     *      Other settings will require tweaks to the Strophe.TIMEOUT value.
+     *    (Integer) hold - The optional HTTPBIND hold value.  This is the
+     *      number of connections the server will hold at one time.  This
+     *      should almost always be set to 1 (the default).
+     */
+    connect: function (jid, pass, callback, wait, hold)
+    {
+		this.changeConnectStatus(Strophe.Status.CONNECTING, null);
+        this.jid = jid;
+        this.pass = pass;
+        this.connect_callback = callback;
+        this.disconnecting = false;
+        this.connected = false;
+        this.authenticated = false;
+        this.errors = 0;
+
+        // parse jid for domain and resource
+        this.domain = Strophe.getDomainFromJid(this.jid);
+		// Let's start the throttler.
+		this._throttleStanzas();
+		// Let's go.
+		this.protocol.connect(this);
+    },
+
+	/** Function start
+	 * This function initializes the stream
+	 * <stream:stream
+       to='example.com'
+       xmlns='jabber:client'
+       xmlns:stream='http://etherx.jabber.org/streams'
+       version='1.0'>
+	
+	 */
+	start: function () {
+		this.send($build('stream:stream', {
+			to: this.domain,
+			'xmlns': 'jabber:client',
+			'xmlns:stream': 'http://etherx.jabber.org/streams',
+			'version': '1.0'}).tree());
+	},
+
+    /** Function: xmlInput
+     *  User overrideable function that receives XML data coming into the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.xmlInput = function (elem) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XML data received by the connection.
+     */
+    xmlInput: function (elem)
+    {
+        return;
+    },
+
+    /** Function: xmlOutput
+     *  User overrideable function that receives XML data sent to the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.xmlOutput = function (elem) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The XMLdata sent by the connection.
+     */
+    xmlOutput: function (elem)
+    {
+        return;
+    },
+
+    /** Function: rawInput
+     *  User overrideable function that receives raw data coming into the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.rawInput = function (data) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (String) data - The data received by the connection.
+     */
+    rawInput: function (data)
+    {
+        return;
+    },
+
+    /** Function: rawOutput
+     *  User overrideable function that receives raw data sent to the
+     *  connection.
+     *
+     *  The default function does nothing.  User code can override this with
+     *  > Strophe.Connection.rawOutput = function (data) {
+     *  >   (user code)
+     *  > };
+     *
+     *  Parameters:
+     *    (String) data - The data sent by the connection.
+     */
+    rawOutput: function (data)
+    {
+        return;
+    },
+
+    /** Function: send
+     *  Send a stanza.
+     *
+     *  This function is called to push data to the server through the 
+	 *  protocol object.
+     *
+     *  Parameters:
+     *    (XMLElement |
+     *     [XMLElement] |
+     *     Strophe.Builder) elem - The stanza to send.
+     */
+    send: function (elem)
+    {
+        if (elem === null) { return ; }
+        if (typeof(elem.sort) === "function") {
+            for (var i = 0; i < elem.length; i++) {
+				if (this._ensureDOMElement(elem[i])) {
+					this._stanzas.push(elem[i]);
+				}
+            }
+        } else if (typeof(elem.tree) === "function") {
+			if (this._ensureDOMElement(elem.tree())) {
+				this._stanzas.push(elem.tree());
+				
+			}
+        } else {
+			if (this._ensureDOMElement(elem)) {
+				this._stanzas.push(elem);
+			}
+        }
+    },
+
+    /** Function: sendIQ
+     *  Helper function to send IQ stanzas.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza to send.
+     *    (Function) callback - The callback function for a successful request.
+     *    (Function) errback - The callback function for a failed or timed
+     *      out request.  On timeout, the stanza will be null.
+     *    (Integer) timeout - The time specified in milliseconds for a
+     *      timeout to occur.
+     *
+     *  Returns:
+     *    The id used to send the IQ.
+    */
+    sendIQ: function (elem, callback, errback, timeout) {
+        var timeoutHandler = null;
+        var that = this;
+
+        if (typeof(elem.tree) === "function") {
+            elem = elem.tree();
+        }
+	var id = elem.getAttribute('id');
+
+	// inject id if not found
+	if (!id) {
+	    id = this.getUniqueId("sendIQ");
+	    elem.setAttribute("id", id);
+	}
+
+	var handler = this.addHandler(function (stanza) {
+	    // remove timeout handler if there is one
+            if (timeoutHandler) {
+                that.deleteTimedHandler(timeoutHandler);
+            }
+
+            var iqtype = stanza.getAttribute('type');
+	    if (iqtype == 'result') {
+		if (callback) {
+                    callback(stanza);
+                }
+	    } else if (iqtype == 'error') {
+		if (errback) {
+                    errback(stanza);
+                }
+	    } else {
+                throw {
+                    name: "StropheError",
+                    message: "Got bad IQ type of " + iqtype
+                };
+            }
+	}, null, 'iq', null, id);
+
+	// if timeout specified, setup timeout handler.
+	if (timeout) {
+	    timeoutHandler = this.addTimedHandler(timeout, function () {
+                // get rid of normal handler
+                that.deleteHandler(handler);
+
+	        // call errback on timeout with null stanza
+                if (errback) {
+		    errback(null);
+                }
+		return false;
+	    });
+	}
+
+	this.send(elem);
+
+	return id;
+    },
+
+
+    /** PrivateFunction: _ensureDOMElement
+     *  Ensures that the data is a DOMElement.
+     */
+	_ensureDOMElement: function (element) {
+		if (element === null || !element.tagName || !element.childNodes) {
+			throw {
+				name: "StropheError",
+				message: "Cannot queue non-DOMElement."
+			};
+		}
+		return true;
+	},
+
+
+    /** Function: addTimedHandler
+     *  Add a timed handler to the connection.
+     *
+     *  This function adds a timed handler.  The provided handler will
+     *  be called every period milliseconds until it returns false,
+     *  the connection is terminated, or the handler is removed.  Handlers
+     *  that wish to continue being invoked should return true.
+     *
+     *  Because of method binding it is necessary to save the result of
+     *  this function if you wish to remove a handler with
+     *  deleteTimedHandler().
+     *
+     *  Note that user handlers are not active until authentication is
+     *  successful.
+     *
+     *  Parameters:
+     *    (Integer) period - The period of the handler.
+     *    (Function) handler - The callback function.
+     *
+     *  Returns:
+     *    A reference to the handler that can be used to remove it.
+     */
+    addTimedHandler: function (period, handler)
+    {
+        var thand = new Strophe.TimedHandler(period, handler);
+        this.addTimeds.push(thand);
+        return thand;
+    },
+
+    /** Function: deleteTimedHandler
+     *  Delete a timed handler for a connection.
+     *
+     *  This function removes a timed handler from the connection.  The
+     *  handRef parameter is *not* the function passed to addTimedHandler(),
+     *  but is the reference returned from addTimedHandler().
+     *
+     *  Parameters:
+     *    (Strophe.TimedHandler) handRef - The handler reference.
+     */
+    deleteTimedHandler: function (handRef)
+    {
+        // this must be done in the Idle loop so that we don't change
+        // the handlers during iteration
+        this.removeTimeds.push(handRef);
+    },
+
+    /** Function: addHandler
+     *  Add a stanza handler for the connection.
+     *
+     *  This function adds a stanza handler to the connection.  The
+     *  handler callback will be called for any stanza that matches
+     *  the parameters.  Note that if multiple parameters are supplied,
+     *  they must all match for the handler to be invoked.
+     *
+     *  The handler will receive the stanza that triggered it as its argument.
+     *  The handler should return true if it is to be invoked again;
+     *  returning false will remove the handler after it returns.
+     *
+     *  As a convenience, the ns parameters applies to the top level element
+     *  and also any of its immediate children.  This is primarily to make
+     *  matching /iq/query elements easy.
+     *
+     *  The options argument contains handler matching flags that affect how
+     *  matches are determined. Currently the only flag is matchBare (a
+     *  boolean). When matchBare is true, the from parameter and the from
+     *  attribute on the stanza will be matched as bare JIDs instead of
+     *  full JIDs. To use this, pass {matchBare: true} as the value of
+     *  options. The default value for matchBare is false.
+     *
+     *  The return value should be saved if you wish to remove the handler
+     *  with deleteHandler().
+     *
+     *  Parameters:
+     *    (Function) handler - The user callback.
+     *    (String) ns - The namespace to match.
+     *    (String) name - The stanza name to match.
+     *    (String) type - The stanza type attribute to match.
+     *    (String) id - The stanza id attribute to match.
+     *    (String) from - The stanza from attribute to match.
+     *    (String) options - The handler options
+     *
+     *  Returns:
+     *    A reference to the handler that can be used to remove it.
+     */
+    addHandler: function (handler, ns, name, type, id, from, options)
+    {
+        var hand = new Strophe.Handler(handler, ns, name, type, id, from, options);
+        this.addHandlers.push(hand);
+        return hand;
+    },
+
+    /** Function: deleteHandler
+     *  Delete a stanza handler for a connection.
+     *
+     *  This function removes a stanza handler from the connection.  The
+     *  handRef parameter is *not* the function passed to addHandler(),
+     *  but is the reference returned from addHandler().
+     *
+     *  Parameters:
+     *    (Strophe.Handler) handRef - The handler reference.
+     */
+    deleteHandler: function (handRef) {
+        // this must be done in the Idle loop so that we don't change
+        // the handlers during iteration
+        this.removeHandlers.push(handRef);
+    },
+
+    /** Function: disconnect
+     *  Start the graceful disconnection process.
+     *
+     *  This function starts the disconnection process.  This process starts
+     *  by sending unavailable presence.  
+	 *  A timeout handler makes sure that disconnection happens.
+     *
+     *  The user supplied connection callback will be notified of the
+     *  progress as this process happens.
+     *
+     *  Parameters:
+     *    (String) reason - The reason the disconnect is occuring.
+     */
+    disconnect: function (reason)
+    {
+        Strophe.info("Disconnect was called because: " + reason);
+        this.changeConnectStatus(Strophe.Status.DISCONNECTING, reason);
+        if (this.connected) {
+	        this.disconnecting = true;
+            // setup timeout handler
+            this._disconnectTimeout = this._addSysTimedHandler(3000, this._onDisconnectTimeout.bind(this));
+		 	if (this.authenticated) {
+	            this.send($pres({xmlns: Strophe.NS.CLIENT, type: 'unavailable'}));
+	        }
+			this.protocol.disconnect();
+        }
+    },
+
+    /** PrivateFunction: changeConnectStatus
+     *  _Private_ helper function that makes sure plugins and the user's
+     *  callback are notified of connection status changes.
+     *
+     *  Parameters:
+     *    (Integer) status - the new connection status, one of the values
+     *      in Strophe.Status
+     *    (String) condition - the error condition or null
+     */
+    changeConnectStatus: function (status, condition)
+    {
+		this.status = status;
+        // notify all plugins listening for status changes
+        for (var k in Strophe._connectionPlugins) {
+            if (Strophe._connectionPlugins.hasOwnProperty(k)) {
+                var plugin = this[k];
+                if (plugin.statusChanged) {
+                    try {
+                        plugin.statusChanged(status, condition);
+                    } catch (err) {
+                        Strophe.error("" + k + " plugin caused an exception " +
+                                      "changing status: " + err);
+                    }
+                }
+            }
+        }
+
+        // notify the user's callback
+        if (this.connect_callback) {
+            // try {
+                this.connect_callback(status, condition);
+            // } catch (e) {
+            //     Strophe.error("User connection callback caused an " +
+            //                   "exception: " + e);
+            // }
+        }
+    },
+
+    /** PrivateFunction: _doDisconnect
+     *  _Private_ function to disconnect.
+     *
+     *  This is the last piece of the disconnection logic in the XMPP connection.  
+	 *  This resets the connection and alerts the user's connection callback.
+     */
+    _doDisconnect: function ()
+    {
+        // delete handlers
+        this.handlers = [];
+        this.timedHandlers = [];
+        this.removeTimeds = [];
+        this.removeHandlers = [];
+        this.addTimeds = [];
+        this.addHandlers = [];
+
+        this.connected = false;
+        this.protocol.finish();
+        // tell the parent we disconnected
+        this.changeConnectStatus(Strophe.Status.DISCONNECTED, null);
+    },
+
+    /** Function: receiveData
+     *  Handler to processes incoming stanza from the protocol layer. It should _not_ be called by the user.
+     *
+     *  Parameters:
+     *    (Strophe.Request) elem - The received stanza
+     */
+    receiveData: function (elem) {
+		var do_sasl_plain = false;
+		var do_sasl_digest_md5 = false;
+		var do_sasl_anonymous = false;
+		
+	    this.connected = true; // We're connected since we got data
+        if (elem === null) { return; }
+
+        this.xmlInput(elem);
+
+        // remove handlers scheduled for deletion
+        var i, hand;
+        while (this.removeHandlers.length > 0) {
+            hand = this.removeHandlers.pop();
+            i = this.handlers.indexOf(hand);
+            if (i >= 0) {
+                this.handlers.splice(i, 1);
+            }
+        }
+
+        // add handlers scheduled for addition
+        while (this.addHandlers.length > 0) {
+            this.handlers.push(this.addHandlers.pop());
+        }
+
+		// send each incoming stanza through the handler chain
+		var i, newList;
+		// process handlers
+        newList = this.handlers;
+		this.handlers = [];
+		for (i = 0; i < newList.length; i++) {
+			var hand = newList[i];
+			if (hand.isMatch(elem) && (this.authenticated || !hand.user)) {
+				if (hand.run(elem)) {
+					this.handlers.push(hand);
+				}
+			} else {
+				this.handlers.push(hand);
+            }
+		}
+
+		// Now, the connection stuff. Technically, these should probably be handlers too, but it seems that they're not currently.
+		var mechanisms = elem.getElementsByTagName("mechanism");
+        var i, mech, auth_str, hashed_auth_str;
+        if (mechanisms.length > 0) {
+            for (i = 0; i < mechanisms.length; i++) {
+                mech = Strophe.getText(mechanisms[i]);
+                if (mech == 'DIGEST-MD5') {
+                    do_sasl_digest_md5 = true;
+                } else if (mech == 'PLAIN') {
+                    do_sasl_plain = true;
+                } else if (mech == 'ANONYMOUS') {
+                    do_sasl_anonymous = true;
+                }
+            }
+        } 
+
+
+		if (this.status == Strophe.Status.CONNECTING) {
+			this.changeConnectStatus(Strophe.Status.AUTHENTICATING, null);
+			if (Strophe.getNodeFromJid(this.jid) === null && do_sasl_anonymous) {
+	            this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "ANONYMOUS"
+	            }).tree());
+
+	        } else if (Strophe.getNodeFromJid(this.jid) === null) {
+	            // we don't have a node, which is required for non-anonymous
+	            // client connections
+	            this.changeConnectStatus(Strophe.Status.CONNFAIL, 'x-strophe-bad-non-anon-jid');
+	            this.disconnect();
+	        } else if (do_sasl_digest_md5) {
+	            this._sasl_challenge_handler = this._addSysHandler(this._sasl_challenge1_cb.bind(this), null, "challenge", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "DIGEST-MD5"
+	            }).tree());
+	        } else if (do_sasl_plain) {
+	            // Build the plain auth string (barejid null
+	            // username null password) and base 64 encoded.
+	            auth_str = Strophe.getBareJidFromJid(this.jid);
+	            auth_str = auth_str + "\u0000";
+	            auth_str = auth_str + Strophe.getNodeFromJid(this.jid);
+	            auth_str = auth_str + "\u0000";
+	            auth_str = auth_str + this.pass;
+
+	            this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+	            this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+	            hashed_auth_str = Base64.encode(auth_str);
+	            this.send($build("auth", {
+	                xmlns: Strophe.NS.SASL,
+	                mechanism: "PLAIN"
+	            }).t(hashed_auth_str).tree());
+	        } else {
+	            this._addSysHandler(this._auth1_cb.bind(this), null, null, null, "_auth_1");
+
+	            this.send($iq({
+	                type: "get",
+	                to: this.domain,
+	                id: "_auth_1"
+	            }).c("query", {
+	                xmlns: Strophe.NS.AUTH
+	            }).c("username", {}).t(Strophe.getNodeFromJid(this.jid)).tree());
+	        }
+		}
+    },
+
+    /** PrivateFunction: _sasl_challenge1_cb
+     *  _Private_ handler for DIGEST-MD5 SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The challenge stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_challenge1_cb: function (elem)
+    {
+        var attribMatch = /([a-z]+)=("[^"]+"|[^,"]+)(?:,|$)/;
+
+        var challenge = Base64.decode(Strophe.getText(elem));
+        var cnonce = MD5.hexdigest(Math.random() * 1234567890);
+        var realm = "";
+        var host = null;
+        var nonce = "";
+        var qop = "";
+        var matches;
+
+        // remove unneeded handlers
+        this.deleteHandler(this._sasl_failure_handler);
+
+        while (challenge.match(attribMatch)) {
+            matches = challenge.match(attribMatch);
+            challenge = challenge.replace(matches[0], "");
+            matches[2] = matches[2].replace(/^"(.+)"$/, "$1");
+            switch (matches[1]) {
+            case "realm":
+                realm = matches[2];
+                break;
+            case "nonce":
+                nonce = matches[2];
+                break;
+            case "qop":
+                qop = matches[2];
+                break;
+            case "host":
+                host = matches[2];
+                break;
+            }
+        }
+
+        var digest_uri = "xmpp/" + this.domain;
+        if (host !== null) {
+            digest_uri = digest_uri + "/" + host;
+        }
+
+        var A1 = MD5.hash(Strophe.getNodeFromJid(this.jid) +
+                          ":" + realm + ":" + this.pass) +
+            ":" + nonce + ":" + cnonce;
+        var A2 = 'AUTHENTICATE:' + digest_uri;
+
+        var responseText = "";
+        responseText += 'username=' +
+            this._quote(Strophe.getNodeFromJid(this.jid)) + ',';
+        responseText += 'realm=' + this._quote(realm) + ',';
+        responseText += 'nonce=' + this._quote(nonce) + ',';
+        responseText += 'cnonce=' + this._quote(cnonce) + ',';
+        responseText += 'nc="00000001",';
+        responseText += 'qop="auth",';
+        responseText += 'digest-uri=' + this._quote(digest_uri) + ',';
+        responseText += 'response=' + this._quote(
+            MD5.hexdigest(MD5.hexdigest(A1) + ":" +
+                          nonce + ":00000001:" +
+                          cnonce + ":auth:" +
+                          MD5.hexdigest(A2))) + ',';
+        responseText += 'charset="utf-8"';
+
+        this._sasl_challenge_handler = this._addSysHandler(this._sasl_challenge2_cb.bind(this), null, "challenge", null, null);
+        this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+        this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+        this.send($build('response', {
+            xmlns: Strophe.NS.SASL
+        }).t(Base64.encode(responseText)).tree());
+
+        return false;
+    },
+
+    /** PrivateFunction: _quote
+     *  _Private_ utility function to backslash escape and quote strings.
+     *
+     *  Parameters:
+     *    (String) str - The string to be quoted.
+     *
+     *  Returns:
+     *    quoted string
+     */
+    _quote: function (str)
+    {
+        return '"' + str.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+        //" end string workaround for emacs
+    },
+
+
+    /** PrivateFunction: _sasl_challenge2_cb
+     *  _Private_ handler for second step of DIGEST-MD5 SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The challenge stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_challenge2_cb: function (elem)
+    {
+        // remove unneeded handlers
+        this.deleteHandler(this._sasl_success_handler);
+        this.deleteHandler(this._sasl_failure_handler);
+
+        this._sasl_success_handler = this._addSysHandler(this._sasl_success_cb.bind(this), null, "success", null, null);
+        this._sasl_failure_handler = this._addSysHandler(this._sasl_failure_cb.bind(this), null, "failure", null, null);
+
+        this.send($build('response', {xmlns: Strophe.NS.SASL}).tree());
+        return false;
+    },
+
+    /** PrivateFunction: _auth1_cb
+     *  _Private_ handler for legacy authentication.
+     *
+     *  This handler is called in response to the initial <iq type='get'/>
+     *  for legacy authentication.  It builds an authentication <iq/> and
+     *  sends it, creating a handler (calling back to _auth2_cb()) to
+     *  handle the result
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza that triggered the callback.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _auth1_cb: function (elem)
+    {
+        // build plaintext auth iq
+        var iq = $iq({type: "set", id: "_auth_2"})
+            .c('query', {xmlns: Strophe.NS.AUTH})
+            .c('username', {}).t(Strophe.getNodeFromJid(this.jid))
+            .up()
+            .c('password').t(this.pass);
+
+        if (!Strophe.getResourceFromJid(this.jid)) {
+            // since the user has not supplied a resource, we pick
+            // a default one here.  unlike other auth methods, the server
+            // cannot do this for us.
+            this.jid = Strophe.getBareJidFromJid(this.jid) + '/strophe';
+        }
+        iq.up().c('resource', {}).t(Strophe.getResourceFromJid(this.jid));
+
+        this._addSysHandler(this._auth2_cb.bind(this), null,
+                            null, null, "_auth_2");
+
+        this.send(iq.tree());
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_success_cb
+     *  _Private_ handler for succesful SASL authentication.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_success_cb: function (elem)
+    {
+        Strophe.info("SASL authentication succeeded.");
+
+        // remove old handlers
+        this.deleteHandler(this._sasl_failure_handler);
+        this._sasl_failure_handler = null;
+        if (this._sasl_challenge_handler) {
+            this.deleteHandler(this._sasl_challenge_handler);
+            this._sasl_challenge_handler = null;
+        }
+
+        this._addSysHandler(this._sasl_auth1_cb.bind(this), null, "stream:features", null, null);
+
+		
+        // we must send an xmpp:restart now
+		this.protocol.restart();
+        
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_auth1_cb
+     *  _Private_ handler to start stream binding.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_auth1_cb: function (elem)
+    {
+        // save stream:features for future usage
+        this.features = elem;
+
+        var i, child;
+
+        for (i = 0; i < elem.childNodes.length; i++) {
+            child = elem.childNodes[i];
+            if (child.nodeName == 'bind') {
+                this.do_bind = true;
+            }
+
+            if (child.nodeName == 'session') {
+                this.do_session = true;
+            }
+        }
+
+        if (!this.do_bind) {
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        } else {
+            this._addSysHandler(this._sasl_bind_cb.bind(this), null, null, null, "_bind_auth_2");
+
+            var resource = Strophe.getResourceFromJid(this.jid);
+            if (resource) {
+                this.send($iq({type: "set", id: "_bind_auth_2"})
+                          .c('bind', {xmlns: Strophe.NS.BIND})
+                          .c('resource', {}).t(resource).tree());
+            } else {
+                this.send($iq({type: "set", id: "_bind_auth_2"})
+                          .c('bind', {xmlns: Strophe.NS.BIND})
+                          .tree());
+            }
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_bind_cb
+     *  _Private_ handler for binding result and session start.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_bind_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "error") {
+            Strophe.info("SASL binding failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+
+        // TODO - need to grab errors
+        var bind = elem.getElementsByTagName("bind");
+        var jidNode;
+        if (bind.length > 0) {
+            // Grab jid
+            jidNode = bind[0].getElementsByTagName("jid");
+            if (jidNode.length > 0) {
+                this.jid = Strophe.getText(jidNode[0]);
+
+                if (this.do_session) {
+                    this._addSysHandler(this._sasl_session_cb.bind(this),
+                                        null, null, null, "_session_auth_2");
+
+                    this.send($iq({type: "set", id: "_session_auth_2"})
+                                  .c('session', {xmlns: Strophe.NS.SESSION})
+                                  .tree());
+                } else {
+                    this.authenticated = true;
+                    this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+                }
+            }
+        } else {
+            Strophe.info("SASL binding failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+    },
+
+    /** PrivateFunction: _sasl_session_cb
+     *  _Private_ handler to finish successful SASL connection.
+     *
+     *  This sets Connection.authenticated to true on success, which
+     *  starts the processing of user handlers.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_session_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "result") {
+            this.authenticated = true;
+            this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+        } else if (elem.getAttribute("type") == "error") {
+            Strophe.info("Session creation failed.");
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            return false;
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _sasl_failure_cb
+     *  _Private_ handler for SASL authentication failure.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The matching stanza.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _sasl_failure_cb: function (elem)
+    {
+        // delete unneeded handlers
+        if (this._sasl_success_handler) {
+            this.deleteHandler(this._sasl_success_handler);
+            this._sasl_success_handler = null;
+        }
+        if (this._sasl_challenge_handler) {
+            this.deleteHandler(this._sasl_challenge_handler);
+            this._sasl_challenge_handler = null;
+        }
+
+        this._doDisconnect();
+        this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+        return false;
+    },
+
+    /** PrivateFunction: _auth2_cb
+     *  _Private_ handler to finish legacy authentication.
+     *
+     *  This handler is called when the result from the jabber:iq:auth
+     *  <iq/> stanza is returned.
+     *
+     *  Parameters:
+     *    (XMLElement) elem - The stanza that triggered the callback.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _auth2_cb: function (elem)
+    {
+        if (elem.getAttribute("type") == "result") {
+            this.authenticated = true;
+            this.changeConnectStatus(Strophe.Status.CONNECTED, null);
+        } else if (elem.getAttribute("type") == "error") {
+            this.changeConnectStatus(Strophe.Status.AUTHFAIL, null);
+            this.disconnect();
+        }
+
+        return false;
+    },
+
+    /** PrivateFunction: _addSysTimedHandler
+     *  _Private_ function to add a system level timed handler.
+     *
+     *  This function is used to add a Strophe.TimedHandler for the
+     *  library code.  System timed handlers are allowed to run before
+     *  authentication is complete.
+     *
+     *  Parameters:
+     *    (Integer) period - The period of the handler.
+     *    (Function) handler - The callback function.
+     */
+    _addSysTimedHandler: function (period, handler)
+    {
+        var thand = new Strophe.TimedHandler(period, handler);
+        thand.user = false;
+        this.addTimeds.push(thand);
+        return thand;
+    },
+
+    /** PrivateFunction: _addSysHandler
+     *  _Private_ function to add a system level stanza handler.
+     *
+     *  This function is used to add a Strophe.Handler for the
+     *  library code.  System stanza handlers are allowed to run before
+     *  authentication is complete.
+     *
+     *  Parameters:
+     *    (Function) handler - The callback function.
+     *    (String) ns - The namespace to match.
+     *    (String) name - The stanza name to match.
+     *    (String) type - The stanza type attribute to match.
+     *    (String) id - The stanza id attribute to match.
+     */
+    _addSysHandler: function (handler, ns, name, type, id)
+    {
+        var hand = new Strophe.Handler(handler, ns, name, type, id);
+        hand.user = false;
+        this.addHandlers.push(hand);
+        return hand;
+    },
+
+    /** PrivateFunction: _onDisconnectTimeout
+     *  _Private_ timeout handler for handling non-graceful disconnection.
+     *
+     *  If the graceful disconnect process does not complete within the
+     *  time allotted, this handler finishes the disconnect anyway.
+     *
+     *  Returns:
+     *    false to remove the handler.
+     */
+    _onDisconnectTimeout: function ()
+    {
+        Strophe.info("_onDisconnectTimeout was called");
+        // actually disconnect
+        this._doDisconnect();
+        return false;
+    },
+
+	/** PrivateFunction: _throttleStanzas
+	*  _Private_ function to throttle stanzas sent to the protocol.
+	*
+	*  Most servers will implement traffic shapers to ensure that a given client does 
+	*  not consume too many resources.
+	*  This function just picks stanza in the _stanzas FIFO and sends them to the 
+	*  protocol layer. The protocol layer may also very well implement a specific 
+	*  throttling, based on their needs.
+	* 
+	* 
+	* 
+	*/
+	_throttleStanzas: function () {
+		stanza = this._stanzas.shift();
+		if (stanza) {
+			if (this.protocol.send(stanza)) {
+			    // Stanza was sent.
+			}
+			else {
+			    // Stack it back up.
+			    this._stanzas.unshift(stanza);
+			}
+		}
+		this._throttle_stanzas_handler = setTimeout(this._throttleStanzas.bind(this), 100 * 1/this.max_stanzas_per_second); // 
+	}
+
+};
+
+if (callback) {
+    callback(Strophe, $build, $msg, $iq, $pres);
+}
+
+})(function () {
+    window.Strophe = arguments[0];
+    window.$build = arguments[1];
+    window.$msg = arguments[2];
+    window.$iq = arguments[3];
+    window.$pres = arguments[4];
+});
+
+
+/* The Websocket Stuff */
+
+if (typeof(DOMParser) == 'undefined') {
+ DOMParser = function () {}
+ DOMParser.prototype.parseFromString = function (str, contentType) {
+  if (typeof(ActiveXObject) != 'undefined') {
+   var xmldata = new ActiveXObject('MSXML.DomDocument');
+   xmldata.async = false;
+   xmldata.loadXML(str);
+   return xmldata;
+  } else if (typeof(XMLHttpRequest) != 'undefined') {
+   var xmldata = new XMLHttpRequest;
+   if (!contentType) {
+    contentType = 'application/xml';
+   }
+   xmldata.open('GET', 'data:' + contentType + ';charset=utf-8,' + encodeURIComponent(str), false);
+   if (xmldata.overrideMimeType) {
+    xmldata.overrideMimeType(contentType);
+   }
+   xmldata.send(null);
+   return xmldata.responseXML;
+  }
+ }
+}
+
+Strophe.Websocket = function (service)
+{
+	// Connection
+	this._connection = null;
+	this._service	= service;
+	this._socket	= null;
+
+	// Requests stack.
+	this._requests = [];    
+	this.connected = false
+};
+
+Strophe.Websocket.prototype = {
+	
+	/** Function connect 
+	 *  Connects to the server using websockets.
+	 *  It also assigns the connection to this proto
+	 */
+	connect: function (connection) {
+		if (!this._socket) {
+    	    Strophe.log("info", "Websocket connecting to " + this._service);
+			this._connection 		= connection;
+	        this._socket 			= new WebSocket(this._service);
+		    this._socket.onopen     = this._onOpen.bind(this);
+			this._socket.onerror 	= this._onError.bind(this);
+		    this._socket.onclose 	= this._onClose.bind(this);
+		    this._socket.onmessage 	= this._onMessage.bind(this);
+		}
+	},
+	
+	/** Function disconnect 
+	 *  Disconnects from the server
+	 */
+	disconnect: function () {
+		this._connection.xmlOutput(this._endStream());
+		this._sendText(this._endStream());
+		this._socket.close(); // Close the socket
+	},
+
+	/** Function finish 
+	 *  Finishes the connection. It's the last step in the cleanup process.
+	 */
+	finish: function () {
+	    this.connected = false;
+		this._socket = null; // Makes sure we delete the socket.
+	},
+	
+	/** Function send 
+	 *  Sends messages
+	 */
+	send: function (msg) {
+	    if (this._sendText(Strophe.serialize(msg))) {
+    		this._connection.xmlOutput(msg);
+	        return true;
+	    }
+	    else {
+	        return false;
+	    }
+	},
+	
+	/** Function: restart
+     *  Send an xmpp:restart stanza.
+     */
+	restart: function () {
+		this._connection.xmlOutput(this._startStream());
+		this._sendText(this._startStream());
+	},
+	
+	/** PrivateFunction: _onError
+     *  _Private_ function to handle websockets errors.
+     *
+     *  Parameters:
+     *    () error - The websocket error.
+     */
+	_onError: function (error) {
+		Strophe.log("error", "Websocket error " + error);
+	},
+
+	/** PrivateFunction: _onOpen
+     *  _Private_ function to handle websockets connections.
+     *
+     */
+	_onOpen: function () {
+		Strophe.log("info", "Websocket open");
+		this.connected = true;
+		this._connection.xmlOutput(this._startStream());
+		this._sendText(this._startStream());
+		this._keepalive();
+	},
+	
+	/** PrivateFunction: _onClose
+     *  _Private_ function to handle websockets closing.
+     *
+	 */
+	_onClose: function (event) {
+		Strophe.log("info", "Websocket disconnected");
+	    this.connected = false;
+		this._connection._doDisconnect();
+	},
+	
+	/** PrivateFunction: _onError
+     *  _Private_ function to handle websockets messages.
+     *
+	 *  This function parses each of the messages as if they are full documents. [TODO : We may actually want to use a SAX Push parser].
+	 *  
+	 *  Since all XMPP traffic starts with "<stream:stream version='1.0' xml:lang='en' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' id='3697395463' from='SERVER'>"
+	 *  The first stanza will always fail to be parsed...
+	 *  Addtionnaly, the seconds stanza will always be a <stream:features> with the stream NS defined in the previous stanza... so we need to 'force' the inclusion of the NS in this stanza!
+     * 
+	 *  Parameters:
+     *    (string) message - The websocket message.
+     */
+	_onMessage: function (message) {
+		this._connection.rawInput(message.data);
+		
+		string = message.data.replace("<stream:features>", "<stream:features xmlns:stream='http://etherx.jabber.org/streams'>"); // Ugly hack todeal with the problem of stream ns undefined.
+		
+		parser = new DOMParser();
+		elem = parser.parseFromString(string, "text/xml").documentElement;
+		
+		this._connection.xmlInput(elem);
+
+		if (elem.nodeName == "stream:stream") {
+			// Let's just skip this.
+		}
+		else {
+			this._connection.receiveData(elem);
+		}
+	},
+	
+	_startStream: function () {
+		return "<stream:stream to='" + this._connection.domain + "' xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' version='1.0' />";
+	},
+	
+	_endStream:function () {
+		return "</stream:stream>";
+	},
+	
+	_sendText: function (text) {
+	    if (this.connected) {
+    	    if (this._socket && this._socket.readyState == 1) {
+        		this._socket.send(text);
+        		this._connection.rawOutput(text);
+        		return true;
+    	    }
+    	    else if (!this.socket || this.socket.readyState == 3) {
+    	        // We're either not connected, or the connection is not there.
+    	        this._connection._doDisconnect();
+    	        return false;
+    	    }
+    	    else {
+    	        // What do we do. It means we're either disconnecting, or connecting. 
+    	        return false;
+    	    }
+	    } else {
+	        // We're not connected, so we can't send anything.
+	        return false;
+	    }
+	},
+	
+	_keepalive: function () {
+        if (this.connected) {
+    	    setTimeout(function () {
+    	        if (this._sendText("")) {
+        	        this._keepalive();
+    	        }
+    	    }.bind(this), 30000);
+        }
+	}
+	
+}
+
+exports.Strophe = Strophe
+exports.$build = $build
+exports.$msg = $msg
+exports.$iq = $iq
+exports.$pres = $pres
+
+});
+
+require.define("/strophejs/base64.js", function (require, module, exports, __dirname, __filename) {
+// This code was written by Tyler Akins and has been placed in the
+// public domain.  It would be nice if you left this header intact.
+// Base64 code from Tyler Akins -- http://rumkin.com
+
+var Base64 = (function () {
+    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    var obj = {
+        /**
+         * Encodes a string in base64
+         * @param {String} input The string to encode in base64.
+         */
+        encode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            do {
+                chr1 = input.charCodeAt(i++);
+                chr2 = input.charCodeAt(i++);
+                chr3 = input.charCodeAt(i++);
+
+                enc1 = chr1 >> 2;
+                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                enc4 = chr3 & 63;
+
+                if (isNaN(chr2)) {
+                    enc3 = enc4 = 64;
+                } else if (isNaN(chr3)) {
+                    enc4 = 64;
+                }
+
+                output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) +
+                    keyStr.charAt(enc3) + keyStr.charAt(enc4);
+            } while (i < input.length);
+
+            return output;
+        },
+
+        /**
+         * Decodes a base64 string.
+         * @param {String} input The string to decode.
+         */
+        decode: function (input) {
+            var output = "";
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+
+            // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+            do {
+                enc1 = keyStr.indexOf(input.charAt(i++));
+                enc2 = keyStr.indexOf(input.charAt(i++));
+                enc3 = keyStr.indexOf(input.charAt(i++));
+                enc4 = keyStr.indexOf(input.charAt(i++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                output = output + String.fromCharCode(chr1);
+
+                if (enc3 != 64) {
+                    output = output + String.fromCharCode(chr2);
+                }
+                if (enc4 != 64) {
+                    output = output + String.fromCharCode(chr3);
+                }
+            } while (i < input.length);
+
+            return output;
+        }
+    };
+
+    return obj;
+})();
+
+exports.Base64 = Base64
+});
+
+require.define("/strophejs/strophe.superfeedr.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery      = require('jquery');
+
+var SuperfeedrPlugin = {
+
+    _connection: null,
+    _firehoser: 'firehoser.superfeedr.com',
+	_handler: null,
+
+    //The plugin must have the init function.
+    init: function (conn) {
+        this._connection = conn;
+        Strophe.addNamespace('PUBSUB', "http://jabber.org/protocol/pubsub");
+    },
+
+    // Subscribes to a feed
+    subscribe: function (feed, callback) {
+        var stanza_id = this._connection.getUniqueId("subscribenode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'set',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('subscribe', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            node: feed
+        });
+        this._connection.addHandler(function (response) {
+            callback(response.getAttribute("type") == "result", {title: Strophe.getText(response.getElementsByTagName("title")[0])});
+            return false;
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // Unsubscribes from a feed
+    unsubscribe: function (feed, callback) {
+        var stanza_id = this._connection.getUniqueId("unsubscribenode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'set',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('unsubscribe', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            node: feed
+        });
+        this._connection.addHandler(function (response) {
+            callback(response.getAttribute("type") == "result");
+            return false;
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // List subscribed feeds
+    list: function (page, callback) {
+        var stanza_id = this._connection.getUniqueId("listnode");
+        var sub = $iq({
+            from: this._connection.jid,
+            to: this._firehoser,
+            type: 'get',
+            id: stanza_id
+        });
+        sub.c('pubsub', {
+            xmlns: Strophe.NS.PUBSUB
+        }).c('subscriptions', {
+            jid: Strophe.getBareJidFromJid(this._connection.jid),
+            'xmlns:superfeedr': "http://superfeedr.com/xmpp-pubsub-ext",
+            'superfeedr:page': page
+        });
+        this._connection.addHandler(function (response) {
+            var subscriptions = response.getElementsByTagName("subscription");
+            var result = []
+            for (i = 0; i < subscriptions.length; i++) {
+                result.push(subscriptions[i].getAttribute("node"));
+            }
+            callback(result);
+            return false; // Unregisters
+        }, null, 'iq', null, stanza_id, null);
+        this._connection.send(sub.tree());
+    },
+
+    // called when connection status is changed
+	// we set up the handler. If it was previously set, we just unset it, and delete it.
+    statusChanged: function (status) {
+        if (this._handler) {
+            this._connection.deleteHandler(this._handler);
+            this._handler = null;
+        }
+        this._handler = this._connection.addHandler(this.notificationReceived.bind(this), null, 'message', null, null, null);
+    },
+
+    notificationReceived: function (msg) {
+        if (msg.getAttribute('from') == "firehoser.superfeedr.com") {
+            var entries = msg.getElementsByTagName("entry");
+            var status = msg.getElementsByTagName("status")[0];
+            var source = {
+                title: Strophe.getText(status.getElementsByTagName("title")[0]),
+                url: status.getAttribute("feed"),
+                links: this.atomLinksToJson(status.getElementsByTagName("link"))
+            }
+            if(entries.length === 0) {
+                this.onNotificationReceived({payload: null, source: source});
+            }
+            for (i = 0; i < entries.length; i++) {
+                this.onNotificationReceived({payload: this.convertAtomToJson(entries[i]), source: source});
+            }
+        }
+        return true; // We must return true to keep the handler active!
+    },
+
+    atomLinksToJson: function (atom_links) {
+        var links = {};
+        for (j = 0; j < atom_links.length; j++) {
+	        var link = atom_links[j];
+	        l = {
+	            href: link.getAttribute("href"),
+	            rel: link.getAttribute("rel"),
+	            title: link.getAttribute("title"),
+	            type: link.getAttribute("type")
+	        };
+	        links[link.getAttribute("rel")] = (links[link.getAttribute("rel")] ? links[link.getAttribute("rel")] : {});
+	        links[link.getAttribute("rel")][link.getAttribute("type")] = (links[link.getAttribute("rel")][link.getAttribute("type")] ? links[link.getAttribute("rel")][link.getAttribute("type")] : []);
+	        links[link.getAttribute("rel")][link.getAttribute("type")].push(l);
+	    }
+	    return links;
+    },
+
+	convertAtomToJson: function (atom) {
+	    var atom_links = atom.getElementsByTagName("link");
+	    var links = this.atomLinksToJson(atom_links);
+	    return {
+	        id: window.btoa(Strophe.getText(atom.getElementsByTagName("id")[0])),
+	        atomId: Strophe.getText(atom.getElementsByTagName("id")[0]),
+	        published: Strophe.getText(atom.getElementsByTagName("published")[0]),
+	        updated: Strophe.getText(atom.getElementsByTagName("updated")[0]),
+	        title: Strophe.getText(atom.getElementsByTagName("title")[0]),
+	        summary: Strophe.getText(atom.getElementsByTagName("summary")[0]),
+	        content: Strophe.getText(atom.getElementsByTagName("content")[0]),
+	        links: links,
+	    };
+	},
+	
+	onNotificationReceived: function(notification) {
+	    // This method should be overwritten!
+	},
+}
+
+exports.SuperfeedrPlugin = SuperfeedrPlugin;
+
+
+
+});
+
+require.define("/tests/models/subscription.js", function (require, module, exports, __dirname, __filename) {
+var should = require('chai').should();
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Subscription = require('../../models/subscription.js').Subscription;
+var Subscriptions = require('../../models/subscription.js').Subscriptions;
+
+describe('Subscription', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Subscription = Subscription.extend({ database: msgboyDatabase});
+        Subscriptions = Subscriptions.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+    
+    describe('fetchOrCreate', function() {
+        it('should create a subscription that does not exist', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.fetchOrCreate(function() {
+                s.id.should.equal("http://blog.superfeedr.com/atom.xml");
+                complete();
+            });
+        });
+        it('should fetch a subscription that exists', function(complete) {
+            var s = new Subscription({id: "https://github.com/superfeedr.atom"});
+            s.fetchOrCreate(function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.fetchOrCreate(function() {
+                    t.id.should.equal("https://github.com/superfeedr.atom");
+                    complete();
+                });
+            });
+        });
+        
+    });
+
+    describe('needsRefresh', function() {
+        it('should return true if the subscription is older than a week and unsubscription is older than a month and if the feed is not in the blacklist', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(true);
+        });
+        it('should return false if the subscription is earlier than a week', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if unsubscription is earlier than a month', function() {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml", unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 + 1});
+            s.needsRefresh().should.equal(false);
+        });
+        it('should return false if the feed is in the blacklist', function() {
+            var s = new Subscription({id: "http://en.wikipedia.org/w/index.php?title=Special:RecentChanges&feed=atom", subscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 7 - 1, unsubscribedAt: new Date().getTime() - 1000 * 60 * 60 * 24 * 31 - 1});
+            s.needsRefresh().should.equal(false);
+        });
+    });
+
+    describe('setState', function() {
+        it('should set the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('change', function() {
+                s.get('state').should.equal("subscribing");
+                complete();
+            })
+            s.setState("subscribing");
+        });
+        it('should trigger the state', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('unsubscribing', function() {
+                complete();
+            })
+            s.setState("unsubscribing");
+        });
+        
+        describe('when setting the state to subscribed', function() {
+            it('should set the subscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('subscribed', function() {
+                    s.get('subscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('subscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("subscribed");
+            });
+        });
+        describe('when setting the state to unsubscribed', function() {
+            it('should set the unsubscribedAt', function(complete) {
+                var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+                s.bind('unsubscribed', function() {
+                    s.get('unsubscribedAt').should.be.above(new Date().getTime() - 1000);
+                    s.get('unsubscribedAt').should.be.below(new Date().getTime() + 1000);
+                    complete();
+                })
+                s.setState("unsubscribed");
+            });
+        })
+        
+    });
+});
+
+describe('Subscriptions', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('pending', function(complete) {
+        it('should yield all subscriptions whose state is "subscrbing"', function(complete) {
+            var s = new Subscription({id: "http://blog.superfeedr.com/atom.xml"});
+            s.bind('subscribing', function() {
+                var t = new Subscription({id: "https://github.com/superfeedr.atom"});
+                t.bind('subscribed', function() {
+                    var u = new Subscription({id: "http://push-pub.appspot.com/feed"});
+                    u.bind('subscribed', function() {
+                        var v = new Subscription({id: "http://github.com/julien.atom"});
+                        v.bind('subscribing', function() {
+                            var pendingSubscriptions = new Subscriptions();
+                            pendingSubscriptions.bind('reset',function(subscritions) {
+                                pendingSubscriptions.pluck('id').should.eql([ 'http://blog.superfeedr.com/atom.xml',
+                                  'http://github.com/julien.atom' ]);
+                                complete();
+                            });
+                            pendingSubscriptions.pending();
+                        });
+                        v.setState("subscribing");
+                    });
+                    u.setState("subscribed");
+                });
+                t.setState("subscribed");
+            });
+            s.setState("subscribing");
+            var subscription =  new Subscriptions();
+        });
+    });
+
+});
+
+
+});
+
+require.define("/tests/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Message = require('../../models/message.js').Message;
+var Archive = require('../../models/archive.js').Archive;
+var should = require('chai').should();
+
+describe('Archive', function(){
+    before(function(done) {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Message = Message.extend({ database: msgboyDatabase});
+        Archive = Archive.extend({ database: msgboyDatabase});
+        var m1 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml', title: 'First Message', createdAt: new Date().getTime() - 5});
+        m1.bind('change', function() {
+            var m2 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/real.xml',title: 'Second Message', createdAt: new Date().getTime() - 4});
+            m2.bind('change', function() {
+                var m3 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Third Message', createdAt: new Date().getTime() - 3});
+                m3.bind('change', function() {
+                    var m4 = new Message({sourceHost: 'superfeedr.com', feed: 'http://superfedr.com/dummy.xml',title: 'Fourth Message', createdAt: new Date().getTime() - 2});
+                    m4.bind('change', function() {
+                        var m5 = new Message({sourceHost: 'tumblr.com', feed: 'http://superfedr.com/real.xml',title: 'Message from Tumblr', createdAt: new Date().getTime() - 1});
+                        m5.bind('change', function() {
+                            done();
+                        });
+                        m5.save();
+                    });
+                    m4.save();
+                });
+                m3.save();
+            });
+            m2.save();
+        });
+        m1.save();
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('comparator', function() {
+        it('should sort all the messages by createdAt', function(done) {
+            var archive =  new Archive();
+            var twelveHourAgoMessage = new Message({title: "Twelve Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 12});
+            var twentyFourHourAgoMessage = new Message({title: "Twenty-Four Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 24});
+            var sixHourAgoMessage = new Message({title: "Six Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 6});
+            var eighteenHourAgoMessage = new Message({title: "Eighteen Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 18});
+            var threeHourAgoMessage = new Message({title: "Three Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 3});
+            var NineHourAgoMessage = new Message({title: "Nine Hour Ago" , createdAt: new Date().getTime() - 1000 * 60 * 60 * 9});
+            archive.add(twelveHourAgoMessage);
+            archive.add(twentyFourHourAgoMessage);
+            archive.add(threeHourAgoMessage);
+            archive.add(NineHourAgoMessage);
+            archive.add(eighteenHourAgoMessage);
+            archive.add(sixHourAgoMessage);
+            var prev = null;
+            archive.each(function(m) {
+                if(prev) {
+                    m.get('createdAt').should.be.below(prev.get('createdAt'));
+                }
+                prev = m;
+            });
+            done();
+        });
+    })
+
+    describe('next', function() {
+        it('should add messages one by one', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    done();
+                }
+            })
+            archive.next(limit);
+        });
+
+        it('should stick to the conditions on messages added', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            var count = 0;
+            var limit = 3;
+            archive.bind('add', function(message) {
+                count += 1;
+                if(count === limit) {
+                    _.each(archive.pluck('sourceHost'), function(h) {
+                        h.should.equal('superfeedr.com');
+                    });
+                    done();
+                }
+            })
+            archive.next(limit, {sourceHost: "superfeedr.com"});
+        });
+    });
+
+    describe('forFeed', function() {
+        it('should return all the messages for a given feed when called with forFeed', function(done) {
+            var archive =  new Archive();
+            archive.model = Message;
+            archive.bind('reset', function() {
+                archive.length.should.equal(3);
+                archive.at(0).get('title').should.equal("Fourth Message");
+                archive.at(1).get('title').should.equal("Third Message");
+                archive.at(2).get('title').should.equal("First Message");
+                done();
+            })
+            archive.forFeed('http://superfedr.com/dummy.xml');
+        });
+    });
+
+});
+
+
+});
+
+require.define("/tests/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var should = require('chai').should();
+
+describe('Database', function(){
+    before(function() {
+        // We need to use a distinct database and clean it up before performing the tests
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('shema', function() {
+        it('should have the right id', function() {
+            msgboyDatabase.id.should.equal("msgboy-database-test");
+        });
+        it('should have the right description', function() {
+            msgboyDatabase.description.should.equal("The database for the msgboy");
+        });
+        it('should have 7 versions', function() {
+            msgboyDatabase.migrations.should.have.length(7);
+        });
+    });
+});
+
+
+});
+
+require.define("/tests/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var Inbox = require('../../models/inbox.js').Inbox;
+
+describe('Inbox', function(){
+    before(function() {
+        msgboyDatabase = _.clone(msgboyDatabase);
+        msgboyDatabase.id = msgboyDatabase.id + "-test";
+        indexedDB.deleteDatabase(msgboyDatabase.id);
+        Inbox = Inbox.extend({ database: msgboyDatabase});
+    });
+
+    beforeEach(function() {
+    });
+
+    describe('setup', function() {
+        it('should trigger ready if the inbox was created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+
+        it('should trigger new if the inbox was not created', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('new', function() {
+                done();
+            })
+            inbox.setup("login", "token")
+        });
+    });
+    
+    describe('fetchAndPrepare', function() {
+        it('should trigger ready if the inbox was found with the right parameters', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('ready', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("login", "token");
+        });
+        it('should trigger error if the jid is missing', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('ready', function() {
+                var jnbox =  new Inbox();
+                jnbox.bind('error', function() {
+                    done();
+                });
+                jnbox.fetchAndPrepare();
+            });
+            inbox.setup("token");
+        });
+        it('should trigger ready if the inbox was not found', function(done) {
+            var inbox =  new Inbox();
+            inbox.bind('error', function() {
+                done();
+            })
+            inbox.fetchAndPrepare();
+        })
+    })
+
+});
+
+
+});
+
+require.define("/tests/models/message.js", function (require, module, exports, __dirname, __filename) {
+var Message = require('../../models/message.js').Message;
+var should = require('chai').should();
+
+describe('Message', function(){
+    before(function() {
+        // We need to save a couple fixture messages!
+    });
+    
+    beforeEach(function() {
+    });
+    
+    describe('defaults', function() {
+        it('should have a relevance of 0.6', function() {
+            var message  = new Message();
+            message.get('relevance').should.equal(0.6);
+        });
+
+        it('should have a state of new', function() {
+            var message  = new Message();
+            message.get('state').should.equal("new");
+        });
+    });
+    
+    describe('when initializing the message', function() {
+        it('should set the value for sourceHost', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceHost').should.equal("msgboy.com");
+        });
+        it('should set the value for sourceLink', function() {
+            var message = new Message({source: {links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}}})
+            message.get('sourceLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for createdAt', function() {
+            var message = new Message({})
+            message.get('createdAt').should.be.above(new Date().getTime() - 10);
+            message.get('createdAt').should.be.below(new Date().getTime() + 10);
+        });
+        it('should set the value for mainLink', function() {
+            var message = new Message({links: {alternate: {"text/html": [{href: "http://msgboy.com/an/entry"}]}}});
+            message.get('mainLink').should.equal("http://msgboy.com/an/entry");
+        });
+        it('should set the value for text to the summary if no content exists', function() {
+            var _summary = "summary";
+            var message = new Message({summary: _summary});
+            message.get('text').should.equal(_summary);
+        });
+        it('should set the value for text to the content if no summary exists', function() {
+            var _content = "content";
+            var message = new Message({content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the content if it s longer than the summary', function() {
+            var _summary = "summary";
+            var _content = "content is longer here";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_content);
+        });
+        it('should set the value for text to the summary if it s longer than the content', function() {
+            var _summary = "summary is longer here";
+            var _content = "content";
+            var message = new Message( {summary: _summary, content: _content});
+            message.get('text').should.equal(_summary);
+        });
+    });
+    
+    describe('when voting up', function() {
+        it('should set the state to up-ed', function() {
+            var message  = new Message();
+            message.voteUp();
+            message.get('state').should.equal('up-ed');
+        });
+    });
+    
+    describe('when voting down', function() {
+        it('should set the state to down-ed', function() {
+            var message  = new Message();
+            message.voteDown();
+            message.get('state').should.equal('down-ed');
+        });
+    });
+    
+    describe('when skipping', function() {
+        it('should set the state to skiped', function() {
+            var message  = new Message();
+            message.skip();
+            message.get('state').should.equal('skipped');
+        });
+    });
+    
+    describe('when setting the state', function() {
+        it('should set the state accordingly', function() {
+            var message  = new Message();
+            message.setState("up-ed");
+            message.get('state').should.equal('up-ed');
+        });
+        it('should trigger the state event', function(done) {
+            var message  = new Message();
+            message.bind('up-ed', function() {
+                done();
+            });
+            message.setState("up-ed");
+        });
+        it('should call the callback if defined', function(done) {
+            var message  = new Message();
+            message.setState("up-ed", function(result) {
+                result.should.equal(true);
+                done();
+            });
+        });
+        
+        
+    });
+    
+    describe('calculateRelevance', function() {
+        
+    });
+    
+    describe('relevanceBasedOnBrothers', function() {
+        
+    });
+});
+
+});
+
+require.define("/tests/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var should = require('chai').should();
+var Plugins = require('../feediscovery.js').Plugins;
+
+
+describe('Feediscovery', function(){
+    before(function(ready) {
+        ready();
+    });
+    
+    beforeEach(function(ready) {
+        ready();
+    });
+    
+    describe('get', function() {
+        
+        it('should extract the right feed url', function(done) {
+            Feediscovery.get('http://ma.tt/', function (links) {
+                links[0].href.should.equal('http://ma.tt/feed/');
+                links[0].rel.should.equal('alternate');
+                links[0].title.should.equal('Matt Mullenweg &raquo; Feed');
+                links[0].type.should.equal('application/rss+xml');
+                links[1].href.should.equal('http://ma.tt/comments/feed/');
+                links[1].rel.should.equal('alternate');
+                links[1].title.should.equal('Matt Mullenweg &raquo; Comments Feed');
+                links[1].type.should.equal('application/rss+xml');
+                done();
+            });
+            
+        })
+        
+    });
+});
+});
+
+require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+// Feediscovery module. The only API that needs to be used is the Feediscovery.get
+Feediscovery = {};
+Feediscovery.stack = [];
+Feediscovery.running = false;
+
+Feediscovery.get = function (_url, _callback) {
+    Feediscovery.stack.push([_url, _callback]);
+    if(!Feediscovery.running) {
+        Feediscovery.running = true;
+        Feediscovery.run();
+    }
+};
+Feediscovery.run = function () {
+    var next = Feediscovery.stack.shift();
+    if (next) {
+        var client = new XMLHttpRequest(); 
+        client.onreadystatechange = function() {
+            if(this.readyState == this.DONE) {
+                next[1](JSON.parse(client.responseText));
+                Feediscovery.run();
+            }
+        };
+        client.open("GET", "http://feediscovery.appspot.com/?url=" + encodeURI(next[0]) , true); // Open up the connection
+        client.send( null ); // Send the request
+    } else {
+        setTimeout(function () {
+            Feediscovery.run();
+        }, 1000);
+    }
+};
+
+exports.Feediscovery = Feediscovery;
+
+});
+
+require.define("/tests/plugins.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var should = require('chai').should();
+var Plugins = require('../plugins.js').Plugins;
+
+describe('Plugins', function(){
+    before(function(ready) {
+        ready();
+    });
+    
+    beforeEach(function(ready) {
+        ready();
+    });
+    
+    describe('importSubscriptions', function() {
+        beforeEach(function(ready) {
+            Plugins.all = [];
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb({url: "url1", title: "title1"});
+                    cb({url: 'url2', title: "title2"});
+                    cb({url: 'url3', title: "title3"});
+                    done(3)
+                },
+                name: "Stub 1"
+            });
+            Plugins.register({
+                listSubscriptions: function(cb, done) {
+                    cb({url: "url4", title: "title4"});
+                    cb({url: 'url5', title: "title5"});
+                    done(2)
+                },
+                name: "Stub 2"
+            });
+            ready();
+        });
+        it('should listSubscriptions for each plugin', function(done) {
+            var subscriptionsUrls = []
+            Plugins.importSubscriptions(function(sub) {
+                subscriptionsUrls.push(sub.url)
+            }, function() {
+    
+            }, function(count) {
+                if(count === 5) {
+                    subscriptionsUrls.should.include('url1');
+                    subscriptionsUrls.should.include('url2');
+                    subscriptionsUrls.should.include('url3');
+                    subscriptionsUrls.should.include('url4');
+                    subscriptionsUrls.should.include('url5');
+                    done();
+                }
+            });
+        });
+    });
+    
+    
+    require('./plugins/google-reader.js');
+    require('./plugins/blogger.js');
+    require('./plugins/bookmarks.js');
+    require('./plugins/disqus.js');
+    require('./plugins/generic.js');
+    require('./plugins/history.js');
+    require('./plugins/posterous.js');
+    require('./plugins/statusnet.js');
+    require('./plugins/tumblr.js');
+    require('./plugins/typepad.js');
+    require('./plugins/wordpress.js');
+    
+});
 });
 
 require.define("/tests/plugins/google-reader.js", function (require, module, exports, __dirname, __filename) {
@@ -16070,42 +23649,6 @@ var Bookmarks = function (Plugins) {
 };
 
 exports.Bookmarks = Bookmarks;
-});
-
-require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
-// Feediscovery module. The only API that needs to be used is the Feediscovery.get
-Feediscovery = {};
-Feediscovery.stack = [];
-Feediscovery.running = false;
-
-Feediscovery.get = function (_url, _callback) {
-    Feediscovery.stack.push([_url, _callback]);
-    if(!Feediscovery.running) {
-        Feediscovery.running = true;
-        Feediscovery.run();
-    }
-};
-Feediscovery.run = function () {
-    var next = Feediscovery.stack.shift();
-    if (next) {
-        var client = new XMLHttpRequest(); 
-        client.onreadystatechange = function() {
-            if(this.readyState == this.DONE) {
-                next[1](JSON.parse(client.responseText));
-                Feediscovery.run();
-            }
-        };
-        client.open("GET", "http://feediscovery.appspot.com/?url=" + encodeURI(next[0]) , true); // Open up the connection
-        client.send( null ); // Send the request
-    } else {
-        setTimeout(function () {
-            Feediscovery.run();
-        }, 1000);
-    }
-};
-
-exports.Feediscovery = Feediscovery;
-
 });
 
 require.define("/tests/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
@@ -16955,16 +24498,15 @@ require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/tests.js", function (require, module, exports, __dirname, __filename) {
     var should = require('chai').should;
-// require('./tests/background.js');
-// require('./tests/models/subscription.js');
-// require('./tests/models/archive.js');
-// require('./tests/models/database.js');
-// require('./tests/models/inbox.js');
-// require('./tests/models/message.js');
-// require('./tests/feediscovery.js');
+require('./tests/background.js');
+require('./tests/models/subscription.js');
+require('./tests/models/archive.js');
+require('./tests/models/database.js');
+require('./tests/models/inbox.js');
+require('./tests/models/message.js');
+require('./tests/feediscovery.js');
 require('./tests/plugins.js');
 // require('./tests/views/.js');
-
 
 
 });
