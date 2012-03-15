@@ -46,6 +46,9 @@ var ArchiveView = Backbone.View.extend({
             });
         }
     },
+    appendNew: function (message) {
+        console.log("show message at top");
+    },
     showNew: function (message) {
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {

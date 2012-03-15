@@ -1,6 +1,7 @@
 var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
+var Message = require('./models/message.js').Message;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
@@ -31,17 +32,23 @@ Msgboy.bind("loaded", function () {
     // Listening to the events from the background page.
     chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
         if (request.signature == "notify" && request.params) {
-            // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
-            // Let's get the content of $("#new_messages")
-            var count = parseInt($("#new_messages").attr("data-unread"));
-            if (count) {
-                $("#new_messages").attr("data-unread", count + 1);
-                $("#new_messages").text("View " + (count + 1) + " new");
-            } else {
-                $("#new_messages").css("top","0");
-                $("#new_messages").attr("data-unread", "1");
-                $("#new_messages").text("View 1 new");
-            }
+            var m = new Message(request.params.id);
+            m.fetch({
+                success: function() {
+                    archiveView.appendNew(m);
+                    // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
+                    // Let's get the content of $("#new_messages")
+                    var count = parseInt($("#new_messages").attr("data-unread"));
+                    if (count) {
+                        $("#new_messages").attr("data-unread", count + 1);
+                        $("#new_messages").text("View " + (count + 1) + " new");
+                    } else {
+                        $("#new_messages").css("top","0");
+                        $("#new_messages").attr("data-unread", "1");
+                        $("#new_messages").text("View 1 new");
+                    }
+                }.bind(this)
+            });
         }
     });
 });
