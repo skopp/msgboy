@@ -14059,8 +14059,8 @@ var MessageView = Backbone.View.extend({
             '<button class="share"></button>',
             '<button class="vote up"></button>',
         '</span>',
-        '<p class="darkened"><%= model.escape("title") %></p>',
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>'
+        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>',
+        '<p><%= model.escape("title") %></p>'
     ].join('')),
     initialize: function () {
         this.model.bind('change', this.layout.bind(this)); 
@@ -14111,15 +14111,7 @@ var MessageView = Backbone.View.extend({
             el.prepend($('<div class="ribbon">' + (this.model.related.length + 1) + ' others</div>'));
         }
         if(typeof this.model.get('image') !== "undefined") {
-            $(this.el).append('<img class="main" src="' + this.model.get('image') + '"/>');
-            this.$("img").load(function(e) {
-                if(e.target.height > e.target.width) {
-                    $(e.target).css("width", "100%");
-                }
-                else {
-                    $(e.target).css("height", "100%");
-                }
-            });
+            $(this.el).css("background", "url(" + this.model.get('image') + ")");
         }
         if(this.model.get('sourceHost') === "msgboy.com") {
             el.addClass('msgboy');

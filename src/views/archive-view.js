@@ -1,9 +1,11 @@
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
+require('../jquery.masonry.min.js');
 var Backbone = require('backbone');
-require('../jquery.isotope.min.js');
 var MessageView = require('./message-view.js').MessageView;
 var Archive = require('../models/archive.js').Archive;
+
+window.$ = $;
 
 var ArchiveView = Backbone.View.extend({
     upperBound: new Date().getTime(),
@@ -14,16 +16,16 @@ var ArchiveView = Backbone.View.extend({
     },
     initialize: function () {
         _.bindAll(this, 'showNew', 'completePage', 'loadNext');
-        $(document).scroll(this.completePage);
-
-        $('#container').isotope({
-            itemSelector: '.message',
-            filter: '.brick-2 .brick-3 .brick-4',
-            masonry: {
-                columnWidth: 10,
+        
+        $('#container').masonry({
+            itemSelector : '.message',
+            columnWidth : 10,
+            animationOptions: {
+                duration: 1000
             }
         });
-        
+          
+        $(document).scroll(this.completePage);
         this.loadingTimes =[];
         this.loaded = this.toLoad;
         this.collection.bind('add', this.showNew);
@@ -47,21 +49,17 @@ var ArchiveView = Backbone.View.extend({
         }
     },
     appendNew: function (message) {
-    },
-    showNew: function (message) {
-        this.upperBound = message.attributes.createdAt;
-        this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
-                $('#container').isotope('reLayout');
+                $('#container').masonry('reload');
             });
 
             message.bind('down-ed', function() {
-                $('#container').isotope('reLayout');
+                $('#container').masonry('reload');
             });
 
             message.bind('expanded', function() {
-                $('#container').isotope('reLayout');
+                $('#container').masonry('reload');
             })
 
             message.bind('unsubscribed', function() {
@@ -70,7 +68,55 @@ var ArchiveView = Backbone.View.extend({
                 brothers.bind('reset', function() {
                     var destroyedOne = _.after(brothers.models.length, function() {
                         // Once all brothers have been destroyed, we can redraw
-                        $('#container').isotope('reLayout');
+                        $('#container').masonry('reload');
+                    })
+                    
+                    _.each(brothers.models, function(brother) {
+                        brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
+                        brother.destroy({
+                            silent: true,
+                            success: destroyedOne
+                        }); // Deletes the brothers 
+                    }.bind(this));
+                }.bind(this));
+                brothers.forFeed(message.get('feed'));
+            }.bind(this));
+
+            var view = new MessageView({
+                model: message
+            });
+            
+            view.bind('rendered', function() {
+                $('#container').prepend($(view.el)).masonry( 'reload' ); // Adds the view in the document.
+                $(view.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
+                $(view.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
+            }.bind(this));
+            view.render(); 
+        }
+    },
+    showNew: function (message) {
+        this.upperBound = message.attributes.createdAt;
+        this.loaded++;
+        if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
+            message.bind('up-ed', function() {
+                $('#container').masonry('reload');
+            });
+
+            message.bind('down-ed', function() {
+                $('#container').masonry('reload');
+            });
+
+            message.bind('expanded', function() {
+                $('#container').masonry('reload');
+            })
+
+            message.bind('unsubscribed', function() {
+                // We have unsubscribed a feed. So we want to delete all of its brothers.
+                var brothers = new Archive(); 
+                brothers.bind('reset', function() {
+                    var destroyedOne = _.after(brothers.models.length, function() {
+                        // Once all brothers have been destroyed, we can redraw
+                        $('#container').masonry('reload');
                     })
                     
                     _.each(brothers.models, function(brother) {
@@ -90,8 +136,8 @@ var ArchiveView = Backbone.View.extend({
             
             view.bind('rendered', function() {
                 this.completePage();
-                $('#container').append(view.el); // Adds the view in the document.
-                $('#container').isotope('appended', $(view.el));
+                $('#container').append($(view.el)); // Adds the view in the document.
+                $('#container').masonry('appended', $(view.el));
             }.bind(this));
 
             // Check if we can group the messages
