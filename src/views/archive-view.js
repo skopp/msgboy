@@ -47,7 +47,6 @@ var ArchiveView = Backbone.View.extend({
         }
     },
     showNew: function (message) {
-        this.upperDound = message.attributes.createdAt;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
