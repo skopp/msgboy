@@ -50,6 +50,7 @@ var ArchiveView = Backbone.View.extend({
         console.log("show message at top");
     },
     showNew: function (message) {
+        this.upperDound = message.attributes.createdAt;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
