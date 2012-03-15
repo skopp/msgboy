@@ -13972,7 +13972,7 @@ var MessageView = require('./message-view.js').MessageView;
 var Archive = require('../models/archive.js').Archive;
 
 var ArchiveView = Backbone.View.extend({
-    upperDound: new Date().getTime(),
+    upperBound: new Date().getTime(),
     lowerBound: 0,
     loaded: 0,
     toLoad: 50,
@@ -14008,14 +14008,14 @@ var ArchiveView = Backbone.View.extend({
         if (this.loaded === this.toLoad) {
             this.loaded = 0; // Reset the loaded counter!
             this.collection.next(this.toLoad, {
-                createdAt: [this.upperDound, this.lowerBound]
+                createdAt: [this.upperBound, this.lowerBound]
             });
         }
     },
     appendNew: function (message) {
-        console.log("show message at top");
     },
     showNew: function (message) {
+        this.upperBound = message.attributes.createdAt;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
