@@ -76,7 +76,7 @@
     font-size: 0.9em;
     height:30px;
     line-height:30px;
-    position: relative;
+    position: absolute;
     left:30%;
     top:10%;
     z-index: 100;
@@ -163,6 +163,14 @@
     width: 90px;
     height: 90px;
     font-weight: normal;
+}
+
+.brick-2 .controls {
+    height: 30px;
+}
+
+.brick-2 .controls button {
+    background-size: 50%;
 }
 
 .brick-3  {
