@@ -17875,12 +17875,15 @@ exports.connect = connect;
 // Shows a popup notification
 var notify = function (message, popup) {
     // Open a notification window if needed!
-    if ((!currentNotification || !currentNotification.ready)  && popup) {
-        currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
-        currentNotification.ready = false;
-        currentNotification.onclose = function () {
-            currentNotification = null;
-        };
+    if ((!currentNotification || !currentNotification.ready) && popup) {
+        if(!currentNotification) {
+            // there is no window.
+            currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+            currentNotification.ready = false;
+            currentNotification.onclose = function () {
+                currentNotification = null;
+            };
+        }
         currentNotification.show();
         messageStack.push(message);
     }
