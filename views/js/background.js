@@ -17965,6 +17965,7 @@ var imgSize = function(src, mainLink, callback) {
     var height = 0, width = 0, img = null;
     var done = null, timeout = null, loadImg = null;
     var parsed = Url.parse(src);
+    var here = Url.parse(window.location.toString());
     var base = Url.parse(mainLink);
     
     done = function(s, height, width) {
@@ -17985,12 +17986,13 @@ var imgSize = function(src, mainLink, callback) {
         img.src = s;
     }
     
-    if(typeof parsed.host === "undefined") {
+    if(typeof parsed.host === "undefined" || (parsed.host === here.host && parsed.protocol === here.protocol)) {
         if(typeof base.host === "undefined") {
             done(src, 0, 0);
         } 
         else {
-            loadImg(Url.resolve(base, parsed).toString())
+            var abs = Url.resolve(base, parsed.path);
+            loadImg(abs);
         }
     } 
     else {
@@ -18024,7 +18026,7 @@ var extractLargestImage = function(blob, mainLink, callback) {
         });
 
         _.each(images, function(image) {
-            if(typeof image.src === "undefined") {
+            if(typeof image.src === "undefined" || image.src === "") {
                 imgLoaded();
             }
             else {
