@@ -15754,9 +15754,7 @@ new Typepad(Plugins);
 var Wordpress = require('./plugins/wordpress.js').Wordpress;
 new Wordpress(Plugins);
 
-
-var currentNotification = currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
-currentNotification.ready = false;
+var currentNotification = null;
 var messageStack = [];
 var reconnectDelay = 1;
 var reconnectionTimeout = null;
