@@ -188,7 +188,6 @@ var resumeSubscriptions = function () {
 };
 exports.resumeSubscriptions = resumeSubscriptions;
 
-
 // Gets the size of an image based on src
 var imgSize = function(src, mainLink, callback) {
     var height = 0, width = 0, img = null;
