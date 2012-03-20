@@ -15,14 +15,15 @@ var MessageView = Backbone.View.extend({
     // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
     template: _.template([
         '<span class="controls">',
-            '<button class="vote down"></button>',
-            '<button class="share"></button>',
-            '<button class="vote up"></button>',
+            '<button title="Vote Down" class="vote down"></button>',
+            '<button title="Share" class="share"></button>',
+            '<button title="Vote Up" class="vote up"></button>',
         '</span>',
         '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>',
         '<p><%= model.escape("title") %></p>'
     ].join('')),
     initialize: function () {
+        $(this.el).attr("title", this.model.get('mainLink'));
         this.model.bind('change', this.layout.bind(this)); 
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
