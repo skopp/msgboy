@@ -40,13 +40,7 @@
     color: #E6E6E6;
 }
 
-.message.msgboy {
-    background-color: #dae7ea;
-    color: #11232c;
-    
-}
-
-.message.msgboy p.darkened {
+.msgboy p {
     background-color: #dae7ea;
     color: #11232c;
 }
@@ -185,7 +179,7 @@
     height: 420px;
 }
 
-.text p {
+p {
     position: absolute;
     top: 40%;
     box-sizing: border-box;
@@ -194,7 +188,6 @@
     width: 100%;
     background-color: #11232C;
 }
-
 
 .brick-2 p, .brick-1 p {
     font-size: 0.9em;
