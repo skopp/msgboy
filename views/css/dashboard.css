@@ -179,6 +179,13 @@
     height: 420px;
 }
 
+.brick-4 .controls button.up {
+    background-color: rgba(0,0,0,.25);
+}
+.brick-4 .controls button.up:hover {
+    background-color: rgba(0,0,0,.25);
+}
+
 p {
     position: absolute;
     top: 40%;
