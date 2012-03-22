@@ -18267,10 +18267,9 @@ Msgboy.bind("loaded", function () {
     // Chrome specific. Listens to external requests from other extensions!
     chrome.extension.onRequestExternal.addListener(function (_request, _sender, _sendResponse) {
         // For now, we only allow the Msgboy Button Extension, but later we'll open that up.
-        if(_sender.id === "bbpgdbninggbaghaipkpijaanmekmopi") {
+        if(_sender.id === "conpgobjdgiggknoomfoemablbgkecga") {
             Msgboy.trigger(_request.signature, _request.params, _sendResponse);
         }
-        // Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
     
     Msgboy.bind('register', function (params, _sendResponse) {
