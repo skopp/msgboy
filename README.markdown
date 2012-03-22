@@ -80,6 +80,9 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * <del>Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.</del>
 * <del>Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)</del>
 * <del>Run the Msgboy on port 80</del>
+* <del>Add tooltips when hovering a box that says "visit article".</del>
+* <del>Create a landing page for each of the "welcome" blocks.</del>
+* <del>Add a "your data is private" welcome block.</del>
 * Add support for unsubscription in plugins.
 * Add support for webintents, as a subscribing app, and calls for "sharing" apps.
 * HTML5 : Custom (web-based) protocol handlers
@@ -88,14 +91,13 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
 * Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
-* Improve the relevance algorithm by adding the keywords based filtering (Bayes).
+* Improve the relevance algorithm by adding the keywords based filtering (Bayes), domain based filtering, as well as the previous relevance (and not just the states)
 * Integrate with Chartbeat
 * More plugins for websites that have some kind of subscription scheme.
 * Keyboard navigation for the dashboard and notifications.
 * Check safari bookmarks so that they're not taken into account...
 * Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
 * Check Memory usage and fix it. Don't ask, it's _always_ too high.
-* Add domain-based filtering for relevance.
 * Show screenshot for large boxes if there is no image at all.
 * Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
 * Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
@@ -106,9 +108,6 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Make the whole Msgboy lighter. Maybe include less files?
 * Try to merge as many JS files as possible (thanks @beau) to make the msgboy lighter.
 * Open new tabs right _after_ the dashboard, not at the end of the window, so that the user has an indication of it.
-* Create a landing page for each of the "welcome" blocks.
-* Add a "your data is private" welcome block.
-* Add tooltips when hovering a box that says "visit article".
 * Consider not redrawing the whole dashboard on "-", but just allow for a redraw 'corner'.
 * When "resetting" subscriptions, it should indicate a message to the user...
 * We should show something on empty dashboard... but what?
