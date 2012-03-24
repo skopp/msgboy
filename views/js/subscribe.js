@@ -11807,11 +11807,189 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
 });
 
+require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
+var _ = require('underscore');
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+
+if (typeof Msgboy === "undefined") {
+    var Msgboy = {};
+}
+
+// Extending Msgboy with the Backbone events
+_.extend(Msgboy, Backbone.Events);
+
+// Logs messages to the console
+console._log = console.log;
+console._debug = console.debug;
+console._info = console.info;
+console._warn = console.warn;
+console._error = console.error;
+Msgboy.log =  {
+    levels: {
+        DEBUG: 10,
+        INFO: 20,
+        WARN: 30,
+        ERROR: 40,
+    },
+    _log: Function.prototype.bind.call(console._log, console),
+    _debug: Function.prototype.bind.call(console._debug, console),
+    _info: Function.prototype.bind.call(console._info, console),
+    _warn: Function.prototype.bind.call(console._warn, console),
+    _error: Function.prototype.bind.call(console._error, console),
+    debug: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._debug.apply(console, args);
+        }
+    },
+    info: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._info.apply(console, args);
+        }
+    },
+    warn: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._warn.apply(console, args);
+        }
+    },
+    error: function () {
+        if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
+            var args = Array.prototype.slice.call(arguments);  
+            this._error.apply(console, args);
+        }
+    },
+}
+
+// Also, hijack all console.log messages
+console.log = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.debug.apply(this, args);
+}
+
+console.debug = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.debug.apply(this, args);
+}
+
+console.info = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.info.apply(this, args);
+}
+
+console.warn = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.warn.apply(this, args);
+}
+
+console.error = function() {
+    var args = Array.prototype.slice.call(arguments);  
+    Msgboy.log.error.apply(this, args);
+}
+
+// Attributes
+Msgboy.log.debugLevel = Msgboy.log.levels.ERROR; // We may want to adjust that in production!
+Msgboy.infos = {};
+Msgboy.inbox = null;
+
+// Returns the environment in which this msgboy is running
+Msgboy.environment = function () {
+    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
+        return "production";
+    }
+    else {
+        return "development";
+    }
+};
+
+if(Msgboy.environment() === "development") {
+    Msgboy.log.debugLevel = Msgboy.log.levels.DEBUG;
+}
+
+// Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
+Msgboy.run =  function () {
+    window.onload = function () {
+        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+            Msgboy.infos = extension_infos;
+            Msgboy.trigger("loaded");
+        });
+    }
+};
+
+exports.Msgboy = Msgboy;
+
+if(typeof window !== "undefined") {
+    window.Msgboy = Msgboy;
+}
+
+
+});
+
+require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
+// Feediscovery module. The only API that needs to be used is the Feediscovery.get
+Feediscovery = {};
+Feediscovery.stack = [];
+Feediscovery.running = false;
+
+Feediscovery.get = function (_url, _callback) {
+    Feediscovery.stack.push([_url, _callback]);
+    if(!Feediscovery.running) {
+        Feediscovery.running = true;
+        Feediscovery.run();
+    }
+};
+Feediscovery.run = function () {
+    var next = Feediscovery.stack.shift();
+    if (next) {
+        var client = new XMLHttpRequest(); 
+        client.onreadystatechange = function() {
+            if(this.readyState == this.DONE) {
+                next[1](JSON.parse(client.responseText));
+                Feediscovery.run();
+            }
+        };
+        client.open("GET", "http://feediscovery.appspot.com/?url=" + encodeURI(next[0]) , true); // Open up the connection
+        client.send( null ); // Send the request
+    } else {
+        setTimeout(function () {
+            Feediscovery.run();
+        }, 1000);
+    }
+};
+
+exports.Feediscovery = Feediscovery;
+
+});
+
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/subscribe.js", function (require, module, exports, __dirname, __filename) {
-    
+    var $ = jQuery = require('jquery');
+var Msgboy = require('./msgboy.js').Msgboy;
+var Feediscovery = require('./feediscovery.js').Feediscovery;
+
+
+Msgboy.bind("loaded", function () {
+    var url =  unescape(unescape(window.location.search).match(/subscribe:(.*)/)[1]);
+    Feediscovery.get(url, function (links) {
+        for(var j = 0; j < links.length; j++) {
+            var link = links[j];
+            chrome.extension.sendRequest({
+                signature: "subscribe",
+                params: {
+                    title: link.title,
+                    url: link.href
+                }
+            }, function (response) {
+                // Done
+            });
+        }
+    });
+});
+
 });
 require("/subscribe.js");

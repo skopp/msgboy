@@ -16247,6 +16247,7 @@ Msgboy.bind("loaded", function () {
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
+    
  });
 
 
@@ -21708,7 +21709,6 @@ var Bookmarks = function (Plugins) {
                                 }
                                 processNext(bookmarks);
                             });
-
                         } else {
                             done(totalFeeds);
                         }

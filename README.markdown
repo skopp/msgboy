@@ -127,6 +127,10 @@ Here are a few tips and tricks to make it easier for people to subscribe.
 - Setup your feeds correctly.
     * Make sure your feed is correctly formatted, valid and easy to parse (limit to 10 entries, use unique identifiers for each entry, correctly formatted dates... etc)
     * Implement PubSubHubbub for realtime notifications (users are notified as soon as you update the content). [Superfeedr](http://superfeedr.com/publisher) hosts most of the hubs out there.
+    
+- Allowing for subscription. If your page has RSS feeds, we will obviously allow users to take them into account. But you can also do the following:
+    * Create links like `<a target="_blank" href="web+subscribe:...">Subscribe</a>` which will allow people to subscribe to a feed, but they need to have designated Msgboy as their main Subscription application.
+    * Use our Generic plugin (see above).
 
 - Tricks
     * Listen to msgboy triggered events to keep track of your visitors who use msgboy, or who subscribe to your feeds. Listen to the events  <code>msgboy-subscribed</code> on the body.

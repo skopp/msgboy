@@ -8,11 +8,12 @@ var OptionsView = Backbone.View.extend({
     events: {
         "change #relevance": "adjustRelevance",
         "click #resetRusbcriptions": "resetRusbcriptions",
-        "click #pinMsgboy": "pinMsgboy"
+        "click #pinMsgboy": "pinMsgboy",
+        "click #msgboySubscribeHandler": "registerHandler"
     },
 
     initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel");
+        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel", "registerHandler");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -72,6 +73,12 @@ var OptionsView = Backbone.View.extend({
         attributes.options['relevance'] = 1 - this.$("#relevance").val() / 100;
         this.model.set(attributes);
         this.model.save();
+    },
+    
+    registerHandler: function() {
+        // Protocol Handler Registration
+        var u =  chrome.extension.getURL("/views/html/subscribe.html?uri=%s");
+        var res = window.navigator.registerProtocolHandler("web+subscribe", u, "Msgboy");
     }
 });
 

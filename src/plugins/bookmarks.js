@@ -39,7 +39,6 @@ var Bookmarks = function (Plugins) {
                                 }
                                 processNext(bookmarks);
                             });
-
                         } else {
                             done(totalFeeds);
                         }

@@ -529,5 +529,6 @@ Msgboy.bind("loaded", function () {
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
+    
  });
 
