@@ -9,11 +9,12 @@ var OptionsView = Backbone.View.extend({
         "change #relevance": "adjustRelevance",
         "click #resetRusbcriptions": "resetRusbcriptions",
         "click #pinMsgboy": "pinMsgboy",
-        "click #msgboySubscribeHandler": "registerHandler"
+        "click #msgboySubscribeHandler": "registerHandler",
+        "change #autoRefresh": "setAutoRefresh"
     },
 
     initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel", "registerHandler");
+        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -34,6 +35,9 @@ var OptionsView = Backbone.View.extend({
         else {
             this.$("#pinMsgboy").val("unpined");
             this.$("#pinMsgboy").html("Pin");
+        }
+        if(this.model.attributes.options.autoRefresh) {
+            this.$("#autoRefresh").prop("checked", true);
         }
     },
 
@@ -57,7 +61,6 @@ var OptionsView = Backbone.View.extend({
         else {
             this.$("#pinMsgboy").val("unpined");
         }
-        
         this.saveModel();
         chrome.tabs.getCurrent(function(tab) {
             chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pined"}, function() {
@@ -71,6 +74,7 @@ var OptionsView = Backbone.View.extend({
         attributes.options = {};
         attributes.options['pinMsgboy'] = this.$("#pinMsgboy").val() === "pined";
         attributes.options['relevance'] = 1 - this.$("#relevance").val() / 100;
+        attributes.options['autoRefresh'] = this.$("#autoRefresh").is(':checked');
         this.model.set(attributes);
         this.model.save();
     },
@@ -79,6 +83,10 @@ var OptionsView = Backbone.View.extend({
         // Protocol Handler Registration
         var u =  chrome.extension.getURL("/views/html/subscribe.html?uri=%s");
         var res = window.navigator.registerProtocolHandler("web+subscribe", u, "Msgboy");
+    },
+    
+    setAutoRefresh: function() {
+        this.saveModel();
     }
 });
 
