@@ -30,7 +30,7 @@ html,body{
 .pane {
     border-top: 1px solid #1c3541;
     border-bottom: 1px solid #091419;
-    padding-bottom: 60px;
+    padding-bottom: 40px;
 }
 
 #info h1 {
@@ -40,11 +40,13 @@ html,body{
 }
 
 #info h2 {
+    color: #EEE;
     margin: 50px 20px 20px 20px;
     font-size: 1.6em;
 }
 
 #info h3 {
+    color: #EEE;
     margin: 30px 20px 10px 20px;
     font-size: 1.4em;
 }
@@ -126,27 +128,23 @@ html,body{
 /*options page stuff*/
 
 #options {
-    margin: 20px;
+    margin: 20px 0px 20px 0px;
     text-align: left;
 }
 
 #options label {
-    margin-right:20px;
+    text-align:left;
+    margin-left: 20px;
+    width: 200px;
     font-size: 1.2em;
     display: block;
     font-weight: bold;
-    margin-bottom: 10px;
     color: #EEE;
 } 
 
 .option {
     margin-bottom: 30px;
     margin-top: 10px;
-}
-
-.option label {
-    width:120px;
-    text-align:left;
 }
 
 #relevance {
@@ -156,12 +154,13 @@ html,body{
 .scale {
     padding:0px;
     margin:0px;
+    margin-left: 220px;
 }
 
 .scale div {
     margin-top: -15px;
     float: left;
-    width: 147px;
+    width: 150px;
     color:rgba(255,255,255,0.7);
 }
 

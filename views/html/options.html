@@ -40,38 +40,42 @@
     </header>
     
     <div id="info">
-        <h1>Options</h1>
         <div id="options">
-            <div class="option">
-                <label for="relevance">Notifications</label>
-                <input type="range" min="0" max="100" value="50" step="5" id="relevance" name="relevance" />
-                <div class="scale"><div class="mini">none</div> <div class="maxi">all</div></div>
-                <p>Train the msgboy to see more accurate messages. <a href="help.html">See how here</a></p>
+            <div class="pane">
+                <h2>Dashboard</h2>
+                <div class="option">
+                    <label for="pinMsgboy">Pin Msgboy</label>
+                    <button class="btn" id="pinMsgboy" value="Pin Msgboy" name="pinMsgboy">Pin</button>
+                    <p>The Msgboy tab will stay pined and open when you restart Chrome.</p>
+                </div>
             </div>
-            <div class="option">
-                <label for="resetRusbcriptions">Subscriptions</label>
-                <button class="btn danger" id="resetRusbcriptions" value="Reset" name="resetRusbcriptions">Reset</button>
-                <p>Use with caution, as it means you'll have to train the msgboy again. (<a href="subscriptions.html">Current list</a>)</p>
+            <div class="pane">
+                <h2>Subscriptions</h2>
+                <div class="option">
+                    <label for="msgboyButton">Msgboy Button</label>
+                    <a class="btn" id="msgboyButton" name="msgboyButton" value="Install Msgboy Button" href="http://msg.by/install-button">Install Button</a>
+                    <p>Install the Msgboy Button which allows you to explicitly subscribe to your favorite websites.</p>
+                </div>
+                <div class="option">
+                    <label for="msgboySubscribe">Handler</label>
+                    <button class="btn" id="msgboySubscribeHandler" name="msgboySubscribeHandler">Register</button>
+                    <p>Click on the button above if you want Msgboy to be your <em>accross the web</em> subscription application.</p>
+                </div>
+                <div class="option">
+                    <label for="resetRusbcriptions">Reset</label>
+                    <button class="btn danger" id="resetRusbcriptions" value="Reset" name="resetRusbcriptions">Reset</button>
+                    <p>Use with caution, as it means you'll have to train the msgboy again. (<a href="subscriptions.html">Current list</a>)</p>
+                </div>
             </div>
-
-            <div class="option">
-                <label for="pinMsgboy">Pin Msgboy</label>
-                <button class="btn" id="pinMsgboy" value="Pin Msgboy" name="pinMsgboy">Pin</button>
-                <p>The Msgboy tab will stay pined and open when you restart Chrome.</p>
+            <div class="pane">
+                <h2>Notifications</h2>
+                <div class="option">
+                    <label for="relevance">Filter</label>
+                    <input type="range" min="0" max="100" value="50" step="5" id="relevance" name="relevance" />
+                    <div class="scale"><div class="mini">none</div> <div class="maxi">all</div></div>
+                    <p>Train the msgboy to see more accurate messages. <a href="help.html">See how here</a></p>
+                </div>
             </div>
-            
-            <div class="option">
-                <label for="msgboyButton">Msgboy Button</label>
-                <a class="btn" id="msgboyButton" name="msgboyButton" value="Install Msgboy Button" href="http://msg.by/install-button">Install Button</a>
-                <p>Install the Msgboy Button which allows you to explicitly subscribe to your favorite websites.</p>
-            </div>
-            
-            <div class="option">
-                <label for="msgboySubscribe">Handler</label>
-                <button class="btn" id="msgboySubscribeHandler" name="msgboySubscribeHandler">Register</button>
-                <p>Click on the button above if you want Msgboy to be your <em>accross the web</em> subscription application.</p>
-            </div>
-            
         </div>
     </div>
     
