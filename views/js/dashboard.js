@@ -13660,6 +13660,62 @@ function lastBraceInKey(str) {
 
 });
 
+require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+var Message = require('./message.js').Message;
+
+var Inbox = Backbone.Model.extend({
+    storeName: "inbox",
+    database: msgboyDatabase,
+    defaults: {
+        id: "1",
+        options: {
+            relevance: 1.0,
+            pinMsgboy: false
+        }
+    },
+    initialize: function () {
+    },
+
+    setup: function (username, token) {
+        this.save({
+            epoch: new Date().getTime(),
+            jid: username,
+            password: token
+        }, {
+            success: function () {
+                this.trigger("ready", this);
+                this.trigger("new", this);
+            }.bind(this),
+            error: function () {
+                this.trigger('error');
+            }.bind(this)
+        });
+    },
+
+    // Fetches and prepares the inbox if needed.
+    fetchAndPrepare: function () {
+        this.fetch({
+            success: function () {
+                if (typeof(this.get('jid')) !== 'undefined' && this.get('jid') !== "" && typeof(this.get('password')) !== 'undefined' && this.get('password') !== "") {
+                    this.trigger("ready", this);
+                } else {
+                    this.trigger('error', 'Not Found');
+                }
+            }.bind(this),
+            error: function () {
+                this.trigger('error', 'Not Found');
+            }.bind(this)
+        });
+    }
+});
+
+exports.Inbox = Inbox;
+});
+
 require.define("/views/archive-view.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
@@ -14963,10 +15019,16 @@ require.define("/dashboard.js", function (require, module, exports, __dirname, _
 var Msgboy = require('./msgboy.js').Msgboy;
 var Archive = require('./models/archive.js').Archive;
 var Message = require('./models/message.js').Message;
+var Inbox = require('./models/inbox.js').Inbox;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
+
 Msgboy.bind("loaded", function () {
+    
+    Msgboy.inbox = new Inbox();
+    Msgboy.inbox.fetch();
+    
     // Bam. Msgboy loaded
     var archive = new Archive();
     var stacked = new Archive();
@@ -15005,17 +15067,22 @@ Msgboy.bind("loaded", function () {
             var m = new Message({id: request.params.id});
             m.fetch({
                 success: function() {
-                    stacked.add(m);
-                    // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
-                    // Let's get the content of $("#new_messages")
-                    var count = parseInt($("#new_messages").attr("data-unread"));
-                    if (count) {
-                        $("#new_messages").attr("data-unread", count + 1);
-                        $("#new_messages").text("View " + (count + 1) + " new");
-                    } else {
-                        $("#new_messages").css("top","0");
-                        $("#new_messages").attr("data-unread", "1");
-                        $("#new_messages").text("View 1 new");
+                    if(Msgboy.inbox.attributes.options.autoRefresh) {
+                        archiveView.appendNew(m); // We should just hide this!
+                    }
+                    else {
+                        stacked.add(m);
+                        // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
+                        // Let's get the content of $("#new_messages")
+                        var count = parseInt($("#new_messages").attr("data-unread"));
+                        if (count) {
+                            $("#new_messages").attr("data-unread", count + 1);
+                            $("#new_messages").text("View " + (count + 1) + " new");
+                        } else {
+                            $("#new_messages").css("top","0");
+                            $("#new_messages").attr("data-unread", "1");
+                            $("#new_messages").text("View 1 new");
+                        }
                     }
                 }.bind(this)
             });
