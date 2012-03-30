@@ -4,18 +4,20 @@ require('../jquery.masonry.min.js');
 var Backbone = require('backbone');
 var MessageView = require('./message-view.js').MessageView;
 var Archive = require('../models/archive.js').Archive;
+require("../date.extension.js");
 
 window.$ = $;
 
 var ArchiveView = Backbone.View.extend({
     upperBound: new Date().getTime(),
     lowerBound: 0,
+    fadeOutTimeout: null,
     loaded: 0,
     toLoad: 50,
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'showNew', 'completePage', 'loadNext');
+        _.bindAll(this, 'appendNew', 'completePage', 'loadNext');
         
         $('#container').masonry({
             itemSelector : '.message',
@@ -26,9 +28,19 @@ var ArchiveView = Backbone.View.extend({
         });
           
         $(document).scroll(this.completePage);
+        $(document).scroll(function() {
+            if(this.fadeOutTimeout) {
+                clearTimeout(this.fadeOutTimeout);
+            }
+            $("#timetracker").fadeIn();
+            this.fadeOutTimeout = setTimeout(function() {
+                this.fadeOutTimeout = null;
+                $("#timetracker").fadeOut();
+            }, 300);
+        });
         this.loadingTimes =[];
         this.loaded = this.toLoad;
-        this.collection.bind('add', this.showNew);
+        this.collection.bind('add', this.appendNew);
         this.loadNext();
     },
     completePage: function () {
@@ -48,7 +60,7 @@ var ArchiveView = Backbone.View.extend({
             });
         }
     },
-    appendNew: function (message) {
+    prependNew: function (message) {
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
                 $('#container').masonry('reload');
@@ -94,7 +106,7 @@ var ArchiveView = Backbone.View.extend({
             view.render(); 
         }
     },
-    showNew: function (message) {
+    appendNew: function (message) {
         this.upperBound = message.attributes.createdAt;
         this.loaded++;
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
@@ -153,6 +165,7 @@ var ArchiveView = Backbone.View.extend({
                 this.lastParentView = view;
             }
         }
+        $("#timetracker").html(new Date(message.attributes.createdAt).toRelativeTime());
     }
 });
 

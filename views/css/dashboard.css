@@ -285,3 +285,18 @@ p {
     background-image: url('../images/share.png');
 }
 
+#timetracker {
+    position:fixed;
+    top: 40%;
+    left: 40%;
+    width: 20%;
+    padding: 5% 0px 5% 0px;
+    background-color:  rgba(0,0,0,.80);
+    border-radius: 30px;
+    font-size: 2.4em;
+    color: white;
+    text-align:center;
+    vertical-align: middle;
+    z-index: 1000;
+    display:none;
+}

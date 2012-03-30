@@ -38,7 +38,7 @@ Msgboy.bind("loaded", function () {
         $("#new_messages").css("top","-36px");
         $("#new_messages").text("");
         stacked.forEach(function(m) {
-            archiveView.appendNew(m); // We should just hide this!
+            archiveView.prependNew(m); // We should just hide this!
         });
         stacked.reset();
         //window.location.reload(true);
@@ -51,7 +51,7 @@ Msgboy.bind("loaded", function () {
             m.fetch({
                 success: function() {
                     if(Msgboy.inbox.attributes.options.autoRefresh) {
-                        archiveView.appendNew(m); // We should just hide this!
+                        archiveView.prependNew(m); // We should just hide this!
                     }
                     else {
                         stacked.add(m);
