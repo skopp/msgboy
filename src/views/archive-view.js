@@ -28,7 +28,12 @@ var ArchiveView = Backbone.View.extend({
         });
           
         $(document).scroll(this.completePage);
+        
         $(document).scroll(function() {
+            var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
+            if(message) {
+                $("#timetracker").html(new Date(message.data('model').attributes.createdAt).toRelativeTime());
+            }
             if(this.fadeOutTimeout) {
                 clearTimeout(this.fadeOutTimeout);
             }
@@ -38,6 +43,7 @@ var ArchiveView = Backbone.View.extend({
                 $("#timetracker").fadeOut();
             }, 300);
         });
+        
         this.loadingTimes =[];
         this.loaded = this.toLoad;
         this.collection.bind('add', this.appendNew);
@@ -165,7 +171,6 @@ var ArchiveView = Backbone.View.extend({
                 this.lastParentView = view;
             }
         }
-        $("#timetracker").html(new Date(message.attributes.createdAt).toRelativeTime());
     }
 });
 

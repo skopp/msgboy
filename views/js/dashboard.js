@@ -13747,7 +13747,12 @@ var ArchiveView = Backbone.View.extend({
         });
           
         $(document).scroll(this.completePage);
+        
         $(document).scroll(function() {
+            var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
+            if(message) {
+                $("#timetracker").html(new Date(message.data('model').attributes.createdAt).toRelativeTime());
+            }
             if(this.fadeOutTimeout) {
                 clearTimeout(this.fadeOutTimeout);
             }
@@ -13757,6 +13762,7 @@ var ArchiveView = Backbone.View.extend({
                 $("#timetracker").fadeOut();
             }, 300);
         });
+        
         this.loadingTimes =[];
         this.loaded = this.toLoad;
         this.collection.bind('add', this.appendNew);
@@ -13884,7 +13890,6 @@ var ArchiveView = Backbone.View.extend({
                 this.lastParentView = view;
             }
         }
-        $("#timetracker").html(new Date(message.attributes.createdAt).toRelativeTime());
     }
 });
 
@@ -13931,7 +13936,8 @@ var MessageView = Backbone.View.extend({
         '<p><%= model.escape("title") %></p>'
     ].join('')),
     initialize: function () {
-        $(this.el).attr("title", this.model.get('mainLink'));
+        $(this.el).attr('title', this.model.get('mainLink'));
+        $(this.el).data('model', this.model);
         this.model.bind('change', this.layout.bind(this)); 
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 

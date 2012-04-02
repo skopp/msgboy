@@ -23,7 +23,8 @@ var MessageView = Backbone.View.extend({
         '<p><%= model.escape("title") %></p>'
     ].join('')),
     initialize: function () {
-        $(this.el).attr("title", this.model.get('mainLink'));
+        $(this.el).attr('title', this.model.get('mainLink'));
+        $(this.el).data('model', this.model);
         this.model.bind('change', this.layout.bind(this)); 
         this.model.bind('remove', this.remove.bind(this))
         this.model.bind('destroy', this.remove.bind(this)); 
