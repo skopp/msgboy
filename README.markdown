@@ -47,48 +47,10 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 
 ### TODO
 
-* <del>Add per-site unread list (as top screen bars) DEPRECATED</del>
-* <del>Add snooze</del>
-* <del>Rewrite the msgboy.com page with inbox</del>.
-* <del>Use the delay@stamp for createdAt of offline messages</del>.
-* <del>Run JSLint (and CSSLint?) in Rake tasks for cleaner JS.</del>
-* <del>Integrate with bit.ly</del>
-* <del>Grouping of items in the dashboard (by source, and by topic).</del>
-* <del>Set git tags when bumping</del>
-* <del>Throttle down importing of sources, to avoid slowness at setup. Since everything happens in the background. It's ok to take more time</del>.
-* <del>Show messages when there was no subscription performed at all...</del>
-* <del>Show more help in the msgboy dashboard in the form of boxes. These should indicate what needs to be done to subscribe to more content (bookmarking stuff!).</del>
-* <del>Add some feeds in black lists (like wikipedia's feeds).</del>
-* <del>Remove the different colors for notifications. That's hard to interpret.</del>
-* <del>Mark non feed subscriptions and delete them if needed</del>.
-* <del>Allow for unsubscriptions no matter the state</del>
-* <del>Refactor down-vote triggered unsubscriptions</del>
-* <del>OPML export</del>
-* <del>Extract images upon creation of messages.</del>
-* <del>Add a 'Pin' Msgboy option - thanks [John B.](http://www.borthwick.com/) for the idea.</del>
-* <del>Notification should be set to none by default.</del>
-* <del>Improve the "Welcome to Msgboy" message by indicating what Msgboy is.</del>
-* <del>Mark expanded notifications as expanded (same color scheme, with slow fading)</del>
-* <del>See why some images are not extracted.</del>
-* <del>Use a different color for Msgboy messages. (just use a match on the domain). The background is not enough. How, then?</del>
-* <del>Scale up images that should be displayed "in full"</del>.
-* <del>Do not use "message" or "stories"... let the user decide.</del>
-* <del>Ungrouped stories should stay ungrouped. </del>
-* <del>Remove the parseURI and replace by require('uri') when browserify supports it.</del>
-* <del>Add google Analytics tracking in links for referrals.</del>
-* <del>Measure with Google Analytics.</del>
-* <del>Better use of `console`, with `log` replaced by `error`, `warn`, `info`, `debug` when appropriate.</del>
-* <del>Add instapaper to the "share" button (Thanks to [Adam B.](http://adambrault.com/)</del>
-* <del>Run the Msgboy on port 80</del>
-* <del>Add tooltips when hovering a box that says "visit article".</del>
-* <del>Create a landing page for each of the "welcome" blocks.</del>
-* <del>Add a "your data is private" welcome block.</del>
 * Add support for unsubscription in plugins.
 * Add support for webintents, as a subscribing app, and calls for "sharing" apps.
-* HTML5 : Custom (web-based) protocol handlers
 * Add support for ActivityStreams
 * When subscribing to a feed on a page, check for rel="me" links and suggest corresponding feeds if they apply.
-* Show a "Path 2.0" clock to indicate some kind of time scale.
 * Run continuous testing before running Rake tasks.
 * Add the ability for a 3rd party site to ask for the list of subscriptions for a user who uses the msgboy. We want to use a system that would protect the users from having _all_ their subscriptions stolen. A solution would be to ask for subscriptions on a given domain, for example.
 * Improve the relevance algorithm by adding the keywords based filtering (Bayes), domain based filtering, as well as the previous relevance (and not just the states)
@@ -99,9 +61,7 @@ You may also create a full blown msgboy plugin, but we may not integrate it in t
 * Improve dashboards by deleting content at the top when scrolling down. It does also mean that we need to load more when scrolling up. Thanks [Dodo](https://github.com/dodo) for the idea.
 * Check Memory usage and fix it. Don't ask, it's _always_ too high.
 * Show screenshot for large boxes if there is no image at all.
-* Adding a bookmarklet (if the user wants to in the settings, to subscribe, and to add 3rd party content to msgboy)
 * Checking a feed status's upon notif and taking it into account so that even non immediate deletes from superfeedr are still being taken into account on the user's end.
-* Ask Bit.ly to redirect msg.by to msgboy.com
 * Show stories in blocks for time clarity, but also memory savings, as we can just remove blocks altogether. Thanks @beau
 * Add action triggered Msgboy messages: tips (5 votes down triggers an unsubscribe!... when the user votes down for the first time)
 * Dynamic Favicon to indicate that there are new messages in the Msgboy tab.
