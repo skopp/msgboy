@@ -3,7 +3,6 @@ var Message = require('./message.js').Message;
 var Msgboy = null;
 
 var saveMessage = function(message) {
-    console.log("saving", message.title)
     var msg = new Message(message);
     msg.save({}, {
         success: function () {
