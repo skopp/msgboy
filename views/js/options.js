@@ -11959,11 +11959,11 @@ var OptionsView = Backbone.View.extend({
     render: function () {
         this.$("#relevance").val((1 - this.model.attributes.options.relevance) * 100);
         if(this.model.attributes.options.pinMsgboy) {
-            this.$("#pinMsgboy").val("pined");
+            this.$("#pinMsgboy").val("pinned");
             this.$("#pinMsgboy").html("Unpin");
         }
         else {
-            this.$("#pinMsgboy").val("unpined");
+            this.$("#pinMsgboy").val("unpinned");
             this.$("#pinMsgboy").html("Pin");
         }
         if(this.model.attributes.options.autoRefresh) {
@@ -11985,15 +11985,15 @@ var OptionsView = Backbone.View.extend({
     },
     
     pinMsgboy: function(event) {
-        if(this.$("#pinMsgboy").val() === "unpined") {
-            this.$("#pinMsgboy").val("pined");
+        if(this.$("#pinMsgboy").val() === "unpinned") {
+            this.$("#pinMsgboy").val("pinned");
         }
         else {
-            this.$("#pinMsgboy").val("unpined");
+            this.$("#pinMsgboy").val("unpinned");
         }
         this.saveModel();
         chrome.tabs.getCurrent(function(tab) {
-            chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pined"}, function() {
+            chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pinned"}, function() {
                 // Done
             }.bind(this))
         }.bind(this));
@@ -12002,7 +12002,7 @@ var OptionsView = Backbone.View.extend({
     saveModel: function() {
         var attributes = {};
         attributes.options = {};
-        attributes.options['pinMsgboy'] = this.$("#pinMsgboy").val() === "pined";
+        attributes.options['pinMsgboy'] = this.$("#pinMsgboy").val() === "pinned";
         attributes.options['relevance'] = 1 - this.$("#relevance").val() / 100;
         attributes.options['autoRefresh'] = this.$("#autoRefresh").is(':checked');
         this.model.set(attributes);
