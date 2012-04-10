@@ -308,7 +308,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
 
             message.calculateRelevance(function (_relevance) {
                 attributes.relevance = _relevance;
-                message.save(attributes, {
+                message.create(attributes, {
                     success: function() {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);

@@ -16288,7 +16288,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
 
             message.calculateRelevance(function (_relevance) {
                 attributes.relevance = _relevance;
-                message.save(attributes, {
+                message.create(attributes, {
                     success: function() {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);
@@ -18286,6 +18286,13 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
+    /* Creates a message (uses save but makes sure we do not overide an existing message.) */
+    create: function(attributes, options) {
+        this.isNew = function() {
+            return true;
+        }
+        this.save(attributes, options);
+    },
     /* Initializes the messages */
     initialize: function (params) {
         if(typeof params === "undefined") {
@@ -18546,7 +18553,7 @@ var Msgboy = null;
 
 var saveMessage = function(message, cb) {
     var msg = new Message(message);
-    msg.save({}, {
+    msg.create({}, {
         success: function () {
             Msgboy.log.debug("Saved message " + msg.id);
             if(typeof cb !== "undefined") {
@@ -23214,25 +23221,47 @@ describe('Message', function(){
     describe('when saving', function() {
         it('should not save duplicate messages (with the same id)', function(done) {
             var id = "a-unique-id";
-            var message  = new Message();
-            message.save({id: id}, {
-                success: function() {
-                    var dupe = new Message();
-                    dupe.save({id: id}, {
+            
+            var runTest = function() {
+                var message  = new Message();
+                message.create({id: id}, {
+                    success: function() {
+                        var dupe = new Message();
+                        dupe.create({id: id}, {
+                            success: function() {
+                                // This should not happen!
+                                throw new Error('We were able to save the dupe!');
+                            },
+                            error: function() {
+                                done();
+                            }
+                        });
+                    }.bind(this),
+                    error: function() {
+                        throw new Error('We couldn\'t save the message');
+                        // This should not happen!
+                    }.bind(this)
+                });
+            };
+            
+            // First, we need to clean up any existing message.
+            var clean = new Message({id: id});
+            clean.fetch({
+                success: function () {
+                    // The message exists! Let's delete it.
+                    clean.destroy({
                         success: function() {
-                            // This should not happen!
-                            throw new Error('We were able to save the dupe!');
-                        },
-                        error: function() {
-                            done();
-                        }
+                            runTest();
+                        }.bind(this)
                     });
                 }.bind(this),
-                error: function() {
-                    throw new Error('We couldn\'t save the message');
-                    // This should not happen!
+                error: function () {
+                    // The message does not exist.
+                    runTest();
                 }.bind(this)
-            }); 
+                
+            })
+            
         });
         
         it('should yet allow for updates', function(done) {

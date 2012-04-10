@@ -13787,6 +13787,13 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
+    /* Creates a message (uses save but makes sure we do not overide an existing message.) */
+    create: function(attributes, options) {
+        this.isNew = function() {
+            return true;
+        }
+        this.save(attributes, options);
+    },
     /* Initializes the messages */
     initialize: function (params) {
         if(typeof params === "undefined") {
@@ -14047,7 +14054,7 @@ var Msgboy = null;
 
 var saveMessage = function(message, cb) {
     var msg = new Message(message);
-    msg.save({}, {
+    msg.create({}, {
         success: function () {
             Msgboy.log.debug("Saved message " + msg.id);
             if(typeof cb !== "undefined") {
@@ -18545,7 +18552,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
 
             message.calculateRelevance(function (_relevance) {
                 attributes.relevance = _relevance;
-                message.save(attributes, {
+                message.create(attributes, {
                     success: function() {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);

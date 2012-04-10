@@ -4,7 +4,7 @@ var Msgboy = null;
 
 var saveMessage = function(message, cb) {
     var msg = new Message(message);
-    msg.save({}, {
+    msg.create({}, {
         success: function () {
             Msgboy.log.debug("Saved message " + msg.id);
             if(typeof cb !== "undefined") {

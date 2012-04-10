@@ -24,6 +24,13 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
+    /* Creates a message (uses save but makes sure we do not overide an existing message.) */
+    create: function(attributes, options) {
+        this.isNew = function() {
+            return true;
+        }
+        this.save(attributes, options);
+    },
     /* Initializes the messages */
     initialize: function (params) {
         if(typeof params === "undefined") {
