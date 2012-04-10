@@ -15188,9 +15188,21 @@ Msgboy.bind("loaded", function () {
     });
 
     // When a message is shared
-    archive.bind("share", function (message) {
+    archive.bind('share', function (message) {
         modalShareView.showForMessage(message);
     });
+    
+    // When a message is down-voted
+    archive.bind('down-ed', function(message) {
+        if(message.attributes.sourceHost !== "msgboy.com") {
+            chrome.extension.sendRequest({
+                signature: "down-ed",
+                params: message
+            }, function (response) {
+                // Nothing to do.
+            });
+        }
+    })
 
     // Refresh the page! Maybe it would actually be fancier to add the elements to the archive and then push them in front. TODO
     $("#new_messages").click(function () {
@@ -15202,7 +15214,7 @@ Msgboy.bind("loaded", function () {
         });
         stacked.reset();
         //window.location.reload(true);
-    }) 
+    });
 
     // Listening to the events from the background page.
     chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {

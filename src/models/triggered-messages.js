@@ -2,11 +2,14 @@ var Message = require('./message.js').Message;
 
 var Msgboy = null;
 
-var saveMessage = function(message) {
+var saveMessage = function(message, cb) {
     var msg = new Message(message);
     msg.save({}, {
         success: function () {
             Msgboy.log.debug("Saved message " + msg.id);
+            if(typeof cb !== "undefined") {
+                cb(msg);
+            }
         }.bind(this),
         error: function (object, error) {
             // Message was not saved... probably a dupe
@@ -20,12 +23,112 @@ var MessageTrigger = {
     observe: function(msgboy) {
         Msgboy = msgboy;
         
+        // Template
         // Msgboy.bind('inbox:new', function() {
         //     saveMessage();
         // });
         
+        Msgboy.bind('down-ed', function() {
+            saveMessage({
+                "id": "tag:msgboy.com,2012:first-downvote",
+                "title": "This was your first downvote",
+                "ungroup": true,
+                "summary": 'Click this box to learn more about what happens when you down-vote!',
+                "image": '',
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": 'http://msg.by/HMQu9Q',
+                            "rel": "alternate",
+                            "title": "Down-voting",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime(),
+                "source": {
+                    "title": "Msgboy",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "alternate": "http://msgboy.com/",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 1.0,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            }, function(message) {
+                Msgboy.inbox.trigger("messages:added", message);
+            });
+        });
+
+        Msgboy.bind('plugins:imported', function(count) {
+            saveMessage({
+                "id": "tag:msgboy.com,2012:plugins",
+                "title": "We successfuly found " + count + " site for you!",
+                "ungroup": true,
+                "summary": 'When looking at your <em>browsing habits</em>, we found ' + count + ' sites you seem to care about.',
+                "image": '',
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": 'http://msg.by/HiC1pI',
+                            "rel": "alternate",
+                            "title": "Msgboy plugins",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime(),
+                "source": {
+                    "title": "Msgboy",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "alternate": "http://msgboy.com/",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 0.6,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            }, function(message) {
+                Msgboy.inbox.trigger("messages:added", message);
+            });
+        });
+        
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:welcome",
                 "title": "Welcome to msgboy! He will show you the web you care about.",
                 "ungroup": true,
                 "summary": 'Welcome to msgboy! It will show you the web you care about.',
@@ -72,6 +175,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:bookmark-and-visit",
                 "title": "Bookmark or come back to sites you love.",
                 "ungroup": true,
                 "image": "/views/images/msgboy-help-screen-2.png",
@@ -118,6 +222,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:real-time",
                 "title": "Newly posted stories appear in realtime.",
                 "ungroup": true,
                 "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
@@ -163,6 +268,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:train",
                 "title": "Train msgboy to give you what you want.",
                 "ungroup": true,
                 "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
@@ -208,6 +314,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:vote-up",
                 "title": "Click '+' for more like this.",
                 "ungroup": true,
                 "summary": "Vote stories up if you want more like them",
@@ -253,6 +360,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:vote-down",
                 "title": "Click '-' if you're not interested.",
                 "ungroup": true,
                 "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
@@ -298,6 +406,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:notifications",
                 "title": "Follow and rate stories with notifications.",
                 "ungroup": true,
                 "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
@@ -343,6 +452,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:use-settings",
                 "title": "You can throttle notifications in settings.",
                 "ungroup": true,
                 "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
@@ -388,6 +498,7 @@ var MessageTrigger = {
         
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:your-data-protected",
                 "title": "Your data is safe and protected.",
                 "ungroup": true,
                 "summary": "The msgboy runs locally. All your browsing data stays local.",

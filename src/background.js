@@ -335,7 +335,7 @@ Msgboy.bind("loaded", function () {
     
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
-        notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
+        notify(message.toJSON(), message.attributes.relevance > Msgboy.inbox.attributes.options.relevance);
     });
 
     // When the inbox is ready
@@ -376,10 +376,12 @@ Msgboy.bind("loaded", function () {
             }, 
             function(plugin, subscriptionsCount) {
                 // Called when done with one plugin
+                Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
                 Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
             },
             function(subscriptionsCount) {
                 // Called when done with all plugins
+                Msgboy.trigger("plugins:imported", subscriptionsCount); // Let's indicate all msgboy susbcribers that it's the case!
                 Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
             });
         });
