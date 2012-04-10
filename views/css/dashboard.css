@@ -187,7 +187,7 @@
 }
 
 p {
-    position: absolute;
+    position: relative;
     top: 40%;
     box-sizing: border-box;
     padding: 5% 5% 5% 5%;
@@ -285,18 +285,28 @@ p {
     background-image: url('../images/share.png');
 }
 
+
 #timetracker {
+    display: block;
     position:fixed;
     top: 40%;
-    left: 40%;
-    width: 20%;
-    padding: 5% 0px 5% 0px;
-    background-color:  rgba(0,0,0,.80);
-    border-radius: 30px;
+    margin-left:auto;
+    margin-right: auto;
+    width: 100%;
+    display:none;
+}
+
+#timetracker p {
+    padding: 50px 20px 50px 20px;
+    display: block;
+    background-color: rgba(0,0,0,.80);
+    border-radius: 20px;
     font-size: 2.4em;
     color: white;
     text-align:center;
     vertical-align: middle;
     z-index: 1000;
-    display:none;
+    width: 350px;
+    margin-left:auto;
+    margin-right: auto;
 }

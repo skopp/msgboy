@@ -13967,7 +13967,7 @@ var ArchiveView = Backbone.View.extend({
         $(document).scroll(function() {
             var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
             if(message) {
-                $("#timetracker").html(new Date(message.data('model').attributes.createdAt).toRelativeTime());
+                $("#timetracker").html("<p>" + new Date(message.data('model').attributes.createdAt).toRelativeTime() + "</p>");
             }
             if(this.fadeOutTimeout) {
                 clearTimeout(this.fadeOutTimeout);
