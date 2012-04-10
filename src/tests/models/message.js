@@ -115,6 +115,55 @@ describe('Message', function(){
         
     });
     
+    describe('when saving', function() {
+        it('should not save duplicate messages (with the same id)', function(done) {
+            var id = "a-unique-id";
+            var message  = new Message();
+            message.save({id: id}, {
+                success: function() {
+                    var dupe = new Message();
+                    dupe.save({id: id}, {
+                        success: function() {
+                            // This should not happen!
+                            throw new Error('We were able to save the dupe!');
+                        },
+                        error: function() {
+                            done();
+                        }
+                    });
+                }.bind(this),
+                error: function() {
+                    throw new Error('We couldn\'t save the message');
+                    // This should not happen!
+                }.bind(this)
+            }); 
+        });
+        
+        it('should yet allow for updates', function(done) {
+            var id = "a-unique-id";
+            var message  = new Message();
+            message.save({id: id}, {
+                success: function() {
+                    message.save({title: "hello world"}, {
+                        success: function() {
+                            // This should not happen!
+                            done();
+                        },
+                        error: function() {
+                            throw new Error('We were not able to update the message.');
+                        }
+                    });
+                }.bind(this),
+                error: function() {
+                    throw new Error('We couldn\'t save the message');
+                    // This should not happen!
+                }.bind(this)
+            }); 
+        })
+        
+        
+    });
+    
     describe('relevanceBasedOnBrothers', function() {
         
     });

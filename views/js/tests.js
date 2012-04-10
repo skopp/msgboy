@@ -351,7 +351,7 @@ function create(window) {
   var location, navigator, XMLHttpRequest;
 
 /*!
- * jQuery JavaScript Library v1.7.1
+ * jQuery JavaScript Library v1.7.2
  * http://jquery.com/
  *
  * Copyright 2011, John Resig
@@ -363,7 +363,7 @@ function create(window) {
  * Copyright 2011, The Dojo Foundation
  * Released under the MIT, BSD, and GPL Licenses.
  *
- * Date: Mon Nov 21 21:11:03 2011 -0500
+ * Date: Wed Mar 21 12:46:34 2012 -0700
  */
 (function( window, undefined ) {
 
@@ -562,7 +562,7 @@ jQuery.fn = jQuery.prototype = {
 	selector: "",
 
 	// The current version of jQuery being used
-	jquery: "1.7.1",
+	jquery: "1.7.2",
 
 	// The default length of a jQuery object is 0
 	length: 0,
@@ -849,9 +849,8 @@ jQuery.extend({
 		return jQuery.type(obj) === "array";
 	},
 
-	// A crude way of determining if an object is a window
 	isWindow: function( obj ) {
-		return obj && typeof obj === "object" && "setInterval" in obj;
+		return obj != null && obj == obj.window;
 	},
 
 	isNumeric: function( obj ) {
@@ -931,6 +930,9 @@ jQuery.extend({
 
 	// Cross-browser xml parsing
 	parseXML: function( data ) {
+		if ( typeof data !== "string" || !data ) {
+			return null;
+		}
 		var xml, tmp;
 		try {
 			if ( window.DOMParser ) { // Standard
@@ -1174,31 +1176,55 @@ jQuery.extend({
 
 	// Mutifunctional method to get and set values to a collection
 	// The value/s can optionally be executed if it's a function
-	access: function( elems, key, value, exec, fn, pass ) {
-		var length = elems.length;
+	access: function( elems, fn, key, value, chainable, emptyGet, pass ) {
+		var exec,
+			bulk = key == null,
+			i = 0,
+			length = elems.length;
 
-		// Setting many attributes
-		if ( typeof key === "object" ) {
-			for ( var k in key ) {
-				jQuery.access( elems, k, key[k], exec, fn, value );
+		// Sets many values
+		if ( key && typeof key === "object" ) {
+			for ( i in key ) {
+				jQuery.access( elems, fn, i, key[i], 1, emptyGet, value );
 			}
-			return elems;
-		}
+			chainable = 1;
 
-		// Setting one attribute
-		if ( value !== undefined ) {
+		// Sets one value
+		} else if ( value !== undefined ) {
 			// Optionally, function values get executed if exec is true
-			exec = !pass && exec && jQuery.isFunction(value);
+			exec = pass === undefined && jQuery.isFunction( value );
 
-			for ( var i = 0; i < length; i++ ) {
-				fn( elems[i], key, exec ? value.call( elems[i], i, fn( elems[i], key ) ) : value, pass );
+			if ( bulk ) {
+				// Bulk operations only iterate when executing function values
+				if ( exec ) {
+					exec = fn;
+					fn = function( elem, key, value ) {
+						return exec.call( jQuery( elem ), value );
+					};
+
+				// Otherwise they run against the entire set
+				} else {
+					fn.call( elems, value );
+					fn = null;
+				}
 			}
 
-			return elems;
+			if ( fn ) {
+				for (; i < length; i++ ) {
+					fn( elems[i], key, exec ? value.call( elems[i], i, fn( elems[i], key ) ) : value, pass );
+				}
+			}
+
+			chainable = 1;
 		}
 
-		// Getting an attribute
-		return length ? fn( elems[0], key ) : undefined;
+		return chainable ?
+			elems :
+
+			// Gets
+			bulk ?
+				fn.call( elems ) :
+				length ? fn( elems[0], key ) : emptyGet;
 	},
 
 	now: function() {
@@ -1357,6 +1383,8 @@ jQuery.Callbacks = function( flags ) {
 		stack = [],
 		// Last fire value (for non-forgettable lists)
 		memory,
+		// Flag to know if list was already fired
+		fired,
 		// Flag to know if list is currently firing
 		firing,
 		// First callback to fire (used internally by add and fireWith)
@@ -1390,6 +1418,7 @@ jQuery.Callbacks = function( flags ) {
 		fire = function( context, args ) {
 			args = args || [];
 			memory = !flags.memory || [ context, args ];
+			fired = true;
 			firing = true;
 			firingIndex = firingStart || 0;
 			firingStart = 0;
@@ -1525,7 +1554,7 @@ jQuery.Callbacks = function( flags ) {
 			},
 			// To know if the callbacks have already been called at least once
 			fired: function() {
-				return !!memory;
+				return !!fired;
 			}
 		};
 
@@ -1688,7 +1717,6 @@ jQuery.support = (function() {
 		select,
 		opt,
 		input,
-		marginDiv,
 		fragment,
 		tds,
 		events,
@@ -1771,8 +1799,12 @@ jQuery.support = (function() {
 		noCloneEvent: true,
 		inlineBlockNeedsLayout: false,
 		shrinkWrapBlocks: false,
-		reliableMarginRight: true
+		reliableMarginRight: true,
+		pixelMargin: true
 	};
+
+	// jQuery.boxModel DEPRECATED in 1.3, use jQuery.support.boxModel instead
+	jQuery.boxModel = support.boxModel = (document.compatMode === "CSS1Compat");
 
 	// Make sure checked status is properly cloned
 	input.checked = true;
@@ -1808,6 +1840,10 @@ jQuery.support = (function() {
 	support.radioValue = input.value === "t";
 
 	input.setAttribute("checked", "checked");
+
+	// #11217 - WebKit loses check when the name is after the checked attribute
+	input.setAttribute( "name", "t" );
+
 	div.appendChild( input );
 	fragment = document.createDocumentFragment();
 	fragment.appendChild( div.lastChild );
@@ -1822,23 +1858,6 @@ jQuery.support = (function() {
 	fragment.removeChild( input );
 	fragment.appendChild( div );
 
-	div.innerHTML = "";
-
-	// Check if div with explicit width and no margin-right incorrectly
-	// gets computed margin-right based on width of container. For more
-	// info see bug #3333
-	// Fails in WebKit before Feb 2011 nightlies
-	// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
-	if ( window.getComputedStyle ) {
-		marginDiv = document.createElement( "div" );
-		marginDiv.style.width = "0";
-		marginDiv.style.marginRight = "0";
-		div.style.width = "2px";
-		div.appendChild( marginDiv );
-		support.reliableMarginRight =
-			( parseInt( ( window.getComputedStyle( marginDiv, null ) || { marginRight: 0 } ).marginRight, 10 ) || 0 ) === 0;
-	}
-
 	// Technique from Juriy Zaytsev
 	// http://perfectionkills.com/detecting-event-support-without-browser-sniffing/
 	// We only care about the case where non-standard event systems
@@ -1846,7 +1865,7 @@ jQuery.support = (function() {
 	// avoid an eval call (in setAttribute) which can cause CSP
 	// to go haywire. See: https://developer.mozilla.org/en/Security/CSP
 	if ( div.attachEvent ) {
-		for( i in {
+		for ( i in {
 			submit: 1,
 			change: 1,
 			focusin: 1
@@ -1864,12 +1883,13 @@ jQuery.support = (function() {
 	fragment.removeChild( div );
 
 	// Null elements to avoid leaks in IE
-	fragment = select = opt = marginDiv = div = input = null;
+	fragment = select = opt = div = input = null;
 
 	// Run tests that need a body at doc ready
 	jQuery(function() {
 		var container, outer, inner, table, td, offsetSupport,
-			conMarginTop, ptlm, vb, style, html,
+			marginDiv, conMarginTop, style, html, positionTopLeftWidthHeight,
+			paddingMarginBorderVisibility, paddingMarginBorder,
 			body = document.getElementsByTagName("body")[0];
 
 		if ( !body ) {
@@ -1878,15 +1898,16 @@ jQuery.support = (function() {
 		}
 
 		conMarginTop = 1;
-		ptlm = "position:absolute;top:0;left:0;width:1px;height:1px;margin:0;";
-		vb = "visibility:hidden;border:0;";
-		style = "style='" + ptlm + "border:5px solid #000;padding:0;'";
-		html = "<div " + style + "><div></div></div>" +
-			"<table " + style + " cellpadding='0' cellspacing='0'>" +
+		paddingMarginBorder = "padding:0;margin:0;border:";
+		positionTopLeftWidthHeight = "position:absolute;top:0;left:0;width:1px;height:1px;";
+		paddingMarginBorderVisibility = paddingMarginBorder + "0;visibility:hidden;";
+		style = "style='" + positionTopLeftWidthHeight + paddingMarginBorder + "5px solid #000;";
+		html = "<div " + style + "display:block;'><div style='" + paddingMarginBorder + "0;display:block;overflow:hidden;'></div></div>" +
+			"<table " + style + "' cellpadding='0' cellspacing='0'>" +
 			"<tr><td></td></tr></table>";
 
 		container = document.createElement("div");
-		container.style.cssText = vb + "width:0;height:0;position:static;top:0;margin-top:" + conMarginTop + "px";
+		container.style.cssText = paddingMarginBorderVisibility + "width:0;height:0;position:static;top:0;margin-top:" + conMarginTop + "px";
 		body.insertBefore( container, body.firstChild );
 
 		// Construct the test element
@@ -1900,7 +1921,7 @@ jQuery.support = (function() {
 		// display:none (it is still safe to use offsets if a parent element is
 		// hidden; don safety goggles and see bug #4512 for more information).
 		// (only IE 8 fails this test)
-		div.innerHTML = "<table><tr><td style='padding:0;border:0;display:none'></td><td>t</td></tr></table>";
+		div.innerHTML = "<table><tr><td style='" + paddingMarginBorder + "0;display:none'></td><td>t</td></tr></table>";
 		tds = div.getElementsByTagName( "td" );
 		isSupported = ( tds[ 0 ].offsetHeight === 0 );
 
@@ -1911,28 +1932,44 @@ jQuery.support = (function() {
 		// (IE <= 8 fail this test)
 		support.reliableHiddenOffsets = isSupported && ( tds[ 0 ].offsetHeight === 0 );
 
-		// Figure out if the W3C box model works as expected
-		div.innerHTML = "";
-		div.style.width = div.style.paddingLeft = "1px";
-		jQuery.boxModel = support.boxModel = div.offsetWidth === 2;
+		// Check if div with explicit width and no margin-right incorrectly
+		// gets computed margin-right based on width of container. For more
+		// info see bug #3333
+		// Fails in WebKit before Feb 2011 nightlies
+		// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
+		if ( window.getComputedStyle ) {
+			div.innerHTML = "";
+			marginDiv = document.createElement( "div" );
+			marginDiv.style.width = "0";
+			marginDiv.style.marginRight = "0";
+			div.style.width = "2px";
+			div.appendChild( marginDiv );
+			support.reliableMarginRight =
+				( parseInt( ( window.getComputedStyle( marginDiv, null ) || { marginRight: 0 } ).marginRight, 10 ) || 0 ) === 0;
+		}
 
 		if ( typeof div.style.zoom !== "undefined" ) {
 			// Check if natively block-level elements act like inline-block
 			// elements when setting their display to 'inline' and giving
 			// them layout
 			// (IE < 8 does this)
+			div.innerHTML = "";
+			div.style.width = div.style.padding = "1px";
+			div.style.border = 0;
+			div.style.overflow = "hidden";
 			div.style.display = "inline";
 			div.style.zoom = 1;
-			support.inlineBlockNeedsLayout = ( div.offsetWidth === 2 );
+			support.inlineBlockNeedsLayout = ( div.offsetWidth === 3 );
 
 			// Check if elements with layout shrink-wrap their children
 			// (IE 6 does this)
-			div.style.display = "";
-			div.innerHTML = "<div style='width:4px;'></div>";
-			support.shrinkWrapBlocks = ( div.offsetWidth !== 2 );
+			div.style.display = "block";
+			div.style.overflow = "visible";
+			div.innerHTML = "<div style='width:5px;'></div>";
+			support.shrinkWrapBlocks = ( div.offsetWidth !== 3 );
 		}
 
-		div.style.cssText = ptlm + vb;
+		div.style.cssText = positionTopLeftWidthHeight + paddingMarginBorderVisibility;
 		div.innerHTML = html;
 
 		outer = div.firstChild;
@@ -1957,8 +1994,17 @@ jQuery.support = (function() {
 		offsetSupport.subtractsBorderForOverflowNotVisible = ( inner.offsetTop === -5 );
 		offsetSupport.doesNotIncludeMarginInBodyOffset = ( body.offsetTop !== conMarginTop );
 
+		if ( window.getComputedStyle ) {
+			div.style.marginTop = "1%";
+			support.pixelMargin = ( window.getComputedStyle( div, null ) || { marginTop: 0 } ).marginTop !== "1%";
+		}
+
+		if ( typeof container.style.zoom !== "undefined" ) {
+			container.style.zoom = 1;
+		}
+
 		body.removeChild( container );
-		div  = container = null;
+		marginDiv = div = container = null;
 
 		jQuery.extend( support, offsetSupport );
 	});
@@ -2215,62 +2261,70 @@ jQuery.extend({
 
 jQuery.fn.extend({
 	data: function( key, value ) {
-		var parts, attr, name,
+		var parts, part, attr, name, l,
+			elem = this[0],
+			i = 0,
 			data = null;
 
-		if ( typeof key === "undefined" ) {
+		// Gets all values
+		if ( key === undefined ) {
 			if ( this.length ) {
-				data = jQuery.data( this[0] );
+				data = jQuery.data( elem );
 
-				if ( this[0].nodeType === 1 && !jQuery._data( this[0], "parsedAttrs" ) ) {
-					attr = this[0].attributes;
-					for ( var i = 0, l = attr.length; i < l; i++ ) {
+				if ( elem.nodeType === 1 && !jQuery._data( elem, "parsedAttrs" ) ) {
+					attr = elem.attributes;
+					for ( l = attr.length; i < l; i++ ) {
 						name = attr[i].name;
 
 						if ( name.indexOf( "data-" ) === 0 ) {
 							name = jQuery.camelCase( name.substring(5) );
 
-							dataAttr( this[0], name, data[ name ] );
+							dataAttr( elem, name, data[ name ] );
 						}
 					}
-					jQuery._data( this[0], "parsedAttrs", true );
+					jQuery._data( elem, "parsedAttrs", true );
 				}
 			}
 
 			return data;
+		}
 
-		} else if ( typeof key === "object" ) {
+		// Sets multiple values
+		if ( typeof key === "object" ) {
 			return this.each(function() {
 				jQuery.data( this, key );
 			});
 		}
 
-		parts = key.split(".");
+		parts = key.split( ".", 2 );
 		parts[1] = parts[1] ? "." + parts[1] : "";
+		part = parts[1] + "!";
 
-		if ( value === undefined ) {
-			data = this.triggerHandler("getData" + parts[1] + "!", [parts[0]]);
+		return jQuery.access( this, function( value ) {
 
-			// Try to fetch any internally stored data first
-			if ( data === undefined && this.length ) {
-				data = jQuery.data( this[0], key );
-				data = dataAttr( this[0], key, data );
+			if ( value === undefined ) {
+				data = this.triggerHandler( "getData" + part, [ parts[0] ] );
+
+				// Try to fetch any internally stored data first
+				if ( data === undefined && elem ) {
+					data = jQuery.data( elem, key );
+					data = dataAttr( elem, key, data );
+				}
+
+				return data === undefined && parts[1] ?
+					this.data( parts[0] ) :
+					data;
 			}
 
-			return data === undefined && parts[1] ?
-				this.data( parts[0] ) :
-				data;
+			parts[1] = value;
+			this.each(function() {
+				var self = jQuery( this );
 
-		} else {
-			return this.each(function() {
-				var self = jQuery( this ),
-					args = [ parts[0], value ];
-
-				self.triggerHandler( "setData" + parts[1] + "!", args );
+				self.triggerHandler( "setData" + part, parts );
 				jQuery.data( this, key, value );
-				self.triggerHandler( "changeData" + parts[1] + "!", args );
+				self.triggerHandler( "changeData" + part, parts );
 			});
-		}
+		}, null, value, arguments.length > 1, null, false );
 	},
 
 	removeData: function( key ) {
@@ -2294,7 +2348,7 @@ function dataAttr( elem, key, data ) {
 				data = data === "true" ? true :
 				data === "false" ? false :
 				data === "null" ? null :
-				jQuery.isNumeric( data ) ? parseFloat( data ) :
+				jQuery.isNumeric( data ) ? +data :
 					rbrace.test( data ) ? jQuery.parseJSON( data ) :
 					data;
 			} catch( e ) {}
@@ -2429,21 +2483,27 @@ jQuery.extend({
 
 jQuery.fn.extend({
 	queue: function( type, data ) {
+		var setter = 2;
+
 		if ( typeof type !== "string" ) {
 			data = type;
 			type = "fx";
+			setter--;
 		}
 
-		if ( data === undefined ) {
+		if ( arguments.length < setter ) {
 			return jQuery.queue( this[0], type );
 		}
-		return this.each(function() {
-			var queue = jQuery.queue( this, type, data );
 
-			if ( type === "fx" && queue[0] !== "inprogress" ) {
-				jQuery.dequeue( this, type );
-			}
-		});
+		return data === undefined ?
+			this :
+			this.each(function() {
+				var queue = jQuery.queue( this, type, data );
+
+				if ( type === "fx" && queue[0] !== "inprogress" ) {
+					jQuery.dequeue( this, type );
+				}
+			});
 	},
 	dequeue: function( type ) {
 		return this.each(function() {
@@ -2497,7 +2557,7 @@ jQuery.fn.extend({
 			}
 		}
 		resolve();
-		return defer.promise();
+		return defer.promise( object );
 	}
 });
 
@@ -2516,7 +2576,7 @@ var rclass = /[\n\t\r]/g,
 
 jQuery.fn.extend({
 	attr: function( name, value ) {
-		return jQuery.access( this, name, value, true, jQuery.attr );
+		return jQuery.access( this, jQuery.attr, name, value, arguments.length > 1 );
 	},
 
 	removeAttr: function( name ) {
@@ -2526,7 +2586,7 @@ jQuery.fn.extend({
 	},
 
 	prop: function( name, value ) {
-		return jQuery.access( this, name, value, true, jQuery.prop );
+		return jQuery.access( this, jQuery.prop, name, value, arguments.length > 1 );
 	},
 
 	removeProp: function( name ) {
@@ -2666,7 +2726,7 @@ jQuery.fn.extend({
 
 		if ( !arguments.length ) {
 			if ( elem ) {
-				hooks = jQuery.valHooks[ elem.nodeName.toLowerCase() ] || jQuery.valHooks[ elem.type ];
+				hooks = jQuery.valHooks[ elem.type ] || jQuery.valHooks[ elem.nodeName.toLowerCase() ];
 
 				if ( hooks && "get" in hooks && (ret = hooks.get( elem, "value" )) !== undefined ) {
 					return ret;
@@ -2710,7 +2770,7 @@ jQuery.fn.extend({
 				});
 			}
 
-			hooks = jQuery.valHooks[ this.nodeName.toLowerCase() ] || jQuery.valHooks[ this.type ];
+			hooks = jQuery.valHooks[ this.type ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
 
 			// If set returns undefined, fall back to normal setting
 			if ( !hooks || !("set" in hooks) || hooks.set( this, val, "value" ) === undefined ) {
@@ -2856,7 +2916,7 @@ jQuery.extend({
 	},
 
 	removeAttr: function( elem, value ) {
-		var propName, attrNames, name, l,
+		var propName, attrNames, name, l, isBool,
 			i = 0;
 
 		if ( value && elem.nodeType === 1 ) {
@@ -2868,13 +2928,17 @@ jQuery.extend({
 
 				if ( name ) {
 					propName = jQuery.propFix[ name ] || name;
+					isBool = rboolean.test( name );
 
 					// See #9699 for explanation of this approach (setting first, then removal)
-					jQuery.attr( elem, name, "" );
+					// Do not do this for boolean attributes (see #10870)
+					if ( !isBool ) {
+						jQuery.attr( elem, name, "" );
+					}
 					elem.removeAttribute( getSetAttribute ? name : propName );
 
 					// Set corresponding property to false for boolean attributes
-					if ( rboolean.test( name ) && propName in elem ) {
+					if ( isBool && propName in elem ) {
 						elem[ propName ] = false;
 					}
 				}
@@ -3028,7 +3092,8 @@ if ( !getSetAttribute ) {
 
 	fixSpecified = {
 		name: true,
-		id: true
+		id: true,
+		coords: true
 	};
 
 	// Use this for any attribute in IE6/7
@@ -3158,7 +3223,7 @@ jQuery.each([ "radio", "checkbox" ], function() {
 
 var rformElems = /^(?:textarea|input|select)$/i,
 	rtypenamespace = /^([^\.]*)?(?:\.(.+))?$/,
-	rhoverHack = /\bhover(\.\S+)?\b/,
+	rhoverHack = /(?:^|\s)hover(\.\S+)?\b/,
 	rkeyEvent = /^key/,
 	rmouseEvent = /^(?:mouse|contextmenu)|click/,
 	rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
@@ -3206,6 +3271,7 @@ jQuery.event = {
 		if ( handler.handler ) {
 			handleObjIn = handler;
 			handler = handleObjIn.handler;
+			selector = handleObjIn.selector;
 		}
 
 		// Make sure that the handler has a unique ID, used to find/remove it later
@@ -3257,7 +3323,7 @@ jQuery.event = {
 				handler: handler,
 				guid: handler.guid,
 				selector: selector,
-				quick: quickParse( selector ),
+				quick: selector && quickParse( selector ),
 				namespace: namespaces.join(".")
 			}, handleObjIn );
 
@@ -3546,6 +3612,7 @@ jQuery.event = {
 			delegateCount = handlers.delegateCount,
 			args = [].slice.call( arguments, 0 ),
 			run_all = !event.exclusive && !event.namespace,
+			special = jQuery.event.special[ event.type ] || {},
 			handlerQueue = [],
 			i, j, cur, jqcur, ret, selMatch, matched, matches, handleObj, sel, related;
 
@@ -3553,33 +3620,42 @@ jQuery.event = {
 		args[0] = event;
 		event.delegateTarget = this;
 
+		// Call the preDispatch hook for the mapped type, and let it bail if desired
+		if ( special.preDispatch && special.preDispatch.call( this, event ) === false ) {
+			return;
+		}
+
 		// Determine handlers that should run if there are delegated events
-		// Avoid disabled elements in IE (#6911) and non-left-click bubbling in Firefox (#3861)
-		if ( delegateCount && !event.target.disabled && !(event.button && event.type === "click") ) {
+		// Avoid non-left-click bubbling in Firefox (#3861)
+		if ( delegateCount && !(event.button && event.type === "click") ) {
 
 			// Pregenerate a single jQuery object for reuse with .is()
 			jqcur = jQuery(this);
 			jqcur.context = this.ownerDocument || this;
 
 			for ( cur = event.target; cur != this; cur = cur.parentNode || this ) {
-				selMatch = {};
-				matches = [];
-				jqcur[0] = cur;
-				for ( i = 0; i < delegateCount; i++ ) {
-					handleObj = handlers[ i ];
-					sel = handleObj.selector;
 
-					if ( selMatch[ sel ] === undefined ) {
-						selMatch[ sel ] = (
-							handleObj.quick ? quickIs( cur, handleObj.quick ) : jqcur.is( sel )
-						);
+				// Don't process events on disabled elements (#6911, #8165)
+				if ( cur.disabled !== true ) {
+					selMatch = {};
+					matches = [];
+					jqcur[0] = cur;
+					for ( i = 0; i < delegateCount; i++ ) {
+						handleObj = handlers[ i ];
+						sel = handleObj.selector;
+
+						if ( selMatch[ sel ] === undefined ) {
+							selMatch[ sel ] = (
+								handleObj.quick ? quickIs( cur, handleObj.quick ) : jqcur.is( sel )
+							);
+						}
+						if ( selMatch[ sel ] ) {
+							matches.push( handleObj );
+						}
 					}
-					if ( selMatch[ sel ] ) {
-						matches.push( handleObj );
+					if ( matches.length ) {
+						handlerQueue.push({ elem: cur, matches: matches });
 					}
-				}
-				if ( matches.length ) {
-					handlerQueue.push({ elem: cur, matches: matches });
 				}
 			}
 		}
@@ -3616,6 +3692,11 @@ jQuery.event = {
 					}
 				}
 			}
+		}
+
+		// Call the postDispatch hook for the mapped type
+		if ( special.postDispatch ) {
+			special.postDispatch.call( this, event );
 		}
 
 		return event.result;
@@ -3909,15 +3990,22 @@ if ( !jQuery.support.submitBubbles ) {
 					form = jQuery.nodeName( elem, "input" ) || jQuery.nodeName( elem, "button" ) ? elem.form : undefined;
 				if ( form && !form._submit_attached ) {
 					jQuery.event.add( form, "submit._submit", function( event ) {
-						// If form was submitted by the user, bubble the event up the tree
-						if ( this.parentNode && !event.isTrigger ) {
-							jQuery.event.simulate( "submit", this.parentNode, event, true );
-						}
+						event._submit_bubble = true;
 					});
 					form._submit_attached = true;
 				}
 			});
 			// return undefined since we don't need an event listener
+		},
+		
+		postDispatch: function( event ) {
+			// If form was submitted by the user, bubble the event up the tree
+			if ( event._submit_bubble ) {
+				delete event._submit_bubble;
+				if ( this.parentNode && !event.isTrigger ) {
+					jQuery.event.simulate( "submit", this.parentNode, event, true );
+				}
+			}
 		},
 
 		teardown: function() {
@@ -4023,9 +4111,9 @@ jQuery.fn.extend({
 		// Types can be a map of types/handlers
 		if ( typeof types === "object" ) {
 			// ( types-Object, selector, data )
-			if ( typeof selector !== "string" ) {
+			if ( typeof selector !== "string" ) { // && selector != null
 				// ( types-Object, data )
-				data = selector;
+				data = data || selector;
 				selector = undefined;
 			}
 			for ( type in types ) {
@@ -4071,14 +4159,14 @@ jQuery.fn.extend({
 		});
 	},
 	one: function( types, selector, data, fn ) {
-		return this.on.call( this, types, selector, data, fn, 1 );
+		return this.on( types, selector, data, fn, 1 );
 	},
 	off: function( types, selector, fn ) {
 		if ( types && types.preventDefault && types.handleObj ) {
 			// ( event )  dispatched jQuery.Event
 			var handleObj = types.handleObj;
 			jQuery( types.delegateTarget ).off(
-				handleObj.namespace? handleObj.type + "." + handleObj.namespace : handleObj.type,
+				handleObj.namespace ? handleObj.origType + "." + handleObj.namespace : handleObj.origType,
 				handleObj.selector,
 				handleObj.handler
 			);
@@ -4237,7 +4325,7 @@ var Sizzle = function( selector, context, results, seed ) {
 	if ( context.nodeType !== 1 && context.nodeType !== 9 ) {
 		return [];
 	}
-	
+
 	if ( !selector || typeof selector !== "string" ) {
 		return results;
 	}
@@ -4247,7 +4335,7 @@ var Sizzle = function( selector, context, results, seed ) {
 		contextXML = Sizzle.isXML( context ),
 		parts = [],
 		soFar = selector;
-	
+
 	// Reset the position of the chunker regexp (start from head)
 	do {
 		chunker.exec( "" );
@@ -4255,9 +4343,9 @@ var Sizzle = function( selector, context, results, seed ) {
 
 		if ( m ) {
 			soFar = m[3];
-		
+
 			parts.push( m[1] );
-		
+
 			if ( m[2] ) {
 				extra = m[3];
 				break;
@@ -4281,7 +4369,7 @@ var Sizzle = function( selector, context, results, seed ) {
 				if ( Expr.relative[ selector ] ) {
 					selector += parts.shift();
 				}
-				
+
 				set = posProcess( selector, set, seed );
 			}
 		}
@@ -4409,7 +4497,7 @@ Sizzle.find = function( expr, context, isXML ) {
 
 	for ( i = 0, len = Expr.order.length; i < len; i++ ) {
 		type = Expr.order[i];
-		
+
 		if ( (match = Expr.leftMatch[ type ].exec( expr )) ) {
 			left = match[1];
 			match.splice( 1, 1 );
@@ -4541,7 +4629,7 @@ var getText = Sizzle.getText = function( elem ) {
 		ret = "";
 
 	if ( nodeType ) {
-		if ( nodeType === 1 || nodeType === 9 ) {
+		if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
 			// Use textContent || innerText for elements
 			if ( typeof elem.textContent === 'string' ) {
 				return elem.textContent;
@@ -4781,7 +4869,7 @@ var Expr = Sizzle.selectors = {
 
 		ATTR: function( match, curLoop, inplace, result, not, isXML ) {
 			var name = match[1] = match[1].replace( rBackslash, "" );
-			
+
 			if ( !isXML && Expr.attrMap[name] ) {
 				match[1] = Expr.attrMap[name];
 			}
@@ -4815,7 +4903,7 @@ var Expr = Sizzle.selectors = {
 			} else if ( Expr.match.POS.test( match[0] ) || Expr.match.CHILD.test( match[0] ) ) {
 				return true;
 			}
-			
+
 			return match;
 		},
 
@@ -4825,7 +4913,7 @@ var Expr = Sizzle.selectors = {
 			return match;
 		}
 	},
-	
+
 	filters: {
 		enabled: function( elem ) {
 			return elem.disabled === false && elem.type !== "hidden";
@@ -4838,14 +4926,14 @@ var Expr = Sizzle.selectors = {
 		checked: function( elem ) {
 			return elem.checked === true;
 		},
-		
+
 		selected: function( elem ) {
 			// Accessing this property makes selected-by-default
 			// options in Safari work properly
 			if ( elem.parentNode ) {
 				elem.parentNode.selectedIndex;
 			}
-			
+
 			return elem.selected === true;
 		},
 
@@ -4867,7 +4955,7 @@ var Expr = Sizzle.selectors = {
 
 		text: function( elem ) {
 			var attr = elem.getAttribute( "type" ), type = elem.type;
-			// IE6 and 7 will map elem.type to 'text' for new HTML5 types (search, etc) 
+			// IE6 and 7 will map elem.type to 'text' for new HTML5 types (search, etc)
 			// use getAttribute instead to test this case
 			return elem.nodeName.toLowerCase() === "input" && "text" === type && ( attr === type || attr === null );
 		},
@@ -4985,22 +5073,23 @@ var Expr = Sizzle.selectors = {
 			switch ( type ) {
 				case "only":
 				case "first":
-					while ( (node = node.previousSibling) )	 {
-						if ( node.nodeType === 1 ) { 
-							return false; 
+					while ( (node = node.previousSibling) ) {
+						if ( node.nodeType === 1 ) {
+							return false;
 						}
 					}
 
-					if ( type === "first" ) { 
-						return true; 
+					if ( type === "first" ) {
+						return true;
 					}
 
 					node = elem;
 
+					/* falls through */
 				case "last":
-					while ( (node = node.nextSibling) )	 {
-						if ( node.nodeType === 1 ) { 
-							return false; 
+					while ( (node = node.nextSibling) ) {
+						if ( node.nodeType === 1 ) {
+							return false;
 						}
 					}
 
@@ -5013,22 +5102,22 @@ var Expr = Sizzle.selectors = {
 					if ( first === 1 && last === 0 ) {
 						return true;
 					}
-					
+
 					doneName = match[0];
 					parent = elem.parentNode;
-	
+
 					if ( parent && (parent[ expando ] !== doneName || !elem.nodeIndex) ) {
 						count = 0;
-						
+
 						for ( node = parent.firstChild; node; node = node.nextSibling ) {
 							if ( node.nodeType === 1 ) {
 								node.nodeIndex = ++count;
 							}
-						} 
+						}
 
 						parent[ expando ] = doneName;
 					}
-					
+
 					diff = elem.nodeIndex - last;
 
 					if ( first === 0 ) {
@@ -5047,7 +5136,7 @@ var Expr = Sizzle.selectors = {
 		TAG: function( elem, match ) {
 			return (match === "*" && elem.nodeType === 1) || !!elem.nodeName && elem.nodeName.toLowerCase() === match;
 		},
-		
+
 		CLASS: function( elem, match ) {
 			return (" " + (elem.className || elem.getAttribute("class")) + " ")
 				.indexOf( match ) > -1;
@@ -5109,6 +5198,9 @@ for ( var type in Expr.match ) {
 	Expr.match[ type ] = new RegExp( Expr.match[ type ].source + (/(?![^\[]*\])(?![^\(]*\))/.source) );
 	Expr.leftMatch[ type ] = new RegExp( /(^(?:.|\r|\n)*?)/.source + Expr.match[ type ].source.replace(/\\(\d+)/g, fescape) );
 }
+// Expose origPOS
+// "global" as in regardless of relation to brackets/parens
+Expr.match.globalPOS = origPOS;
 
 var makeArray = function( array, results ) {
 	array = Array.prototype.slice.call( array, 0 );
@@ -5117,7 +5209,7 @@ var makeArray = function( array, results ) {
 		results.push.apply( results, array );
 		return results;
 	}
-	
+
 	return array;
 };
 
@@ -5349,7 +5441,7 @@ if ( document.querySelectorAll ) {
 		if ( div.querySelectorAll && div.querySelectorAll(".TEST").length === 0 ) {
 			return;
 		}
-	
+
 		Sizzle = function( query, context, extra, seed ) {
 			context = context || document;
 
@@ -5358,24 +5450,24 @@ if ( document.querySelectorAll ) {
 			if ( !seed && !Sizzle.isXML(context) ) {
 				// See if we find a selector to speed up
 				var match = /^(\w+$)|^\.([\w\-]+$)|^#([\w\-]+$)/.exec( query );
-				
+
 				if ( match && (context.nodeType === 1 || context.nodeType === 9) ) {
 					// Speed-up: Sizzle("TAG")
 					if ( match[1] ) {
 						return makeArray( context.getElementsByTagName( query ), extra );
-					
+
 					// Speed-up: Sizzle(".CLASS")
 					} else if ( match[2] && Expr.find.CLASS && context.getElementsByClassName ) {
 						return makeArray( context.getElementsByClassName( match[2] ), extra );
 					}
 				}
-				
+
 				if ( context.nodeType === 9 ) {
 					// Speed-up: Sizzle("body")
 					// The body element only exists once, optimize finding it
 					if ( query === "body" && context.body ) {
 						return makeArray( [ context.body ], extra );
-						
+
 					// Speed-up: Sizzle("#ID")
 					} else if ( match && match[3] ) {
 						var elem = context.getElementById( match[3] );
@@ -5388,12 +5480,12 @@ if ( document.querySelectorAll ) {
 							if ( elem.id === match[3] ) {
 								return makeArray( [ elem ], extra );
 							}
-							
+
 						} else {
 							return makeArray( [], extra );
 						}
 					}
-					
+
 					try {
 						return makeArray( context.querySelectorAll(query), extra );
 					} catch(qsaError) {}
@@ -5431,7 +5523,7 @@ if ( document.querySelectorAll ) {
 					}
 				}
 			}
-		
+
 			return oldSizzle(query, context, extra, seed);
 		};
 
@@ -5458,7 +5550,7 @@ if ( document.querySelectorAll ) {
 			// This should fail with an exception
 			// Gecko does not error, returns false instead
 			matches.call( document.documentElement, "[test!='']:sizzle" );
-	
+
 		} catch( pseudoError ) {
 			pseudoWorks = true;
 		}
@@ -5468,7 +5560,7 @@ if ( document.querySelectorAll ) {
 			expr = expr.replace(/\=\s*([^'"\]]*)\s*\]/g, "='$1']");
 
 			if ( !Sizzle.isXML( node ) ) {
-				try { 
+				try {
 					if ( pseudoWorks || !Expr.match.PSEUDO.test( expr ) && !/!=/.test( expr ) ) {
 						var ret = matches.call( node, expr );
 
@@ -5505,7 +5597,7 @@ if ( document.querySelectorAll ) {
 	if ( div.getElementsByClassName("e").length === 1 ) {
 		return;
 	}
-	
+
 	Expr.order.splice(1, 0, "CLASS");
 	Expr.find.CLASS = function( match, context, isXML ) {
 		if ( typeof context.getElementsByClassName !== "undefined" && !isXML ) {
@@ -5556,7 +5648,7 @@ function dirCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
 
 		if ( elem ) {
 			var match = false;
-			
+
 			elem = elem[dir];
 
 			while ( elem ) {
@@ -5609,7 +5701,7 @@ if ( document.documentElement.contains ) {
 
 Sizzle.isXML = function( elem ) {
 	// documentElement is verified for cases where it doesn't yet exist
-	// (such as loading iframes in IE - #4833) 
+	// (such as loading iframes in IE - #4833)
 	var documentElement = (elem ? elem.ownerDocument || elem : 0).documentElement;
 
 	return documentElement ? documentElement.nodeName !== "HTML" : false;
@@ -5659,7 +5751,7 @@ var runtil = /Until$/,
 	rmultiselector = /,/,
 	isSimple = /^.[^:#\[\.,]*$/,
 	slice = Array.prototype.slice,
-	POS = jQuery.expr.match.POS,
+	POS = jQuery.expr.match.globalPOS,
 	// methods guaranteed to produce a unique set when starting from a unique set
 	guaranteedUnique = {
 		children: true,
@@ -5726,11 +5818,11 @@ jQuery.fn.extend({
 	},
 
 	is: function( selector ) {
-		return !!selector && ( 
+		return !!selector && (
 			typeof selector === "string" ?
 				// If this is a positional selector, check membership in the returned set
 				// so $("p:first").is("p:last") won't return true for a doc with two "p".
-				POS.test( selector ) ? 
+				POS.test( selector ) ?
 					jQuery( selector, this.context ).index( this[0] ) >= 0 :
 					jQuery.filter( selector, this ).length > 0 :
 				this.filter( selector ).length > 0 );
@@ -5738,7 +5830,7 @@ jQuery.fn.extend({
 
 	closest: function( selectors, context ) {
 		var ret = [], i, l, cur = this[0];
-		
+
 		// Array (deprecated as of jQuery 1.7)
 		if ( jQuery.isArray( selectors ) ) {
 			var level = 1;
@@ -5857,7 +5949,7 @@ jQuery.each({
 		return jQuery.dir( elem, "previousSibling", until );
 	},
 	siblings: function( elem ) {
-		return jQuery.sibling( elem.parentNode.firstChild, elem );
+		return jQuery.sibling( ( elem.parentNode || {} ).firstChild, elem );
 	},
 	children: function( elem ) {
 		return jQuery.sibling( elem.firstChild );
@@ -5991,7 +6083,7 @@ function createSafeFragment( document ) {
 	return safeFrag;
 }
 
-var nodeNames = "abbr|article|aside|audio|canvas|datalist|details|figcaption|figure|footer|" +
+var nodeNames = "abbr|article|aside|audio|bdi|canvas|data|datalist|details|figcaption|figure|footer|" +
 		"header|hgroup|mark|meter|nav|output|progress|section|summary|time|video",
 	rinlinejQuery = / jQuery\d+="(?:\d+|null)"/g,
 	rleadingWhitespace = /^\s+/,
@@ -6001,7 +6093,7 @@ var nodeNames = "abbr|article|aside|audio|canvas|datalist|details|figcaption|fig
 	rhtml = /<|&#?\w+;/,
 	rnoInnerhtml = /<(?:script|style)/i,
 	rnocache = /<(?:script|object|embed|option|style)/i,
-	rnoshimcache = new RegExp("<(?:" + nodeNames + ")", "i"),
+	rnoshimcache = new RegExp("<(?:" + nodeNames + ")[\\s/>]", "i"),
 	// checked="checked" or checked
 	rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,
 	rscriptType = /\/(java|ecma)script/i,
@@ -6028,20 +6120,12 @@ if ( !jQuery.support.htmlSerialize ) {
 }
 
 jQuery.fn.extend({
-	text: function( text ) {
-		if ( jQuery.isFunction(text) ) {
-			return this.each(function(i) {
-				var self = jQuery( this );
-
-				self.text( text.call(this, i, self.text()) );
-			});
-		}
-
-		if ( typeof text !== "object" && text !== undefined ) {
-			return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode( text ) );
-		}
-
-		return jQuery.text( this );
+	text: function( value ) {
+		return jQuery.access( this, function( value ) {
+			return value === undefined ?
+				jQuery.text( this ) :
+				this.empty().append( ( this[0] && this[0].ownerDocument || document ).createTextNode( value ) );
+		}, null, value, arguments.length );
 	},
 
 	wrapAll: function( html ) {
@@ -6193,44 +6277,44 @@ jQuery.fn.extend({
 	},
 
 	html: function( value ) {
-		if ( value === undefined ) {
-			return this[0] && this[0].nodeType === 1 ?
-				this[0].innerHTML.replace(rinlinejQuery, "") :
-				null;
+		return jQuery.access( this, function( value ) {
+			var elem = this[0] || {},
+				i = 0,
+				l = this.length;
 
-		// See if we can take a shortcut and just use innerHTML
-		} else if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
-			(jQuery.support.leadingWhitespace || !rleadingWhitespace.test( value )) &&
-			!wrapMap[ (rtagName.exec( value ) || ["", ""])[1].toLowerCase() ] ) {
-
-			value = value.replace(rxhtmlTag, "<$1></$2>");
-
-			try {
-				for ( var i = 0, l = this.length; i < l; i++ ) {
-					// Remove element nodes and prevent memory leaks
-					if ( this[i].nodeType === 1 ) {
-						jQuery.cleanData( this[i].getElementsByTagName("*") );
-						this[i].innerHTML = value;
-					}
-				}
-
-			// If using innerHTML throws an exception, use the fallback method
-			} catch(e) {
-				this.empty().append( value );
+			if ( value === undefined ) {
+				return elem.nodeType === 1 ?
+					elem.innerHTML.replace( rinlinejQuery, "" ) :
+					null;
 			}
 
-		} else if ( jQuery.isFunction( value ) ) {
-			this.each(function(i){
-				var self = jQuery( this );
 
-				self.html( value.call(this, i, self.html()) );
-			});
+			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+				( jQuery.support.leadingWhitespace || !rleadingWhitespace.test( value ) ) &&
+				!wrapMap[ ( rtagName.exec( value ) || ["", ""] )[1].toLowerCase() ] ) {
 
-		} else {
-			this.empty().append( value );
-		}
+				value = value.replace( rxhtmlTag, "<$1></$2>" );
 
-		return this;
+				try {
+					for (; i < l; i++ ) {
+						// Remove element nodes and prevent memory leaks
+						elem = this[i] || {};
+						if ( elem.nodeType === 1 ) {
+							jQuery.cleanData( elem.getElementsByTagName( "*" ) );
+							elem.innerHTML = value;
+						}
+					}
+
+					elem = 0;
+
+				// If using innerHTML throws an exception, use the fallback method
+				} catch(e) {}
+			}
+
+			if ( elem ) {
+				this.empty().append( value );
+			}
+		}, null, value, arguments.length );
 	},
 
 	replaceWith: function( value ) {
@@ -6333,7 +6417,23 @@ jQuery.fn.extend({
 			}
 
 			if ( scripts.length ) {
-				jQuery.each( scripts, evalScript );
+				jQuery.each( scripts, function( i, elem ) {
+					if ( elem.src ) {
+						jQuery.ajax({
+							type: "GET",
+							global: false,
+							url: elem.src,
+							async: false,
+							dataType: "script"
+						});
+					} else {
+						jQuery.globalEval( ( elem.text || elem.textContent || elem.innerHTML || "" ).replace( rcleanScript, "/*$0*/" ) );
+					}
+
+					if ( elem.parentNode ) {
+						elem.parentNode.removeChild( elem );
+					}
+				});
 			}
 		}
 
@@ -6365,7 +6465,7 @@ function cloneCopyEvent( src, dest ) {
 
 		for ( type in events ) {
 			for ( i = 0, l = events[ type ].length; i < l; i++ ) {
-				jQuery.event.add( dest, type + ( events[ type ][ i ].namespace ? "." : "" ) + events[ type ][ i ].namespace, events[ type ][ i ], events[ type ][ i ].data );
+				jQuery.event.add( dest, type, events[ type ][ i ] );
 			}
 		}
 	}
@@ -6427,11 +6527,20 @@ function cloneFixAttributes( src, dest ) {
 	// cloning other types of input fields
 	} else if ( nodeName === "input" || nodeName === "textarea" ) {
 		dest.defaultValue = src.defaultValue;
+
+	// IE blanks contents when cloning scripts
+	} else if ( nodeName === "script" && dest.text !== src.text ) {
+		dest.text = src.text;
 	}
 
 	// Event data gets referenced instead of copied if the expando
 	// gets copied too
 	dest.removeAttribute( jQuery.expando );
+
+	// Clear flags for bubbling special change/submit events, they must
+	// be reattached when the newly cloned events are first activated
+	dest.removeAttribute( "_submit_attached" );
+	dest.removeAttribute( "_change_attached" );
 }
 
 jQuery.buildFragment = function( args, nodes, scripts ) {
@@ -6556,7 +6665,7 @@ jQuery.extend({
 			destElements,
 			i,
 			// IE<=8 does not properly clone detached, unknown element nodes
-			clone = jQuery.support.html5Clone || !rnoshimcache.test( "<" + elem.nodeName ) ?
+			clone = jQuery.support.html5Clone || jQuery.isXMLDoc(elem) || !rnoshimcache.test( "<" + elem.nodeName + ">" ) ?
 				elem.cloneNode( true ) :
 				shimCloneNode( elem );
 
@@ -6606,7 +6715,8 @@ jQuery.extend({
 	},
 
 	clean: function( elems, context, fragment, scripts ) {
-		var checkScriptType;
+		var checkScriptType, script, j,
+				ret = [];
 
 		context = context || document;
 
@@ -6614,8 +6724,6 @@ jQuery.extend({
 		if ( typeof context.createElement === "undefined" ) {
 			context = context.ownerDocument || context[0] && context[0].ownerDocument || document;
 		}
-
-		var ret = [], j;
 
 		for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
 			if ( typeof elem === "number" ) {
@@ -6638,7 +6746,9 @@ jQuery.extend({
 					var tag = ( rtagName.exec( elem ) || ["", ""] )[1].toLowerCase(),
 						wrap = wrapMap[ tag ] || wrapMap._default,
 						depth = wrap[0],
-						div = context.createElement("div");
+						div = context.createElement("div"),
+						safeChildNodes = safeFragment.childNodes,
+						remove;
 
 					// Append wrapper element to unknown element safe doc fragment
 					if ( context === document ) {
@@ -6683,6 +6793,21 @@ jQuery.extend({
 					}
 
 					elem = div.childNodes;
+
+					// Clear elements from DocumentFragment (safeFragment or otherwise)
+					// to avoid hoarding elements. Fixes #11356
+					if ( div ) {
+						div.parentNode.removeChild( div );
+
+						// Guard against -1 index exceptions in FF3.6
+						if ( safeChildNodes.length > 0 ) {
+							remove = safeChildNodes[ safeChildNodes.length - 1 ];
+
+							if ( remove && remove.parentNode ) {
+								remove.parentNode.removeChild( remove );
+							}
+						}
+					}
 				}
 			}
 
@@ -6711,16 +6836,17 @@ jQuery.extend({
 				return !elem.type || rscriptType.test( elem.type );
 			};
 			for ( i = 0; ret[i]; i++ ) {
-				if ( scripts && jQuery.nodeName( ret[i], "script" ) && (!ret[i].type || ret[i].type.toLowerCase() === "text/javascript") ) {
-					scripts.push( ret[i].parentNode ? ret[i].parentNode.removeChild( ret[i] ) : ret[i] );
+				script = ret[i];
+				if ( scripts && jQuery.nodeName( script, "script" ) && (!script.type || rscriptType.test( script.type )) ) {
+					scripts.push( script.parentNode ? script.parentNode.removeChild( script ) : script );
 
 				} else {
-					if ( ret[i].nodeType === 1 ) {
-						var jsTags = jQuery.grep( ret[i].getElementsByTagName( "script" ), checkScriptType );
+					if ( script.nodeType === 1 ) {
+						var jsTags = jQuery.grep( script.getElementsByTagName( "script" ), checkScriptType );
 
 						ret.splice.apply( ret, [i + 1, 0].concat( jsTags ) );
 					}
-					fragment.appendChild( ret[i] );
+					fragment.appendChild( script );
 				}
 			}
 		}
@@ -6774,22 +6900,6 @@ jQuery.extend({
 	}
 });
 
-function evalScript( i, elem ) {
-	if ( elem.src ) {
-		jQuery.ajax({
-			url: elem.src,
-			async: false,
-			dataType: "script"
-		});
-	} else {
-		jQuery.globalEval( ( elem.text || elem.textContent || elem.innerHTML || "" ).replace( rcleanScript, "/*$0*/" ) );
-	}
-
-	if ( elem.parentNode ) {
-		elem.parentNode.removeChild( elem );
-	}
-}
-
 
 
 
@@ -6797,29 +6907,27 @@ var ralpha = /alpha\([^)]*\)/i,
 	ropacity = /opacity=([^)]*)/,
 	// fixed for IE9, see #8346
 	rupper = /([A-Z]|^ms)/g,
-	rnumpx = /^-?\d+(?:px)?$/i,
-	rnum = /^-?\d/,
+	rnum = /^[\-+]?(?:\d*\.)?\d+$/i,
+	rnumnonpx = /^-?(?:\d*\.)?\d+(?!px)[^\d\s]+$/i,
 	rrelNum = /^([\-+])=([\-+.\de]+)/,
+	rmargin = /^margin/,
 
 	cssShow = { position: "absolute", visibility: "hidden", display: "block" },
-	cssWidth = [ "Left", "Right" ],
-	cssHeight = [ "Top", "Bottom" ],
+
+	// order is important!
+	cssExpand = [ "Top", "Right", "Bottom", "Left" ],
+
 	curCSS,
 
 	getComputedStyle,
 	currentStyle;
 
 jQuery.fn.css = function( name, value ) {
-	// Setting 'undefined' is a no-op
-	if ( arguments.length === 2 && value === undefined ) {
-		return this;
-	}
-
-	return jQuery.access( this, name, value, true, function( elem, name, value ) {
+	return jQuery.access( this, function( elem, name, value ) {
 		return value !== undefined ?
 			jQuery.style( elem, name, value ) :
 			jQuery.css( elem, name );
-	});
+	}, name, value, arguments.length > 1 );
 };
 
 jQuery.extend({
@@ -6830,7 +6938,7 @@ jQuery.extend({
 			get: function( elem, computed ) {
 				if ( computed ) {
 					// We should always get a number back from opacity
-					var ret = curCSS( elem, "opacity", "opacity" );
+					var ret = curCSS( elem, "opacity" );
 					return ret === "" ? "1" : ret;
 
 				} else {
@@ -6938,56 +7046,174 @@ jQuery.extend({
 
 	// A method for quickly swapping in/out CSS properties to get correct calculations
 	swap: function( elem, options, callback ) {
-		var old = {};
+		var old = {},
+			ret, name;
 
 		// Remember the old values, and insert the new ones
-		for ( var name in options ) {
+		for ( name in options ) {
 			old[ name ] = elem.style[ name ];
 			elem.style[ name ] = options[ name ];
 		}
 
-		callback.call( elem );
+		ret = callback.call( elem );
 
 		// Revert the old values
 		for ( name in options ) {
 			elem.style[ name ] = old[ name ];
 		}
+
+		return ret;
 	}
 });
 
-// DEPRECATED, Use jQuery.css() instead
+// DEPRECATED in 1.3, Use jQuery.css() instead
 jQuery.curCSS = jQuery.css;
 
-jQuery.each(["height", "width"], function( i, name ) {
+if ( document.defaultView && document.defaultView.getComputedStyle ) {
+	getComputedStyle = function( elem, name ) {
+		var ret, defaultView, computedStyle, width,
+			style = elem.style;
+
+		name = name.replace( rupper, "-$1" ).toLowerCase();
+
+		if ( (defaultView = elem.ownerDocument.defaultView) &&
+				(computedStyle = defaultView.getComputedStyle( elem, null )) ) {
+
+			ret = computedStyle.getPropertyValue( name );
+			if ( ret === "" && !jQuery.contains( elem.ownerDocument.documentElement, elem ) ) {
+				ret = jQuery.style( elem, name );
+			}
+		}
+
+		// A tribute to the "awesome hack by Dean Edwards"
+		// WebKit uses "computed value (percentage if specified)" instead of "used value" for margins
+		// which is against the CSSOM draft spec: http://dev.w3.org/csswg/cssom/#resolved-values
+		if ( !jQuery.support.pixelMargin && computedStyle && rmargin.test( name ) && rnumnonpx.test( ret ) ) {
+			width = style.width;
+			style.width = ret;
+			ret = computedStyle.width;
+			style.width = width;
+		}
+
+		return ret;
+	};
+}
+
+if ( document.documentElement.currentStyle ) {
+	currentStyle = function( elem, name ) {
+		var left, rsLeft, uncomputed,
+			ret = elem.currentStyle && elem.currentStyle[ name ],
+			style = elem.style;
+
+		// Avoid setting ret to empty string here
+		// so we don't default to auto
+		if ( ret == null && style && (uncomputed = style[ name ]) ) {
+			ret = uncomputed;
+		}
+
+		// From the awesome hack by Dean Edwards
+		// http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291
+
+		// If we're not dealing with a regular pixel number
+		// but a number that has a weird ending, we need to convert it to pixels
+		if ( rnumnonpx.test( ret ) ) {
+
+			// Remember the original values
+			left = style.left;
+			rsLeft = elem.runtimeStyle && elem.runtimeStyle.left;
+
+			// Put in the new values to get a computed value out
+			if ( rsLeft ) {
+				elem.runtimeStyle.left = elem.currentStyle.left;
+			}
+			style.left = name === "fontSize" ? "1em" : ret;
+			ret = style.pixelLeft + "px";
+
+			// Revert the changed values
+			style.left = left;
+			if ( rsLeft ) {
+				elem.runtimeStyle.left = rsLeft;
+			}
+		}
+
+		return ret === "" ? "auto" : ret;
+	};
+}
+
+curCSS = getComputedStyle || currentStyle;
+
+function getWidthOrHeight( elem, name, extra ) {
+
+	// Start with offset property
+	var val = name === "width" ? elem.offsetWidth : elem.offsetHeight,
+		i = name === "width" ? 1 : 0,
+		len = 4;
+
+	if ( val > 0 ) {
+		if ( extra !== "border" ) {
+			for ( ; i < len; i += 2 ) {
+				if ( !extra ) {
+					val -= parseFloat( jQuery.css( elem, "padding" + cssExpand[ i ] ) ) || 0;
+				}
+				if ( extra === "margin" ) {
+					val += parseFloat( jQuery.css( elem, extra + cssExpand[ i ] ) ) || 0;
+				} else {
+					val -= parseFloat( jQuery.css( elem, "border" + cssExpand[ i ] + "Width" ) ) || 0;
+				}
+			}
+		}
+
+		return val + "px";
+	}
+
+	// Fall back to computed then uncomputed css if necessary
+	val = curCSS( elem, name );
+	if ( val < 0 || val == null ) {
+		val = elem.style[ name ];
+	}
+
+	// Computed unit is not pixels. Stop here and return.
+	if ( rnumnonpx.test(val) ) {
+		return val;
+	}
+
+	// Normalize "", auto, and prepare for extra
+	val = parseFloat( val ) || 0;
+
+	// Add padding, border, margin
+	if ( extra ) {
+		for ( ; i < len; i += 2 ) {
+			val += parseFloat( jQuery.css( elem, "padding" + cssExpand[ i ] ) ) || 0;
+			if ( extra !== "padding" ) {
+				val += parseFloat( jQuery.css( elem, "border" + cssExpand[ i ] + "Width" ) ) || 0;
+			}
+			if ( extra === "margin" ) {
+				val += parseFloat( jQuery.css( elem, extra + cssExpand[ i ]) ) || 0;
+			}
+		}
+	}
+
+	return val + "px";
+}
+
+jQuery.each([ "height", "width" ], function( i, name ) {
 	jQuery.cssHooks[ name ] = {
 		get: function( elem, computed, extra ) {
-			var val;
-
 			if ( computed ) {
 				if ( elem.offsetWidth !== 0 ) {
-					return getWH( elem, name, extra );
+					return getWidthOrHeight( elem, name, extra );
 				} else {
-					jQuery.swap( elem, cssShow, function() {
-						val = getWH( elem, name, extra );
+					return jQuery.swap( elem, cssShow, function() {
+						return getWidthOrHeight( elem, name, extra );
 					});
 				}
-
-				return val;
 			}
 		},
 
 		set: function( elem, value ) {
-			if ( rnumpx.test( value ) ) {
-				// ignore negative width and height values #1599
-				value = parseFloat( value );
-
-				if ( value >= 0 ) {
-					return value + "px";
-				}
-
-			} else {
-				return value;
-			}
+			return rnum.test( value ) ?
+				value + "px" :
+				value;
 		}
 	};
 });
@@ -7041,129 +7267,17 @@ jQuery(function() {
 			get: function( elem, computed ) {
 				// WebKit Bug 13343 - getComputedStyle returns wrong value for margin-right
 				// Work around by temporarily setting element display to inline-block
-				var ret;
-				jQuery.swap( elem, { "display": "inline-block" }, function() {
+				return jQuery.swap( elem, { "display": "inline-block" }, function() {
 					if ( computed ) {
-						ret = curCSS( elem, "margin-right", "marginRight" );
+						return curCSS( elem, "margin-right" );
 					} else {
-						ret = elem.style.marginRight;
+						return elem.style.marginRight;
 					}
 				});
-				return ret;
 			}
 		};
 	}
 });
-
-if ( document.defaultView && document.defaultView.getComputedStyle ) {
-	getComputedStyle = function( elem, name ) {
-		var ret, defaultView, computedStyle;
-
-		name = name.replace( rupper, "-$1" ).toLowerCase();
-
-		if ( (defaultView = elem.ownerDocument.defaultView) &&
-				(computedStyle = defaultView.getComputedStyle( elem, null )) ) {
-			ret = computedStyle.getPropertyValue( name );
-			if ( ret === "" && !jQuery.contains( elem.ownerDocument.documentElement, elem ) ) {
-				ret = jQuery.style( elem, name );
-			}
-		}
-
-		return ret;
-	};
-}
-
-if ( document.documentElement.currentStyle ) {
-	currentStyle = function( elem, name ) {
-		var left, rsLeft, uncomputed,
-			ret = elem.currentStyle && elem.currentStyle[ name ],
-			style = elem.style;
-
-		// Avoid setting ret to empty string here
-		// so we don't default to auto
-		if ( ret === null && style && (uncomputed = style[ name ]) ) {
-			ret = uncomputed;
-		}
-
-		// From the awesome hack by Dean Edwards
-		// http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291
-
-		// If we're not dealing with a regular pixel number
-		// but a number that has a weird ending, we need to convert it to pixels
-		if ( !rnumpx.test( ret ) && rnum.test( ret ) ) {
-
-			// Remember the original values
-			left = style.left;
-			rsLeft = elem.runtimeStyle && elem.runtimeStyle.left;
-
-			// Put in the new values to get a computed value out
-			if ( rsLeft ) {
-				elem.runtimeStyle.left = elem.currentStyle.left;
-			}
-			style.left = name === "fontSize" ? "1em" : ( ret || 0 );
-			ret = style.pixelLeft + "px";
-
-			// Revert the changed values
-			style.left = left;
-			if ( rsLeft ) {
-				elem.runtimeStyle.left = rsLeft;
-			}
-		}
-
-		return ret === "" ? "auto" : ret;
-	};
-}
-
-curCSS = getComputedStyle || currentStyle;
-
-function getWH( elem, name, extra ) {
-
-	// Start with offset property
-	var val = name === "width" ? elem.offsetWidth : elem.offsetHeight,
-		which = name === "width" ? cssWidth : cssHeight,
-		i = 0,
-		len = which.length;
-
-	if ( val > 0 ) {
-		if ( extra !== "border" ) {
-			for ( ; i < len; i++ ) {
-				if ( !extra ) {
-					val -= parseFloat( jQuery.css( elem, "padding" + which[ i ] ) ) || 0;
-				}
-				if ( extra === "margin" ) {
-					val += parseFloat( jQuery.css( elem, extra + which[ i ] ) ) || 0;
-				} else {
-					val -= parseFloat( jQuery.css( elem, "border" + which[ i ] + "Width" ) ) || 0;
-				}
-			}
-		}
-
-		return val + "px";
-	}
-
-	// Fall back to computed then uncomputed css if necessary
-	val = curCSS( elem, name, name );
-	if ( val < 0 || val == null ) {
-		val = elem.style[ name ] || 0;
-	}
-	// Normalize "", auto, and prepare for extra
-	val = parseFloat( val ) || 0;
-
-	// Add padding, border, margin
-	if ( extra ) {
-		for ( ; i < len; i++ ) {
-			val += parseFloat( jQuery.css( elem, "padding" + which[ i ] ) ) || 0;
-			if ( extra !== "padding" ) {
-				val += parseFloat( jQuery.css( elem, "border" + which[ i ] + "Width" ) ) || 0;
-			}
-			if ( extra === "margin" ) {
-				val += parseFloat( jQuery.css( elem, extra + which[ i ] ) ) || 0;
-			}
-		}
-	}
-
-	return val + "px";
-}
 
 if ( jQuery.expr && jQuery.expr.filters ) {
 	jQuery.expr.filters.hidden = function( elem ) {
@@ -7177,6 +7291,31 @@ if ( jQuery.expr && jQuery.expr.filters ) {
 		return !jQuery.expr.filters.hidden( elem );
 	};
 }
+
+// These hooks are used by animate to expand properties
+jQuery.each({
+	margin: "",
+	padding: "",
+	border: "Width"
+}, function( prefix, suffix ) {
+
+	jQuery.cssHooks[ prefix + suffix ] = {
+		expand: function( value ) {
+			var i,
+
+				// assumes a single number if not a string
+				parts = typeof value === "string" ? value.split(" ") : [ value ],
+				expanded = {};
+
+			for ( i = 0; i < 4; i++ ) {
+				expanded[ prefix + cssExpand[ i ] + suffix ] =
+					parts[ i ] || parts[ i - 2 ] || parts[ 0 ];
+			}
+
+			return expanded;
+		}
+	};
+});
 
 
 
@@ -7496,7 +7635,7 @@ jQuery.extend({
 		isLocal: rlocalProtocol.test( ajaxLocParts[ 1 ] ),
 		global: true,
 		type: "GET",
-		contentType: "application/x-www-form-urlencoded",
+		contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 		processData: true,
 		async: true,
 		/*
@@ -7822,7 +7961,7 @@ jQuery.extend({
 		// Apply prefilters
 		inspectPrefiltersOrTransports( prefilters, s, options, jqXHR );
 
-		// If request was aborted inside a prefiler, stop there
+		// If request was aborted inside a prefilter, stop there
 		if ( state === 2 ) {
 			return false;
 		}
@@ -7995,11 +8134,11 @@ function buildParams( prefix, obj, traditional, add ) {
 				// a server error. Possible fixes are to modify rack's
 				// deserialization algorithm or to provide an option or flag
 				// to force array serialization to be shallow.
-				buildParams( prefix + "[" + ( typeof v === "object" || jQuery.isArray(v) ? i : "" ) + "]", v, traditional, add );
+				buildParams( prefix + "[" + ( typeof v === "object" ? i : "" ) + "]", v, traditional, add );
 			}
 		});
 
-	} else if ( !traditional && obj != null && typeof obj === "object" ) {
+	} else if ( !traditional && jQuery.type( obj ) === "object" ) {
 		// Serialize object item.
 		for ( var name in obj ) {
 			buildParams( prefix + "[" + name + "]", obj[ name ], traditional, add );
@@ -8195,8 +8334,7 @@ jQuery.ajaxSetup({
 // Detect, normalize options and install callbacks for jsonp requests
 jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 
-	var inspectData = s.contentType === "application/x-www-form-urlencoded" &&
-		( typeof s.data === "string" );
+	var inspectData = ( typeof s.data === "string" ) && /^application\/x\-www\-form\-urlencoded/.test( s.contentType );
 
 	if ( s.dataTypes[ 0 ] === "jsonp" ||
 		s.jsonp !== false && ( jsre.test( s.url ) ||
@@ -8497,7 +8635,13 @@ if ( jQuery.support.ajax ) {
 									if ( xml && xml.documentElement /* #4958 */ ) {
 										responses.xml = xml;
 									}
-									responses.text = xhr.responseText;
+
+									// When requesting binary data, IE6-9 will throw an exception
+									// on any attempt to access responseText (#11426)
+									try {
+										responses.text = xhr.responseText;
+									} catch( _ ) {
+									}
 
 									// Firefox throws an exception when accessing
 									// statusText for faulty cross-domain requests
@@ -8605,7 +8749,8 @@ jQuery.fn.extend({
 					// Set elements which have been overridden with display: none
 					// in a stylesheet to whatever the default browser style is
 					// for such an element
-					if ( display === "" && jQuery.css(elem, "display") === "none" ) {
+					if ( (display === "" && jQuery.css(elem, "display") === "none") ||
+						!jQuery.contains( elem.ownerDocument.documentElement, elem ) ) {
 						jQuery._data( elem, "olddisplay", defaultDisplay(elem.nodeName) );
 					}
 				}
@@ -8709,24 +8854,37 @@ jQuery.fn.extend({
 			var opt = jQuery.extend( {}, optall ),
 				isElement = this.nodeType === 1,
 				hidden = isElement && jQuery(this).is(":hidden"),
-				name, val, p, e,
+				name, val, p, e, hooks, replace,
 				parts, start, end, unit,
 				method;
 
 			// will store per property easing and be used to determine when an animation is complete
 			opt.animatedProperties = {};
 
+			// first pass over propertys to expand / normalize
 			for ( p in prop ) {
-
-				// property name normalization
 				name = jQuery.camelCase( p );
 				if ( p !== name ) {
 					prop[ name ] = prop[ p ];
 					delete prop[ p ];
 				}
 
-				val = prop[ name ];
+				if ( ( hooks = jQuery.cssHooks[ name ] ) && "expand" in hooks ) {
+					replace = hooks.expand( prop[ name ] );
+					delete prop[ name ];
 
+					// not quite $.extend, this wont overwrite keys already present.
+					// also - reusing 'p' from above because we have the correct "name"
+					for ( p in replace ) {
+						if ( ! ( p in prop ) ) {
+							prop[ p ] = replace[ p ];
+						}
+					}
+				}
+			}
+
+			for ( name in prop ) {
+				val = prop[ name ];
 				// easing resolution: per property > opt.specialEasing > opt.easing > 'swing' (default)
 				if ( jQuery.isArray( val ) ) {
 					opt.animatedProperties[ name ] = val[ 1 ];
@@ -8953,11 +9111,11 @@ jQuery.extend({
 	},
 
 	easing: {
-		linear: function( p, n, firstNum, diff ) {
-			return firstNum + diff * p;
+		linear: function( p ) {
+			return p;
 		},
-		swing: function( p, n, firstNum, diff ) {
-			return ( ( -Math.cos( p*Math.PI ) / 2 ) + 0.5 ) * diff + firstNum;
+		swing: function( p ) {
+			return ( -Math.cos( p*Math.PI ) / 2 ) + 0.5;
 		}
 	},
 
@@ -9015,8 +9173,12 @@ jQuery.fx.prototype = {
 		t.queue = this.options.queue;
 		t.elem = this.elem;
 		t.saveState = function() {
-			if ( self.options.hide && jQuery._data( self.elem, "fxshow" + self.prop ) === undefined ) {
-				jQuery._data( self.elem, "fxshow" + self.prop, self.start );
+			if ( jQuery._data( self.elem, "fxshow" + self.prop ) === undefined ) {
+				if ( self.options.hide ) {
+					jQuery._data( self.elem, "fxshow" + self.prop, self.start );
+				} else if ( self.options.show ) {
+					jQuery._data( self.elem, "fxshow" + self.prop, self.end );
+				}
 			}
 		};
 
@@ -9183,12 +9345,14 @@ jQuery.extend( jQuery.fx, {
 	}
 });
 
-// Adds width/height step functions
-// Do not set anything below 0
-jQuery.each([ "width", "height" ], function( i, prop ) {
-	jQuery.fx.step[ prop ] = function( fx ) {
-		jQuery.style( fx.elem, prop, Math.max(0, fx.now) + fx.unit );
-	};
+// Ensure props that can't be negative don't go there on undershoot easing
+jQuery.each( fxAttrs.concat.apply( [], fxAttrs ), function( i, prop ) {
+	// exclude marginTop, marginLeft, marginBottom and marginRight from this list
+	if ( prop.indexOf( "margin" ) ) {
+		jQuery.fx.step[ prop ] = function( fx ) {
+			jQuery.style( fx.elem, prop, Math.max(0, fx.now) + fx.unit );
+		};
+	}
 });
 
 if ( jQuery.expr && jQuery.expr.filters ) {
@@ -9225,7 +9389,7 @@ function defaultDisplay( nodeName ) {
 			// document to it; WebKit & Firefox won't allow reusing the iframe document.
 			if ( !iframeDoc || !iframe.createElement ) {
 				iframeDoc = ( iframe.contentWindow || iframe.contentDocument ).document;
-				iframeDoc.write( ( document.compatMode === "CSS1Compat" ? "<!doctype html>" : "" ) + "<html><body>" );
+				iframeDoc.write( ( jQuery.support.boxModel ? "<!doctype html>" : "" ) + "<html><body>" );
 				iframeDoc.close();
 			}
 
@@ -9247,33 +9411,15 @@ function defaultDisplay( nodeName ) {
 
 
 
-var rtable = /^t(?:able|d|h)$/i,
+var getOffset,
+	rtable = /^t(?:able|d|h)$/i,
 	rroot = /^(?:body|html)$/i;
 
 if ( "getBoundingClientRect" in document.documentElement ) {
-	jQuery.fn.offset = function( options ) {
-		var elem = this[0], box;
-
-		if ( options ) {
-			return this.each(function( i ) {
-				jQuery.offset.setOffset( this, options, i );
-			});
-		}
-
-		if ( !elem || !elem.ownerDocument ) {
-			return null;
-		}
-
-		if ( elem === elem.ownerDocument.body ) {
-			return jQuery.offset.bodyOffset( elem );
-		}
-
+	getOffset = function( elem, doc, docElem, box ) {
 		try {
 			box = elem.getBoundingClientRect();
 		} catch(e) {}
-
-		var doc = elem.ownerDocument,
-			docElem = doc.documentElement;
 
 		// Make sure we're not dealing with a disconnected DOM node
 		if ( !box || !jQuery.contains( docElem, elem ) ) {
@@ -9281,7 +9427,7 @@ if ( "getBoundingClientRect" in document.documentElement ) {
 		}
 
 		var body = doc.body,
-			win = getWindow(doc),
+			win = getWindow( doc ),
 			clientTop  = docElem.clientTop  || body.clientTop  || 0,
 			clientLeft = docElem.clientLeft || body.clientLeft || 0,
 			scrollTop  = win.pageYOffset || jQuery.support.boxModel && docElem.scrollTop  || body.scrollTop,
@@ -9293,28 +9439,10 @@ if ( "getBoundingClientRect" in document.documentElement ) {
 	};
 
 } else {
-	jQuery.fn.offset = function( options ) {
-		var elem = this[0];
-
-		if ( options ) {
-			return this.each(function( i ) {
-				jQuery.offset.setOffset( this, options, i );
-			});
-		}
-
-		if ( !elem || !elem.ownerDocument ) {
-			return null;
-		}
-
-		if ( elem === elem.ownerDocument.body ) {
-			return jQuery.offset.bodyOffset( elem );
-		}
-
+	getOffset = function( elem, doc, docElem ) {
 		var computedStyle,
 			offsetParent = elem.offsetParent,
 			prevOffsetParent = elem,
-			doc = elem.ownerDocument,
-			docElem = doc.documentElement,
 			body = doc.body,
 			defaultView = doc.defaultView,
 			prevComputedStyle = defaultView ? defaultView.getComputedStyle( elem, null ) : elem.currentStyle,
@@ -9364,6 +9492,29 @@ if ( "getBoundingClientRect" in document.documentElement ) {
 		return { top: top, left: left };
 	};
 }
+
+jQuery.fn.offset = function( options ) {
+	if ( arguments.length ) {
+		return options === undefined ?
+			this :
+			this.each(function( i ) {
+				jQuery.offset.setOffset( this, options, i );
+			});
+	}
+
+	var elem = this[0],
+		doc = elem && elem.ownerDocument;
+
+	if ( !doc ) {
+		return null;
+	}
+
+	if ( elem === doc.body ) {
+		return jQuery.offset.bodyOffset( elem );
+	}
+
+	return getOffset( elem, doc, doc.documentElement );
+};
 
 jQuery.offset = {
 
@@ -9470,42 +9621,30 @@ jQuery.fn.extend({
 
 
 // Create scrollLeft and scrollTop methods
-jQuery.each( ["Left", "Top"], function( i, name ) {
-	var method = "scroll" + name;
+jQuery.each( {scrollLeft: "pageXOffset", scrollTop: "pageYOffset"}, function( method, prop ) {
+	var top = /Y/.test( prop );
 
 	jQuery.fn[ method ] = function( val ) {
-		var elem, win;
+		return jQuery.access( this, function( elem, method, val ) {
+			var win = getWindow( elem );
 
-		if ( val === undefined ) {
-			elem = this[ 0 ];
-
-			if ( !elem ) {
-				return null;
+			if ( val === undefined ) {
+				return win ? (prop in win) ? win[ prop ] :
+					jQuery.support.boxModel && win.document.documentElement[ method ] ||
+						win.document.body[ method ] :
+					elem[ method ];
 			}
-
-			win = getWindow( elem );
-
-			// Return the scroll offset
-			return win ? ("pageXOffset" in win) ? win[ i ? "pageYOffset" : "pageXOffset" ] :
-				jQuery.support.boxModel && win.document.documentElement[ method ] ||
-					win.document.body[ method ] :
-				elem[ method ];
-		}
-
-		// Set the scroll offset
-		return this.each(function() {
-			win = getWindow( this );
 
 			if ( win ) {
 				win.scrollTo(
-					!i ? val : jQuery( win ).scrollLeft(),
-					 i ? val : jQuery( win ).scrollTop()
+					!top ? val : jQuery( win ).scrollLeft(),
+					 top ? val : jQuery( win ).scrollTop()
 				);
 
 			} else {
-				this[ method ] = val;
+				elem[ method ] = val;
 			}
-		});
+		}, method, val, arguments.length, null );
 	};
 });
 
@@ -9521,9 +9660,10 @@ function getWindow( elem ) {
 
 
 // Create width, height, innerHeight, innerWidth, outerHeight and outerWidth methods
-jQuery.each([ "Height", "Width" ], function( i, name ) {
-
-	var type = name.toLowerCase();
+jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
+	var clientProp = "client" + name,
+		scrollProp = "scroll" + name,
+		offsetProp = "offset" + name;
 
 	// innerHeight and innerWidth
 	jQuery.fn[ "inner" + name ] = function() {
@@ -9545,50 +9685,48 @@ jQuery.each([ "Height", "Width" ], function( i, name ) {
 			null;
 	};
 
-	jQuery.fn[ type ] = function( size ) {
-		// Get window width or height
-		var elem = this[0];
-		if ( !elem ) {
-			return size == null ? null : this;
-		}
+	jQuery.fn[ type ] = function( value ) {
+		return jQuery.access( this, function( elem, type, value ) {
+			var doc, docElemProp, orig, ret;
 
-		if ( jQuery.isFunction( size ) ) {
-			return this.each(function( i ) {
-				var self = jQuery( this );
-				self[ type ]( size.call( this, i, self[ type ]() ) );
-			});
-		}
+			if ( jQuery.isWindow( elem ) ) {
+				// 3rd condition allows Nokia support, as it supports the docElem prop but not CSS1Compat
+				doc = elem.document;
+				docElemProp = doc.documentElement[ clientProp ];
+				return jQuery.support.boxModel && docElemProp ||
+					doc.body && doc.body[ clientProp ] || docElemProp;
+			}
 
-		if ( jQuery.isWindow( elem ) ) {
-			// Everyone else use document.documentElement or document.body depending on Quirks vs Standards mode
-			// 3rd condition allows Nokia support, as it supports the docElem prop but not CSS1Compat
-			var docElemProp = elem.document.documentElement[ "client" + name ],
-				body = elem.document.body;
-			return elem.document.compatMode === "CSS1Compat" && docElemProp ||
-				body && body[ "client" + name ] || docElemProp;
+			// Get document width or height
+			if ( elem.nodeType === 9 ) {
+				// Either scroll[Width/Height] or offset[Width/Height], whichever is greater
+				doc = elem.documentElement;
 
-		// Get document width or height
-		} else if ( elem.nodeType === 9 ) {
-			// Either scroll[Width/Height] or offset[Width/Height], whichever is greater
-			return Math.max(
-				elem.documentElement["client" + name],
-				elem.body["scroll" + name], elem.documentElement["scroll" + name],
-				elem.body["offset" + name], elem.documentElement["offset" + name]
-			);
+				// when a window > document, IE6 reports a offset[Width/Height] > client[Width/Height]
+				// so we can't use max, as it'll choose the incorrect offset[Width/Height]
+				// instead we use the correct client[Width/Height]
+				// support:IE6
+				if ( doc[ clientProp ] >= doc[ scrollProp ] ) {
+					return doc[ clientProp ];
+				}
 
-		// Get or set width or height on the element
-		} else if ( size === undefined ) {
-			var orig = jQuery.css( elem, type ),
+				return Math.max(
+					elem.body[ scrollProp ], doc[ scrollProp ],
+					elem.body[ offsetProp ], doc[ offsetProp ]
+				);
+			}
+
+			// Get width or height on the element
+			if ( value === undefined ) {
+				orig = jQuery.css( elem, type );
 				ret = parseFloat( orig );
+				return jQuery.isNumeric( ret ) ? ret : orig;
+			}
 
-			return jQuery.isNumeric( ret ) ? ret : orig;
-
-		// Set the width or height on the element (default to pixels if value is unitless)
-		} else {
-			return this.css( type, typeof size === "string" ? size : size + "px" );
-		}
+			// Set the width or height on the element
+			jQuery( elem ).css( type, value );
+		}, type, value, arguments.length, null );
 	};
-
 });
 
 
@@ -10805,7 +10943,7 @@ module.exports = {"main":"underscore.js"}
 });
 
 require.define("/node_modules/underscore/underscore.js", function (require, module, exports, __dirname, __filename) {
-//     Underscore.js 1.3.1
+//     Underscore.js 1.3.3
 //     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore is freely distributable under the MIT license.
 //     Portions of Underscore are inspired or borrowed from Prototype,
@@ -10869,7 +11007,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   }
 
   // Current version.
-  _.VERSION = '1.3.1';
+  _.VERSION = '1.3.3';
 
   // Collection Functions
   // --------------------
@@ -10987,7 +11125,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
     each(obj, function(value, index, list) {
       if (!(result = result && iterator.call(context, value, index, list))) return breaker;
     });
-    return result;
+    return !!result;
   };
 
   // Determine if at least one element in the object matches a truth test.
@@ -11031,7 +11169,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
   // Return the maximum element or (element-based computation).
   _.max = function(obj, iterator, context) {
-    if (!iterator && _.isArray(obj)) return Math.max.apply(Math, obj);
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0]) return Math.max.apply(Math, obj);
     if (!iterator && _.isEmpty(obj)) return -Infinity;
     var result = {computed : -Infinity};
     each(obj, function(value, index, list) {
@@ -11043,7 +11181,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
   // Return the minimum element (or element-based computation).
   _.min = function(obj, iterator, context) {
-    if (!iterator && _.isArray(obj)) return Math.min.apply(Math, obj);
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0]) return Math.min.apply(Math, obj);
     if (!iterator && _.isEmpty(obj)) return Infinity;
     var result = {computed : Infinity};
     each(obj, function(value, index, list) {
@@ -11057,19 +11195,16 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   _.shuffle = function(obj) {
     var shuffled = [], rand;
     each(obj, function(value, index, list) {
-      if (index == 0) {
-        shuffled[0] = value;
-      } else {
-        rand = Math.floor(Math.random() * (index + 1));
-        shuffled[index] = shuffled[rand];
-        shuffled[rand] = value;
-      }
+      rand = Math.floor(Math.random() * (index + 1));
+      shuffled[index] = shuffled[rand];
+      shuffled[rand] = value;
     });
     return shuffled;
   };
 
   // Sort the object's values by a criterion produced by an iterator.
-  _.sortBy = function(obj, iterator, context) {
+  _.sortBy = function(obj, val, context) {
+    var iterator = _.isFunction(val) ? val : function(obj) { return obj[val]; };
     return _.pluck(_.map(obj, function(value, index, list) {
       return {
         value : value,
@@ -11077,6 +11212,8 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
       };
     }).sort(function(left, right) {
       var a = left.criteria, b = right.criteria;
+      if (a === void 0) return 1;
+      if (b === void 0) return -1;
       return a < b ? -1 : a > b ? 1 : 0;
     }), 'value');
   };
@@ -11106,26 +11243,26 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   };
 
   // Safely convert anything iterable into a real, live array.
-  _.toArray = function(iterable) {
-    if (!iterable)                return [];
-    if (iterable.toArray)         return iterable.toArray();
-    if (_.isArray(iterable))      return slice.call(iterable);
-    if (_.isArguments(iterable))  return slice.call(iterable);
-    return _.values(iterable);
+  _.toArray = function(obj) {
+    if (!obj)                                     return [];
+    if (_.isArray(obj))                           return slice.call(obj);
+    if (_.isArguments(obj))                       return slice.call(obj);
+    if (obj.toArray && _.isFunction(obj.toArray)) return obj.toArray();
+    return _.values(obj);
   };
 
   // Return the number of elements in an object.
   _.size = function(obj) {
-    return _.toArray(obj).length;
+    return _.isArray(obj) ? obj.length : _.keys(obj).length;
   };
 
   // Array Functions
   // ---------------
 
   // Get the first element of an array. Passing **n** will return the first N
-  // values in the array. Aliased as `head`. The **guard** check allows it to work
-  // with `_.map`.
-  _.first = _.head = function(array, n, guard) {
+  // values in the array. Aliased as `head` and `take`. The **guard** check
+  // allows it to work with `_.map`.
+  _.first = _.head = _.take = function(array, n, guard) {
     return (n != null) && !guard ? slice.call(array, 0, n) : array[0];
   };
 
@@ -11179,15 +11316,17 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Aliased as `unique`.
   _.uniq = _.unique = function(array, isSorted, iterator) {
     var initial = iterator ? _.map(array, iterator) : array;
-    var result = [];
-    _.reduce(initial, function(memo, el, i) {
-      if (0 == i || (isSorted === true ? _.last(memo) != el : !_.include(memo, el))) {
-        memo[memo.length] = el;
-        result[result.length] = array[i];
+    var results = [];
+    // The `isSorted` flag is irrelevant if the array only contains two elements.
+    if (array.length < 3) isSorted = true;
+    _.reduce(initial, function (memo, value, index) {
+      if (isSorted ? _.last(memo) !== value || !memo.length : !_.include(memo, value)) {
+        memo.push(value);
+        results.push(array[index]);
       }
       return memo;
     }, []);
-    return result;
+    return results;
   };
 
   // Produce an array that contains the union: each distinct element from all of
@@ -11210,7 +11349,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
-    var rest = _.flatten(slice.call(arguments, 1));
+    var rest = _.flatten(slice.call(arguments, 1), true);
     return _.filter(array, function(value){ return !_.include(rest, value); });
   };
 
@@ -11321,7 +11460,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // it with the arguments supplied.
   _.delay = function(func, wait) {
     var args = slice.call(arguments, 2);
-    return setTimeout(function(){ return func.apply(func, args); }, wait);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
   };
 
   // Defers a function, scheduling it to run after the current call stack has
@@ -11333,7 +11472,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Returns a function, that, when invoked, will only be triggered at most once
   // during a given window of time.
   _.throttle = function(func, wait) {
-    var context, args, timeout, throttling, more;
+    var context, args, timeout, throttling, more, result;
     var whenDone = _.debounce(function(){ more = throttling = false; }, wait);
     return function() {
       context = this; args = arguments;
@@ -11346,24 +11485,27 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
       if (throttling) {
         more = true;
       } else {
-        func.apply(context, args);
+        result = func.apply(context, args);
       }
       whenDone();
       throttling = true;
+      return result;
     };
   };
 
   // Returns a function, that, as long as it continues to be invoked, will not
   // be triggered. The function will be called after it stops being called for
-  // N milliseconds.
-  _.debounce = function(func, wait) {
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  _.debounce = function(func, wait, immediate) {
     var timeout;
     return function() {
       var context = this, args = arguments;
       var later = function() {
         timeout = null;
-        func.apply(context, args);
+        if (!immediate) func.apply(context, args);
       };
+      if (immediate && !timeout) func.apply(context, args);
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
@@ -11446,6 +11588,15 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
       }
     });
     return obj;
+  };
+
+  // Return a copy of the object only containing the whitelisted properties.
+  _.pick = function(obj) {
+    var result = {};
+    each(_.flatten(slice.call(arguments, 1)), function(key) {
+      if (key in obj) result[key] = obj[key];
+    });
+    return result;
   };
 
   // Fill in a given object with default properties.
@@ -11568,6 +11719,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Is a given array, string, or object empty?
   // An "empty" object has no enumerable own-properties.
   _.isEmpty = function(obj) {
+    if (obj == null) return true;
     if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
     for (var key in obj) if (_.has(obj, key)) return false;
     return true;
@@ -11612,6 +11764,11 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Is a given value a number?
   _.isNumber = function(obj) {
     return toString.call(obj) == '[object Number]';
+  };
+
+  // Is a given object a finite number?
+  _.isFinite = function(obj) {
+    return _.isNumber(obj) && isFinite(obj);
   };
 
   // Is the given value `NaN`?
@@ -11675,6 +11832,14 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
     return (''+string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;');
   };
 
+  // If the value of the named property is a function then invoke it;
+  // otherwise, return it.
+  _.result = function(object, property) {
+    if (object == null) return null;
+    var value = object[property];
+    return _.isFunction(value) ? value.call(object) : value;
+  };
+
   // Add your own custom functions to the Underscore object, ensuring that
   // they're correctly added to the OOP wrapper as well.
   _.mixin = function(obj) {
@@ -11704,39 +11869,72 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // guaranteed not to match.
   var noMatch = /.^/;
 
+  // Certain characters need to be escaped so that they can be put into a
+  // string literal.
+  var escapes = {
+    '\\': '\\',
+    "'": "'",
+    'r': '\r',
+    'n': '\n',
+    't': '\t',
+    'u2028': '\u2028',
+    'u2029': '\u2029'
+  };
+
+  for (var p in escapes) escapes[escapes[p]] = p;
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+  var unescaper = /\\(\\|'|r|n|t|u2028|u2029)/g;
+
   // Within an interpolation, evaluation, or escaping, remove HTML escaping
   // that had been previously added.
   var unescape = function(code) {
-    return code.replace(/\\\\/g, '\\').replace(/\\'/g, "'");
+    return code.replace(unescaper, function(match, escape) {
+      return escapes[escape];
+    });
   };
 
   // JavaScript micro-templating, similar to John Resig's implementation.
   // Underscore templating handles arbitrary delimiters, preserves whitespace,
   // and correctly escapes quotes within interpolated code.
-  _.template = function(str, data) {
-    var c  = _.templateSettings;
-    var tmpl = 'var __p=[],print=function(){__p.push.apply(__p,arguments);};' +
-      'with(obj||{}){__p.push(\'' +
-      str.replace(/\\/g, '\\\\')
-         .replace(/'/g, "\\'")
-         .replace(c.escape || noMatch, function(match, code) {
-           return "',_.escape(" + unescape(code) + "),'";
-         })
-         .replace(c.interpolate || noMatch, function(match, code) {
-           return "'," + unescape(code) + ",'";
-         })
-         .replace(c.evaluate || noMatch, function(match, code) {
-           return "');" + unescape(code).replace(/[\r\n\t]/g, ' ') + ";__p.push('";
-         })
-         .replace(/\r/g, '\\r')
-         .replace(/\n/g, '\\n')
-         .replace(/\t/g, '\\t')
-         + "');}return __p.join('');";
-    var func = new Function('obj', '_', tmpl);
-    if (data) return func(data, _);
-    return function(data) {
-      return func.call(this, data, _);
+  _.template = function(text, data, settings) {
+    settings = _.defaults(settings || {}, _.templateSettings);
+
+    // Compile the template source, taking care to escape characters that
+    // cannot be included in a string literal and then unescape them in code
+    // blocks.
+    var source = "__p+='" + text
+      .replace(escaper, function(match) {
+        return '\\' + escapes[match];
+      })
+      .replace(settings.escape || noMatch, function(match, code) {
+        return "'+\n_.escape(" + unescape(code) + ")+\n'";
+      })
+      .replace(settings.interpolate || noMatch, function(match, code) {
+        return "'+\n(" + unescape(code) + ")+\n'";
+      })
+      .replace(settings.evaluate || noMatch, function(match, code) {
+        return "';\n" + unescape(code) + "\n;__p+='";
+      }) + "';\n";
+
+    // If a variable is not specified, place data values in local scope.
+    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+
+    source = "var __p='';" +
+      "var print=function(){__p+=Array.prototype.join.call(arguments, '')};\n" +
+      source + "return __p;\n";
+
+    var render = new Function(settings.variable || 'obj', '_', source);
+    if (data) return render(data, _);
+    var template = function(data) {
+      return render.call(this, data, _);
     };
+
+    // Provide the compiled function source as a convenience for build time
+    // precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' +
+      source + '}';
+
+    return template;
   };
 
   // Add a "chain" function, which will delegate to the wrapper.
@@ -11846,7 +12044,7 @@ var used = [];
 _$jscoverage['chai.js'][8]++;
 var exports = module.exports = {};
 _$jscoverage['chai.js'][10]++;
-exports.version = "0.5.0";
+exports.version = "0.5.2";
 _$jscoverage['chai.js'][12]++;
 exports.Assertion = require("./assertion");
 _$jscoverage['chai.js'][13]++;
@@ -11877,7 +12075,7 @@ _$jscoverage['chai.js'][32]++;
 var assert = require("./interface/assert");
 _$jscoverage['chai.js'][33]++;
 exports.use(assert);
-_$jscoverage['chai.js'].source = ["/*!"," * chai"," * Copyright(c) 2011-2012 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var used = [];","var exports = module.exports = {};","","exports.version = '0.5.0';","","exports.Assertion = require('./assertion');","exports.AssertionError = require('./error');","","exports.inspect = require('./utils/inspect');","","exports.use = function (fn) {","  if (!~used.indexOf(fn)) {","    fn(this);","    used.push(fn);","  }","","  return this;","};","","var expect = require('./interface/expect');","exports.use(expect);","","var should = require('./interface/should');","exports.use(should);","","var assert = require('./interface/assert');","exports.use(assert);"];
+_$jscoverage['chai.js'].source = ["/*!"," * chai"," * Copyright(c) 2011-2012 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","var used = [];","var exports = module.exports = {};","","exports.version = '0.5.2';","","exports.Assertion = require('./assertion');","exports.AssertionError = require('./error');","","exports.inspect = require('./utils/inspect');","","exports.use = function (fn) {","  if (!~used.indexOf(fn)) {","    fn(this);","    used.push(fn);","  }","","  return this;","};","","var expect = require('./interface/expect');","exports.use(expect);","","var should = require('./interface/should');","exports.use(should);","","var assert = require('./interface/assert');","exports.use(assert);"];
 
 });
 
@@ -11893,166 +12091,166 @@ if (! _$jscoverage['assertion.js']) {
   _$jscoverage['assertion.js'][70] = 0;
   _$jscoverage['assertion.js'][71] = 0;
   _$jscoverage['assertion.js'][87] = 0;
-  _$jscoverage['assertion.js'][101] = 0;
-  _$jscoverage['assertion.js'][102] = 0;
   _$jscoverage['assertion.js'][103] = 0;
-  _$jscoverage['assertion.js'][106] = 0;
-  _$jscoverage['assertion.js'][107] = 0;
-  _$jscoverage['assertion.js'][125] = 0;
+  _$jscoverage['assertion.js'][104] = 0;
+  _$jscoverage['assertion.js'][105] = 0;
+  _$jscoverage['assertion.js'][108] = 0;
+  _$jscoverage['assertion.js'][109] = 0;
   _$jscoverage['assertion.js'][127] = 0;
-  _$jscoverage['assertion.js'][141] = 0;
+  _$jscoverage['assertion.js'][129] = 0;
   _$jscoverage['assertion.js'][143] = 0;
-  _$jscoverage['assertion.js'][157] = 0;
+  _$jscoverage['assertion.js'][145] = 0;
   _$jscoverage['assertion.js'][159] = 0;
-  _$jscoverage['assertion.js'][174] = 0;
+  _$jscoverage['assertion.js'][161] = 0;
   _$jscoverage['assertion.js'][176] = 0;
-  _$jscoverage['assertion.js'][177] = 0;
-  _$jscoverage['assertion.js'][191] = 0;
+  _$jscoverage['assertion.js'][178] = 0;
+  _$jscoverage['assertion.js'][179] = 0;
   _$jscoverage['assertion.js'][193] = 0;
-  _$jscoverage['assertion.js'][206] = 0;
+  _$jscoverage['assertion.js'][195] = 0;
   _$jscoverage['assertion.js'][208] = 0;
-  _$jscoverage['assertion.js'][222] = 0;
+  _$jscoverage['assertion.js'][210] = 0;
   _$jscoverage['assertion.js'][224] = 0;
-  _$jscoverage['assertion.js'][238] = 0;
+  _$jscoverage['assertion.js'][226] = 0;
   _$jscoverage['assertion.js'][240] = 0;
-  _$jscoverage['assertion.js'][254] = 0;
+  _$jscoverage['assertion.js'][242] = 0;
   _$jscoverage['assertion.js'][256] = 0;
-  _$jscoverage['assertion.js'][270] = 0;
+  _$jscoverage['assertion.js'][258] = 0;
   _$jscoverage['assertion.js'][272] = 0;
-  _$jscoverage['assertion.js'][273] = 0;
-  _$jscoverage['assertion.js'][292] = 0;
+  _$jscoverage['assertion.js'][274] = 0;
+  _$jscoverage['assertion.js'][275] = 0;
   _$jscoverage['assertion.js'][294] = 0;
-  _$jscoverage['assertion.js'][299] = 0;
-  _$jscoverage['assertion.js'][313] = 0;
+  _$jscoverage['assertion.js'][296] = 0;
+  _$jscoverage['assertion.js'][301] = 0;
   _$jscoverage['assertion.js'][315] = 0;
-  _$jscoverage['assertion.js'][322] = 0;
-  _$jscoverage['assertion.js'][336] = 0;
+  _$jscoverage['assertion.js'][317] = 0;
+  _$jscoverage['assertion.js'][324] = 0;
   _$jscoverage['assertion.js'][338] = 0;
-  _$jscoverage['assertion.js'][345] = 0;
-  _$jscoverage['assertion.js'][364] = 0;
+  _$jscoverage['assertion.js'][340] = 0;
+  _$jscoverage['assertion.js'][347] = 0;
   _$jscoverage['assertion.js'][366] = 0;
-  _$jscoverage['assertion.js'][372] = 0;
-  _$jscoverage['assertion.js'][388] = 0;
+  _$jscoverage['assertion.js'][368] = 0;
+  _$jscoverage['assertion.js'][374] = 0;
   _$jscoverage['assertion.js'][390] = 0;
   _$jscoverage['assertion.js'][392] = 0;
-  _$jscoverage['assertion.js'][393] = 0;
   _$jscoverage['assertion.js'][394] = 0;
   _$jscoverage['assertion.js'][395] = 0;
-  _$jscoverage['assertion.js'][398] = 0;
-  _$jscoverage['assertion.js'][403] = 0;
-  _$jscoverage['assertion.js'][421] = 0;
+  _$jscoverage['assertion.js'][396] = 0;
+  _$jscoverage['assertion.js'][397] = 0;
+  _$jscoverage['assertion.js'][400] = 0;
+  _$jscoverage['assertion.js'][405] = 0;
   _$jscoverage['assertion.js'][423] = 0;
-  _$jscoverage['assertion.js'][431] = 0;
-  _$jscoverage['assertion.js'][448] = 0;
-  _$jscoverage['assertion.js'][449] = 0;
-  _$jscoverage['assertion.js'][455] = 0;
-  _$jscoverage['assertion.js'][470] = 0;
-  _$jscoverage['assertion.js'][471] = 0;
-  _$jscoverage['assertion.js'][477] = 0;
-  _$jscoverage['assertion.js'][492] = 0;
-  _$jscoverage['assertion.js'][493] = 0;
-  _$jscoverage['assertion.js'][498] = 0;
-  _$jscoverage['assertion.js'][513] = 0;
-  _$jscoverage['assertion.js'][514] = 0;
-  _$jscoverage['assertion.js'][519] = 0;
-  _$jscoverage['assertion.js'][535] = 0;
-  _$jscoverage['assertion.js'][536] = 0;
+  _$jscoverage['assertion.js'][425] = 0;
+  _$jscoverage['assertion.js'][433] = 0;
+  _$jscoverage['assertion.js'][450] = 0;
+  _$jscoverage['assertion.js'][451] = 0;
+  _$jscoverage['assertion.js'][457] = 0;
+  _$jscoverage['assertion.js'][472] = 0;
+  _$jscoverage['assertion.js'][473] = 0;
+  _$jscoverage['assertion.js'][479] = 0;
+  _$jscoverage['assertion.js'][494] = 0;
+  _$jscoverage['assertion.js'][495] = 0;
+  _$jscoverage['assertion.js'][500] = 0;
+  _$jscoverage['assertion.js'][515] = 0;
+  _$jscoverage['assertion.js'][516] = 0;
+  _$jscoverage['assertion.js'][521] = 0;
+  _$jscoverage['assertion.js'][537] = 0;
   _$jscoverage['assertion.js'][538] = 0;
-  _$jscoverage['assertion.js'][543] = 0;
-  _$jscoverage['assertion.js'][558] = 0;
-  _$jscoverage['assertion.js'][559] = 0;
+  _$jscoverage['assertion.js'][540] = 0;
+  _$jscoverage['assertion.js'][545] = 0;
+  _$jscoverage['assertion.js'][560] = 0;
   _$jscoverage['assertion.js'][561] = 0;
-  _$jscoverage['assertion.js'][569] = 0;
-  _$jscoverage['assertion.js'][588] = 0;
-  _$jscoverage['assertion.js'][589] = 0;
+  _$jscoverage['assertion.js'][563] = 0;
+  _$jscoverage['assertion.js'][571] = 0;
   _$jscoverage['assertion.js'][590] = 0;
-  _$jscoverage['assertion.js'][595] = 0;
-  _$jscoverage['assertion.js'][615] = 0;
-  _$jscoverage['assertion.js'][616] = 0;
+  _$jscoverage['assertion.js'][591] = 0;
+  _$jscoverage['assertion.js'][592] = 0;
+  _$jscoverage['assertion.js'][597] = 0;
   _$jscoverage['assertion.js'][617] = 0;
   _$jscoverage['assertion.js'][618] = 0;
-  _$jscoverage['assertion.js'][621] = 0;
-  _$jscoverage['assertion.js'][627] = 0;
-  _$jscoverage['assertion.js'][628] = 0;
-  _$jscoverage['assertion.js'][638] = 0;
-  _$jscoverage['assertion.js'][639] = 0;
-  _$jscoverage['assertion.js'][655] = 0;
-  _$jscoverage['assertion.js'][656] = 0;
-  _$jscoverage['assertion.js'][660] = 0;
-  _$jscoverage['assertion.js'][677] = 0;
-  _$jscoverage['assertion.js'][678] = 0;
+  _$jscoverage['assertion.js'][619] = 0;
+  _$jscoverage['assertion.js'][620] = 0;
+  _$jscoverage['assertion.js'][623] = 0;
+  _$jscoverage['assertion.js'][629] = 0;
+  _$jscoverage['assertion.js'][630] = 0;
+  _$jscoverage['assertion.js'][640] = 0;
+  _$jscoverage['assertion.js'][641] = 0;
+  _$jscoverage['assertion.js'][657] = 0;
+  _$jscoverage['assertion.js'][658] = 0;
+  _$jscoverage['assertion.js'][662] = 0;
   _$jscoverage['assertion.js'][679] = 0;
+  _$jscoverage['assertion.js'][680] = 0;
   _$jscoverage['assertion.js'][681] = 0;
-  _$jscoverage['assertion.js'][689] = 0;
-  _$jscoverage['assertion.js'][704] = 0;
-  _$jscoverage['assertion.js'][705] = 0;
-  _$jscoverage['assertion.js'][710] = 0;
-  _$jscoverage['assertion.js'][725] = 0;
-  _$jscoverage['assertion.js'][726] = 0;
-  _$jscoverage['assertion.js'][731] = 0;
-  _$jscoverage['assertion.js'][746] = 0;
-  _$jscoverage['assertion.js'][747] = 0;
+  _$jscoverage['assertion.js'][683] = 0;
+  _$jscoverage['assertion.js'][691] = 0;
+  _$jscoverage['assertion.js'][706] = 0;
+  _$jscoverage['assertion.js'][707] = 0;
+  _$jscoverage['assertion.js'][712] = 0;
+  _$jscoverage['assertion.js'][727] = 0;
+  _$jscoverage['assertion.js'][728] = 0;
+  _$jscoverage['assertion.js'][733] = 0;
+  _$jscoverage['assertion.js'][748] = 0;
   _$jscoverage['assertion.js'][749] = 0;
-  _$jscoverage['assertion.js'][754] = 0;
-  _$jscoverage['assertion.js'][768] = 0;
+  _$jscoverage['assertion.js'][751] = 0;
+  _$jscoverage['assertion.js'][756] = 0;
   _$jscoverage['assertion.js'][770] = 0;
-  _$jscoverage['assertion.js'][771] = 0;
-  _$jscoverage['assertion.js'][790] = 0;
-  _$jscoverage['assertion.js'][791] = 0;
-  _$jscoverage['assertion.js'][794] = 0;
-  _$jscoverage['assertion.js'][798] = 0;
+  _$jscoverage['assertion.js'][772] = 0;
+  _$jscoverage['assertion.js'][773] = 0;
+  _$jscoverage['assertion.js'][792] = 0;
+  _$jscoverage['assertion.js'][793] = 0;
+  _$jscoverage['assertion.js'][796] = 0;
   _$jscoverage['assertion.js'][800] = 0;
-  _$jscoverage['assertion.js'][804] = 0;
-  _$jscoverage['assertion.js'][805] = 0;
-  _$jscoverage['assertion.js'][809] = 0;
-  _$jscoverage['assertion.js'][810] = 0;
-  _$jscoverage['assertion.js'][814] = 0;
-  _$jscoverage['assertion.js'][815] = 0;
+  _$jscoverage['assertion.js'][802] = 0;
+  _$jscoverage['assertion.js'][806] = 0;
+  _$jscoverage['assertion.js'][807] = 0;
+  _$jscoverage['assertion.js'][811] = 0;
+  _$jscoverage['assertion.js'][812] = 0;
   _$jscoverage['assertion.js'][816] = 0;
+  _$jscoverage['assertion.js'][817] = 0;
   _$jscoverage['assertion.js'][818] = 0;
-  _$jscoverage['assertion.js'][819] = 0;
+  _$jscoverage['assertion.js'][820] = 0;
   _$jscoverage['assertion.js'][821] = 0;
-  _$jscoverage['assertion.js'][825] = 0;
-  _$jscoverage['assertion.js'][828] = 0;
-  _$jscoverage['assertion.js'][831] = 0;
-  _$jscoverage['assertion.js'][839] = 0;
-  _$jscoverage['assertion.js'][869] = 0;
-  _$jscoverage['assertion.js'][870] = 0;
+  _$jscoverage['assertion.js'][823] = 0;
+  _$jscoverage['assertion.js'][827] = 0;
+  _$jscoverage['assertion.js'][830] = 0;
+  _$jscoverage['assertion.js'][833] = 0;
+  _$jscoverage['assertion.js'][841] = 0;
+  _$jscoverage['assertion.js'][871] = 0;
   _$jscoverage['assertion.js'][872] = 0;
   _$jscoverage['assertion.js'][874] = 0;
-  _$jscoverage['assertion.js'][875] = 0;
   _$jscoverage['assertion.js'][876] = 0;
   _$jscoverage['assertion.js'][877] = 0;
   _$jscoverage['assertion.js'][878] = 0;
   _$jscoverage['assertion.js'][879] = 0;
-  _$jscoverage['assertion.js'][882] = 0;
-  _$jscoverage['assertion.js'][883] = 0;
-  _$jscoverage['assertion.js'][886] = 0;
-  _$jscoverage['assertion.js'][887] = 0;
-  _$jscoverage['assertion.js'][891] = 0;
-  _$jscoverage['assertion.js'][894] = 0;
-  _$jscoverage['assertion.js'][895] = 0;
-  _$jscoverage['assertion.js'][900] = 0;
-  _$jscoverage['assertion.js'][901] = 0;
+  _$jscoverage['assertion.js'][880] = 0;
+  _$jscoverage['assertion.js'][881] = 0;
+  _$jscoverage['assertion.js'][884] = 0;
+  _$jscoverage['assertion.js'][885] = 0;
+  _$jscoverage['assertion.js'][888] = 0;
+  _$jscoverage['assertion.js'][889] = 0;
+  _$jscoverage['assertion.js'][893] = 0;
+  _$jscoverage['assertion.js'][896] = 0;
+  _$jscoverage['assertion.js'][897] = 0;
   _$jscoverage['assertion.js'][902] = 0;
-  _$jscoverage['assertion.js'][907] = 0;
+  _$jscoverage['assertion.js'][903] = 0;
+  _$jscoverage['assertion.js'][904] = 0;
   _$jscoverage['assertion.js'][909] = 0;
-  _$jscoverage['assertion.js'][913] = 0;
+  _$jscoverage['assertion.js'][911] = 0;
   _$jscoverage['assertion.js'][915] = 0;
-  _$jscoverage['assertion.js'][920] = 0;
-  _$jscoverage['assertion.js'][936] = 0;
-  _$jscoverage['assertion.js'][937] = 0;
-  _$jscoverage['assertion.js'][941] = 0;
-  _$jscoverage['assertion.js'][949] = 0;
-  _$jscoverage['assertion.js'][964] = 0;
-  _$jscoverage['assertion.js'][965] = 0;
-  _$jscoverage['assertion.js'][973] = 0;
-  _$jscoverage['assertion.js'][989] = 0;
-  _$jscoverage['assertion.js'][990] = 0;
-  _$jscoverage['assertion.js'][995] = 0;
-  _$jscoverage['assertion.js'][1002] = 0;
-  _$jscoverage['assertion.js'][1003] = 0;
+  _$jscoverage['assertion.js'][917] = 0;
+  _$jscoverage['assertion.js'][922] = 0;
+  _$jscoverage['assertion.js'][938] = 0;
+  _$jscoverage['assertion.js'][939] = 0;
+  _$jscoverage['assertion.js'][943] = 0;
+  _$jscoverage['assertion.js'][951] = 0;
+  _$jscoverage['assertion.js'][966] = 0;
+  _$jscoverage['assertion.js'][967] = 0;
+  _$jscoverage['assertion.js'][975] = 0;
+  _$jscoverage['assertion.js'][991] = 0;
+  _$jscoverage['assertion.js'][992] = 0;
+  _$jscoverage['assertion.js'][997] = 0;
   _$jscoverage['assertion.js'][1004] = 0;
+  _$jscoverage['assertion.js'][1005] = 0;
+  _$jscoverage['assertion.js'][1006] = 0;
 }
 _$jscoverage['assertion.js'][48]++;
 var AssertionError = require("./error"), eql = require("./utils/eql"), toString = Object.prototype.toString, inspect = require("./utils/inspect");
@@ -12069,400 +12267,400 @@ function Assertion(obj, msg, stack) {
 }
 _$jscoverage['assertion.js'][87]++;
 Assertion.includeStack = false;
-_$jscoverage['assertion.js'][101]++;
+_$jscoverage['assertion.js'][103]++;
 Assertion.prototype.assert = (function (expr, msg, negateMsg, expected, actual) {
-  _$jscoverage['assertion.js'][102]++;
+  _$jscoverage['assertion.js'][104]++;
   actual = actual || this.obj;
-  _$jscoverage['assertion.js'][103]++;
+  _$jscoverage['assertion.js'][105]++;
   var msg = (this.negate? negateMsg: msg), ok = this.negate? ! expr: expr;
-  _$jscoverage['assertion.js'][106]++;
+  _$jscoverage['assertion.js'][108]++;
   if (! ok) {
-    _$jscoverage['assertion.js'][107]++;
+    _$jscoverage['assertion.js'][109]++;
     throw new AssertionError({message: this.msg? this.msg + ": " + msg: msg, actual: actual, expected: expected, stackStartFunction: Assertion.includeStack? this.assert: this.ssfi});
   }
 });
-_$jscoverage['assertion.js'][125]++;
+_$jscoverage['assertion.js'][127]++;
 Object.defineProperty(Assertion.prototype, "inspect", {get: (function () {
-  _$jscoverage['assertion.js'][127]++;
+  _$jscoverage['assertion.js'][129]++;
   return inspect(this.obj);
 }), configurable: true});
-_$jscoverage['assertion.js'][141]++;
+_$jscoverage['assertion.js'][143]++;
 Object.defineProperty(Assertion.prototype, "to", {get: (function () {
-  _$jscoverage['assertion.js'][143]++;
+  _$jscoverage['assertion.js'][145]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][157]++;
+_$jscoverage['assertion.js'][159]++;
 Object.defineProperty(Assertion.prototype, "be", {get: (function () {
-  _$jscoverage['assertion.js'][159]++;
+  _$jscoverage['assertion.js'][161]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][174]++;
+_$jscoverage['assertion.js'][176]++;
 Object.defineProperty(Assertion.prototype, "been", {get: (function () {
-  _$jscoverage['assertion.js'][176]++;
+  _$jscoverage['assertion.js'][178]++;
   this.tense = "past";
-  _$jscoverage['assertion.js'][177]++;
+  _$jscoverage['assertion.js'][179]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][191]++;
+_$jscoverage['assertion.js'][193]++;
 Object.defineProperty(Assertion.prototype, "an", {get: (function () {
-  _$jscoverage['assertion.js'][193]++;
+  _$jscoverage['assertion.js'][195]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][206]++;
+_$jscoverage['assertion.js'][208]++;
 Object.defineProperty(Assertion.prototype, "is", {get: (function () {
-  _$jscoverage['assertion.js'][208]++;
+  _$jscoverage['assertion.js'][210]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][222]++;
+_$jscoverage['assertion.js'][224]++;
 Object.defineProperty(Assertion.prototype, "and", {get: (function () {
-  _$jscoverage['assertion.js'][224]++;
+  _$jscoverage['assertion.js'][226]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][238]++;
+_$jscoverage['assertion.js'][240]++;
 Object.defineProperty(Assertion.prototype, "have", {get: (function () {
-  _$jscoverage['assertion.js'][240]++;
+  _$jscoverage['assertion.js'][242]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][254]++;
+_$jscoverage['assertion.js'][256]++;
 Object.defineProperty(Assertion.prototype, "with", {get: (function () {
-  _$jscoverage['assertion.js'][256]++;
+  _$jscoverage['assertion.js'][258]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][270]++;
+_$jscoverage['assertion.js'][272]++;
 Object.defineProperty(Assertion.prototype, "not", {get: (function () {
-  _$jscoverage['assertion.js'][272]++;
+  _$jscoverage['assertion.js'][274]++;
   this.negate = true;
-  _$jscoverage['assertion.js'][273]++;
+  _$jscoverage['assertion.js'][275]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][292]++;
+_$jscoverage['assertion.js'][294]++;
 Object.defineProperty(Assertion.prototype, "ok", {get: (function () {
-  _$jscoverage['assertion.js'][294]++;
+  _$jscoverage['assertion.js'][296]++;
   this.assert(this.obj, "expected " + this.inspect + " to be truthy", "expected " + this.inspect + " to be falsy");
-  _$jscoverage['assertion.js'][299]++;
+  _$jscoverage['assertion.js'][301]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][313]++;
+_$jscoverage['assertion.js'][315]++;
 Object.defineProperty(Assertion.prototype, "true", {get: (function () {
-  _$jscoverage['assertion.js'][315]++;
+  _$jscoverage['assertion.js'][317]++;
   this.assert(true === this.obj, "expected " + this.inspect + " to be true", "expected " + this.inspect + " to be false", this.negate? false: true);
-  _$jscoverage['assertion.js'][322]++;
+  _$jscoverage['assertion.js'][324]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][336]++;
+_$jscoverage['assertion.js'][338]++;
 Object.defineProperty(Assertion.prototype, "false", {get: (function () {
-  _$jscoverage['assertion.js'][338]++;
+  _$jscoverage['assertion.js'][340]++;
   this.assert(false === this.obj, "expected " + this.inspect + " to be false", "expected " + this.inspect + " to be true", this.negate? true: false);
-  _$jscoverage['assertion.js'][345]++;
+  _$jscoverage['assertion.js'][347]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][364]++;
+_$jscoverage['assertion.js'][366]++;
 Object.defineProperty(Assertion.prototype, "exist", {get: (function () {
-  _$jscoverage['assertion.js'][366]++;
+  _$jscoverage['assertion.js'][368]++;
   this.assert(null != this.obj, "expected " + this.inspect + " to exist", "expected " + this.inspect + " to not exist");
-  _$jscoverage['assertion.js'][372]++;
+  _$jscoverage['assertion.js'][374]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][388]++;
+_$jscoverage['assertion.js'][390]++;
 Object.defineProperty(Assertion.prototype, "empty", {get: (function () {
-  _$jscoverage['assertion.js'][390]++;
-  var expected = this.obj;
   _$jscoverage['assertion.js'][392]++;
+  var expected = this.obj;
+  _$jscoverage['assertion.js'][394]++;
   if (Array.isArray(this.obj)) {
-    _$jscoverage['assertion.js'][393]++;
+    _$jscoverage['assertion.js'][395]++;
     expected = this.obj.length;
   }
   else {
-    _$jscoverage['assertion.js'][394]++;
+    _$jscoverage['assertion.js'][396]++;
     if (typeof this.obj === "object") {
-      _$jscoverage['assertion.js'][395]++;
+      _$jscoverage['assertion.js'][397]++;
       expected = Object.keys(this.obj).length;
     }
   }
-  _$jscoverage['assertion.js'][398]++;
+  _$jscoverage['assertion.js'][400]++;
   this.assert(! expected, "expected " + this.inspect + " to be empty", "expected " + this.inspect + " not to be empty");
-  _$jscoverage['assertion.js'][403]++;
+  _$jscoverage['assertion.js'][405]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][421]++;
+_$jscoverage['assertion.js'][423]++;
 Object.defineProperty(Assertion.prototype, "arguments", {get: (function () {
-  _$jscoverage['assertion.js'][423]++;
+  _$jscoverage['assertion.js'][425]++;
   this.assert("[object Arguments]" == Object.prototype.toString.call(this.obj), "expected " + this.inspect + " to be arguments", "expected " + this.inspect + " to not be arguments", "[object Arguments]", Object.prototype.toString.call(this.obj));
-  _$jscoverage['assertion.js'][431]++;
+  _$jscoverage['assertion.js'][433]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][448]++;
+_$jscoverage['assertion.js'][450]++;
 Assertion.prototype.equal = (function (val) {
-  _$jscoverage['assertion.js'][449]++;
+  _$jscoverage['assertion.js'][451]++;
   this.assert(val === this.obj, "expected " + this.inspect + " to equal " + inspect(val), "expected " + this.inspect + " to not equal " + inspect(val), val);
-  _$jscoverage['assertion.js'][455]++;
+  _$jscoverage['assertion.js'][457]++;
   return this;
 });
-_$jscoverage['assertion.js'][470]++;
+_$jscoverage['assertion.js'][472]++;
 Assertion.prototype.eql = (function (obj) {
-  _$jscoverage['assertion.js'][471]++;
+  _$jscoverage['assertion.js'][473]++;
   this.assert(eql(obj, this.obj), "expected " + this.inspect + " to equal " + inspect(obj), "expected " + this.inspect + " to not equal " + inspect(obj), obj);
-  _$jscoverage['assertion.js'][477]++;
+  _$jscoverage['assertion.js'][479]++;
   return this;
 });
-_$jscoverage['assertion.js'][492]++;
+_$jscoverage['assertion.js'][494]++;
 Assertion.prototype.above = (function (val) {
-  _$jscoverage['assertion.js'][493]++;
+  _$jscoverage['assertion.js'][495]++;
   this.assert(this.obj > val, "expected " + this.inspect + " to be above " + val, "expected " + this.inspect + " to be below " + val);
-  _$jscoverage['assertion.js'][498]++;
+  _$jscoverage['assertion.js'][500]++;
   return this;
 });
-_$jscoverage['assertion.js'][513]++;
+_$jscoverage['assertion.js'][515]++;
 Assertion.prototype.below = (function (val) {
-  _$jscoverage['assertion.js'][514]++;
+  _$jscoverage['assertion.js'][516]++;
   this.assert(this.obj < val, "expected " + this.inspect + " to be below " + val, "expected " + this.inspect + " to be above " + val);
-  _$jscoverage['assertion.js'][519]++;
+  _$jscoverage['assertion.js'][521]++;
   return this;
 });
-_$jscoverage['assertion.js'][535]++;
+_$jscoverage['assertion.js'][537]++;
 Assertion.prototype.within = (function (start, finish) {
-  _$jscoverage['assertion.js'][536]++;
-  var range = start + ".." + finish;
   _$jscoverage['assertion.js'][538]++;
+  var range = start + ".." + finish;
+  _$jscoverage['assertion.js'][540]++;
   this.assert(this.obj >= start && this.obj <= finish, "expected " + this.inspect + " to be within " + range, "expected " + this.inspect + " to not be within " + range);
-  _$jscoverage['assertion.js'][543]++;
+  _$jscoverage['assertion.js'][545]++;
   return this;
 });
-_$jscoverage['assertion.js'][558]++;
+_$jscoverage['assertion.js'][560]++;
 Assertion.prototype.a = (function (type) {
-  _$jscoverage['assertion.js'][559]++;
-  var klass = type.charAt(0).toUpperCase() + type.slice(1);
   _$jscoverage['assertion.js'][561]++;
+  var klass = type.charAt(0).toUpperCase() + type.slice(1);
+  _$jscoverage['assertion.js'][563]++;
   this.assert("[object " + klass + "]" === toString.call(this.obj), "expected " + this.inspect + " to be a " + type, "expected " + this.inspect + " not to be a " + type, "[object " + klass + "]", toString.call(this.obj));
-  _$jscoverage['assertion.js'][569]++;
+  _$jscoverage['assertion.js'][571]++;
   return this;
 });
-_$jscoverage['assertion.js'][588]++;
+_$jscoverage['assertion.js'][590]++;
 Assertion.prototype["instanceof"] = (function (constructor) {
-  _$jscoverage['assertion.js'][589]++;
+  _$jscoverage['assertion.js'][591]++;
   var name = constructor.name;
-  _$jscoverage['assertion.js'][590]++;
+  _$jscoverage['assertion.js'][592]++;
   this.assert(this.obj instanceof constructor, "expected " + this.inspect + " to be an instance of " + name, "expected " + this.inspect + " to not be an instance of " + name);
-  _$jscoverage['assertion.js'][595]++;
+  _$jscoverage['assertion.js'][597]++;
   return this;
 });
-_$jscoverage['assertion.js'][615]++;
+_$jscoverage['assertion.js'][617]++;
 Assertion.prototype.property = (function (name, val) {
-  _$jscoverage['assertion.js'][616]++;
+  _$jscoverage['assertion.js'][618]++;
   if (this.negate && undefined !== val) {
-    _$jscoverage['assertion.js'][617]++;
+    _$jscoverage['assertion.js'][619]++;
     if (undefined === this.obj[name]) {
-      _$jscoverage['assertion.js'][618]++;
+      _$jscoverage['assertion.js'][620]++;
       throw new Error(this.inspect + " has no property " + inspect(name));
     }
   }
   else {
-    _$jscoverage['assertion.js'][621]++;
+    _$jscoverage['assertion.js'][623]++;
     this.assert(undefined !== this.obj[name], "expected " + this.inspect + " to have a property " + inspect(name), "expected " + this.inspect + " to not have property " + inspect(name));
   }
-  _$jscoverage['assertion.js'][627]++;
+  _$jscoverage['assertion.js'][629]++;
   if (undefined !== val) {
-    _$jscoverage['assertion.js'][628]++;
+    _$jscoverage['assertion.js'][630]++;
     this.assert(val === this.obj[name], "expected " + this.inspect + " to have a property " + inspect(name) + " of " + inspect(val) + ", but got " + inspect(this.obj[name]), "expected " + this.inspect + " to not have a property " + inspect(name) + " of " + inspect(val), val, this.obj[val]);
   }
-  _$jscoverage['assertion.js'][638]++;
+  _$jscoverage['assertion.js'][640]++;
   this.obj = this.obj[name];
-  _$jscoverage['assertion.js'][639]++;
+  _$jscoverage['assertion.js'][641]++;
   return this;
 });
-_$jscoverage['assertion.js'][655]++;
+_$jscoverage['assertion.js'][657]++;
 Assertion.prototype.ownProperty = (function (name) {
-  _$jscoverage['assertion.js'][656]++;
+  _$jscoverage['assertion.js'][658]++;
   this.assert(this.obj.hasOwnProperty(name), "expected " + this.inspect + " to have own property " + inspect(name), "expected " + this.inspect + " to not have own property " + inspect(name));
-  _$jscoverage['assertion.js'][660]++;
+  _$jscoverage['assertion.js'][662]++;
   return this;
 });
-_$jscoverage['assertion.js'][677]++;
+_$jscoverage['assertion.js'][679]++;
 Assertion.prototype.length = (function (n) {
-  _$jscoverage['assertion.js'][678]++;
+  _$jscoverage['assertion.js'][680]++;
   new Assertion(this.obj).to.have.property("length");
-  _$jscoverage['assertion.js'][679]++;
-  var len = this.obj.length;
   _$jscoverage['assertion.js'][681]++;
+  var len = this.obj.length;
+  _$jscoverage['assertion.js'][683]++;
   this.assert(len == n, "expected " + this.inspect + " to have a length of " + n + " but got " + len, "expected " + this.inspect + " to not have a length of " + len, n, len);
-  _$jscoverage['assertion.js'][689]++;
+  _$jscoverage['assertion.js'][691]++;
   return this;
 });
-_$jscoverage['assertion.js'][704]++;
+_$jscoverage['assertion.js'][706]++;
 Assertion.prototype.match = (function (re) {
-  _$jscoverage['assertion.js'][705]++;
+  _$jscoverage['assertion.js'][707]++;
   this.assert(re.exec(this.obj), "expected " + this.inspect + " to match " + re, "expected " + this.inspect + " not to match " + re);
-  _$jscoverage['assertion.js'][710]++;
+  _$jscoverage['assertion.js'][712]++;
   return this;
 });
-_$jscoverage['assertion.js'][725]++;
+_$jscoverage['assertion.js'][727]++;
 Assertion.prototype.include = (function (obj) {
-  _$jscoverage['assertion.js'][726]++;
+  _$jscoverage['assertion.js'][728]++;
   this.assert(~ this.obj.indexOf(obj), "expected " + this.inspect + " to include " + inspect(obj), "expected " + this.inspect + " to not include " + inspect(obj));
-  _$jscoverage['assertion.js'][731]++;
+  _$jscoverage['assertion.js'][733]++;
   return this;
 });
-_$jscoverage['assertion.js'][746]++;
+_$jscoverage['assertion.js'][748]++;
 Assertion.prototype.string = (function (str) {
-  _$jscoverage['assertion.js'][747]++;
-  new Assertion(this.obj).is.a("string");
   _$jscoverage['assertion.js'][749]++;
+  new Assertion(this.obj).is.a("string");
+  _$jscoverage['assertion.js'][751]++;
   this.assert(~ this.obj.indexOf(str), "expected " + this.inspect + " to contain " + inspect(str), "expected " + this.inspect + " to not contain " + inspect(str));
-  _$jscoverage['assertion.js'][754]++;
+  _$jscoverage['assertion.js'][756]++;
   return this;
 });
-_$jscoverage['assertion.js'][768]++;
+_$jscoverage['assertion.js'][770]++;
 Object.defineProperty(Assertion.prototype, "contain", {get: (function () {
-  _$jscoverage['assertion.js'][770]++;
+  _$jscoverage['assertion.js'][772]++;
   this.contains = true;
-  _$jscoverage['assertion.js'][771]++;
+  _$jscoverage['assertion.js'][773]++;
   return this;
 }), configurable: true});
-_$jscoverage['assertion.js'][790]++;
+_$jscoverage['assertion.js'][792]++;
 Assertion.prototype.keys = (function (keys) {
-  _$jscoverage['assertion.js'][791]++;
+  _$jscoverage['assertion.js'][793]++;
   var str, ok = true;
-  _$jscoverage['assertion.js'][794]++;
+  _$jscoverage['assertion.js'][796]++;
   keys = keys instanceof Array? keys: Array.prototype.slice.call(arguments);
-  _$jscoverage['assertion.js'][798]++;
+  _$jscoverage['assertion.js'][800]++;
   if (! keys.length) {
-    _$jscoverage['assertion.js'][798]++;
+    _$jscoverage['assertion.js'][800]++;
     throw new Error("keys required");
   }
-  _$jscoverage['assertion.js'][800]++;
+  _$jscoverage['assertion.js'][802]++;
   var actual = Object.keys(this.obj), len = keys.length;
-  _$jscoverage['assertion.js'][804]++;
+  _$jscoverage['assertion.js'][806]++;
   ok = keys.every((function (key) {
-  _$jscoverage['assertion.js'][805]++;
+  _$jscoverage['assertion.js'][807]++;
   return ~ actual.indexOf(key);
 }));
-  _$jscoverage['assertion.js'][809]++;
+  _$jscoverage['assertion.js'][811]++;
   if (! this.negate && ! this.contains) {
-    _$jscoverage['assertion.js'][810]++;
+    _$jscoverage['assertion.js'][812]++;
     ok = ok && keys.length == actual.length;
   }
-  _$jscoverage['assertion.js'][814]++;
-  if (len > 1) {
-    _$jscoverage['assertion.js'][815]++;
-    keys = keys.map((function (key) {
   _$jscoverage['assertion.js'][816]++;
+  if (len > 1) {
+    _$jscoverage['assertion.js'][817]++;
+    keys = keys.map((function (key) {
+  _$jscoverage['assertion.js'][818]++;
   return inspect(key);
 }));
-    _$jscoverage['assertion.js'][818]++;
+    _$jscoverage['assertion.js'][820]++;
     var last = keys.pop();
-    _$jscoverage['assertion.js'][819]++;
+    _$jscoverage['assertion.js'][821]++;
     str = keys.join(", ") + ", and " + last;
   }
   else {
-    _$jscoverage['assertion.js'][821]++;
+    _$jscoverage['assertion.js'][823]++;
     str = inspect(keys[0]);
   }
-  _$jscoverage['assertion.js'][825]++;
+  _$jscoverage['assertion.js'][827]++;
   str = (len > 1? "keys ": "key ") + str;
-  _$jscoverage['assertion.js'][828]++;
+  _$jscoverage['assertion.js'][830]++;
   str = (this.contains? "contain ": "have ") + str;
-  _$jscoverage['assertion.js'][831]++;
+  _$jscoverage['assertion.js'][833]++;
   this.assert(ok, "expected " + this.inspect + " to " + str, "expected " + this.inspect + " to not " + str, keys, Object.keys(this.obj));
-  _$jscoverage['assertion.js'][839]++;
+  _$jscoverage['assertion.js'][841]++;
   return this;
 });
-_$jscoverage['assertion.js'][869]++;
+_$jscoverage['assertion.js'][871]++;
 Assertion.prototype["throw"] = (function (constructor, msg) {
-  _$jscoverage['assertion.js'][870]++;
-  new Assertion(this.obj).is.a("function");
   _$jscoverage['assertion.js'][872]++;
-  var thrown = false;
+  new Assertion(this.obj).is.a("function");
   _$jscoverage['assertion.js'][874]++;
+  var thrown = false;
+  _$jscoverage['assertion.js'][876]++;
   if (arguments.length === 0) {
-    _$jscoverage['assertion.js'][875]++;
+    _$jscoverage['assertion.js'][877]++;
     msg = null;
-    _$jscoverage['assertion.js'][876]++;
+    _$jscoverage['assertion.js'][878]++;
     constructor = null;
   }
   else {
-    _$jscoverage['assertion.js'][877]++;
+    _$jscoverage['assertion.js'][879]++;
     if (constructor && (constructor instanceof RegExp || "string" === typeof constructor)) {
-      _$jscoverage['assertion.js'][878]++;
+      _$jscoverage['assertion.js'][880]++;
       msg = constructor;
-      _$jscoverage['assertion.js'][879]++;
+      _$jscoverage['assertion.js'][881]++;
       constructor = null;
     }
   }
-  _$jscoverage['assertion.js'][882]++;
+  _$jscoverage['assertion.js'][884]++;
   try {
-    _$jscoverage['assertion.js'][883]++;
+    _$jscoverage['assertion.js'][885]++;
     this.obj();
   }
   catch (err) {
-    _$jscoverage['assertion.js'][886]++;
+    _$jscoverage['assertion.js'][888]++;
     if (constructor && "function" === typeof constructor) {
-      _$jscoverage['assertion.js'][887]++;
+      _$jscoverage['assertion.js'][889]++;
       this.assert(err instanceof constructor && err.name == constructor.name, "expected " + this.inspect + " to throw " + constructor.name + " but a " + err.name + " was thrown", "expected " + this.inspect + " to not throw " + constructor.name);
-      _$jscoverage['assertion.js'][891]++;
+      _$jscoverage['assertion.js'][893]++;
       if (! msg) {
-        _$jscoverage['assertion.js'][891]++;
+        _$jscoverage['assertion.js'][893]++;
         return this;
       }
     }
-    _$jscoverage['assertion.js'][894]++;
+    _$jscoverage['assertion.js'][896]++;
     if (err.message && msg && msg instanceof RegExp) {
-      _$jscoverage['assertion.js'][895]++;
+      _$jscoverage['assertion.js'][897]++;
       this.assert(msg.exec(err.message), "expected " + this.inspect + " to throw error matching " + msg + " but got " + inspect(err.message), "expected " + this.inspect + " to throw error not matching " + msg);
-      _$jscoverage['assertion.js'][900]++;
+      _$jscoverage['assertion.js'][902]++;
       return this;
     }
     else {
-      _$jscoverage['assertion.js'][901]++;
+      _$jscoverage['assertion.js'][903]++;
       if (err.message && msg && "string" === typeof msg) {
-        _$jscoverage['assertion.js'][902]++;
+        _$jscoverage['assertion.js'][904]++;
         this.assert(~ err.message.indexOf(msg), "expected " + this.inspect + " to throw error including " + inspect(msg) + " but got " + inspect(err.message), "expected " + this.inspect + " to throw error not including " + inspect(msg));
-        _$jscoverage['assertion.js'][907]++;
+        _$jscoverage['assertion.js'][909]++;
         return this;
       }
       else {
-        _$jscoverage['assertion.js'][909]++;
+        _$jscoverage['assertion.js'][911]++;
         thrown = true;
       }
     }
   }
-  _$jscoverage['assertion.js'][913]++;
-  var name = (constructor? constructor.name: "an error");
   _$jscoverage['assertion.js'][915]++;
+  var name = (constructor? constructor.name: "an error");
+  _$jscoverage['assertion.js'][917]++;
   this.assert(thrown === true, "expected " + this.inspect + " to throw " + name, "expected " + this.inspect + " to not throw " + name);
-  _$jscoverage['assertion.js'][920]++;
+  _$jscoverage['assertion.js'][922]++;
   return this;
 });
-_$jscoverage['assertion.js'][936]++;
+_$jscoverage['assertion.js'][938]++;
 Assertion.prototype.respondTo = (function (method) {
-  _$jscoverage['assertion.js'][937]++;
+  _$jscoverage['assertion.js'][939]++;
   var context = ("function" === typeof this.obj)? this.obj.prototype[method]: this.obj[method];
-  _$jscoverage['assertion.js'][941]++;
+  _$jscoverage['assertion.js'][943]++;
   this.assert("function" === typeof context, "expected " + this.inspect + " to respond to " + inspect(method), "expected " + this.inspect + " to not respond to " + inspect(method), "function", typeof context);
-  _$jscoverage['assertion.js'][949]++;
+  _$jscoverage['assertion.js'][951]++;
   return this;
 });
-_$jscoverage['assertion.js'][964]++;
+_$jscoverage['assertion.js'][966]++;
 Assertion.prototype.satisfy = (function (matcher) {
-  _$jscoverage['assertion.js'][965]++;
+  _$jscoverage['assertion.js'][967]++;
   this.assert(matcher(this.obj), "expected " + this.inspect + " to satisfy " + inspect(matcher), "expected " + this.inspect + " to not satisfy" + inspect(matcher), this.negate? false: true, matcher(this.obj));
-  _$jscoverage['assertion.js'][973]++;
+  _$jscoverage['assertion.js'][975]++;
   return this;
 });
-_$jscoverage['assertion.js'][989]++;
+_$jscoverage['assertion.js'][991]++;
 Assertion.prototype.closeTo = (function (expected, delta) {
-  _$jscoverage['assertion.js'][990]++;
+  _$jscoverage['assertion.js'][992]++;
   this.assert((this.obj - delta === expected) || (this.obj + delta === expected), "expected " + this.inspect + " to be close to " + expected + " +/- " + delta, "expected " + this.inspect + " not to be close to " + expected + " +/- " + delta);
-  _$jscoverage['assertion.js'][995]++;
+  _$jscoverage['assertion.js'][997]++;
   return this;
 });
-_$jscoverage['assertion.js'][1002]++;
+_$jscoverage['assertion.js'][1004]++;
 (function alias(name, as) {
-  _$jscoverage['assertion.js'][1003]++;
+  _$jscoverage['assertion.js'][1005]++;
   Assertion.prototype[as] = Assertion.prototype[name];
-  _$jscoverage['assertion.js'][1004]++;
+  _$jscoverage['assertion.js'][1006]++;
   return alias;
 })("length", "lengthOf")("keys", "key")("ownProperty", "haveOwnProperty")("above", "greaterThan")("below", "lessThan")("throw", "throws")("throw", "Throw")("instanceof", "instanceOf");
-_$jscoverage['assertion.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," *"," * Primarily a refactor of: should.js"," * https://github.com/visionmedia/should.js"," * Copyright(c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;"," * MIT Licensed"," */","","/**"," * ### BDD Style Introduction"," *"," * The BDD style is exposed through `expect` or `should` interfaces. In both"," * scenarios, you chain together natural language assertions."," *"," *      // expect"," *      var expect = require('chai').expect;"," *      expect(foo).to.equal('bar');"," *"," *      // should"," *      var should = require('chai').should();"," *      foo.should.equal('bar');"," *"," * #### Differences"," *"," * The `expect` interface provides a function as a starting point for chaining"," * your language assertions. It works on node.js and in all browsers."," *"," * The `should` interface extends `Object.prototype` to provide a single getter as"," * the starting point for your language assertions. It works on node.js and in"," * all browsers except Internet Explorer."," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","/*!"," * Module dependencies."," */","","var AssertionError = require('./error')","  , eql = require('./utils/eql')","  , toString = Object.prototype.toString","  , inspect = require('./utils/inspect');","","/*!"," * Module export."," */","","module.exports = Assertion;","","","/*!"," * # Assertion Constructor"," *"," * Creates object for chaining."," *"," * @api private"," */","","function Assertion (obj, msg, stack) {","  this.ssfi = stack || arguments.callee;","  this.obj = obj;","  this.msg = msg;","}","","/*!","  * ## Assertion.includeStack","  * , toString = Object.prototype.toString","  *","  * User configurable property, influences whether stack trace","  * is included in Assertion error message. Default of false","  * suppresses stack trace in the error message","  *","  *     Assertion.includeStack = true;  // enable stack on error","  *","  * @api public","  */","","Assertion.includeStack = false;","","/*!"," * # .assert(expression, message, negateMessage)"," *"," * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass."," *"," * @name assert"," * @param {Philosophical} expression to be tested"," * @param {String} message to display if fails"," * @param {String} negatedMessage to display if negated expression fails"," * @api private"," */","","Assertion.prototype.assert = function (expr, msg, negateMsg, expected, actual) {","  actual = actual || this.obj;","  var msg = (this.negate ? negateMsg : msg)","    , ok = this.negate ? !expr : expr;","","  if (!ok) {","    throw new AssertionError({","        message: this.msg ? this.msg + ': ' + msg : msg // include custom message if available","      , actual: actual","      , expected: expected","      , stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi","    });","  }","};","","/*!"," * # inspect"," *"," * Returns the current object stringified."," *"," * @name inspect"," * @api private"," */","","Object.defineProperty(Assertion.prototype, 'inspect',","  { get: function () {","      return inspect(this.obj);","    }","  , configurable: true","});","","/**"," * # to"," *"," * Language chain."," *"," * @name to"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'to',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # be"," *"," * Language chain."," *"," * @name be"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'be',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # been"," *"," * Language chain. Also tests `tense` to past for addon"," * modules that use the tense feature."," *"," * @name been"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'been',","  { get: function () {","      this.tense = 'past';","      return this;","    }","  , configurable: true","});","","/**"," * # an"," *"," * Language chain."," *"," * @name an"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'an',","  { get: function () {","      return this;","    }","  , configurable: true","});","/**"," * # is"," *"," * Language chain."," *"," * @name is"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'is',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # and"," *"," * Language chain."," *"," * @name and"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'and',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # have"," *"," * Language chain."," *"," * @name have"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'have',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # with"," *"," * Language chain."," *"," * @name with"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'with',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # .not"," *"," * Negates any of assertions following in the chain."," *"," * @name not"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'not',","  { get: function () {","      this.negate = true;","      return this;","    }","  , configurable: true","});","","/**"," * # .ok"," *"," * Assert object truthiness."," *"," *      expect('everthing').to.be.ok;"," *      expect(false).to.not.be.ok;"," *      expect(undefined).to.not.be.ok;"," *      expect(null).to.not.be.ok;"," *"," * @name ok"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'ok',","  { get: function () {","      this.assert(","          this.obj","        , 'expected ' + this.inspect + ' to be truthy'","        , 'expected ' + this.inspect + ' to be falsy');","","      return this;","    }","  , configurable: true","});","","/**"," * # .true"," *"," * Assert object is true"," *"," * @name true"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'true',","  { get: function () {","      this.assert(","          true === this.obj","        , 'expected ' + this.inspect + ' to be true'","        , 'expected ' + this.inspect + ' to be false'","        , this.negate ? false : true","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .false"," *"," * Assert object is false"," *"," * @name false"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'false',","  { get: function () {","      this.assert(","          false === this.obj","        , 'expected ' + this.inspect + ' to be false'","        , 'expected ' + this.inspect + ' to be true'","        , this.negate ? true : false","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .exist"," *"," * Assert object exists (null)."," *"," *      var foo = 'hi'"," *        , bar;"," *      expect(foo).to.exist;"," *      expect(bar).to.not.exist;"," *"," * @name exist"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'exist',","  { get: function () {","      this.assert(","          null != this.obj","        , 'expected ' + this.inspect + ' to exist'","        , 'expected ' + this.inspect + ' to not exist'","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .empty"," *"," * Assert object's length to be 0."," *"," *      expect([]).to.be.empty;"," *"," * @name empty"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'empty',","  { get: function () {","      var expected = this.obj;","","      if (Array.isArray(this.obj)) {","        expected = this.obj.length;","      } else if (typeof this.obj === 'object') {","        expected = Object.keys(this.obj).length;","      }","","      this.assert(","          !expected","        , 'expected ' + this.inspect + ' to be empty'","        , 'expected ' + this.inspect + ' not to be empty');","","      return this;","    }","  , configurable: true","});","","/**"," * # .arguments"," *"," * Assert object is an instanceof arguments."," *"," *      function test () {"," *        expect(arguments).to.be.arguments;"," *      }"," *"," * @name arguments"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'arguments',","  { get: function () {","      this.assert(","          '[object Arguments]' == Object.prototype.toString.call(this.obj)","        , 'expected ' + this.inspect + ' to be arguments'","        , 'expected ' + this.inspect + ' to not be arguments'","        , '[object Arguments]'","        , Object.prototype.toString.call(this.obj)","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .equal(value)"," *"," * Assert strict equality."," *"," *      expect('hello').to.equal('hello');"," *"," * @name equal"," * @param {*} value"," * @api public"," */","","Assertion.prototype.equal = function (val) {","  this.assert(","      val === this.obj","    , 'expected ' + this.inspect + ' to equal ' + inspect(val)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(val)","    , val );","","  return this;","};","","/**"," * # .eql(value)"," *"," * Assert deep equality."," *"," *      expect({ foo: 'bar' }).to.eql({ foo: 'bar' });"," *"," * @name eql"," * @param {*} value"," * @api public"," */","","Assertion.prototype.eql = function (obj) {","  this.assert(","      eql(obj, this.obj)","    , 'expected ' + this.inspect + ' to equal ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj)","    , obj );","","  return this;","};","","/**"," * # .above(value)"," *"," * Assert greater than `value`."," *"," *      expect(10).to.be.above(5);"," *"," * @name above"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.above = function (val) {","  this.assert(","      this.obj &gt; val","    , 'expected ' + this.inspect + ' to be above ' + val","    , 'expected ' + this.inspect + ' to be below ' + val);","","  return this;","};","","/**"," * # .below(value)"," *"," * Assert less than `value`."," *"," *      expect(5).to.be.below(10);"," *"," * @name below"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.below = function (val) {","  this.assert(","      this.obj &lt; val","    , 'expected ' + this.inspect + ' to be below ' + val","    , 'expected ' + this.inspect + ' to be above ' + val);","","  return this;","};","","/**"," * # .within(start, finish)"," *"," * Assert that a number is within a range."," *"," *      expect(7).to.be.within(5,10);"," *"," * @name within"," * @param {Number} start lowerbound inclusive"," * @param {Number} finish upperbound inclusive"," * @api public"," */","","Assertion.prototype.within = function (start, finish) {","  var range = start + '..' + finish;","","  this.assert(","      this.obj &gt;= start &amp;&amp; this.obj &lt;= finish","    , 'expected ' + this.inspect + ' to be within ' + range","    , 'expected ' + this.inspect + ' to not be within ' + range);","","  return this;","};","","/**"," * # .a(type)"," *"," * Assert typeof."," *"," *      expect('test').to.be.a('string');"," *"," * @name a"," * @param {String} type"," * @api public"," */","","Assertion.prototype.a = function (type) {","  var klass = type.charAt(0).toUpperCase() + type.slice(1);","","  this.assert(","      '[object ' + klass + ']' === toString.call(this.obj)","    , 'expected ' + this.inspect + ' to be a ' + type","    , 'expected ' + this.inspect + ' not to be a ' + type","    , '[object ' + klass + ']'","    , toString.call(this.obj)","  );","","  return this;","};","","/**"," * # .instanceof(constructor)"," *"," * Assert instanceof."," *"," *      var Tea = function (name) { this.name = name; }"," *        , Chai = new Tea('chai');"," *"," *      expect(Chai).to.be.an.instanceOf(Tea);"," *"," * @name instanceof"," * @param {Constructor}"," * @alias instanceOf"," * @api public"," */","","Assertion.prototype.instanceof = function (constructor) {","  var name = constructor.name;","  this.assert(","      this.obj instanceof constructor","    , 'expected ' + this.inspect + ' to be an instance of ' + name","    , 'expected ' + this.inspect + ' to not be an instance of ' + name);","","  return this;","};","","/**"," * # .property(name, [value])"," *"," * Assert that property of `name` exists, optionally with `value`."," *"," *      var obj = { foo: 'bar' }"," *      expect(obj).to.have.property('foo');"," *      expect(obj).to.have.property('foo', 'bar');"," *      expect(obj).to.have.property('foo').to.be.a('string');"," *"," * @name property"," * @param {String} name"," * @param {*} value (optional)"," * @returns value of property for chaining"," * @api public"," */","","Assertion.prototype.property = function (name, val) {","  if (this.negate &amp;&amp; undefined !== val) {","    if (undefined === this.obj[name]) {","      throw new Error(this.inspect + ' has no property ' + inspect(name));","    }","  } else {","    this.assert(","        undefined !== this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name)","      , 'expected ' + this.inspect + ' to not have property ' + inspect(name));","  }","","  if (undefined !== val) {","    this.assert(","        val === this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +","          inspect(val) + ', but got ' + inspect(this.obj[name])","      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val)","      , val","      , this.obj[val]","    );","  }","","  this.obj = this.obj[name];","  return this;","};","","/**"," * # .ownProperty(name)"," *"," * Assert that has own property by `name`."," *"," *      expect('test').to.have.ownProperty('length');"," *"," * @name ownProperty"," * @alias haveOwnProperty"," * @param {String} name"," * @api public"," */","","Assertion.prototype.ownProperty = function (name) {","  this.assert(","      this.obj.hasOwnProperty(name)","    , 'expected ' + this.inspect + ' to have own property ' + inspect(name)","    , 'expected ' + this.inspect + ' to not have own property ' + inspect(name));","  return this;","};","","/**"," * # .length(val)"," *"," * Assert that object has expected length."," *"," *      expect([1,2,3]).to.have.length(3);"," *      expect('foobar').to.have.length(6);"," *"," * @name length"," * @alias lengthOf"," * @param {Number} length"," * @api public"," */","","Assertion.prototype.length = function (n) {","  new Assertion(this.obj).to.have.property('length');","  var len = this.obj.length;","","  this.assert(","      len == n","    , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len","    , 'expected ' + this.inspect + ' to not have a length of ' + len","    , n","    , len","  );","","  return this;","};","","/**"," * # .match(regexp)"," *"," * Assert that matches regular expression."," *"," *      expect('foobar').to.match(/^foo/);"," *"," * @name match"," * @param {RegExp} RegularExpression"," * @api public"," */","","Assertion.prototype.match = function (re) {","  this.assert(","      re.exec(this.obj)","    , 'expected ' + this.inspect + ' to match ' + re","    , 'expected ' + this.inspect + ' not to match ' + re);","","  return this;","};","","/**"," * # .include(obj)"," *"," * Assert the inclusion of an object in an Array or substring in string."," *"," *      expect([1,2,3]).to.include(2);"," *"," * @name include"," * @param {Object|String|Number} obj"," * @api public"," */","","Assertion.prototype.include = function (obj) {","  this.assert(","      ~this.obj.indexOf(obj)","    , 'expected ' + this.inspect + ' to include ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not include ' + inspect(obj));","","  return this;","};","","/**"," * # .string(string)"," *"," * Assert inclusion of string in string."," *"," *      expect('foobar').to.have.string('bar');"," *"," * @name string"," * @param {String} string"," * @api public"," */","","Assertion.prototype.string = function (str) {","  new Assertion(this.obj).is.a('string');","","  this.assert(","      ~this.obj.indexOf(str)","    , 'expected ' + this.inspect + ' to contain ' + inspect(str)","    , 'expected ' + this.inspect + ' to not contain ' + inspect(str));","","  return this;","};","","","","/**"," * # contain"," *"," * Toggles the `contain` flag for the `keys` assertion."," *"," * @name contain"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'contain',","  { get: function () {","      this.contains = true;","      return this;","    },","    configurable: true","});","","/**"," * # .keys(key1, [key2], [...])"," *"," * Assert exact keys or the inclusing of keys using the `contain` modifier."," *"," *      expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);"," *      expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');"," *"," * @name keys"," * @alias key"," * @param {String|Array} Keys"," * @api public"," */","","Assertion.prototype.keys = function(keys) {","  var str","    , ok = true;","","  keys = keys instanceof Array","    ? keys","    : Array.prototype.slice.call(arguments);","","  if (!keys.length) throw new Error('keys required');","","  var actual = Object.keys(this.obj)","    , len = keys.length;","","  // Inclusion","  ok = keys.every(function(key){","    return ~actual.indexOf(key);","  });","","  // Strict","  if (!this.negate &amp;&amp; !this.contains) {","    ok = ok &amp;&amp; keys.length == actual.length;","  }","","  // Key string","  if (len &gt; 1) {","    keys = keys.map(function(key){","      return inspect(key);","    });","    var last = keys.pop();","    str = keys.join(', ') + ', and ' + last;","  } else {","    str = inspect(keys[0]);","  }","","  // Form","  str = (len &gt; 1 ? 'keys ' : 'key ') + str;","","  // Have / include","  str = (this.contains ? 'contain ' : 'have ') + str;","","  // Assertion","  this.assert(","      ok","    , 'expected ' + this.inspect + ' to ' + str","    , 'expected ' + this.inspect + ' to not ' + str","    , keys","    , Object.keys(this.obj)","  );","","  return this;","}","","/**"," * # .throw(constructor)"," *"," * Assert that a function will throw a specific type of error or that error"," * thrown will match a RegExp or include a string."," *"," *      var fn = function () { throw new ReferenceError('This is a bad function.'); }"," *      expect(fn).to.throw(ReferenceError);"," *      expect(fn).to.throw(/bad function/);"," *      expect(fn).to.not.throw('good function');"," *      expect(fn).to.throw(ReferenceError, /bad function/);"," *"," * Please note that when a throw expectation is negated, it will check each"," * parameter independently, starting with Error constructor type. The appropriate way"," * to check for the existence of a type of error but for a message that does not match"," * is to use `and`."," *"," *      expect(fn).to.throw(ReferenceError).and.not.throw(/good function/);"," *"," * @name throw"," * @alias throws"," * @alias Throw"," * @param {ErrorConstructor} constructor"," * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types"," * @api public"," */","","Assertion.prototype.throw = function (constructor, msg) {","  new Assertion(this.obj).is.a('function');","","  var thrown = false;","","  if (arguments.length === 0) {","    msg = null;","    constructor = null;","  } else if (constructor &amp;&amp; (constructor instanceof RegExp || 'string' === typeof constructor)) {","    msg = constructor;","    constructor = null;","  }","","  try {","    this.obj();","  } catch (err) {","    // first, check constructor","    if (constructor &amp;&amp; 'function' === typeof constructor) {","      this.assert(","          err instanceof constructor &amp;&amp; err.name == constructor.name","        , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'","        , 'expected ' + this.inspect + ' to not throw ' + constructor.name );","      if (!msg) return this;","    }","    // next, check message","    if (err.message &amp;&amp; msg &amp;&amp; msg instanceof RegExp) {","      this.assert(","          msg.exec(err.message)","        , 'expected ' + this.inspect + ' to throw error matching ' + msg + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not matching ' + msg","      );","      return this;","    } else if (err.message &amp;&amp; msg &amp;&amp; 'string' === typeof msg) {","      this.assert(","          ~err.message.indexOf(msg)","        , 'expected ' + this.inspect + ' to throw error including ' + inspect(msg) + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not including ' + inspect(msg)","      );","      return this;","    } else {","      thrown = true;","    }","  }","","  var name = (constructor ? constructor.name : 'an error');","","  this.assert(","      thrown === true","    , 'expected ' + this.inspect + ' to throw ' + name","    , 'expected ' + this.inspect + ' to not throw ' + name);","","  return this;","};","","/**"," * # .respondTo(method)"," *"," * Assert that object/class will respond to a method."," *"," *      expect(Klass).to.respondTo('bar');"," *      expect(obj).to.respondTo('bar');"," *"," * @name respondTo"," * @param {String} method"," * @api public"," */","","Assertion.prototype.respondTo = function (method) {","  var context = ('function' === typeof this.obj)","    ? this.obj.prototype[method]","    : this.obj[method];","","  this.assert(","      'function' === typeof context","    , 'expected ' + this.inspect + ' to respond to ' + inspect(method)","    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method)","    , 'function'","    , typeof context","  );","","  return this;","};","","/**"," * # .satisfy(method)"," *"," * Assert that passes a truth test."," *"," *      expect(1).to.satisfy(function(num) { return num &gt; 0; });"," *"," * @name satisfy"," * @param {Function} matcher"," * @api public"," */","","Assertion.prototype.satisfy = function (matcher) {","  this.assert(","      matcher(this.obj)","    , 'expected ' + this.inspect + ' to satisfy ' + inspect(matcher)","    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher)","    , this.negate ? false : true","    , matcher(this.obj)","  );","","  return this;","};","","/**"," * # .closeTo(expected, delta)"," *"," * Assert that actual is equal to +/- delta."," *"," *      expect(1.5).to.be.closeTo(1, 0.5);"," *"," * @name closeTo"," * @param {Number} expected"," * @param {Number} delta"," * @api public"," */","","Assertion.prototype.closeTo = function (expected, delta) {","  this.assert(","      (this.obj - delta === expected) || (this.obj + delta === expected)","    , 'expected ' + this.inspect + ' to be close to ' + expected + ' +/- ' + delta","    , 'expected ' + this.inspect + ' not to be close to ' + expected + ' +/- ' + delta);","","  return this;","};","","/*!"," * Aliases."," */","","(function alias(name, as){","  Assertion.prototype[as] = Assertion.prototype[name];","  return alias;","})","('length', 'lengthOf')","('keys', 'key')","('ownProperty', 'haveOwnProperty')","('above', 'greaterThan')","('below', 'lessThan')","('throw', 'throws')","('throw', 'Throw') // for troublesome browsers","('instanceof', 'instanceOf');"];
+_$jscoverage['assertion.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," *"," * Primarily a refactor of: should.js"," * https://github.com/visionmedia/should.js"," * Copyright(c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;"," * MIT Licensed"," */","","/**"," * ### BDD Style Introduction"," *"," * The BDD style is exposed through `expect` or `should` interfaces. In both"," * scenarios, you chain together natural language assertions."," *"," *      // expect"," *      var expect = require('chai').expect;"," *      expect(foo).to.equal('bar');"," *"," *      // should"," *      var should = require('chai').should();"," *      foo.should.equal('bar');"," *"," * #### Differences"," *"," * The `expect` interface provides a function as a starting point for chaining"," * your language assertions. It works on node.js and in all browsers."," *"," * The `should` interface extends `Object.prototype` to provide a single getter as"," * the starting point for your language assertions. It works on node.js and in"," * all browsers except Internet Explorer."," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","/*!"," * Module dependencies."," */","","var AssertionError = require('./error')","  , eql = require('./utils/eql')","  , toString = Object.prototype.toString","  , inspect = require('./utils/inspect');","","/*!"," * Module export."," */","","module.exports = Assertion;","","","/*!"," * # Assertion Constructor"," *"," * Creates object for chaining."," *"," * @api private"," */","","function Assertion (obj, msg, stack) {","  this.ssfi = stack || arguments.callee;","  this.obj = obj;","  this.msg = msg;","}","","/*!","  * ## Assertion.includeStack","  * , toString = Object.prototype.toString","  *","  * User configurable property, influences whether stack trace","  * is included in Assertion error message. Default of false","  * suppresses stack trace in the error message","  *","  *     Assertion.includeStack = true;  // enable stack on error","  *","  * @api public","  */","","Assertion.includeStack = false;","","/*!"," * # .assert(expression, message, negateMessage, expected, actual)"," *"," * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass."," *"," * @name assert"," * @param {Philosophical} expression to be tested"," * @param {String} message to display if fails"," * @param {String} negatedMessage to display if negated expression fails"," * @param {*} expected value (remember to check for negation)"," * @param {*} actual (optional) will default to `this.obj`"," * @api private"," */","","Assertion.prototype.assert = function (expr, msg, negateMsg, expected, actual) {","  actual = actual || this.obj;","  var msg = (this.negate ? negateMsg : msg)","    , ok = this.negate ? !expr : expr;","","  if (!ok) {","    throw new AssertionError({","        message: this.msg ? this.msg + ': ' + msg : msg // include custom message if available","      , actual: actual","      , expected: expected","      , stackStartFunction: (Assertion.includeStack) ? this.assert : this.ssfi","    });","  }","};","","/*!"," * # inspect"," *"," * Returns the current object stringified."," *"," * @name inspect"," * @api private"," */","","Object.defineProperty(Assertion.prototype, 'inspect',","  { get: function () {","      return inspect(this.obj);","    }","  , configurable: true","});","","/**"," * # to"," *"," * Language chain."," *"," * @name to"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'to',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # be"," *"," * Language chain."," *"," * @name be"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'be',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # been"," *"," * Language chain. Also tests `tense` to past for addon"," * modules that use the tense feature."," *"," * @name been"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'been',","  { get: function () {","      this.tense = 'past';","      return this;","    }","  , configurable: true","});","","/**"," * # an"," *"," * Language chain."," *"," * @name an"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'an',","  { get: function () {","      return this;","    }","  , configurable: true","});","/**"," * # is"," *"," * Language chain."," *"," * @name is"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'is',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # and"," *"," * Language chain."," *"," * @name and"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'and',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # have"," *"," * Language chain."," *"," * @name have"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'have',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # with"," *"," * Language chain."," *"," * @name with"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'with',","  { get: function () {","      return this;","    }","  , configurable: true","});","","/**"," * # .not"," *"," * Negates any of assertions following in the chain."," *"," * @name not"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'not',","  { get: function () {","      this.negate = true;","      return this;","    }","  , configurable: true","});","","/**"," * # .ok"," *"," * Assert object truthiness."," *"," *      expect('everthing').to.be.ok;"," *      expect(false).to.not.be.ok;"," *      expect(undefined).to.not.be.ok;"," *      expect(null).to.not.be.ok;"," *"," * @name ok"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'ok',","  { get: function () {","      this.assert(","          this.obj","        , 'expected ' + this.inspect + ' to be truthy'","        , 'expected ' + this.inspect + ' to be falsy');","","      return this;","    }","  , configurable: true","});","","/**"," * # .true"," *"," * Assert object is true"," *"," * @name true"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'true',","  { get: function () {","      this.assert(","          true === this.obj","        , 'expected ' + this.inspect + ' to be true'","        , 'expected ' + this.inspect + ' to be false'","        , this.negate ? false : true","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .false"," *"," * Assert object is false"," *"," * @name false"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'false',","  { get: function () {","      this.assert(","          false === this.obj","        , 'expected ' + this.inspect + ' to be false'","        , 'expected ' + this.inspect + ' to be true'","        , this.negate ? true : false","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .exist"," *"," * Assert object exists (null)."," *"," *      var foo = 'hi'"," *        , bar;"," *      expect(foo).to.exist;"," *      expect(bar).to.not.exist;"," *"," * @name exist"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'exist',","  { get: function () {","      this.assert(","          null != this.obj","        , 'expected ' + this.inspect + ' to exist'","        , 'expected ' + this.inspect + ' to not exist'","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .empty"," *"," * Assert object's length to be 0."," *"," *      expect([]).to.be.empty;"," *"," * @name empty"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'empty',","  { get: function () {","      var expected = this.obj;","","      if (Array.isArray(this.obj)) {","        expected = this.obj.length;","      } else if (typeof this.obj === 'object') {","        expected = Object.keys(this.obj).length;","      }","","      this.assert(","          !expected","        , 'expected ' + this.inspect + ' to be empty'","        , 'expected ' + this.inspect + ' not to be empty');","","      return this;","    }","  , configurable: true","});","","/**"," * # .arguments"," *"," * Assert object is an instanceof arguments."," *"," *      function test () {"," *        expect(arguments).to.be.arguments;"," *      }"," *"," * @name arguments"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'arguments',","  { get: function () {","      this.assert(","          '[object Arguments]' == Object.prototype.toString.call(this.obj)","        , 'expected ' + this.inspect + ' to be arguments'","        , 'expected ' + this.inspect + ' to not be arguments'","        , '[object Arguments]'","        , Object.prototype.toString.call(this.obj)","      );","","      return this;","    }","  , configurable: true","});","","/**"," * # .equal(value)"," *"," * Assert strict equality."," *"," *      expect('hello').to.equal('hello');"," *"," * @name equal"," * @param {*} value"," * @api public"," */","","Assertion.prototype.equal = function (val) {","  this.assert(","      val === this.obj","    , 'expected ' + this.inspect + ' to equal ' + inspect(val)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(val)","    , val );","","  return this;","};","","/**"," * # .eql(value)"," *"," * Assert deep equality."," *"," *      expect({ foo: 'bar' }).to.eql({ foo: 'bar' });"," *"," * @name eql"," * @param {*} value"," * @api public"," */","","Assertion.prototype.eql = function (obj) {","  this.assert(","      eql(obj, this.obj)","    , 'expected ' + this.inspect + ' to equal ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not equal ' + inspect(obj)","    , obj );","","  return this;","};","","/**"," * # .above(value)"," *"," * Assert greater than `value`."," *"," *      expect(10).to.be.above(5);"," *"," * @name above"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.above = function (val) {","  this.assert(","      this.obj &gt; val","    , 'expected ' + this.inspect + ' to be above ' + val","    , 'expected ' + this.inspect + ' to be below ' + val);","","  return this;","};","","/**"," * # .below(value)"," *"," * Assert less than `value`."," *"," *      expect(5).to.be.below(10);"," *"," * @name below"," * @param {Number} value"," * @api public"," */","","Assertion.prototype.below = function (val) {","  this.assert(","      this.obj &lt; val","    , 'expected ' + this.inspect + ' to be below ' + val","    , 'expected ' + this.inspect + ' to be above ' + val);","","  return this;","};","","/**"," * # .within(start, finish)"," *"," * Assert that a number is within a range."," *"," *      expect(7).to.be.within(5,10);"," *"," * @name within"," * @param {Number} start lowerbound inclusive"," * @param {Number} finish upperbound inclusive"," * @api public"," */","","Assertion.prototype.within = function (start, finish) {","  var range = start + '..' + finish;","","  this.assert(","      this.obj &gt;= start &amp;&amp; this.obj &lt;= finish","    , 'expected ' + this.inspect + ' to be within ' + range","    , 'expected ' + this.inspect + ' to not be within ' + range);","","  return this;","};","","/**"," * # .a(type)"," *"," * Assert typeof."," *"," *      expect('test').to.be.a('string');"," *"," * @name a"," * @param {String} type"," * @api public"," */","","Assertion.prototype.a = function (type) {","  var klass = type.charAt(0).toUpperCase() + type.slice(1);","","  this.assert(","      '[object ' + klass + ']' === toString.call(this.obj)","    , 'expected ' + this.inspect + ' to be a ' + type","    , 'expected ' + this.inspect + ' not to be a ' + type","    , '[object ' + klass + ']'","    , toString.call(this.obj)","  );","","  return this;","};","","/**"," * # .instanceof(constructor)"," *"," * Assert instanceof."," *"," *      var Tea = function (name) { this.name = name; }"," *        , Chai = new Tea('chai');"," *"," *      expect(Chai).to.be.an.instanceOf(Tea);"," *"," * @name instanceof"," * @param {Constructor}"," * @alias instanceOf"," * @api public"," */","","Assertion.prototype.instanceof = function (constructor) {","  var name = constructor.name;","  this.assert(","      this.obj instanceof constructor","    , 'expected ' + this.inspect + ' to be an instance of ' + name","    , 'expected ' + this.inspect + ' to not be an instance of ' + name);","","  return this;","};","","/**"," * # .property(name, [value])"," *"," * Assert that property of `name` exists, optionally with `value`."," *"," *      var obj = { foo: 'bar' }"," *      expect(obj).to.have.property('foo');"," *      expect(obj).to.have.property('foo', 'bar');"," *      expect(obj).to.have.property('foo').to.be.a('string');"," *"," * @name property"," * @param {String} name"," * @param {*} value (optional)"," * @returns value of property for chaining"," * @api public"," */","","Assertion.prototype.property = function (name, val) {","  if (this.negate &amp;&amp; undefined !== val) {","    if (undefined === this.obj[name]) {","      throw new Error(this.inspect + ' has no property ' + inspect(name));","    }","  } else {","    this.assert(","        undefined !== this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name)","      , 'expected ' + this.inspect + ' to not have property ' + inspect(name));","  }","","  if (undefined !== val) {","    this.assert(","        val === this.obj[name]","      , 'expected ' + this.inspect + ' to have a property ' + inspect(name) + ' of ' +","          inspect(val) + ', but got ' + inspect(this.obj[name])","      , 'expected ' + this.inspect + ' to not have a property ' + inspect(name) + ' of ' +  inspect(val)","      , val","      , this.obj[val]","    );","  }","","  this.obj = this.obj[name];","  return this;","};","","/**"," * # .ownProperty(name)"," *"," * Assert that has own property by `name`."," *"," *      expect('test').to.have.ownProperty('length');"," *"," * @name ownProperty"," * @alias haveOwnProperty"," * @param {String} name"," * @api public"," */","","Assertion.prototype.ownProperty = function (name) {","  this.assert(","      this.obj.hasOwnProperty(name)","    , 'expected ' + this.inspect + ' to have own property ' + inspect(name)","    , 'expected ' + this.inspect + ' to not have own property ' + inspect(name));","  return this;","};","","/**"," * # .length(val)"," *"," * Assert that object has expected length."," *"," *      expect([1,2,3]).to.have.length(3);"," *      expect('foobar').to.have.length(6);"," *"," * @name length"," * @alias lengthOf"," * @param {Number} length"," * @api public"," */","","Assertion.prototype.length = function (n) {","  new Assertion(this.obj).to.have.property('length');","  var len = this.obj.length;","","  this.assert(","      len == n","    , 'expected ' + this.inspect + ' to have a length of ' + n + ' but got ' + len","    , 'expected ' + this.inspect + ' to not have a length of ' + len","    , n","    , len","  );","","  return this;","};","","/**"," * # .match(regexp)"," *"," * Assert that matches regular expression."," *"," *      expect('foobar').to.match(/^foo/);"," *"," * @name match"," * @param {RegExp} RegularExpression"," * @api public"," */","","Assertion.prototype.match = function (re) {","  this.assert(","      re.exec(this.obj)","    , 'expected ' + this.inspect + ' to match ' + re","    , 'expected ' + this.inspect + ' not to match ' + re);","","  return this;","};","","/**"," * # .include(obj)"," *"," * Assert the inclusion of an object in an Array or substring in string."," *"," *      expect([1,2,3]).to.include(2);"," *"," * @name include"," * @param {Object|String|Number} obj"," * @api public"," */","","Assertion.prototype.include = function (obj) {","  this.assert(","      ~this.obj.indexOf(obj)","    , 'expected ' + this.inspect + ' to include ' + inspect(obj)","    , 'expected ' + this.inspect + ' to not include ' + inspect(obj));","","  return this;","};","","/**"," * # .string(string)"," *"," * Assert inclusion of string in string."," *"," *      expect('foobar').to.have.string('bar');"," *"," * @name string"," * @param {String} string"," * @api public"," */","","Assertion.prototype.string = function (str) {","  new Assertion(this.obj).is.a('string');","","  this.assert(","      ~this.obj.indexOf(str)","    , 'expected ' + this.inspect + ' to contain ' + inspect(str)","    , 'expected ' + this.inspect + ' to not contain ' + inspect(str));","","  return this;","};","","","","/**"," * # contain"," *"," * Toggles the `contain` flag for the `keys` assertion."," *"," * @name contain"," * @api public"," */","","Object.defineProperty(Assertion.prototype, 'contain',","  { get: function () {","      this.contains = true;","      return this;","    },","    configurable: true","});","","/**"," * # .keys(key1, [key2], [...])"," *"," * Assert exact keys or the inclusing of keys using the `contain` modifier."," *"," *      expect({ foo: 1, bar: 2 }).to.have.keys(['foo', 'bar']);"," *      expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys('foo', 'bar');"," *"," * @name keys"," * @alias key"," * @param {String|Array} Keys"," * @api public"," */","","Assertion.prototype.keys = function(keys) {","  var str","    , ok = true;","","  keys = keys instanceof Array","    ? keys","    : Array.prototype.slice.call(arguments);","","  if (!keys.length) throw new Error('keys required');","","  var actual = Object.keys(this.obj)","    , len = keys.length;","","  // Inclusion","  ok = keys.every(function(key){","    return ~actual.indexOf(key);","  });","","  // Strict","  if (!this.negate &amp;&amp; !this.contains) {","    ok = ok &amp;&amp; keys.length == actual.length;","  }","","  // Key string","  if (len &gt; 1) {","    keys = keys.map(function(key){","      return inspect(key);","    });","    var last = keys.pop();","    str = keys.join(', ') + ', and ' + last;","  } else {","    str = inspect(keys[0]);","  }","","  // Form","  str = (len &gt; 1 ? 'keys ' : 'key ') + str;","","  // Have / include","  str = (this.contains ? 'contain ' : 'have ') + str;","","  // Assertion","  this.assert(","      ok","    , 'expected ' + this.inspect + ' to ' + str","    , 'expected ' + this.inspect + ' to not ' + str","    , keys","    , Object.keys(this.obj)","  );","","  return this;","}","","/**"," * # .throw(constructor)"," *"," * Assert that a function will throw a specific type of error or that error"," * thrown will match a RegExp or include a string."," *"," *      var fn = function () { throw new ReferenceError('This is a bad function.'); }"," *      expect(fn).to.throw(ReferenceError);"," *      expect(fn).to.throw(/bad function/);"," *      expect(fn).to.not.throw('good function');"," *      expect(fn).to.throw(ReferenceError, /bad function/);"," *"," * Please note that when a throw expectation is negated, it will check each"," * parameter independently, starting with Error constructor type. The appropriate way"," * to check for the existence of a type of error but for a message that does not match"," * is to use `and`."," *"," *      expect(fn).to.throw(ReferenceError).and.not.throw(/good function/);"," *"," * @name throw"," * @alias throws"," * @alias Throw"," * @param {ErrorConstructor} constructor"," * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types"," * @api public"," */","","Assertion.prototype.throw = function (constructor, msg) {","  new Assertion(this.obj).is.a('function');","","  var thrown = false;","","  if (arguments.length === 0) {","    msg = null;","    constructor = null;","  } else if (constructor &amp;&amp; (constructor instanceof RegExp || 'string' === typeof constructor)) {","    msg = constructor;","    constructor = null;","  }","","  try {","    this.obj();","  } catch (err) {","    // first, check constructor","    if (constructor &amp;&amp; 'function' === typeof constructor) {","      this.assert(","          err instanceof constructor &amp;&amp; err.name == constructor.name","        , 'expected ' + this.inspect + ' to throw ' + constructor.name + ' but a ' + err.name + ' was thrown'","        , 'expected ' + this.inspect + ' to not throw ' + constructor.name );","      if (!msg) return this;","    }","    // next, check message","    if (err.message &amp;&amp; msg &amp;&amp; msg instanceof RegExp) {","      this.assert(","          msg.exec(err.message)","        , 'expected ' + this.inspect + ' to throw error matching ' + msg + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not matching ' + msg","      );","      return this;","    } else if (err.message &amp;&amp; msg &amp;&amp; 'string' === typeof msg) {","      this.assert(","          ~err.message.indexOf(msg)","        , 'expected ' + this.inspect + ' to throw error including ' + inspect(msg) + ' but got ' + inspect(err.message)","        , 'expected ' + this.inspect + ' to throw error not including ' + inspect(msg)","      );","      return this;","    } else {","      thrown = true;","    }","  }","","  var name = (constructor ? constructor.name : 'an error');","","  this.assert(","      thrown === true","    , 'expected ' + this.inspect + ' to throw ' + name","    , 'expected ' + this.inspect + ' to not throw ' + name);","","  return this;","};","","/**"," * # .respondTo(method)"," *"," * Assert that object/class will respond to a method."," *"," *      expect(Klass).to.respondTo('bar');"," *      expect(obj).to.respondTo('bar');"," *"," * @name respondTo"," * @param {String} method"," * @api public"," */","","Assertion.prototype.respondTo = function (method) {","  var context = ('function' === typeof this.obj)","    ? this.obj.prototype[method]","    : this.obj[method];","","  this.assert(","      'function' === typeof context","    , 'expected ' + this.inspect + ' to respond to ' + inspect(method)","    , 'expected ' + this.inspect + ' to not respond to ' + inspect(method)","    , 'function'","    , typeof context","  );","","  return this;","};","","/**"," * # .satisfy(method)"," *"," * Assert that passes a truth test."," *"," *      expect(1).to.satisfy(function(num) { return num &gt; 0; });"," *"," * @name satisfy"," * @param {Function} matcher"," * @api public"," */","","Assertion.prototype.satisfy = function (matcher) {","  this.assert(","      matcher(this.obj)","    , 'expected ' + this.inspect + ' to satisfy ' + inspect(matcher)","    , 'expected ' + this.inspect + ' to not satisfy' + inspect(matcher)","    , this.negate ? false : true","    , matcher(this.obj)","  );","","  return this;","};","","/**"," * # .closeTo(expected, delta)"," *"," * Assert that actual is equal to +/- delta."," *"," *      expect(1.5).to.be.closeTo(1, 0.5);"," *"," * @name closeTo"," * @param {Number} expected"," * @param {Number} delta"," * @api public"," */","","Assertion.prototype.closeTo = function (expected, delta) {","  this.assert(","      (this.obj - delta === expected) || (this.obj + delta === expected)","    , 'expected ' + this.inspect + ' to be close to ' + expected + ' +/- ' + delta","    , 'expected ' + this.inspect + ' not to be close to ' + expected + ' +/- ' + delta);","","  return this;","};","","/*!"," * Aliases."," */","","(function alias(name, as){","  Assertion.prototype[as] = Assertion.prototype[name];","  return alias;","})","('length', 'lengthOf')","('keys', 'key')","('ownProperty', 'haveOwnProperty')","('above', 'greaterThan')","('below', 'lessThan')","('throw', 'throws')","('throw', 'Throw') // for troublesome browsers","('instanceof', 'instanceOf');"];
 
 });
 
@@ -13292,77 +13490,82 @@ if (! _$jscoverage['interface/assert.js']) {
   _$jscoverage['interface/assert.js'][31] = 0;
   _$jscoverage['interface/assert.js'][35] = 0;
   _$jscoverage['interface/assert.js'][42] = 0;
+  _$jscoverage['interface/assert.js'][57] = 0;
   _$jscoverage['interface/assert.js'][58] = 0;
-  _$jscoverage['interface/assert.js'][59] = 0;
-  _$jscoverage['interface/assert.js'][76] = 0;
-  _$jscoverage['interface/assert.js'][77] = 0;
-  _$jscoverage['interface/assert.js'][79] = 0;
+  _$jscoverage['interface/assert.js'][81] = 0;
+  _$jscoverage['interface/assert.js'][82] = 0;
   _$jscoverage['interface/assert.js'][99] = 0;
   _$jscoverage['interface/assert.js'][100] = 0;
   _$jscoverage['interface/assert.js'][102] = 0;
   _$jscoverage['interface/assert.js'][122] = 0;
   _$jscoverage['interface/assert.js'][123] = 0;
-  _$jscoverage['interface/assert.js'][140] = 0;
-  _$jscoverage['interface/assert.js'][141] = 0;
-  _$jscoverage['interface/assert.js'][158] = 0;
-  _$jscoverage['interface/assert.js'][159] = 0;
-  _$jscoverage['interface/assert.js'][176] = 0;
-  _$jscoverage['interface/assert.js'][177] = 0;
-  _$jscoverage['interface/assert.js'][194] = 0;
-  _$jscoverage['interface/assert.js'][195] = 0;
-  _$jscoverage['interface/assert.js'][212] = 0;
-  _$jscoverage['interface/assert.js'][213] = 0;
-  _$jscoverage['interface/assert.js'][229] = 0;
-  _$jscoverage['interface/assert.js'][230] = 0;
-  _$jscoverage['interface/assert.js'][247] = 0;
-  _$jscoverage['interface/assert.js'][248] = 0;
-  _$jscoverage['interface/assert.js'][264] = 0;
-  _$jscoverage['interface/assert.js'][265] = 0;
-  _$jscoverage['interface/assert.js'][282] = 0;
-  _$jscoverage['interface/assert.js'][283] = 0;
-  _$jscoverage['interface/assert.js'][300] = 0;
-  _$jscoverage['interface/assert.js'][301] = 0;
-  _$jscoverage['interface/assert.js'][318] = 0;
-  _$jscoverage['interface/assert.js'][319] = 0;
-  _$jscoverage['interface/assert.js'][336] = 0;
-  _$jscoverage['interface/assert.js'][337] = 0;
-  _$jscoverage['interface/assert.js'][354] = 0;
-  _$jscoverage['interface/assert.js'][355] = 0;
-  _$jscoverage['interface/assert.js'][375] = 0;
-  _$jscoverage['interface/assert.js'][376] = 0;
-  _$jscoverage['interface/assert.js'][393] = 0;
-  _$jscoverage['interface/assert.js'][394] = 0;
-  _$jscoverage['interface/assert.js'][414] = 0;
-  _$jscoverage['interface/assert.js'][415] = 0;
+  _$jscoverage['interface/assert.js'][125] = 0;
+  _$jscoverage['interface/assert.js'][145] = 0;
+  _$jscoverage['interface/assert.js'][146] = 0;
+  _$jscoverage['interface/assert.js'][163] = 0;
+  _$jscoverage['interface/assert.js'][164] = 0;
+  _$jscoverage['interface/assert.js'][181] = 0;
+  _$jscoverage['interface/assert.js'][182] = 0;
+  _$jscoverage['interface/assert.js'][199] = 0;
+  _$jscoverage['interface/assert.js'][200] = 0;
+  _$jscoverage['interface/assert.js'][217] = 0;
+  _$jscoverage['interface/assert.js'][218] = 0;
+  _$jscoverage['interface/assert.js'][235] = 0;
+  _$jscoverage['interface/assert.js'][236] = 0;
+  _$jscoverage['interface/assert.js'][252] = 0;
+  _$jscoverage['interface/assert.js'][253] = 0;
+  _$jscoverage['interface/assert.js'][270] = 0;
+  _$jscoverage['interface/assert.js'][271] = 0;
+  _$jscoverage['interface/assert.js'][287] = 0;
+  _$jscoverage['interface/assert.js'][288] = 0;
+  _$jscoverage['interface/assert.js'][305] = 0;
+  _$jscoverage['interface/assert.js'][306] = 0;
+  _$jscoverage['interface/assert.js'][323] = 0;
+  _$jscoverage['interface/assert.js'][324] = 0;
+  _$jscoverage['interface/assert.js'][341] = 0;
+  _$jscoverage['interface/assert.js'][342] = 0;
+  _$jscoverage['interface/assert.js'][359] = 0;
+  _$jscoverage['interface/assert.js'][360] = 0;
+  _$jscoverage['interface/assert.js'][377] = 0;
+  _$jscoverage['interface/assert.js'][378] = 0;
+  _$jscoverage['interface/assert.js'][395] = 0;
+  _$jscoverage['interface/assert.js'][396] = 0;
+  _$jscoverage['interface/assert.js'][416] = 0;
+  _$jscoverage['interface/assert.js'][417] = 0;
   _$jscoverage['interface/assert.js'][434] = 0;
   _$jscoverage['interface/assert.js'][435] = 0;
-  _$jscoverage['interface/assert.js'][437] = 0;
-  _$jscoverage['interface/assert.js'][438] = 0;
-  _$jscoverage['interface/assert.js'][439] = 0;
-  _$jscoverage['interface/assert.js'][440] = 0;
-  _$jscoverage['interface/assert.js'][458] = 0;
-  _$jscoverage['interface/assert.js'][459] = 0;
-  _$jscoverage['interface/assert.js'][477] = 0;
+  _$jscoverage['interface/assert.js'][455] = 0;
+  _$jscoverage['interface/assert.js'][456] = 0;
+  _$jscoverage['interface/assert.js'][475] = 0;
+  _$jscoverage['interface/assert.js'][476] = 0;
   _$jscoverage['interface/assert.js'][478] = 0;
-  _$jscoverage['interface/assert.js'][498] = 0;
+  _$jscoverage['interface/assert.js'][479] = 0;
+  _$jscoverage['interface/assert.js'][480] = 0;
+  _$jscoverage['interface/assert.js'][481] = 0;
   _$jscoverage['interface/assert.js'][499] = 0;
   _$jscoverage['interface/assert.js'][500] = 0;
-  _$jscoverage['interface/assert.js'][501] = 0;
-  _$jscoverage['interface/assert.js'][504] = 0;
-  _$jscoverage['interface/assert.js'][524] = 0;
-  _$jscoverage['interface/assert.js'][525] = 0;
-  _$jscoverage['interface/assert.js'][526] = 0;
-  _$jscoverage['interface/assert.js'][527] = 0;
-  _$jscoverage['interface/assert.js'][530] = 0;
-  _$jscoverage['interface/assert.js'][549] = 0;
-  _$jscoverage['interface/assert.js'][550] = 0;
-  _$jscoverage['interface/assert.js'][551] = 0;
-  _$jscoverage['interface/assert.js'][553] = 0;
-  _$jscoverage['interface/assert.js'][560] = 0;
-  _$jscoverage['interface/assert.js'][561] = 0;
+  _$jscoverage['interface/assert.js'][518] = 0;
+  _$jscoverage['interface/assert.js'][519] = 0;
+  _$jscoverage['interface/assert.js'][539] = 0;
+  _$jscoverage['interface/assert.js'][540] = 0;
+  _$jscoverage['interface/assert.js'][541] = 0;
+  _$jscoverage['interface/assert.js'][542] = 0;
+  _$jscoverage['interface/assert.js'][545] = 0;
+  _$jscoverage['interface/assert.js'][565] = 0;
+  _$jscoverage['interface/assert.js'][566] = 0;
+  _$jscoverage['interface/assert.js'][567] = 0;
   _$jscoverage['interface/assert.js'][568] = 0;
-  _$jscoverage['interface/assert.js'][569] = 0;
-  _$jscoverage['interface/assert.js'][570] = 0;
+  _$jscoverage['interface/assert.js'][571] = 0;
+  _$jscoverage['interface/assert.js'][590] = 0;
+  _$jscoverage['interface/assert.js'][591] = 0;
+  _$jscoverage['interface/assert.js'][592] = 0;
+  _$jscoverage['interface/assert.js'][594] = 0;
+  _$jscoverage['interface/assert.js'][595] = 0;
+  _$jscoverage['interface/assert.js'][605] = 0;
+  _$jscoverage['interface/assert.js'][606] = 0;
+  _$jscoverage['interface/assert.js'][613] = 0;
+  _$jscoverage['interface/assert.js'][614] = 0;
+  _$jscoverage['interface/assert.js'][615] = 0;
 }
 _$jscoverage['interface/assert.js'][31]++;
 module.exports = (function (chai) {
@@ -13370,185 +13573,197 @@ module.exports = (function (chai) {
   var Assertion = chai.Assertion, inspect = chai.inspect;
   _$jscoverage['interface/assert.js'][42]++;
   var assert = chai.assert = {};
+  _$jscoverage['interface/assert.js'][57]++;
+  assert.fail = (function (actual, expected, message, operator) {
   _$jscoverage['interface/assert.js'][58]++;
+  throw new chai.AssertionError({actual: actual, expected: expected, message: message, operator: operator, stackStartFunction: assert.fail});
+});
+  _$jscoverage['interface/assert.js'][81]++;
   assert.ok = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][59]++;
+  _$jscoverage['interface/assert.js'][82]++;
   new Assertion(val, msg).is.ok;
 });
-  _$jscoverage['interface/assert.js'][76]++;
-  assert.equal = (function (act, exp, msg) {
-  _$jscoverage['interface/assert.js'][77]++;
-  var test = new Assertion(act, msg);
-  _$jscoverage['interface/assert.js'][79]++;
-  test.assert(exp == test.obj, "expected " + test.inspect + " to equal " + inspect(exp), "expected " + test.inspect + " to not equal " + inspect(exp));
-});
   _$jscoverage['interface/assert.js'][99]++;
-  assert.notEqual = (function (act, exp, msg) {
+  assert.equal = (function (act, exp, msg) {
   _$jscoverage['interface/assert.js'][100]++;
   var test = new Assertion(act, msg);
   _$jscoverage['interface/assert.js'][102]++;
-  test.assert(exp != test.obj, "expected " + test.inspect + " to equal " + inspect(exp), "expected " + test.inspect + " to not equal " + inspect(exp));
+  test.assert(exp == test.obj, "expected " + test.inspect + " to equal " + inspect(exp), "expected " + test.inspect + " to not equal " + inspect(exp));
 });
   _$jscoverage['interface/assert.js'][122]++;
-  assert.strictEqual = (function (act, exp, msg) {
+  assert.notEqual = (function (act, exp, msg) {
   _$jscoverage['interface/assert.js'][123]++;
+  var test = new Assertion(act, msg);
+  _$jscoverage['interface/assert.js'][125]++;
+  test.assert(exp != test.obj, "expected " + test.inspect + " to equal " + inspect(exp), "expected " + test.inspect + " to not equal " + inspect(exp));
+});
+  _$jscoverage['interface/assert.js'][145]++;
+  assert.strictEqual = (function (act, exp, msg) {
+  _$jscoverage['interface/assert.js'][146]++;
   new Assertion(act, msg).to.equal(exp);
 });
-  _$jscoverage['interface/assert.js'][140]++;
+  _$jscoverage['interface/assert.js'][163]++;
   assert.notStrictEqual = (function (act, exp, msg) {
-  _$jscoverage['interface/assert.js'][141]++;
+  _$jscoverage['interface/assert.js'][164]++;
   new Assertion(act, msg).to.not.equal(exp);
 });
-  _$jscoverage['interface/assert.js'][158]++;
+  _$jscoverage['interface/assert.js'][181]++;
   assert.deepEqual = (function (act, exp, msg) {
-  _$jscoverage['interface/assert.js'][159]++;
+  _$jscoverage['interface/assert.js'][182]++;
   new Assertion(act, msg).to.eql(exp);
 });
-  _$jscoverage['interface/assert.js'][176]++;
+  _$jscoverage['interface/assert.js'][199]++;
   assert.notDeepEqual = (function (act, exp, msg) {
-  _$jscoverage['interface/assert.js'][177]++;
+  _$jscoverage['interface/assert.js'][200]++;
   new Assertion(act, msg).to.not.eql(exp);
 });
-  _$jscoverage['interface/assert.js'][194]++;
+  _$jscoverage['interface/assert.js'][217]++;
   assert.isTrue = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][195]++;
+  _$jscoverage['interface/assert.js'][218]++;
   new Assertion(val, msg).is["true"];
 });
-  _$jscoverage['interface/assert.js'][212]++;
+  _$jscoverage['interface/assert.js'][235]++;
   assert.isFalse = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][213]++;
+  _$jscoverage['interface/assert.js'][236]++;
   new Assertion(val, msg).is["false"];
 });
-  _$jscoverage['interface/assert.js'][229]++;
+  _$jscoverage['interface/assert.js'][252]++;
   assert.isNull = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][230]++;
+  _$jscoverage['interface/assert.js'][253]++;
   new Assertion(val, msg).to.equal(null);
 });
-  _$jscoverage['interface/assert.js'][247]++;
+  _$jscoverage['interface/assert.js'][270]++;
   assert.isNotNull = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][248]++;
+  _$jscoverage['interface/assert.js'][271]++;
   new Assertion(val, msg).to.not.equal(null);
 });
-  _$jscoverage['interface/assert.js'][264]++;
+  _$jscoverage['interface/assert.js'][287]++;
   assert.isUndefined = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][265]++;
+  _$jscoverage['interface/assert.js'][288]++;
   new Assertion(val, msg).to.equal(undefined);
 });
-  _$jscoverage['interface/assert.js'][282]++;
+  _$jscoverage['interface/assert.js'][305]++;
+  assert.isDefined = (function (val, msg) {
+  _$jscoverage['interface/assert.js'][306]++;
+  new Assertion(val, msg).to.not.equal(undefined);
+});
+  _$jscoverage['interface/assert.js'][323]++;
   assert.isFunction = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][283]++;
+  _$jscoverage['interface/assert.js'][324]++;
   new Assertion(val, msg).to.be.a("function");
 });
-  _$jscoverage['interface/assert.js'][300]++;
+  _$jscoverage['interface/assert.js'][341]++;
   assert.isObject = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][301]++;
+  _$jscoverage['interface/assert.js'][342]++;
   new Assertion(val, msg).to.be.a("object");
 });
-  _$jscoverage['interface/assert.js'][318]++;
+  _$jscoverage['interface/assert.js'][359]++;
   assert.isArray = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][319]++;
+  _$jscoverage['interface/assert.js'][360]++;
   new Assertion(val, msg).to.be["instanceof"](Array);
 });
-  _$jscoverage['interface/assert.js'][336]++;
+  _$jscoverage['interface/assert.js'][377]++;
   assert.isString = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][337]++;
+  _$jscoverage['interface/assert.js'][378]++;
   new Assertion(val, msg).to.be.a("string");
 });
-  _$jscoverage['interface/assert.js'][354]++;
+  _$jscoverage['interface/assert.js'][395]++;
   assert.isNumber = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][355]++;
+  _$jscoverage['interface/assert.js'][396]++;
   new Assertion(val, msg).to.be.a("number");
 });
-  _$jscoverage['interface/assert.js'][375]++;
+  _$jscoverage['interface/assert.js'][416]++;
   assert.isBoolean = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][376]++;
+  _$jscoverage['interface/assert.js'][417]++;
   new Assertion(val, msg).to.be.a("boolean");
 });
-  _$jscoverage['interface/assert.js'][393]++;
+  _$jscoverage['interface/assert.js'][434]++;
   assert.typeOf = (function (val, type, msg) {
-  _$jscoverage['interface/assert.js'][394]++;
+  _$jscoverage['interface/assert.js'][435]++;
   new Assertion(val, msg).to.be.a(type);
 });
-  _$jscoverage['interface/assert.js'][414]++;
+  _$jscoverage['interface/assert.js'][455]++;
   assert.instanceOf = (function (val, type, msg) {
-  _$jscoverage['interface/assert.js'][415]++;
+  _$jscoverage['interface/assert.js'][456]++;
   new Assertion(val, msg).to.be["instanceof"](type);
 });
-  _$jscoverage['interface/assert.js'][434]++;
+  _$jscoverage['interface/assert.js'][475]++;
   assert.include = (function (exp, inc, msg) {
-  _$jscoverage['interface/assert.js'][435]++;
+  _$jscoverage['interface/assert.js'][476]++;
   var obj = new Assertion(exp, msg);
-  _$jscoverage['interface/assert.js'][437]++;
+  _$jscoverage['interface/assert.js'][478]++;
   if (Array.isArray(exp)) {
-    _$jscoverage['interface/assert.js'][438]++;
+    _$jscoverage['interface/assert.js'][479]++;
     obj.to.include(inc);
   }
   else {
-    _$jscoverage['interface/assert.js'][439]++;
+    _$jscoverage['interface/assert.js'][480]++;
     if ("string" === typeof exp) {
-      _$jscoverage['interface/assert.js'][440]++;
+      _$jscoverage['interface/assert.js'][481]++;
       obj.to.contain.string(inc);
     }
   }
 });
-  _$jscoverage['interface/assert.js'][458]++;
+  _$jscoverage['interface/assert.js'][499]++;
   assert.match = (function (exp, re, msg) {
-  _$jscoverage['interface/assert.js'][459]++;
+  _$jscoverage['interface/assert.js'][500]++;
   new Assertion(exp, msg).to.match(re);
 });
-  _$jscoverage['interface/assert.js'][477]++;
+  _$jscoverage['interface/assert.js'][518]++;
   assert.length = (function (exp, len, msg) {
-  _$jscoverage['interface/assert.js'][478]++;
+  _$jscoverage['interface/assert.js'][519]++;
   new Assertion(exp, msg).to.have.length(len);
 });
-  _$jscoverage['interface/assert.js'][498]++;
+  _$jscoverage['interface/assert.js'][539]++;
   assert["throws"] = (function (fn, type, msg) {
-  _$jscoverage['interface/assert.js'][499]++;
+  _$jscoverage['interface/assert.js'][540]++;
   if ("string" === typeof type) {
-    _$jscoverage['interface/assert.js'][500]++;
+    _$jscoverage['interface/assert.js'][541]++;
     msg = type;
-    _$jscoverage['interface/assert.js'][501]++;
+    _$jscoverage['interface/assert.js'][542]++;
     type = null;
   }
-  _$jscoverage['interface/assert.js'][504]++;
+  _$jscoverage['interface/assert.js'][545]++;
   new Assertion(fn, msg).to["throw"](type);
 });
-  _$jscoverage['interface/assert.js'][524]++;
+  _$jscoverage['interface/assert.js'][565]++;
   assert.doesNotThrow = (function (fn, type, msg) {
-  _$jscoverage['interface/assert.js'][525]++;
+  _$jscoverage['interface/assert.js'][566]++;
   if ("string" === typeof type) {
-    _$jscoverage['interface/assert.js'][526]++;
+    _$jscoverage['interface/assert.js'][567]++;
     msg = type;
-    _$jscoverage['interface/assert.js'][527]++;
+    _$jscoverage['interface/assert.js'][568]++;
     type = null;
   }
-  _$jscoverage['interface/assert.js'][530]++;
+  _$jscoverage['interface/assert.js'][571]++;
   new Assertion(fn, msg).to.not["throw"](type);
 });
-  _$jscoverage['interface/assert.js'][549]++;
+  _$jscoverage['interface/assert.js'][590]++;
   assert.operator = (function (val, operator, val2, msg) {
-  _$jscoverage['interface/assert.js'][550]++;
+  _$jscoverage['interface/assert.js'][591]++;
   if (! ~ ["==", "===", ">", ">=", "<", "<=", "!=", "!=="].indexOf(operator)) {
-    _$jscoverage['interface/assert.js'][551]++;
+    _$jscoverage['interface/assert.js'][592]++;
     throw new Error("Invalid operator \"" + operator + "\"");
   }
-  _$jscoverage['interface/assert.js'][553]++;
-  new Assertion(eval(val + operator + val2), msg).to.be["true"];
+  _$jscoverage['interface/assert.js'][594]++;
+  var test = new Assertion(eval(val + operator + val2), msg);
+  _$jscoverage['interface/assert.js'][595]++;
+  test.assert(true === test.obj, "expected " + inspect(val) + " to be " + operator + " " + inspect(val2), "expected " + inspect(val) + " to not be " + operator + " " + inspect(val2));
 });
-  _$jscoverage['interface/assert.js'][560]++;
+  _$jscoverage['interface/assert.js'][605]++;
   assert.ifError = (function (val, msg) {
-  _$jscoverage['interface/assert.js'][561]++;
+  _$jscoverage['interface/assert.js'][606]++;
   new Assertion(val, msg).to.not.be.ok;
 });
-  _$jscoverage['interface/assert.js'][568]++;
+  _$jscoverage['interface/assert.js'][613]++;
   (function alias(name, as) {
-  _$jscoverage['interface/assert.js'][569]++;
+  _$jscoverage['interface/assert.js'][614]++;
   assert[as] = assert[name];
-  _$jscoverage['interface/assert.js'][570]++;
+  _$jscoverage['interface/assert.js'][615]++;
   return alias;
 })("length", "lengthOf")("throws", "throw");
 });
-_$jscoverage['interface/assert.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","/**"," * ### TDD Style Introduction"," *"," * The TDD style is exposed through `assert` interfaces. This provides"," * the classic assert.`test` notation, similiar to that packaged with"," * node.js. This assert module, however, provides several additional"," * tests and is browser compatible."," *"," *      // assert"," *      var assert = require('chai').assert;"," *        , foo = 'bar';"," *"," *      assert.typeOf(foo, 'string');"," *      assert.equal(foo, 'bar');"," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","module.exports = function (chai) {","  /*!","   * Chai dependencies.","   */","  var Assertion = chai.Assertion","    , inspect = chai.inspect;","","  /*!","   * Module export.","   */","","  var assert = chai.assert = {};","","  /**","   * # .ok(object, [message])","   *","   * Assert object is truthy.","   *","   *      assert.ok('everthing', 'everything is ok');","   *      assert.ok(false, 'this will fail');","   *","   * @name ok","   * @param {*} object to test","   * @param {String} message","   * @api public","   */","","  assert.ok = function (val, msg) {","    new Assertion(val, msg).is.ok;","  };","","  /**","   * # .equal(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.equal(3, 3, 'these numbers are equal');","   *","   * @name equal","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.equal = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp == test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .notEqual(actual, expected, [message])","   *","   * Assert not equal.","   *","   *      assert.notEqual(3, 4, 'these numbers are not equal');","   *","   * @name notEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notEqual = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp != test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .strictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.strictEqual(true, true, 'these booleans are strictly equal');","   *","   * @name strictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.strictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.equal(exp);","  };","","  /**","   * # .notStrictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.notStrictEqual(1, true, 'these booleans are not strictly equal');","   *","   * @name notStrictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notStrictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.equal(exp);","  };","","  /**","   * # .deepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.deepEqual({ tea: 'green' }, { tea: 'green' });","   *","   * @name deepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.deepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.eql(exp);","  };","","  /**","   * # .notDeepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });","   *","   * @name notDeepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notDeepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.eql(exp);","  };","","  /**","   * # .isTrue(value, [message])","   *","   * Assert `value` is true.","   *","   *      var tea_served = true;","   *      assert.isTrue(tea_served, 'the tea has been served');","   *","   * @name isTrue","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isTrue = function (val, msg) {","    new Assertion(val, msg).is.true;","  };","","  /**","   * # .isFalse(value, [message])","   *","   * Assert `value` is false.","   *","   *      var tea_served = false;","   *      assert.isFalse(tea_served, 'no tea yet? hmm...');","   *","   * @name isFalse","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isFalse = function (val, msg) {","    new Assertion(val, msg).is.false;","  };","","  /**","   * # .isNull(value, [message])","   *","   * Assert `value` is null.","   *","   *      assert.isNull(err, 'no errors');","   *","   * @name isNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNull = function (val, msg) {","    new Assertion(val, msg).to.equal(null);","  };","","  /**","   * # .isNotNull(value, [message])","   *","   * Assert `value` is not null.","   *","   *      var tea = 'tasty chai';","   *      assert.isNotNull(tea, 'great, time for tea!');","   *","   * @name isNotNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNotNull = function (val, msg) {","    new Assertion(val, msg).to.not.equal(null);","  };","","  /**","   * # .isUndefined(value, [message])","   *","   * Assert `value` is undefined.","   *","   *      assert.isUndefined(tea, 'no tea defined');","   *","   * @name isUndefined","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isUndefined = function (val, msg) {","    new Assertion(val, msg).to.equal(undefined);","  };","","  /**","   * # .isFunction(value, [message])","   *","   * Assert `value` is a function.","   *","   *      var serve_tea = function () { return 'cup of tea'; };","   *      assert.isFunction(serve_tea, 'great, we can have tea now');","   *","   * @name isFunction","   * @param {Function} value","   * @param {String} message","   * @api public","   */","","  assert.isFunction = function (val, msg) {","    new Assertion(val, msg).to.be.a('function');","  };","","  /**","   * # .isObject(value, [message])","   *","   * Assert `value` is an object.","   *","   *      var selection = { name: 'Chai', serve: 'with spices' };","   *      assert.isObject(selection, 'tea selection is an object');","   *","   * @name isObject","   * @param {Object} value","   * @param {String} message","   * @api public","   */","","  assert.isObject = function (val, msg) {","    new Assertion(val, msg).to.be.a('object');","  };","","  /**","   * # .isArray(value, [message])","   *","   * Assert `value` is an instance of Array.","   *","   *      var menu = [ 'green', 'chai', 'oolong' ];","   *      assert.isArray(menu, 'what kind of tea do we want?');","   *","   * @name isArray","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isArray = function (val, msg) {","    new Assertion(val, msg).to.be.instanceof(Array);","  };","","  /**","   * # .isString(value, [message])","   *","   * Assert `value` is a string.","   *","   *      var teaorder = 'chai';","   *      assert.isString(tea_order, 'order placed');","   *","   * @name isString","   * @param {String} value","   * @param {String} message","   * @api public","   */","","  assert.isString = function (val, msg) {","    new Assertion(val, msg).to.be.a('string');","  };","","  /**","   * # .isNumber(value, [message])","   *","   * Assert `value` is a number","   *","   *      var cups = 2;","   *      assert.isNumber(cups, 'how many cups');","   *","   * @name isNumber","   * @param {Number} value","   * @param {String} message","   * @api public","   */","","  assert.isNumber = function (val, msg) {","    new Assertion(val, msg).to.be.a('number');","  };","","  /**","   * # .isBoolean(value, [message])","   *","   * Assert `value` is a boolean","   *","   *      var teaready = true","   *        , teaserved = false;","   *","   *      assert.isBoolean(tea_ready, 'is the tea ready');","   *      assert.isBoolean(tea_served, 'has tea been served');","   *","   * @name isBoolean","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isBoolean = function (val, msg) {","    new Assertion(val, msg).to.be.a('boolean');","  };","","  /**","   * # .typeOf(value, name, [message])","   *","   * Assert typeof `value` is `name`.","   *","   *      assert.typeOf('tea', 'string', 'we have a string');","   *","   * @name typeOf","   * @param {*} value","   * @param {String} typeof name","   * @param {String} message","   * @api public","   */","","  assert.typeOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.a(type);","  };","","  /**","   * # .instanceOf(object, constructor, [message])","   *","   * Assert `value` is instanceof `constructor`.","   *","   *      var Tea = function (name) { this.name = name; }","   *        , Chai = new Tea('chai');","   *","   *      assert.instanceOf(Chai, Tea, 'chai is an instance of tea');","   *","   * @name instanceOf","   * @param {Object} object","   * @param {Constructor} constructor","   * @param {String} message","   * @api public","   */","","  assert.instanceOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.instanceof(type);","  };","","  /**","   * # .include(value, includes, [message])","   *","   * Assert the inclusion of an object in another. Works","   * for strings and arrays.","   *","   *      assert.include('foobar', 'bar', 'foobar contains string `var`);","   *      assert.include([ 1, 2, 3], 3, 'array contains value);","   *","   * @name include","   * @param {Array|String} value","   * @param {*} includes","   * @param {String} message","   * @api public","   */","","  assert.include = function (exp, inc, msg) {","    var obj = new Assertion(exp, msg);","","    if (Array.isArray(exp)) {","      obj.to.include(inc);","    } else if ('string' === typeof exp) {","      obj.to.contain.string(inc);","    }","  };","","  /**","   * # .match(value, regex, [message])","   *","   * Assert that `value` matches regular expression.","   *","   *      assert.match('foobar', /^foo/, 'Regexp matches');","   *","   * @name match","   * @param {*} value","   * @param {RegExp} RegularExpression","   * @param {String} message","   * @api public","   */","","  assert.match = function (exp, re, msg) {","    new Assertion(exp, msg).to.match(re);","  };","","  /**","   * # .length(value, constructor, [message])","   *","   * Assert that object has expected length.","   *","   *      assert.length([1,2,3], 3, 'Array has length of 3');","   *      assert.length('foobar', 5, 'String has length of 6');","   *","   * @name length","   * @param {*} value","   * @param {Number} length","   * @param {String} message","   * @api public","   */","","  assert.length = function (exp, len, msg) {","    new Assertion(exp, msg).to.have.length(len);","  };","","  /**","   * # .throws(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      assert.throw(fn, ReferenceError, 'function throw reference error');","   *","   * @name throws","   * @alias throw","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.throws = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.throw(type);","  };","","  /**","   * # .doesNotThrow(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      var fn = function (err) { if (err) throw Error(err) };","   *      assert.doesNotThrow(fn, Error, 'function throw reference error');","   *","   * @name doesNotThrow","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.doesNotThrow = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.not.throw(type);","  };","","  /**","   * # .operator(val, operator, val2, [message])","   *","   * Compare two values using operator.","   *","   *      assert.operator(1, '&lt;', 2, 'everything is ok');","   *      assert.operator(1, '&gt;', 2, 'this will fail');","   *","   * @name operator","   * @param {*} object to test","   * @param {String} operator","   * @param {*} second object","   * @param {String} message","   * @api public","   */","","  assert.operator = function (val, operator, val2, msg) {","    if (!~['==', '===', '&gt;', '&gt;=', '&lt;', '&lt;=', '!=', '!=='].indexOf(operator)) {","      throw new Error('Invalid operator \"' + operator + '\"');","    }","    new Assertion(eval(val + operator + val2), msg).to.be.true;","  };","","  /*!","   * Undocumented / untested","   */","","  assert.ifError = function (val, msg) {","    new Assertion(val, msg).to.not.be.ok;","  };","","  /*!","   * Aliases.","   */","","  (function alias(name, as){","    assert[as] = assert[name];","    return alias;","  })","  ('length', 'lengthOf')","  ('throws', 'throw');","};"];
+_$jscoverage['interface/assert.js'].source = ["/*!"," * chai"," * Copyright(c) 2011 Jake Luer &lt;jake@alogicalparadox.com&gt;"," * MIT Licensed"," */","","/**"," * ### TDD Style Introduction"," *"," * The TDD style is exposed through `assert` interfaces. This provides"," * the classic assert.`test` notation, similiar to that packaged with"," * node.js. This assert module, however, provides several additional"," * tests and is browser compatible."," *"," *      // assert"," *      var assert = require('chai').assert;"," *        , foo = 'bar';"," *"," *      assert.typeOf(foo, 'string');"," *      assert.equal(foo, 'bar');"," *"," * #### Configuration"," *"," * By default, Chai does not show stack traces upon an AssertionError. This can"," * be changed by modifying the `includeStack` parameter for chai.Assertion. For example:"," *"," *      var chai = require('chai');"," *      chai.Assertion.includeStack = true; // defaults to false"," */","","module.exports = function (chai) {","  /*!","   * Chai dependencies.","   */","  var Assertion = chai.Assertion","    , inspect = chai.inspect;","","  /*!","   * Module export.","   */","","  var assert = chai.assert = {};","","  /**","   * # .fail(actual, expect, msg, operator)","   *","   * Throw a failure. Node.js compatible.","   *","   * @name fail","   * @param {*} actual value","   * @param {*} expected value","   * @param {String} message","   * @param {String} operator","   * @api public","   */","","  assert.fail = function (actual, expected, message, operator) {","    throw new chai.AssertionError({","        actual: actual","      , expected: expected","      , message: message","      , operator: operator","      , stackStartFunction: assert.fail","    });","  }","","  /**","   * # .ok(object, [message])","   *","   * Assert object is truthy.","   *","   *      assert.ok('everthing', 'everything is ok');","   *      assert.ok(false, 'this will fail');","   *","   * @name ok","   * @param {*} object to test","   * @param {String} message","   * @api public","   */","","  assert.ok = function (val, msg) {","    new Assertion(val, msg).is.ok;","  };","","  /**","   * # .equal(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.equal(3, 3, 'these numbers are equal');","   *","   * @name equal","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.equal = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp == test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .notEqual(actual, expected, [message])","   *","   * Assert not equal.","   *","   *      assert.notEqual(3, 4, 'these numbers are not equal');","   *","   * @name notEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notEqual = function (act, exp, msg) {","    var test = new Assertion(act, msg);","","    test.assert(","        exp != test.obj","      , 'expected ' + test.inspect + ' to equal ' + inspect(exp)","      , 'expected ' + test.inspect + ' to not equal ' + inspect(exp));","  };","","  /**","   * # .strictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.strictEqual(true, true, 'these booleans are strictly equal');","   *","   * @name strictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.strictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.equal(exp);","  };","","  /**","   * # .notStrictEqual(actual, expected, [message])","   *","   * Assert strict equality.","   *","   *      assert.notStrictEqual(1, true, 'these booleans are not strictly equal');","   *","   * @name notStrictEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notStrictEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.equal(exp);","  };","","  /**","   * # .deepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.deepEqual({ tea: 'green' }, { tea: 'green' });","   *","   * @name deepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.deepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.eql(exp);","  };","","  /**","   * # .notDeepEqual(actual, expected, [message])","   *","   * Assert not deep equality.","   *","   *      assert.notDeepEqual({ tea: 'green' }, { tea: 'jasmine' });","   *","   * @name notDeepEqual","   * @param {*} actual","   * @param {*} expected","   * @param {String} message","   * @api public","   */","","  assert.notDeepEqual = function (act, exp, msg) {","    new Assertion(act, msg).to.not.eql(exp);","  };","","  /**","   * # .isTrue(value, [message])","   *","   * Assert `value` is true.","   *","   *      var tea_served = true;","   *      assert.isTrue(tea_served, 'the tea has been served');","   *","   * @name isTrue","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isTrue = function (val, msg) {","    new Assertion(val, msg).is.true;","  };","","  /**","   * # .isFalse(value, [message])","   *","   * Assert `value` is false.","   *","   *      var tea_served = false;","   *      assert.isFalse(tea_served, 'no tea yet? hmm...');","   *","   * @name isFalse","   * @param {Boolean} value","   * @param {String} message","   * @api public","   */","","  assert.isFalse = function (val, msg) {","    new Assertion(val, msg).is.false;","  };","","  /**","   * # .isNull(value, [message])","   *","   * Assert `value` is null.","   *","   *      assert.isNull(err, 'no errors');","   *","   * @name isNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNull = function (val, msg) {","    new Assertion(val, msg).to.equal(null);","  };","","  /**","   * # .isNotNull(value, [message])","   *","   * Assert `value` is not null.","   *","   *      var tea = 'tasty chai';","   *      assert.isNotNull(tea, 'great, time for tea!');","   *","   * @name isNotNull","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isNotNull = function (val, msg) {","    new Assertion(val, msg).to.not.equal(null);","  };","","  /**","   * # .isUndefined(value, [message])","   *","   * Assert `value` is undefined.","   *","   *      assert.isUndefined(tea, 'no tea defined');","   *","   * @name isUndefined","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isUndefined = function (val, msg) {","    new Assertion(val, msg).to.equal(undefined);","  };","","  /**","   * # .isDefined(value, [message])","   *","   * Assert `value` is not undefined.","   *","   *      var tea = 'cup of chai';","   *      assert.isDefined(tea, 'no tea defined');","   *","   * @name isUndefined","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isDefined = function (val, msg) {","    new Assertion(val, msg).to.not.equal(undefined);","  };","","  /**","   * # .isFunction(value, [message])","   *","   * Assert `value` is a function.","   *","   *      var serve_tea = function () { return 'cup of tea'; };","   *      assert.isFunction(serve_tea, 'great, we can have tea now');","   *","   * @name isFunction","   * @param {Function} value","   * @param {String} message","   * @api public","   */","","  assert.isFunction = function (val, msg) {","    new Assertion(val, msg).to.be.a('function');","  };","","  /**","   * # .isObject(value, [message])","   *","   * Assert `value` is an object.","   *","   *      var selection = { name: 'Chai', serve: 'with spices' };","   *      assert.isObject(selection, 'tea selection is an object');","   *","   * @name isObject","   * @param {Object} value","   * @param {String} message","   * @api public","   */","","  assert.isObject = function (val, msg) {","    new Assertion(val, msg).to.be.a('object');","  };","","  /**","   * # .isArray(value, [message])","   *","   * Assert `value` is an instance of Array.","   *","   *      var menu = [ 'green', 'chai', 'oolong' ];","   *      assert.isArray(menu, 'what kind of tea do we want?');","   *","   * @name isArray","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isArray = function (val, msg) {","    new Assertion(val, msg).to.be.instanceof(Array);","  };","","  /**","   * # .isString(value, [message])","   *","   * Assert `value` is a string.","   *","   *      var teaorder = 'chai';","   *      assert.isString(tea_order, 'order placed');","   *","   * @name isString","   * @param {String} value","   * @param {String} message","   * @api public","   */","","  assert.isString = function (val, msg) {","    new Assertion(val, msg).to.be.a('string');","  };","","  /**","   * # .isNumber(value, [message])","   *","   * Assert `value` is a number","   *","   *      var cups = 2;","   *      assert.isNumber(cups, 'how many cups');","   *","   * @name isNumber","   * @param {Number} value","   * @param {String} message","   * @api public","   */","","  assert.isNumber = function (val, msg) {","    new Assertion(val, msg).to.be.a('number');","  };","","  /**","   * # .isBoolean(value, [message])","   *","   * Assert `value` is a boolean","   *","   *      var teaready = true","   *        , teaserved = false;","   *","   *      assert.isBoolean(tea_ready, 'is the tea ready');","   *      assert.isBoolean(tea_served, 'has tea been served');","   *","   * @name isBoolean","   * @param {*} value","   * @param {String} message","   * @api public","   */","","  assert.isBoolean = function (val, msg) {","    new Assertion(val, msg).to.be.a('boolean');","  };","","  /**","   * # .typeOf(value, name, [message])","   *","   * Assert typeof `value` is `name`.","   *","   *      assert.typeOf('tea', 'string', 'we have a string');","   *","   * @name typeOf","   * @param {*} value","   * @param {String} typeof name","   * @param {String} message","   * @api public","   */","","  assert.typeOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.a(type);","  };","","  /**","   * # .instanceOf(object, constructor, [message])","   *","   * Assert `value` is instanceof `constructor`.","   *","   *      var Tea = function (name) { this.name = name; }","   *        , Chai = new Tea('chai');","   *","   *      assert.instanceOf(Chai, Tea, 'chai is an instance of tea');","   *","   * @name instanceOf","   * @param {Object} object","   * @param {Constructor} constructor","   * @param {String} message","   * @api public","   */","","  assert.instanceOf = function (val, type, msg) {","    new Assertion(val, msg).to.be.instanceof(type);","  };","","  /**","   * # .include(value, includes, [message])","   *","   * Assert the inclusion of an object in another. Works","   * for strings and arrays.","   *","   *      assert.include('foobar', 'bar', 'foobar contains string `var`);","   *      assert.include([ 1, 2, 3], 3, 'array contains value);","   *","   * @name include","   * @param {Array|String} value","   * @param {*} includes","   * @param {String} message","   * @api public","   */","","  assert.include = function (exp, inc, msg) {","    var obj = new Assertion(exp, msg);","","    if (Array.isArray(exp)) {","      obj.to.include(inc);","    } else if ('string' === typeof exp) {","      obj.to.contain.string(inc);","    }","  };","","  /**","   * # .match(value, regex, [message])","   *","   * Assert that `value` matches regular expression.","   *","   *      assert.match('foobar', /^foo/, 'Regexp matches');","   *","   * @name match","   * @param {*} value","   * @param {RegExp} RegularExpression","   * @param {String} message","   * @api public","   */","","  assert.match = function (exp, re, msg) {","    new Assertion(exp, msg).to.match(re);","  };","","  /**","   * # .length(value, constructor, [message])","   *","   * Assert that object has expected length.","   *","   *      assert.length([1,2,3], 3, 'Array has length of 3');","   *      assert.length('foobar', 5, 'String has length of 6');","   *","   * @name length","   * @param {*} value","   * @param {Number} length","   * @param {String} message","   * @api public","   */","","  assert.length = function (exp, len, msg) {","    new Assertion(exp, msg).to.have.length(len);","  };","","  /**","   * # .throws(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      assert.throw(fn, ReferenceError, 'function throw reference error');","   *","   * @name throws","   * @alias throw","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.throws = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.throw(type);","  };","","  /**","   * # .doesNotThrow(function, [constructor/regexp], [message])","   *","   * Assert that a function will throw a specific","   * type of error.","   *","   *      var fn = function (err) { if (err) throw Error(err) };","   *      assert.doesNotThrow(fn, Error, 'function throw reference error');","   *","   * @name doesNotThrow","   * @param {Function} function to test","   * @param {ErrorConstructor} constructor","   * @param {String} message","   * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error#Error_types","   * @api public","   */","","  assert.doesNotThrow = function (fn, type, msg) {","    if ('string' === typeof type) {","      msg = type;","      type = null;","    }","","    new Assertion(fn, msg).to.not.throw(type);","  };","","  /**","   * # .operator(val, operator, val2, [message])","   *","   * Compare two values using operator.","   *","   *      assert.operator(1, '&lt;', 2, 'everything is ok');","   *      assert.operator(1, '&gt;', 2, 'this will fail');","   *","   * @name operator","   * @param {*} object to test","   * @param {String} operator","   * @param {*} second object","   * @param {String} message","   * @api public","   */","","  assert.operator = function (val, operator, val2, msg) {","    if (!~['==', '===', '&gt;', '&gt;=', '&lt;', '&lt;=', '!=', '!=='].indexOf(operator)) {","      throw new Error('Invalid operator \"' + operator + '\"');","    }","    var test = new Assertion(eval(val + operator + val2), msg);","    test.assert(","        true === test.obj","      , 'expected ' + inspect(val) + ' to be ' + operator + ' ' + inspect(val2)","      , 'expected ' + inspect(val) + ' to not be ' + operator + ' ' + inspect(val2) );","  };","","  /*!","   * Undocumented / untested","   */","","  assert.ifError = function (val, msg) {","    new Assertion(val, msg).to.not.be.ok;","  };","","  /*!","   * Aliases.","   */","","  (function alias(name, as){","    assert[as] = assert[name];","    return alias;","  })","  ('length', 'lengthOf')","  ('throws', 'throw');","};"];
 
 });
 
@@ -13562,7 +13777,7 @@ require.define("/node_modules/chai/lib/chai.js", function (require, module, expo
 var used = [];
 var exports = module.exports = {};
 
-exports.version = '0.5.0';
+exports.version = '0.5.2';
 
 exports.Assertion = require('./assertion');
 exports.AssertionError = require('./error');
@@ -13679,7 +13894,7 @@ function Assertion (obj, msg, stack) {
 Assertion.includeStack = false;
 
 /*!
- * # .assert(expression, message, negateMessage)
+ * # .assert(expression, message, negateMessage, expected, actual)
  *
  * Executes an expression and check expectations. Throws AssertionError for reporting if test doesn't pass.
  *
@@ -13687,6 +13902,8 @@ Assertion.includeStack = false;
  * @param {Philosophical} expression to be tested
  * @param {String} message to display if fails
  * @param {String} negatedMessage to display if negated expression fails
+ * @param {*} expected value (remember to check for negation)
+ * @param {*} actual (optional) will default to `this.obj`
  * @api private
  */
 
@@ -15140,6 +15357,29 @@ module.exports = function (chai) {
   var assert = chai.assert = {};
 
   /**
+   * # .fail(actual, expect, msg, operator)
+   *
+   * Throw a failure. Node.js compatible.
+   *
+   * @name fail
+   * @param {*} actual value
+   * @param {*} expected value
+   * @param {String} message
+   * @param {String} operator
+   * @api public
+   */
+
+  assert.fail = function (actual, expected, message, operator) {
+    throw new chai.AssertionError({
+        actual: actual
+      , expected: expected
+      , message: message
+      , operator: operator
+      , stackStartFunction: assert.fail
+    });
+  }
+
+  /**
    * # .ok(object, [message])
    *
    * Assert object is truthy.
@@ -15361,6 +15601,24 @@ module.exports = function (chai) {
 
   assert.isUndefined = function (val, msg) {
     new Assertion(val, msg).to.equal(undefined);
+  };
+
+  /**
+   * # .isDefined(value, [message])
+   *
+   * Assert `value` is not undefined.
+   *
+   *      var tea = 'cup of chai';
+   *      assert.isDefined(tea, 'no tea defined');
+   *
+   * @name isUndefined
+   * @param {*} value
+   * @param {String} message
+   * @api public
+   */
+
+  assert.isDefined = function (val, msg) {
+    new Assertion(val, msg).to.not.equal(undefined);
   };
 
   /**
@@ -15648,7 +15906,11 @@ module.exports = function (chai) {
     if (!~['==', '===', '>', '>=', '<', '<=', '!=', '!=='].indexOf(operator)) {
       throw new Error('Invalid operator "' + operator + '"');
     }
-    new Assertion(eval(val + operator + val2), msg).to.be.true;
+    var test = new Assertion(eval(val + operator + val2), msg);
+    test.assert(
+        true === test.obj
+      , 'expected ' + inspect(val) + ' to be ' + operator + ' ' + inspect(val2)
+      , 'expected ' + inspect(val) + ' to not be ' + operator + ' ' + inspect(val2) );
   };
 
   /*!
@@ -17601,7 +17863,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
             debugLog("execute : " + method +  " on " + storeName + " for " + object.id);
             switch (method) {
             case "create":
-                this.write(storeName, object, options);
+                this.create(storeName, object, options);
                 break;
             case "read":
                 if (object.id || object.cid) {
@@ -17611,7 +17873,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                 }
                 break;
             case "update":
-                this.write(storeName, object, options); // We may want to check that this is not a collection. TOFIX
+                this.update(storeName, object, options); // We may want to check that this is not a collection. TOFIX
                 break;
             case "delete":
                 this.delete(storeName, object, options); // We may want to check that this is not a collection. TOFIX
@@ -17621,9 +17883,29 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
             }
         },
 
-        // Writes the json to the storeName in db.
+        // Writes the json to the storeName in db. It is a create operations, which means it will fail if the key already exists
         // options are just success and error callbacks.
-        write: function (storeName, object, options) {
+        create: function (storeName, object, options) {
+            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(writeTransaction);
+            var store = writeTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            if (!json.id) json.id = guid();
+
+            var writeRequest = store.add(json, json.id);
+
+            writeRequest.onerror = function (e) {
+                options.error(e);
+            };
+            writeRequest.onsuccess = function (e) {
+                options.success(json);
+            };
+        },
+        
+        // Writes the json to the storeName in db. It is an update operation, which means it will overwrite the value if the key already exist
+        // options are just success and error callbacks.
+        update: function (storeName, object, options) {
             var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
             //this._track_transaction(writeTransaction);
             var store = writeTransaction.objectStore(storeName);
@@ -17891,6 +18173,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
     };
 
     if(typeof exports == 'undefined'){
+        Backbone.ajaxSync = Backbone.sync;
         Backbone.sync = sync;
     }
     else {
@@ -22925,6 +23208,55 @@ describe('Message', function(){
     });
     
     describe('calculateRelevance', function() {
+        
+    });
+    
+    describe('when saving', function() {
+        it('should not save duplicate messages (with the same id)', function(done) {
+            var id = "a-unique-id";
+            var message  = new Message();
+            message.save({id: id}, {
+                success: function() {
+                    var dupe = new Message();
+                    dupe.save({id: id}, {
+                        success: function() {
+                            // This should not happen!
+                            throw new Error('We were able to save the dupe!');
+                        },
+                        error: function() {
+                            done();
+                        }
+                    });
+                }.bind(this),
+                error: function() {
+                    throw new Error('We couldn\'t save the message');
+                    // This should not happen!
+                }.bind(this)
+            }); 
+        });
+        
+        it('should yet allow for updates', function(done) {
+            var id = "a-unique-id";
+            var message  = new Message();
+            message.save({id: id}, {
+                success: function() {
+                    message.save({title: "hello world"}, {
+                        success: function() {
+                            // This should not happen!
+                            done();
+                        },
+                        error: function() {
+                            throw new Error('We were not able to update the message.');
+                        }
+                    });
+                }.bind(this),
+                error: function() {
+                    throw new Error('We couldn\'t save the message');
+                    // This should not happen!
+                }.bind(this)
+            }); 
+        })
+        
         
     });
     
