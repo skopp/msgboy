@@ -16293,7 +16293,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);
                     }.bind(this),
-                    error: function() {
+                    error: function(error) {
                         Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
                     }.bind(this)
                 }); 
@@ -18286,8 +18286,15 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
-    /* Creates a message (uses save but makes sure we do not overide an existing message.) */
+    /* Creates a message (uses save but makes sure we do not overide an existing message.) 
+       It also deletes some attributes that we will not use in the msgboy to make it lighter
+    */
     create: function(attributes, options) {
+        delete this.attributes.summary;
+        delete this.attributes.content;
+        delete this.attributes.text;
+        delete this.attributes.updated;
+        delete this.attributes.published;
         this.isNew = function() {
             return true;
         }
@@ -18339,23 +18346,6 @@ var Message = Backbone.Model.extend({
         else {
             params.mainLink = "";
         }
-        
-        // Setting up the text, as the longest between the summary and the content.
-        if (params.content) {
-            if (params.summary && params.summary.length > params.content.length) {
-                params.text =  params.summary;
-            }
-            else {
-                params.text =  params.content;
-            }
-        }
-        else if (params.summary) {
-            params.text =  params.summary;
-        }
-        else {
-            params.text = "";
-        }
-        
         
         // Setting up the params
         this.set(params);

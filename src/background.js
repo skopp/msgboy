@@ -313,7 +313,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);
                     }.bind(this),
-                    error: function() {
+                    error: function(error) {
                         Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
                     }.bind(this)
                 }); 
