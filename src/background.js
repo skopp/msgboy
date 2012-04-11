@@ -5,13 +5,12 @@ var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
 var Message         = require('./models/message.js').Message;
-var WelcomeMessages = require('./models/welcome-messages.js').WelcomeMessages;
+var MessageTrigger  = require('./models/triggered-messages.js').MessageTrigger;
 var Subscriptions   = require('./models/subscription.js').Subscriptions;
 var Subscription    = require('./models/subscription.js').Subscription;
 var Strophe         = require('./strophejs/core.js').Strophe
 var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
 Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
-
 
 var Blogger = require('./plugins/blogger.js').Blogger;
 new Blogger(Plugins);
@@ -309,12 +308,12 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
 
             message.calculateRelevance(function (_relevance) {
                 attributes.relevance = _relevance;
-                message.save(attributes, {
+                message.create(attributes, {
                     success: function() {
                         Msgboy.log.debug("Saved message", msg.id);
                         Msgboy.inbox.trigger("messages:added", message);
                     }.bind(this),
-                    error: function() {
+                    error: function(error) {
                         Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
                     }.bind(this)
                 }); 
@@ -330,16 +329,18 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
 }
 
 Msgboy.bind("loaded", function () {
+    MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
     
     Msgboy.inbox = new Inbox();
     
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
-        notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
+        notify(message.toJSON(), message.attributes.relevance > Msgboy.inbox.attributes.options.relevance);
     });
 
     // When the inbox is ready
     Msgboy.inbox.bind("ready", function () {
+        Msgboy.trigger("inbox:ready");
         Msgboy.log.debug("Inbox ready");
         connect(Msgboy.inbox);
         // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
@@ -364,20 +365,7 @@ Msgboy.bind("loaded", function () {
     // When the inbox is new.
     Msgboy.inbox.bind("new", function () {
         Msgboy.log.debug("New Inbox");
-        // Add a couple boxes for the example!
-        for(var i in WelcomeMessages) {
-            var msg = new Message(WelcomeMessages[i]);
-            msg.save({}, {
-                success: function () {
-                    Msgboy.log.debug("Saved message " + msg.id);
-                }.bind(this),
-                error: function (object, error) {
-                    // Message was not saved... probably a dupe
-                    Msgboy.log.debug("Could not save message " + JSON.stringify(msg.toJSON()));
-                    Msgboy.log.debug(error);
-                }.bind(this)
-            });
-        }
+        Msgboy.trigger("inbox:new"); // Let's indicate all msgboy susbcribers that it's the case!
         
         Msgboy.bind("connected", function(){
             // And import all plugins.
@@ -388,10 +376,12 @@ Msgboy.bind("loaded", function () {
             }, 
             function(plugin, subscriptionsCount) {
                 // Called when done with one plugin
+                Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
                 Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
             },
             function(subscriptionsCount) {
                 // Called when done with all plugins
+                Msgboy.trigger("plugins:imported", subscriptionsCount); // Let's indicate all msgboy susbcribers that it's the case!
                 Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
             });
         });
@@ -529,6 +519,5 @@ Msgboy.bind("loaded", function () {
     
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
-    
  });
 

@@ -24,6 +24,20 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
+    /* Creates a message (uses save but makes sure we do not overide an existing message.) 
+       It also deletes some attributes that we will not use in the msgboy to make it lighter
+    */
+    create: function(attributes, options) {
+        delete this.attributes.summary;
+        delete this.attributes.content;
+        delete this.attributes.text;
+        delete this.attributes.updated;
+        delete this.attributes.published;
+        this.isNew = function() {
+            return true;
+        }
+        this.save(attributes, options);
+    },
     /* Initializes the messages */
     initialize: function (params) {
         if(typeof params === "undefined") {
@@ -86,7 +100,6 @@ var Message = Backbone.Model.extend({
         else {
             params.text = "";
         }
-        
         
         // Setting up the params
         this.set(params);

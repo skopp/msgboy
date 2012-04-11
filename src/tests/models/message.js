@@ -115,6 +115,77 @@ describe('Message', function(){
         
     });
     
+    describe('when saving', function() {
+        it('should not save duplicate messages (with the same id)', function(done) {
+            var id = "a-unique-id";
+            
+            var runTest = function() {
+                var message  = new Message();
+                message.create({id: id}, {
+                    success: function() {
+                        var dupe = new Message();
+                        dupe.create({id: id}, {
+                            success: function() {
+                                // This should not happen!
+                                throw new Error('We were able to save the dupe!');
+                            },
+                            error: function() {
+                                done();
+                            }
+                        });
+                    }.bind(this),
+                    error: function() {
+                        throw new Error('We couldn\'t save the message');
+                        // This should not happen!
+                    }.bind(this)
+                });
+            };
+            
+            // First, we need to clean up any existing message.
+            var clean = new Message({id: id});
+            clean.fetch({
+                success: function () {
+                    // The message exists! Let's delete it.
+                    clean.destroy({
+                        success: function() {
+                            runTest();
+                        }.bind(this)
+                    });
+                }.bind(this),
+                error: function () {
+                    // The message does not exist.
+                    runTest();
+                }.bind(this)
+                
+            })
+            
+        });
+        
+        it('should yet allow for updates', function(done) {
+            var id = "a-unique-id";
+            var message  = new Message();
+            message.save({id: id}, {
+                success: function() {
+                    message.save({title: "hello world"}, {
+                        success: function() {
+                            // This should not happen!
+                            done();
+                        },
+                        error: function() {
+                            throw new Error('We were not able to update the message.');
+                        }
+                    });
+                }.bind(this),
+                error: function() {
+                    throw new Error('We couldn\'t save the message');
+                    // This should not happen!
+                }.bind(this)
+            }); 
+        })
+        
+        
+    });
+    
     describe('relevanceBasedOnBrothers', function() {
         
     });
