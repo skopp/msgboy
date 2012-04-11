@@ -12999,6 +12999,22 @@ var Message = Backbone.Model.extend({
             params.mainLink = "";
         }
         
+        // Setting up the text, as the longest between the summary and the content.
+        if (params.content) {
+            if (params.summary && params.summary.length > params.content.length) {
+                params.text =  params.summary;
+            }
+            else {
+                params.text =  params.content;
+            }
+        }
+        else if (params.summary) {
+            params.text =  params.summary;
+        }
+        else {
+            params.text = "";
+        }
+        
         // Setting up the params
         this.set(params);
         
