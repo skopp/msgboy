@@ -347,7 +347,7 @@ Msgboy.bind("loaded", function () {
         if(Msgboy.inbox.attributes.options.pinMsgboy) {
             chrome.tabs.getAllInWindow(undefined, function(tabs) {
                 for (var i = 0, tab; tab = tabs[i]; i++) {
-                    if (tab.url && tab.url.match(/chrome-extension:\/\/.*\/views\/html\/dashboard\.html/)) {
+                    if (tab.url && tab.url.match(new RegExp("chrome-extension://" + chrome.i18n.getMessage("@@extension_id") + ""))) {
                         // Fine, the tab is opened. No need to do much more.
                         return;
                     }
