@@ -29,7 +29,7 @@ var NotificationView = Backbone.View.extend({
                 model: message
             });
             
-            message.bind("up-ed", function () {
+            message.bind('up-ed', function () {
                 // The message was uped. We need to go to that page
                 // And show the next
                 this.showNext();
@@ -40,12 +40,12 @@ var NotificationView = Backbone.View.extend({
                 });
             }.bind(this));
 
-            message.bind("down-ed", function () {
+            message.bind('down-ed', function () {
                 this.showNext();
                 view.remove();
             }.bind(this));
             
-            message.bind("clicked", function() {
+            message.bind('clicked', function() {
                 this.showNext();
                 view.remove();
             }.bind(this));

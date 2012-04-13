@@ -14505,7 +14505,6 @@ var MessageView = Backbone.View.extend({
             this.handleExpand();
         }
         else {
-            this.model.trigger('clicked');
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     chrome.extension.sendRequest({
@@ -14513,11 +14512,19 @@ var MessageView = Backbone.View.extend({
                         params: this.model.toJSON()
                     });
                 } else {
-                    chrome.extension.sendRequest({
-                        signature: "tab",
-                        params: {url: this.model.get('mainLink'), selected: false}
-                    });
-                    this.trigger("clicked");
+                    // User wants to open a tab.
+                    // We need to open a tab right after this one.
+                    chrome.tabs.getCurrent(function(tab) {
+                        var tabParams = {url: this.model.get('mainLink'), selected: false};
+                        if(tab) {
+                            tabParams['index'] = tab.index + 1;
+                        }
+                        chrome.extension.sendRequest({
+                            signature: 'tab',
+                            params: tabParams
+                        });
+                        this.model.trigger('clicked');
+                    }.bind(this));
                 }
             }
         }
