@@ -12405,11 +12405,19 @@ Feediscovery.stack = [];
 Feediscovery.running = false;
 
 Feediscovery.get = function (_url, _callback) {
-    Feediscovery.stack.push([_url, _callback]);
-    if(!Feediscovery.running) {
-        Feediscovery.running = true;
-        Feediscovery.run();
+    // Let's first do some verifications on the url to avoid wasting resources.
+    if(_url.match(/chrome-extension:/)) {
+        // No feediscovery lookup for chrome extensions.
+        _callback([]);
     }
+    else {
+        Feediscovery.stack.push([_url, _callback]);
+        if(!Feediscovery.running) {
+            Feediscovery.running = true;
+            Feediscovery.run();
+        }
+    }
+    
 };
 Feediscovery.run = function () {
     var next = Feediscovery.stack.shift();
