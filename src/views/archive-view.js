@@ -6,8 +6,6 @@ var MessageView = require('./message-view.js').MessageView;
 var Archive = require('../models/archive.js').Archive;
 require("../date.extension.js");
 
-window.$ = $;
-
 var ArchiveView = Backbone.View.extend({
     upperBound: new Date().getTime(),
     lowerBound: 0,
