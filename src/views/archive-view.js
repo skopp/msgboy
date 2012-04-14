@@ -17,7 +17,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'appendNew', 'completePage', 'loadNext');
+        _.bindAll(this, 'appendNew', 'completePage');
         
         $('#container').masonry({
             itemSelector : '.message',
@@ -26,9 +26,11 @@ var ArchiveView = Backbone.View.extend({
                 duration: 1000
             }
         });
-          
+        
+        // Completes the page by loading more messages.
         $(document).scroll(this.completePage);
         
+        // Show the time indicator
         $(document).scroll(function() {
             var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
             if(message && typeof(message.data('model')) !== "undefined") {
@@ -47,25 +49,19 @@ var ArchiveView = Backbone.View.extend({
         this.loadingTimes =[];
         this.loaded = this.toLoad;
         this.collection.bind('add', this.appendNew);
-        this.loadNext();
+        this.completePage();
     },
     completePage: function () {
-        if ($("#container").height() < $(window).height()) {
-            // We should also pre-emptively load more pages if the document is shorter than the page.
-            this.loadNext();
-        } else if ($(window).scrollTop() > $(document).height() - $(window).height() - 300) {
-            // We're close to the bottom. Let's load an additional page!
-            this.loadNext();
-        }
-    },
-    loadNext: function () {
         if (this.loaded === this.toLoad) {
-            this.loaded = 0; // Reset the loaded counter!
-            this.collection.next(this.toLoad, {
-                createdAt: [this.upperBound, this.lowerBound]
-            });
+            if ($(window).scrollTop() > $(document).height() - 5 * $(window).height()) {
+                this.loaded = 0; // Reset the loaded counter!
+                this.collection.next(this.toLoad, {
+                    createdAt: [this.upperBound, this.lowerBound]
+                });
+            }
         }
     },
+
     prependNew: function (message) {
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
