@@ -17,7 +17,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'appendNew', 'completePage');
+        _.bindAll(this, 'appendNew', 'completePage', 'prependNew');
         
         $('#container').masonry({
             itemSelector : '.message',
@@ -61,7 +61,6 @@ var ArchiveView = Backbone.View.extend({
             }
         }
     },
-
     prependNew: function (message) {
         if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
             message.bind('up-ed', function() {
