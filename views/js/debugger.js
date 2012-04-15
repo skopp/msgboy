@@ -12398,6 +12398,656 @@ if(typeof window !== "undefined") {
 
 });
 
+require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
+var $ = jQuery = require('jquery');
+var Backbone = require('backbone');
+Backbone.sync = require('backbone-indexeddb').sync;
+var msgboyDatabase = require('./database.js').msgboyDatabase;
+
+var Archive = Backbone.Collection.extend({
+    storeName: "messages",
+    database: msgboyDatabase,
+
+    initialize: function () {
+        this.model = require('./message.js').Message; // This avoids recursion in requires
+    },
+    comparator: function (message) {
+        return - (message.get('createdAt'));
+    },
+    next: function (number, condition) {
+        var options = {
+            conditions: condition,
+            limit: number,
+            addIndividually: true
+        };
+        this.fetch(options);
+    },
+    forFeed: function (_feed) {
+        this.fetch({conditions: {feed: _feed}});
+    }
+});
+
+exports.Archive = Archive;
+});
+
+require.define("/node_modules/backbone-indexeddb/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"backbone-indexeddb.js"}
+});
+
+require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
+(function () { /*global _: false, Backbone: false */
+    // Generate four random hex digits.
+    function S4() {
+        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+    }
+
+    // Generate a pseudo-GUID by concatenating random hexadecimal.
+    function guid() {
+        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+    }
+
+    if(typeof exports !== 'undefined'){
+        _ = require('underscore');
+        Backbone = require('backbone');
+    }
+    
+    
+     // Naming is a mess!
+     var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB ;
+     var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction; // No prefix in moz
+     var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange ; // No prefix in moz
+
+     /* Horrible Hack to prevent ' Expected an identifier and instead saw 'continue' (a reserved word).'*/
+     if (window.indexedDB) {
+         indexedDB.prototype._continue =  indexedDB.prototype.continue;
+     } else if (window.webkitIDBRequest) {
+         webkitIDBRequest.prototype._continue = webkitIDBRequest.prototype.continue;
+     }
+
+     window.indexedDB = indexedDB;
+     window.IDBCursor = window.IDBCursor || window.webkitIDBCursor ||  window.mozIDBCursor ||  window.msIDBCursor ;
+    
+
+    // Driver object
+    // That's the interesting part.
+    // There is a driver for each schema provided. The schema is a te combination of name (for the database), a version as well as migrations to reach that 
+    // version of the database.
+    function Driver(schema, ready) {
+        this.schema         = schema;
+        this.ready          = ready;
+        this.error          = null;
+        this.transactions   = []; // Used to list all transactions and keep track of active ones.
+        this.db             = null;
+        this.supportOnUpgradeNeeded = false;
+        var lastMigrationPathVersion = _.last(this.schema.migrations).version;
+        debugLog("opening database " + this.schema.id + " in version #" + lastMigrationPathVersion);
+        this.dbRequest      = indexedDB.open(this.schema.id,lastMigrationPathVersion); //schema version need to be an unsigned long
+
+        this.launchMigrationPath = function(dbVersion) {
+            var clonedMigrations = _.clone(schema.migrations);
+            this.migrate(clonedMigrations, dbVersion, {
+                success: function () {
+                    this.ready();
+                }.bind(this),
+                error: function () {
+                    this.error = "Database not up to date. " + dbVersion + " expected was " + lastMigrationPathVersion;
+                }.bind(this)
+            });
+        };
+
+        this.dbRequest.onblocked = function(event){
+            debugLog("blocked");
+        }
+
+        this.dbRequest.onsuccess = function (e) {
+            this.db = e.target.result; // Attach the connection ot the queue.
+
+            if(!this.supportOnUpgradeNeeded)
+            {
+                var currentIntDBVersion = (parseInt(this.db.version) ||  0); // we need convert beacuse chrome store in integer and ie10 DP4+ in int;
+
+                if (currentIntDBVersion === lastMigrationPathVersion) { //if support new event onupgradeneeded will trigger the ready function
+                    // No migration to perform!
+                    this.ready();
+                } else if (currentIntDBVersion < lastMigrationPathVersion ) {
+                    // We need to migrate up to the current migration defined in the database
+                    this.launchMigrationPath(currentIntDBVersion);
+                } else {
+                    // Looks like the IndexedDB is at a higher version than the current driver schema.
+                    this.error = "Database version is greater than current code " + currentIntDBVersion + " expected was " + lastMigrationPathVersion;
+                }
+            };
+        }.bind(this);
+
+
+
+        this.dbRequest.onerror = function (e) {
+            // Failed to open the database
+            this.error = "Couldn't not connect to the database"
+        }.bind(this);
+
+        this.dbRequest.onabort = function (e) {
+            // Failed to open the database
+            this.error = "Connection to the database aborted"
+        }.bind(this);
+
+
+
+        this.dbRequest.onupgradeneeded = function(iDBVersionChangeEvent){
+            this.db =iDBVersionChangeEvent.target.transaction.db;
+
+            this.supportOnUpgradeNeeded = true;
+
+            debugLog("onupgradeneeded = " + iDBVersionChangeEvent.oldVersion + " => " + iDBVersionChangeEvent.newVersion);
+            this.launchMigrationPath(iDBVersionChangeEvent.oldVersion);
+
+
+        }.bind(this);
+    }
+
+    function debugLog(str) {
+        if (typeof window !== "undefined" && typeof window.console !== "undefined" && typeof window.console.log !== "undefined") {
+            window.console.log(str);
+        }
+        else if(console.log !== "undefined") {
+            console.log(str)
+        }
+    }
+
+    // Driver Prototype
+    Driver.prototype = {
+
+        // Tracks transactions. Mostly for debugging purposes. TO-IMPROVE
+        _track_transaction: function(transaction) {
+            this.transactions.push(transaction);
+            function removeIt() {
+                var idx = this.transactions.indexOf(transaction);
+                if (idx !== -1) {this.transactions.splice(idx); }
+            };
+            transaction.oncomplete = removeIt.bind(this);
+            transaction.onabort = removeIt.bind(this);
+            transaction.onerror = removeIt.bind(this);
+        },
+
+        // Performs all the migrations to reach the right version of the database.
+        migrate: function (migrations, version, options) {
+            debugLog("Starting migrations from " + version);
+            this._migrate_next(migrations, version, options);
+        },
+
+        // Performs the next migrations. This method is private and should probably not be called.
+        _migrate_next: function (migrations, version, options) {
+            debugLog("_migrate_next begin version from #" + version);
+            var that = this;
+            var migration = migrations.shift();
+            if (migration) {
+                if (!version || version < migration.version) {
+                    // We need to apply this migration-
+                    if (typeof migration.before == "undefined") {
+                        migration.before = function (next) {
+                            next();
+                        };
+                    }
+                    if (typeof migration.after == "undefined") {
+                        migration.after = function (next) {
+                            next();
+                        };
+                    }
+                    // First, let's run the before script
+                    debugLog("_migrate_next begin before version #" + migration.version);
+                    migration.before(function () {
+                        debugLog("_migrate_next done before version #" + migration.version);
+
+                        var continueMigration = function (e) {
+                            debugLog("_migrate_next continueMigration version #" + migration.version);
+
+                            var transaction = this.dbRequest.transaction || versionRequest.result;
+                            debugLog("_migrate_next begin migrate version #" + migration.version);
+
+                            migration.migrate(transaction, function () {
+                                debugLog("_migrate_next done migrate version #" + migration.version);
+                                // Migration successfully appliedn let's go to the next one!
+                                debugLog("_migrate_next begin after version #" + migration.version);
+                                migration.after(function () {
+                                    debugLog("_migrate_next done after version #" + migration.version);
+                                    debugLog("Migrated to " + migration.version);
+
+                                    //last modification occurred, need finish
+                                    if(migrations.length ==0) {
+                                        /*if(this.supportOnUpgradeNeeded){
+                                            debugLog("Done migrating");
+                                            // No more migration
+                                            options.success();
+                                        }
+                                        else{*/
+                                            debugLog("_migrate_next setting transaction.oncomplete to finish  version #" + migration.version);
+                                            transaction.oncomplete = function() {
+                                                debugLog("_migrate_next done transaction.oncomplete version #" + migration.version);
+
+                                                debugLog("Done migrating");
+                                                // No more migration
+                                                options.success();
+                                            }
+                                        //}
+                                    }
+                                    else
+                                    {
+                                        debugLog("_migrate_next setting transaction.oncomplete to recursive _migrate_next  version #" + migration.version);
+                                        transaction.oncomplete = function() {
+                                           debugLog("_migrate_next end from version #" + version + " to " + migration.version);
+                                           that._migrate_next(migrations, version, options);
+                                       }
+                                    }
+
+                                }.bind(this));
+                            }.bind(this));
+                        }.bind(this);
+
+                        if(!this.supportOnUpgradeNeeded){
+                            debugLog("_migrate_next begin setVersion version #" + migration.version);
+                            var versionRequest = this.db.setVersion(migration.version);
+                            versionRequest.onsuccess = continueMigration;
+                            versionRequest.onerror = options.error;
+                        }
+                        else {
+                            continueMigration();
+                        }
+
+                    }.bind(this));
+                } else {
+                    // No need to apply this migration
+                    debugLog("Skipping migration " + migration.version);
+                    this._migrate_next(migrations, version, options);
+                }
+            }
+        },
+
+        // This is the main method, called by the ExecutionQueue when the driver is ready (database open and migration performed)
+        execute: function (storeName, method, object, options) {
+            debugLog("execute : " + method +  " on " + storeName + " for " + object.id);
+            switch (method) {
+            case "create":
+                this.create(storeName, object, options);
+                break;
+            case "read":
+                if (object.id || object.cid) {
+                    this.read(storeName, object, options); // It's a model
+                } else {
+                    this.query(storeName, object, options); // It's a collection
+                }
+                break;
+            case "update":
+                this.update(storeName, object, options); // We may want to check that this is not a collection. TOFIX
+                break;
+            case "delete":
+                this.delete(storeName, object, options); // We may want to check that this is not a collection. TOFIX
+                break;
+            default:
+                // Hum what?
+            }
+        },
+
+        // Writes the json to the storeName in db. It is a create operations, which means it will fail if the key already exists
+        // options are just success and error callbacks.
+        create: function (storeName, object, options) {
+            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(writeTransaction);
+            var store = writeTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            if (!json.id) json.id = guid();
+
+            var writeRequest = store.add(json, json.id);
+
+            writeRequest.onerror = function (e) {
+                options.error(e);
+            };
+            writeRequest.onsuccess = function (e) {
+                options.success(json);
+            };
+        },
+        
+        // Writes the json to the storeName in db. It is an update operation, which means it will overwrite the value if the key already exist
+        // options are just success and error callbacks.
+        update: function (storeName, object, options) {
+            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(writeTransaction);
+            var store = writeTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            if (!json.id) json.id = guid();
+
+            var writeRequest = store.put(json, json.id);
+
+            writeRequest.onerror = function (e) {
+                options.error(e);
+            };
+            writeRequest.onsuccess = function (e) {
+                options.success(json);
+            };
+        },
+
+        // Reads from storeName in db with json.id if it's there of with any json.xxxx as long as xxx is an index in storeName 
+        read: function (storeName, object, options) {
+            var readTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
+            this._track_transaction(readTransaction);
+
+            var store = readTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+
+            var getRequest = null;
+            if (json.id) {
+                getRequest = store.get(json.id);
+            } else {
+                // We need to find which index we have
+                _.each(store.indexNames, function (key, index) {
+                    index = store.index(key);
+                    if (json[index.keyPath] && !getRequest) {
+                        getRequest = index.get(json[index.keyPath]);
+                    }
+                });
+            }
+            if (getRequest) {
+                getRequest.onsuccess = function (event) {
+                    if (event.target.result) {
+                        options.success(event.target.result);
+                    } else {
+                        options.error("Not Found");
+                    }
+                };
+                getRequest.onerror = function () {
+                    options.error("Not Found"); // We couldn't find the record.
+                }
+            } else {
+                options.error("Not Found"); // We couldn't even look for it, as we don't have enough data.
+            }
+        },
+
+        // Deletes the json.id key and value in storeName from db.
+        delete: function (storeName, object, options) {
+            var deleteTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
+            //this._track_transaction(deleteTransaction);
+
+            var store = deleteTransaction.objectStore(storeName);
+            var json = object.toJSON();
+
+            var deleteRequest = store.delete(json.id);
+            deleteRequest.onsuccess = function (event) {
+                options.success(null);
+            };
+            deleteRequest.onerror = function (event) {
+                options.error("Not Deleted");
+            };
+        },
+
+        // Performs a query on storeName in db.
+        // options may include :
+        // - conditions : value of an index, or range for an index
+        // - range : range for the primary key
+        // - limit : max number of elements to be yielded
+        // - offset : skipped items.
+        query: function (storeName, collection, options) {
+            var elements = [];
+            var skipped = 0, processed = 0;
+            var queryTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
+            //this._track_transaction(queryTransaction);
+
+            var readCursor = null;
+            var store = queryTransaction.objectStore(storeName);
+            var index = null,
+                lower = null,
+                upper = null,
+                bounds = null;
+
+            if (options.conditions) {
+                // We have a condition, we need to use it for the cursor
+                _.each(store.indexNames, function (key) {
+                    if (!readCursor) {
+                        index = store.index(key);
+                        if (options.conditions[index.keyPath] instanceof Array) {
+                            lower = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][1] : options.conditions[index.keyPath][0];
+                            upper = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][0] : options.conditions[index.keyPath][1];
+                            bounds = IDBKeyRange.bound(lower, upper, true, true);
+
+                            if (options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1]) {
+                                // Looks like we want the DESC order
+                                readCursor = index.openCursor(bounds, window.IDBCursor.PREV);
+                            } else {
+                                // We want ASC order
+                                readCursor = index.openCursor(bounds, window.IDBCursor.NEXT);
+                            }
+                        } else if (options.conditions[index.keyPath]) {
+                            bounds = IDBKeyRange.only(options.conditions[index.keyPath]);
+                            readCursor = index.openCursor(bounds);
+                        }
+                    }
+                });
+            } else {
+                // No conditions, use the index
+                if (options.range) {
+                    lower = options.range[0] > options.range[1] ? options.range[1] : options.range[0];
+                    upper = options.range[0] > options.range[1] ? options.range[0] : options.range[1];
+                    bounds = IDBKeyRange.bound(lower, upper);
+                    if (options.range[0] > options.range[1]) {
+                        readCursor = store.openCursor(bounds, window.IDBCursor.PREV);
+                    } else {
+                        readCursor = store.openCursor(bounds, window.IDBCursor.NEXT);
+                    }
+                } else {
+                    readCursor = store.openCursor();
+                }
+            }
+
+            if (typeof (readCursor) == "undefined" || !readCursor) {
+                options.error("No Cursor");
+            } else {
+                readCursor.onerror = function(e){
+                    options.error("readCursor error", e);
+                };
+                // Setup a handler for the cursor’s `success` event:
+                readCursor.onsuccess = function (e) {
+                    var cursor = e.target.result;
+                    if (!cursor || (options.limit && processed >= options.limit)) {
+                        // If there is no cursor, or if we're done adding stuff.
+                        if (options.addIndividually || options.clear) {
+                            // nothing!
+                            // We need to indicate that we're done. But, how?
+                            collection.trigger("reset");
+                        } else {
+                            options.success(elements); // We're done. No more elements.
+                        }
+                    }
+                    else {
+                        if (options.offset && options.offset > skipped) {
+                            skipped++;
+                            cursor.continue(); /* We need to Moving the cursor forward */
+                        } else {
+                            // This time, it looks like it's good!
+                            if (options.addIndividually) {
+                                collection.add(cursor.value);
+                            } else if (options.clear) {
+                                var deleteRequest = store.delete(cursor.value.id);
+                                deleteRequest.onsuccess = function (event) {
+                                    elements.push(cursor.value);
+                                };
+                                deleteRequest.onerror = function (event) {
+                                    elements.push(cursor.value);
+                                };
+
+                            } else {
+                                elements.push(cursor.value);
+                            }
+                            processed++;
+                            cursor.continue();
+                        }
+                    }
+                };
+            }
+        },
+        close :function(){
+            if(this.db){
+                this.db.close();
+            }
+        }
+    };
+
+    // ExecutionQueue object
+    // The execution queue is an abstraction to buffer up requests to the database.
+    // It holds a "driver". When the driver is ready, it just fires up the queue and executes in sync.
+    function ExecutionQueue(schema) {
+        this.driver     = new Driver(schema, this.ready.bind(this));
+        this.started    = false;
+        this.stack      = [];
+        this.version    = _.last(schema.migrations).version;
+    }
+
+    // ExecutionQueue Prototype
+    ExecutionQueue.prototype = {
+        // Called when the driver is ready
+        // It just loops over the elements in the queue and executes them.
+        ready: function () {
+            this.started = true;
+            _.each(this.stack, function (message) {
+                this.execute(message);
+            }.bind(this));
+        },
+
+        // Executes a given command on the driver. If not started, just stacks up one more element.
+        execute: function (message) {
+            if (this.started) {
+                this.driver.execute(message[1].storeName, message[0], message[1], message[2]); // Upon messages, we execute the query
+            } else {
+                this.stack.push(message);
+            }
+        },
+
+        close : function(){
+            this.driver.close();
+        }
+    };
+
+    // Method used by Backbone for sync of data with data store. It was initially designed to work with "server side" APIs, This wrapper makes 
+    // it work with the local indexedDB stuff. It uses the schema attribute provided by the object.
+    // The wrapper keeps an active Executuon Queue for each "schema", and executes querues agains it, based on the object type (collection or
+    // single model), but also the method... etc.
+    // Keeps track of the connections
+    var Databases = {};
+
+    function sync(method, object, options) {
+
+        if(method=="closeall"){
+            _.each(Databases,function(database){
+                database.close();
+            });
+
+            return;
+        }
+
+        var schema = object.database;
+        if (Databases[schema.id]) {
+            if(Databases[schema.id].version != _.last(schema.migrations).version){
+                Databases[schema.id].close();
+                delete Databases[schema.id];
+            }
+        }
+
+        var next = function(){
+        };
+
+        if (!Databases[schema.id]) {
+            Databases[schema.id] = new ExecutionQueue(schema,next);
+        }
+        Databases[schema.id].execute([method, object, options]);
+    };
+
+    if(typeof exports == 'undefined'){
+        Backbone.ajaxSync = Backbone.sync;
+        Backbone.sync = sync;
+    }
+    else {
+        exports.sync = sync;
+        exports.debugLog = debugLog;
+    }
+
+    //window.addEventListener("unload",function(){Backbone.sync("closeall")})
+})();
+});
+
+require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
+var msgboyDatabase = {
+    id: "msgboy-database",
+    description: "The database for the msgboy",
+    migrations: [{
+        version: 1,
+        migrate: function (transaction, next) {
+            transaction.db.createObjectStore("messages");
+            transaction.db.createObjectStore("inbox");
+            next();
+        }
+    }, {
+        version: 2,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("createdAtIndex", "createdAt", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 3,
+        migrate: function (transaction, next) {
+            var store = transaction.db.createObjectStore("feeds");
+            store.createIndex("urlIndex", "url", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 4,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("sourceLinkIndex", "sourceLink", {
+                unique: false
+            });
+            store.createIndex("hostIndex", "sourceHost", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 5,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("stateIndex", "state", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 6,
+        migrate: function (transaction, next) {
+            var store = transaction.objectStore("messages");
+            store.createIndex("feedIndex", "feed", {
+                unique: false
+            });
+            next();
+        }
+    }, {
+        version: 7,
+        migrate: function (transaction, next) {
+            var subscriptions = transaction.db.createObjectStore("subscriptions");
+            subscriptions.createIndex("stateIndex", "state", {unique: false});
+            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
+            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
+            next();
+        }
+    }]
+};
+
+exports.msgboyDatabase = msgboyDatabase
+});
+
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var UrlParser = require('url');
@@ -13500,1590 +14150,47 @@ function lastBraceInKey(str) {
 
 });
 
-require.define("/node_modules/backbone-indexeddb/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"backbone-indexeddb.js"}
-});
-
-require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", function (require, module, exports, __dirname, __filename) {
-(function () { /*global _: false, Backbone: false */
-    // Generate four random hex digits.
-    function S4() {
-        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-    }
-
-    // Generate a pseudo-GUID by concatenating random hexadecimal.
-    function guid() {
-        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-    }
-
-    if(typeof exports !== 'undefined'){
-        _ = require('underscore');
-        Backbone = require('backbone');
-    }
-    
-    
-     // Naming is a mess!
-     var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB ;
-     var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction; // No prefix in moz
-     var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange ; // No prefix in moz
-
-     /* Horrible Hack to prevent ' Expected an identifier and instead saw 'continue' (a reserved word).'*/
-     if (window.indexedDB) {
-         indexedDB.prototype._continue =  indexedDB.prototype.continue;
-     } else if (window.webkitIDBRequest) {
-         webkitIDBRequest.prototype._continue = webkitIDBRequest.prototype.continue;
-     }
-
-     window.indexedDB = indexedDB;
-     window.IDBCursor = window.IDBCursor || window.webkitIDBCursor ||  window.mozIDBCursor ||  window.msIDBCursor ;
-    
-
-    // Driver object
-    // That's the interesting part.
-    // There is a driver for each schema provided. The schema is a te combination of name (for the database), a version as well as migrations to reach that 
-    // version of the database.
-    function Driver(schema, ready) {
-        this.schema         = schema;
-        this.ready          = ready;
-        this.error          = null;
-        this.transactions   = []; // Used to list all transactions and keep track of active ones.
-        this.db             = null;
-        this.supportOnUpgradeNeeded = false;
-        var lastMigrationPathVersion = _.last(this.schema.migrations).version;
-        debugLog("opening database " + this.schema.id + " in version #" + lastMigrationPathVersion);
-        this.dbRequest      = indexedDB.open(this.schema.id,lastMigrationPathVersion); //schema version need to be an unsigned long
-
-        this.launchMigrationPath = function(dbVersion) {
-            var clonedMigrations = _.clone(schema.migrations);
-            this.migrate(clonedMigrations, dbVersion, {
-                success: function () {
-                    this.ready();
-                }.bind(this),
-                error: function () {
-                    this.error = "Database not up to date. " + dbVersion + " expected was " + lastMigrationPathVersion;
-                }.bind(this)
-            });
-        };
-
-        this.dbRequest.onblocked = function(event){
-            debugLog("blocked");
-        }
-
-        this.dbRequest.onsuccess = function (e) {
-            this.db = e.target.result; // Attach the connection ot the queue.
-
-            if(!this.supportOnUpgradeNeeded)
-            {
-                var currentIntDBVersion = (parseInt(this.db.version) ||  0); // we need convert beacuse chrome store in integer and ie10 DP4+ in int;
-
-                if (currentIntDBVersion === lastMigrationPathVersion) { //if support new event onupgradeneeded will trigger the ready function
-                    // No migration to perform!
-                    this.ready();
-                } else if (currentIntDBVersion < lastMigrationPathVersion ) {
-                    // We need to migrate up to the current migration defined in the database
-                    this.launchMigrationPath(currentIntDBVersion);
-                } else {
-                    // Looks like the IndexedDB is at a higher version than the current driver schema.
-                    this.error = "Database version is greater than current code " + currentIntDBVersion + " expected was " + lastMigrationPathVersion;
-                }
-            };
-        }.bind(this);
-
-
-
-        this.dbRequest.onerror = function (e) {
-            // Failed to open the database
-            this.error = "Couldn't not connect to the database"
-        }.bind(this);
-
-        this.dbRequest.onabort = function (e) {
-            // Failed to open the database
-            this.error = "Connection to the database aborted"
-        }.bind(this);
-
-
-
-        this.dbRequest.onupgradeneeded = function(iDBVersionChangeEvent){
-            this.db =iDBVersionChangeEvent.target.transaction.db;
-
-            this.supportOnUpgradeNeeded = true;
-
-            debugLog("onupgradeneeded = " + iDBVersionChangeEvent.oldVersion + " => " + iDBVersionChangeEvent.newVersion);
-            this.launchMigrationPath(iDBVersionChangeEvent.oldVersion);
-
-
-        }.bind(this);
-    }
-
-    function debugLog(str) {
-        if (typeof window !== "undefined" && typeof window.console !== "undefined" && typeof window.console.log !== "undefined") {
-            window.console.log(str);
-        }
-        else if(console.log !== "undefined") {
-            console.log(str)
-        }
-    }
-
-    // Driver Prototype
-    Driver.prototype = {
-
-        // Tracks transactions. Mostly for debugging purposes. TO-IMPROVE
-        _track_transaction: function(transaction) {
-            this.transactions.push(transaction);
-            function removeIt() {
-                var idx = this.transactions.indexOf(transaction);
-                if (idx !== -1) {this.transactions.splice(idx); }
-            };
-            transaction.oncomplete = removeIt.bind(this);
-            transaction.onabort = removeIt.bind(this);
-            transaction.onerror = removeIt.bind(this);
-        },
-
-        // Performs all the migrations to reach the right version of the database.
-        migrate: function (migrations, version, options) {
-            debugLog("Starting migrations from " + version);
-            this._migrate_next(migrations, version, options);
-        },
-
-        // Performs the next migrations. This method is private and should probably not be called.
-        _migrate_next: function (migrations, version, options) {
-            debugLog("_migrate_next begin version from #" + version);
-            var that = this;
-            var migration = migrations.shift();
-            if (migration) {
-                if (!version || version < migration.version) {
-                    // We need to apply this migration-
-                    if (typeof migration.before == "undefined") {
-                        migration.before = function (next) {
-                            next();
-                        };
-                    }
-                    if (typeof migration.after == "undefined") {
-                        migration.after = function (next) {
-                            next();
-                        };
-                    }
-                    // First, let's run the before script
-                    debugLog("_migrate_next begin before version #" + migration.version);
-                    migration.before(function () {
-                        debugLog("_migrate_next done before version #" + migration.version);
-
-                        var continueMigration = function (e) {
-                            debugLog("_migrate_next continueMigration version #" + migration.version);
-
-                            var transaction = this.dbRequest.transaction || versionRequest.result;
-                            debugLog("_migrate_next begin migrate version #" + migration.version);
-
-                            migration.migrate(transaction, function () {
-                                debugLog("_migrate_next done migrate version #" + migration.version);
-                                // Migration successfully appliedn let's go to the next one!
-                                debugLog("_migrate_next begin after version #" + migration.version);
-                                migration.after(function () {
-                                    debugLog("_migrate_next done after version #" + migration.version);
-                                    debugLog("Migrated to " + migration.version);
-
-                                    //last modification occurred, need finish
-                                    if(migrations.length ==0) {
-                                        /*if(this.supportOnUpgradeNeeded){
-                                            debugLog("Done migrating");
-                                            // No more migration
-                                            options.success();
-                                        }
-                                        else{*/
-                                            debugLog("_migrate_next setting transaction.oncomplete to finish  version #" + migration.version);
-                                            transaction.oncomplete = function() {
-                                                debugLog("_migrate_next done transaction.oncomplete version #" + migration.version);
-
-                                                debugLog("Done migrating");
-                                                // No more migration
-                                                options.success();
-                                            }
-                                        //}
-                                    }
-                                    else
-                                    {
-                                        debugLog("_migrate_next setting transaction.oncomplete to recursive _migrate_next  version #" + migration.version);
-                                        transaction.oncomplete = function() {
-                                           debugLog("_migrate_next end from version #" + version + " to " + migration.version);
-                                           that._migrate_next(migrations, version, options);
-                                       }
-                                    }
-
-                                }.bind(this));
-                            }.bind(this));
-                        }.bind(this);
-
-                        if(!this.supportOnUpgradeNeeded){
-                            debugLog("_migrate_next begin setVersion version #" + migration.version);
-                            var versionRequest = this.db.setVersion(migration.version);
-                            versionRequest.onsuccess = continueMigration;
-                            versionRequest.onerror = options.error;
-                        }
-                        else {
-                            continueMigration();
-                        }
-
-                    }.bind(this));
-                } else {
-                    // No need to apply this migration
-                    debugLog("Skipping migration " + migration.version);
-                    this._migrate_next(migrations, version, options);
-                }
-            }
-        },
-
-        // This is the main method, called by the ExecutionQueue when the driver is ready (database open and migration performed)
-        execute: function (storeName, method, object, options) {
-            debugLog("execute : " + method +  " on " + storeName + " for " + object.id);
-            switch (method) {
-            case "create":
-                this.create(storeName, object, options);
-                break;
-            case "read":
-                if (object.id || object.cid) {
-                    this.read(storeName, object, options); // It's a model
-                } else {
-                    this.query(storeName, object, options); // It's a collection
-                }
-                break;
-            case "update":
-                this.update(storeName, object, options); // We may want to check that this is not a collection. TOFIX
-                break;
-            case "delete":
-                this.delete(storeName, object, options); // We may want to check that this is not a collection. TOFIX
-                break;
-            default:
-                // Hum what?
-            }
-        },
-
-        // Writes the json to the storeName in db. It is a create operations, which means it will fail if the key already exists
-        // options are just success and error callbacks.
-        create: function (storeName, object, options) {
-            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
-            //this._track_transaction(writeTransaction);
-            var store = writeTransaction.objectStore(storeName);
-            var json = object.toJSON();
-
-            if (!json.id) json.id = guid();
-
-            var writeRequest = store.add(json, json.id);
-
-            writeRequest.onerror = function (e) {
-                options.error(e);
-            };
-            writeRequest.onsuccess = function (e) {
-                options.success(json);
-            };
-        },
-        
-        // Writes the json to the storeName in db. It is an update operation, which means it will overwrite the value if the key already exist
-        // options are just success and error callbacks.
-        update: function (storeName, object, options) {
-            var writeTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
-            //this._track_transaction(writeTransaction);
-            var store = writeTransaction.objectStore(storeName);
-            var json = object.toJSON();
-
-            if (!json.id) json.id = guid();
-
-            var writeRequest = store.put(json, json.id);
-
-            writeRequest.onerror = function (e) {
-                options.error(e);
-            };
-            writeRequest.onsuccess = function (e) {
-                options.success(json);
-            };
-        },
-
-        // Reads from storeName in db with json.id if it's there of with any json.xxxx as long as xxx is an index in storeName 
-        read: function (storeName, object, options) {
-            var readTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
-            this._track_transaction(readTransaction);
-
-            var store = readTransaction.objectStore(storeName);
-            var json = object.toJSON();
-
-
-            var getRequest = null;
-            if (json.id) {
-                getRequest = store.get(json.id);
-            } else {
-                // We need to find which index we have
-                _.each(store.indexNames, function (key, index) {
-                    index = store.index(key);
-                    if (json[index.keyPath] && !getRequest) {
-                        getRequest = index.get(json[index.keyPath]);
-                    }
-                });
-            }
-            if (getRequest) {
-                getRequest.onsuccess = function (event) {
-                    if (event.target.result) {
-                        options.success(event.target.result);
-                    } else {
-                        options.error("Not Found");
-                    }
-                };
-                getRequest.onerror = function () {
-                    options.error("Not Found"); // We couldn't find the record.
-                }
-            } else {
-                options.error("Not Found"); // We couldn't even look for it, as we don't have enough data.
-            }
-        },
-
-        // Deletes the json.id key and value in storeName from db.
-        delete: function (storeName, object, options) {
-            var deleteTransaction = this.db.transaction([storeName], IDBTransaction.READ_WRITE);
-            //this._track_transaction(deleteTransaction);
-
-            var store = deleteTransaction.objectStore(storeName);
-            var json = object.toJSON();
-
-            var deleteRequest = store.delete(json.id);
-            deleteRequest.onsuccess = function (event) {
-                options.success(null);
-            };
-            deleteRequest.onerror = function (event) {
-                options.error("Not Deleted");
-            };
-        },
-
-        // Performs a query on storeName in db.
-        // options may include :
-        // - conditions : value of an index, or range for an index
-        // - range : range for the primary key
-        // - limit : max number of elements to be yielded
-        // - offset : skipped items.
-        query: function (storeName, collection, options) {
-            var elements = [];
-            var skipped = 0, processed = 0;
-            var queryTransaction = this.db.transaction([storeName], IDBTransaction.READ_ONLY);
-            //this._track_transaction(queryTransaction);
-
-            var readCursor = null;
-            var store = queryTransaction.objectStore(storeName);
-            var index = null,
-                lower = null,
-                upper = null,
-                bounds = null;
-
-            if (options.conditions) {
-                // We have a condition, we need to use it for the cursor
-                _.each(store.indexNames, function (key) {
-                    if (!readCursor) {
-                        index = store.index(key);
-                        if (options.conditions[index.keyPath] instanceof Array) {
-                            lower = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][1] : options.conditions[index.keyPath][0];
-                            upper = options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1] ? options.conditions[index.keyPath][0] : options.conditions[index.keyPath][1];
-                            bounds = IDBKeyRange.bound(lower, upper, true, true);
-
-                            if (options.conditions[index.keyPath][0] > options.conditions[index.keyPath][1]) {
-                                // Looks like we want the DESC order
-                                readCursor = index.openCursor(bounds, window.IDBCursor.PREV);
-                            } else {
-                                // We want ASC order
-                                readCursor = index.openCursor(bounds, window.IDBCursor.NEXT);
-                            }
-                        } else if (options.conditions[index.keyPath]) {
-                            bounds = IDBKeyRange.only(options.conditions[index.keyPath]);
-                            readCursor = index.openCursor(bounds);
-                        }
-                    }
-                });
-            } else {
-                // No conditions, use the index
-                if (options.range) {
-                    lower = options.range[0] > options.range[1] ? options.range[1] : options.range[0];
-                    upper = options.range[0] > options.range[1] ? options.range[0] : options.range[1];
-                    bounds = IDBKeyRange.bound(lower, upper);
-                    if (options.range[0] > options.range[1]) {
-                        readCursor = store.openCursor(bounds, window.IDBCursor.PREV);
-                    } else {
-                        readCursor = store.openCursor(bounds, window.IDBCursor.NEXT);
-                    }
-                } else {
-                    readCursor = store.openCursor();
-                }
-            }
-
-            if (typeof (readCursor) == "undefined" || !readCursor) {
-                options.error("No Cursor");
-            } else {
-                readCursor.onerror = function(e){
-                    options.error("readCursor error", e);
-                };
-                // Setup a handler for the cursor’s `success` event:
-                readCursor.onsuccess = function (e) {
-                    var cursor = e.target.result;
-                    if (!cursor || (options.limit && processed >= options.limit)) {
-                        // If there is no cursor, or if we're done adding stuff.
-                        if (options.addIndividually || options.clear) {
-                            // nothing!
-                            // We need to indicate that we're done. But, how?
-                            collection.trigger("reset");
-                        } else {
-                            options.success(elements); // We're done. No more elements.
-                        }
-                    }
-                    else {
-                        if (options.offset && options.offset > skipped) {
-                            skipped++;
-                            cursor.continue(); /* We need to Moving the cursor forward */
-                        } else {
-                            // This time, it looks like it's good!
-                            if (options.addIndividually) {
-                                collection.add(cursor.value);
-                            } else if (options.clear) {
-                                var deleteRequest = store.delete(cursor.value.id);
-                                deleteRequest.onsuccess = function (event) {
-                                    elements.push(cursor.value);
-                                };
-                                deleteRequest.onerror = function (event) {
-                                    elements.push(cursor.value);
-                                };
-
-                            } else {
-                                elements.push(cursor.value);
-                            }
-                            processed++;
-                            cursor.continue();
-                        }
-                    }
-                };
-            }
-        },
-        close :function(){
-            if(this.db){
-                this.db.close();
-            }
-        }
-    };
-
-    // ExecutionQueue object
-    // The execution queue is an abstraction to buffer up requests to the database.
-    // It holds a "driver". When the driver is ready, it just fires up the queue and executes in sync.
-    function ExecutionQueue(schema) {
-        this.driver     = new Driver(schema, this.ready.bind(this));
-        this.started    = false;
-        this.stack      = [];
-        this.version    = _.last(schema.migrations).version;
-    }
-
-    // ExecutionQueue Prototype
-    ExecutionQueue.prototype = {
-        // Called when the driver is ready
-        // It just loops over the elements in the queue and executes them.
-        ready: function () {
-            this.started = true;
-            _.each(this.stack, function (message) {
-                this.execute(message);
-            }.bind(this));
-        },
-
-        // Executes a given command on the driver. If not started, just stacks up one more element.
-        execute: function (message) {
-            if (this.started) {
-                this.driver.execute(message[1].storeName, message[0], message[1], message[2]); // Upon messages, we execute the query
-            } else {
-                this.stack.push(message);
-            }
-        },
-
-        close : function(){
-            this.driver.close();
-        }
-    };
-
-    // Method used by Backbone for sync of data with data store. It was initially designed to work with "server side" APIs, This wrapper makes 
-    // it work with the local indexedDB stuff. It uses the schema attribute provided by the object.
-    // The wrapper keeps an active Executuon Queue for each "schema", and executes querues agains it, based on the object type (collection or
-    // single model), but also the method... etc.
-    // Keeps track of the connections
-    var Databases = {};
-
-    function sync(method, object, options) {
-
-        if(method=="closeall"){
-            _.each(Databases,function(database){
-                database.close();
-            });
-
-            return;
-        }
-
-        var schema = object.database;
-        if (Databases[schema.id]) {
-            if(Databases[schema.id].version != _.last(schema.migrations).version){
-                Databases[schema.id].close();
-                delete Databases[schema.id];
-            }
-        }
-
-        var next = function(){
-        };
-
-        if (!Databases[schema.id]) {
-            Databases[schema.id] = new ExecutionQueue(schema,next);
-        }
-        Databases[schema.id].execute([method, object, options]);
-    };
-
-    if(typeof exports == 'undefined'){
-        Backbone.ajaxSync = Backbone.sync;
-        Backbone.sync = sync;
-    }
-    else {
-        exports.sync = sync;
-        exports.debugLog = debugLog;
-    }
-
-    //window.addEventListener("unload",function(){Backbone.sync("closeall")})
-})();
-});
-
-require.define("/models/database.js", function (require, module, exports, __dirname, __filename) {
-var msgboyDatabase = {
-    id: "msgboy-database",
-    description: "The database for the msgboy",
-    migrations: [{
-        version: 1,
-        migrate: function (transaction, next) {
-            transaction.db.createObjectStore("messages");
-            transaction.db.createObjectStore("inbox");
-            next();
-        }
-    }, {
-        version: 2,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("createdAtIndex", "createdAt", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 3,
-        migrate: function (transaction, next) {
-            var store = transaction.db.createObjectStore("feeds");
-            store.createIndex("urlIndex", "url", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 4,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("sourceLinkIndex", "sourceLink", {
-                unique: false
-            });
-            store.createIndex("hostIndex", "sourceHost", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 5,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("stateIndex", "state", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 6,
-        migrate: function (transaction, next) {
-            var store = transaction.objectStore("messages");
-            store.createIndex("feedIndex", "feed", {
-                unique: false
-            });
-            next();
-        }
-    }, {
-        version: 7,
-        migrate: function (transaction, next) {
-            var subscriptions = transaction.db.createObjectStore("subscriptions");
-            subscriptions.createIndex("stateIndex", "state", {unique: false});
-            subscriptions.createIndex("subscribedAtIndex", "subscribedAt", {unique: false});
-            subscriptions.createIndex("unsubscribedAtIndex", "unsubscribedAt", {unique: false});
-            next();
-        }
-    }]
-};
-
-exports.msgboyDatabase = msgboyDatabase
-});
-
-require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-Backbone.sync = require('backbone-indexeddb').sync;
-var msgboyDatabase = require('./database.js').msgboyDatabase;
-
-var Archive = Backbone.Collection.extend({
-    storeName: "messages",
-    database: msgboyDatabase,
-
-    initialize: function () {
-        this.model = require('./message.js').Message; // This avoids recursion in requires
-    },
-    comparator: function (message) {
-        return - (message.get('createdAt'));
-    },
-    next: function (number, condition) {
-        var options = {
-            conditions: condition,
-            limit: number,
-            addIndividually: true
-        };
-        this.fetch(options);
-    },
-    forFeed: function (_feed) {
-        this.fetch({conditions: {feed: _feed}});
-    }
-});
-
-exports.Archive = Archive;
-});
-
-require.define("/views/notification-view.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
-var $ = jQuery = require('jquery');
-var Backbone = require('backbone');
-var MessageView = require('./message-view.js').MessageView;
-
-var NotificationView = Backbone.View.extend({
-    events: {
-    },
-    initialize: function () {
-        _.bindAll(this, 'showNext', 'showOrBuffer');
-        this.mouseOver = false;
-        this.nextTimeout = null;
-        this.period = 8000;
-        this.buffer = [];
-        this.started = false;
-    },
-    showOrBuffer: function(message) {
-        this.buffer.push(message);
-        if(!this.started) {
-            this.started = true;
-            this.showNext(); // Let's start
-        }
-    },
-    showNext: function() {
-        clearTimeout(this.nextTimeout);
-        var message = this.buffer.shift(); // Race condition here!
-        if(message) {
-            var view = new MessageView({
-                model: message
-            });
-            
-            message.bind('up-ed', function () {
-                // The message was uped. We need to go to that page
-                // And show the next
-                this.showNext();
-                view.remove();
-                chrome.extension.sendRequest({
-                    signature: "tab",
-                    params: {url: message.get('mainLink'), selected: true}
-                });
-            }.bind(this));
-
-            message.bind('down-ed', function () {
-                this.showNext();
-                view.remove();
-            }.bind(this));
-            
-            message.bind('clicked', function() {
-                this.showNext();
-                view.remove();
-            }.bind(this));
-
-            view.bind('rendered', function() {
-                $("body").append(view.el); // Adds the view in the document.
-            }.bind(this));
-            
-            view.render(); 
-            
-            this.nextTimeout = setTimeout(function () {
-                this.showNext();
-                view.remove();
-            }.bind(this), this.period);
-        }
-        else {
-            window.close();
-        }
-    }
-});
-
-exports.NotificationView = NotificationView;
-
-});
-
-require.define("/views/message-view.js", function (require, module, exports, __dirname, __filename) {
-var _ = require('underscore');
-var $ = jQuery = require('jquery');
-require('../jquery.color.js');
-var Backbone = require('backbone');
-
-var MessageView = Backbone.View.extend({
-    tagName: "div",
-    className: "message",
-    events: {
-        "click .up": "handleUpClick",
-        "click .down": "handleDownClick",
-        "click .share": "handleShare",
-        "click": "handleClick"
-    },
-    // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
-    template: _.template([
-        '<span class="controls">',
-            '<button title="Vote Down" class="vote down"></button>',
-            '<button title="Share" class="share"></button>',
-            '<button title="Vote Up" class="vote up"></button>',
-        '</span>',
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>',
-        '<p><%= model.escape("title") %></p>'
-    ].join('')),
-    initialize: function () {
-        $(this.el).attr('title', this.model.get('mainLink'));
-        $(this.el).data('model', this.model);
-        this.model.bind('change', this.layout.bind(this)); 
-        this.model.bind('remove', this.remove.bind(this))
-        this.model.bind('destroy', this.remove.bind(this)); 
-        this.model.bind('expand', function() {
-            // Let's remember to never group these stories again.
-            this.model.save({ungroup: true});
-            $(this.el).removeClass('stack'); // Let's show this bro!
-            $(this.el).removeClass('brother'); // Let's show this bro!
-            $(this.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
-            $(this.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
-        }.bind(this)); 
-        this.model.bind('unsubscribe', function () {
-            var request = {
-                signature: "unsubscribe",
-                params: {
-                    title: "", // TODO : Add support for title 
-                    url: this.model.get('feed'),
-                    force: true
-                },
-                force: true
-            };
-            chrome.extension.sendRequest(request, function (response) {
-                // Unsubscribed... We need to delete all the brothas and sistas!
-                this.model.trigger('unsubscribed');
-            }.bind(this));
-        }.bind(this));
-    },
-    render: function () {
-        this.layout();
-        this.trigger('rendered');
-    },
-    layout: function() {
-        var el = $(this.el), 
-        isGroup = this.model.related && this.model.related.length > 1;
-        
-        // remove all the brick classes, add new one
-        el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
-        el.addClass(this.getBrickClass());
-
-        el.html(this.template({model: this.model}));
-        el.addClass("text");
-        
-        // render our compiled template
-        if (isGroup) {
-            el.addClass('stack');
-            el.prepend($('<div class="ribbon">' + (this.model.related.length + 1) + ' others</div>'));
-        }
-        if(typeof this.model.get('image') !== "undefined") {
-            $(this.el).css("background", "url(" + this.model.get('image') + ")");
-        }
-        if(this.model.get('sourceHost') === "msgboy.com") {
-            el.addClass('msgboy');
-        }
-    },
-    // Browser event handlers
-    handleClick: function (evt) {
-        var el = $(this.el),
-                isGroup = this.model.related.length > 1;
-        if (isGroup) {
-            this.handleExpand();
-        }
-        else {
-            if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
-                if (evt.shiftKey) {
-                    chrome.extension.sendRequest({
-                        signature: "notify",
-                        params: this.model.toJSON()
-                    });
-                } else {
-                    // User wants to open a tab.
-                    // We need to open a tab right after this one.
-                    chrome.tabs.getCurrent(function(tab) {
-                        var tabParams = {url: this.model.get('mainLink'), selected: false};
-                        if(tab) {
-                            tabParams['index'] = tab.index + 1;
-                        }
-                        chrome.extension.sendRequest({
-                            signature: 'tab',
-                            params: tabParams
-                        });
-                        this.model.trigger('clicked');
-                    }.bind(this));
-                }
-            }
-        }
-    },
-    handleUpClick: function () {
-        this.model.voteUp();
-    },
-    handleDownClick: function () {
-        this.model.voteDown();
-    },
-    handleShare: function(e) {
-        this.model.trigger('share', this.model);
-    },
-    handleExpand: function (e) {
-        this.model.related.each(function(message, i) {
-            message.trigger('expand');
-        });
-        this.model.trigger('expand', this); // Let's also expand this model.
-        this.model.trigger('expanded', this);
-        this.model.related.reset(); // And now remove the messages inside :)
-        this.layout();
-        return false;
-    },
-    getBrickClass: function () {
-        var res,
-            state = this.model.get('state');
-            
-        if (state === 'down-ed') {
-            res = 1;
-        } else if (state === 'up-ed') {
-            res = 4;
-        } else {
-            res = Math.ceil(this.model.attributes.relevance * 4); 
-        }
-        return 'brick-' + res;
-    }
-});
-
-exports.MessageView = MessageView;
-
-});
-
-require.define("/jquery.color.js", function (require, module, exports, __dirname, __filename) {
-/*
- * jQuery Color Animations v@VERSION
- * http://jquery.org/
- *
- * Copyright 2011 John Resig
- * Dual licensed under the MIT or GPL Version 2 licenses.
- * http://jquery.org/license
- *
- * Date: @DATE
- */
-
-(function( jQuery, undefined ){
-	var stepHooks = "backgroundColor borderBottomColor borderLeftColor borderRightColor borderTopColor color outlineColor".split(" "),
-
-		// plusequals test for += 100 -= 100
-		rplusequals = /^([\-+])=\s*(\d+\.?\d*)/,
-		// a set of RE's that can match strings and generate color tuples.
-		stringParsers = [{
-				re: /rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)/,
-				parse: function( execResult ) {
-					return [
-						execResult[ 1 ],
-						execResult[ 2 ],
-						execResult[ 3 ],
-						execResult[ 4 ]
-					];
-				}
-			}, {
-				re: /rgba?\(\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)/,
-				parse: function( execResult ) {
-					return [
-						2.55 * execResult[1],
-						2.55 * execResult[2],
-						2.55 * execResult[3],
-						execResult[ 4 ]
-					];
-				}
-			}, {
-				re: /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/,
-				parse: function( execResult ) {
-					return [
-						parseInt( execResult[ 1 ], 16 ),
-						parseInt( execResult[ 2 ], 16 ),
-						parseInt( execResult[ 3 ], 16 )
-					];
-				}
-			}, {
-				re: /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/,
-				parse: function( execResult ) {
-					return [
-						parseInt( execResult[ 1 ] + execResult[ 1 ], 16 ),
-						parseInt( execResult[ 2 ] + execResult[ 2 ], 16 ),
-						parseInt( execResult[ 3 ] + execResult[ 3 ], 16 )
-					];
-				}
-			}, {
-				re: /hsla?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\%\s*,\s*(\d+(?:\.\d+)?)\%\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)/,
-				space: "hsla",
-				parse: function( execResult ) {
-					return [
-						execResult[1],
-						execResult[2] / 100,
-						execResult[3] / 100,
-						execResult[4]
-					];
-				}
-			}],
-
-		// jQuery.Color( )
-		color = jQuery.Color = function( color, green, blue, alpha ) {
-			return new jQuery.Color.fn.parse( color, green, blue, alpha );
-		},
-		spaces = {
-			rgba: {
-				cache: "_rgba",
-				props: {
-					red: {
-						idx: 0,
-						type: "byte",
-						empty: true
-					},
-					green: {
-						idx: 1,
-						type: "byte",
-						empty: true
-					},
-					blue: {
-						idx: 2,
-						type: "byte",
-						empty: true
-					},
-					alpha: {
-						idx: 3,
-						type: "percent",
-						def: 1
-					}
-				}
-			},
-			hsla: {
-				cache: "_hsla",
-				props: {
-					hue: {
-						idx: 0,
-						type: "degrees",
-						empty: true
-					},
-					saturation: {
-						idx: 1,
-						type: "percent",
-						empty: true
-					},
-					lightness: {
-						idx: 2,
-						type: "percent",
-						empty: true
-					}
-				}
-			}
-		},
-		propTypes = {
-			"byte": {
-				floor: true,
-				min: 0,
-				max: 255
-			},
-			"percent": {
-				min: 0,
-				max: 1
-			},
-			"degrees": {
-				mod: 360,
-				floor: true
-			}
-		},
-		rgbaspace = spaces.rgba.props,
-		support = color.support = {},
-
-		// colors = jQuery.Color.names
-		colors,
-
-		// local aliases of functions called often
-		each = jQuery.each;
-
-	spaces.hsla.props.alpha = rgbaspace.alpha;
-
-	function clamp( value, prop, alwaysAllowEmpty ) {
-		var type = propTypes[ prop.type ] || {},
-			allowEmpty = prop.empty || alwaysAllowEmpty;
-
-		if ( allowEmpty && value == null ) {
-			return null;
-		}
-		if ( prop.def && value == null ) {
-			return prop.def;
-		}
-		if ( type.floor ) {
-			value = ~~value;
-		} else {
-			value = parseFloat( value );
-		}
-		if ( value == null || isNaN( value ) ) {
-			return prop.def;
-		}
-		if ( type.mod ) {
-			value = value % type.mod;
-			// -10 -> 350
-			return value < 0 ? type.mod + value : value;
-		}
-
-		// for now all property types without mod have min and max
-		return type.min > value ? type.min : type.max < value ? type.max : value;
-	}
-
-	function stringParse( string ) {
-		var inst = color(),
-			rgba = inst._rgba = [];
-
-		string = string.toLowerCase();
-
-		each( stringParsers, function( i, parser ) {
-			var match = parser.re.exec( string ),
-				values = match && parser.parse( match ),
-				parsed,
-				spaceName = parser.space || "rgba",
-				cache = spaces[ spaceName ].cache;
-
-
-			if ( values ) {
-				parsed = inst[ spaceName ]( values );
-
-				// if this was an rgba parse the assignment might happen twice
-				// oh well....
-				inst[ cache ] = parsed[ cache ];
-				rgba = inst._rgba = parsed._rgba;
-
-				// exit each( stringParsers ) here because we matched
-				return false;
-			}
-		});
-
-		// Found a stringParser that handled it
-		if ( rgba.length !== 0 ) {
-
-			// if this came from a parsed string, force "transparent" when alpha is 0
-			// chrome, (and maybe others) return "transparent" as rgba(0,0,0,0)
-			if ( Math.max.apply( Math, rgba ) === 0 ) {
-				jQuery.extend( rgba, colors.transparent );
-			}
-			return inst;
-		}
-
-		// named colors / default - filter back through parse function
-		if ( string = colors[ string ] ) {
-			return string;
-		}
-	}
-
-	color.fn = color.prototype = {
-		constructor: color,
-		parse: function( red, green, blue, alpha ) {
-			if ( red === undefined ) {
-				this._rgba = [ null, null, null, null ];
-				return this;
-			}
-			if ( red instanceof jQuery || red.nodeType ) {
-				red = red instanceof jQuery ? red.css( green ) : jQuery( red ).css( green );
-				green = undefined;
-			}
-
-			var inst = this,
-				type = jQuery.type( red ),
-				rgba = this._rgba = [],
-				source;
-
-			// more than 1 argument specified - assume ( red, green, blue, alpha )
-			if ( green !== undefined ) {
-				red = [ red, green, blue, alpha ];
-				type = "array";
-			}
-
-			if ( type === "string" ) {
-				return this.parse( stringParse( red ) || colors._default );
-			}
-
-			if ( type === "array" ) {
-				each( rgbaspace, function( key, prop ) {
-					rgba[ prop.idx ] = clamp( red[ prop.idx ], prop );
-				});
-				return this;
-			}
-
-			if ( type === "object" ) {
-				if ( red instanceof color ) {
-					each( spaces, function( spaceName, space ) {
-						if ( red[ space.cache ] ) {
-							inst[ space.cache ] = red[ space.cache ].slice();
-						}
-					});
-				} else {
-					each( spaces, function( spaceName, space ) {
-						each( space.props, function( key, prop ) {
-							var cache = space.cache;
-
-							// if the cache doesn't exist, and we know how to convert
-							if ( !inst[ cache ] && space.to ) {
-
-								// if the value was null, we don't need to copy it
-								// if the key was alpha, we don't need to copy it either
-								if ( red[ key ] == null || key === "alpha") {
-									return;
-								}
-								inst[ cache ] = space.to( inst._rgba );
-							}
-
-							// this is the only case where we allow nulls for ALL properties.
-							// call clamp with alwaysAllowEmpty
-							inst[ cache ][ prop.idx ] = clamp( red[ key ], prop, true );
-						});
-					});
-				}
-				return this;
-			}
-		},
-		is: function( compare ) {
-			var is = color( compare ),
-				same = true,
-				myself = this;
-
-			each( spaces, function( _, space ) {
-				var isCache = is[ space.cache ],
-					localCache;
-				if (isCache) {
-					localCache = myself[ space.cache ] || space.to && space.to( myself._rgba ) || [];
-					each( space.props, function( _, prop ) {
-						if ( isCache[ prop.idx ] != null ) {
-							same = ( isCache[ prop.idx ] == localCache[ prop.idx ] );
-							return same;
-						}
-					});
-				}
-				return same;
-			});
-			return same;
-		},
-		_space: function() {
-			var used = [],
-				inst = this;
-			each( spaces, function( spaceName, space ) {
-				if ( inst[ space.cache ] ) {
-					used.push( spaceName );
-				}
-			});
-			return used.pop();
-		},
-		transition: function( other, distance ) {
-			var end = color( other ),
-				spaceName = end._space(),
-				space = spaces[ spaceName ],
-				start = this[ space.cache ] || space.to( this._rgba ),
-				result = start.slice();
-
-			end = end[ space.cache ];
-			each( space.props, function( key, prop ) {
-				var index = prop.idx,
-					startValue = start[ index ],
-					endValue = end[ index ],
-					type = propTypes[ prop.type ] || {};
-
-				// if null, don't override start value
-				if ( endValue === null ) {
-					return;
-				}
-				// if null - use end
-				if ( startValue === null ) {
-					result[ index ] = endValue;
-				} else {
-					if ( type.mod ) {
-						if ( endValue - startValue > type.mod / 2 ) {
-							startValue += type.mod;
-						} else if ( startValue - endValue > type.mod / 2 ) {
-							startValue -= type.mod;
-						}
-					}
-					result[ prop.idx ] = clamp( ( endValue - startValue ) * distance + startValue, prop );
-				}
-			});
-			return this[ spaceName ]( result );
-		},
-		blend: function( opaque ) {
-			// if we are already opaque - return ourself
-			if ( this._rgba[ 3 ] === 1 ) {
-				return this;
-			}
-
-			var rgb = this._rgba.slice(),
-				a = rgb.pop(),
-				blend = color( opaque )._rgba;
-
-			return color( jQuery.map( rgb, function( v, i ) {
-				return ( 1 - a ) * blend[ i ] + a * v;
-			}));
-		},
-		toRgbaString: function() {
-			var prefix = "rgba(",
-				rgba = jQuery.map( this._rgba, function( v, i ) {
-					return v == null ? ( i > 2 ? 1 : 0 ) : v;
-				});
-
-			if ( rgba[ 3 ] === 1 ) {
-				rgba.pop();
-				prefix = "rgb(";
-			}
-
-			return prefix + rgba.join(",") + ")";
-		},
-		toHslaString: function() {
-			var prefix = "hsla(",
-				hsla = jQuery.map( this.hsla(), function( v, i ) {
-					if ( v == null ) {
-						v = i > 2 ? 1 : 0;
-					}
-
-					// catch 1 and 2
-					if ( i && i < 3 ) {
-						v = Math.round( v * 100 ) + "%";
-					}
-					return v;
-				});
-
-			if ( hsla[ 3 ] == 1 ) {
-				hsla.pop();
-				prefix = "hsl(";
-			}
-			return prefix + hsla.join(",") + ")";
-		},
-		toHexString: function( includeAlpha ) {
-			var rgba = this._rgba.slice(),
-				alpha = rgba.pop();
-
-			if ( includeAlpha ) {
-				rgba.push( ~~( alpha * 255 ) );
-			}
-
-			return "#" + jQuery.map( rgba, function( v, i ) {
-
-				// default to 0 when nulls exist
-				v = ( v || 0 ).toString( 16 );
-				return v.length == 1 ? "0" + v : v;
-			}).join("");
-		},
-		toString: function() {
-			return this._rgba[ 3 ] === 0 ? "transparent" : this.toRgbaString();
-		}
-	};
-	color.fn.parse.prototype = color.fn;
-
-	// hsla conversions adapted from:
-	// http://www.google.com/codesearch/p#OAMlx_jo-ck/src/third_party/WebKit/Source/WebCore/inspector/front-end/Color.js&d=7&l=193
-
-	function hue2rgb( p, q, h ) {
-		h = ( h + 1 ) % 1;
-		if ( h * 6 < 1 ) {
-			return p + (q - p) * 6 * h;
-		}
-		if ( h * 2 < 1) {
-			return q;
-		}
-		if ( h * 3 < 2 ) {
-			return p + (q - p) * ((2/3) - h) * 6;
-		}
-		return p;
-	}
-
-	spaces.hsla.to = function ( rgba ) {
-		if ( rgba[ 0 ] == null || rgba[ 1 ] == null || rgba[ 2 ] == null ) {
-			return [ null, null, null, rgba[ 3 ] ];
-		}
-		var r = rgba[ 0 ] / 255,
-			g = rgba[ 1 ] / 255,
-			b = rgba[ 2 ] / 255,
-			a = rgba[ 3 ],
-			max = Math.max( r, g, b ),
-			min = Math.min( r, g, b ),
-			diff = max - min,
-			add = max + min,
-			l = add * 0.5,
-			h, s;
-
-		if ( min === max ) {
-			h = 0;
-		} else if ( r === max ) {
-			h = ( 60 * ( g - b ) / diff ) + 360;
-		} else if ( g === max ) {
-			h = ( 60 * ( b - r ) / diff ) + 120;
-		} else {
-			h = ( 60 * ( r - g ) / diff ) + 240;
-		}
-
-		if ( l === 0 || l === 1 ) {
-			s = l;
-		} else if ( l <= 0.5 ) {
-			s = diff / add;
-		} else {
-			s = diff / ( 2 - add );
-		}
-		return [ Math.round(h) % 360, s, l, a == null ? 1 : a ];
-	};
-
-	spaces.hsla.from = function ( hsla ) {
-		if ( hsla[ 0 ] == null || hsla[ 1 ] == null || hsla[ 2 ] == null ) {
-			return [ null, null, null, hsla[ 3 ] ];
-		}
-		var h = hsla[ 0 ] / 360,
-			s = hsla[ 1 ],
-			l = hsla[ 2 ],
-			a = hsla[ 3 ],
-			q = l <= 0.5 ? l * ( 1 + s ) : l + s - l * s,
-			p = 2 * l - q,
-			r, g, b;
-
-		return [
-			Math.round( hue2rgb( p, q, h + ( 1 / 3 ) ) * 255 ),
-			Math.round( hue2rgb( p, q, h ) * 255 ),
-			Math.round( hue2rgb( p, q, h - ( 1 / 3 ) ) * 255 ),
-			a
-		];
-	};
-
-
-	each( spaces, function( spaceName, space ) {
-		var props = space.props,
-			cache = space.cache,
-			to = space.to,
-			from = space.from;
-
-		// makes rgba() and hsla()
-		color.fn[ spaceName ] = function( value ) {
-
-			// generate a cache for this space if it doesn't exist
-			if ( to && !this[ cache ] ) {
-				this[ cache ] = to( this._rgba );
-			}
-			if ( value === undefined ) {
-				return this[ cache ].slice();
-			}
-
-			var type = jQuery.type( value ),
-				arr = ( type === "array" || type === "object" ) ? value : arguments,
-				local = this[ cache ].slice(),
-				ret;
-
-			each( props, function( key, prop ) {
-				var val = arr[ type === "object" ? key : prop.idx ];
-				if ( val == null ) {
-					val = local[ prop.idx ];
-				}
-				local[ prop.idx ] = clamp( val, prop );
-			});
-
-			if ( from ) {
-				ret = color( from( local ) );
-				ret[ cache ] = local;
-				return ret;
-			} else {
-				return color( local );
-			}
-		};
-
-		// makes red() green() blue() alpha() hue() saturation() lightness()
-		each( props, function( key, prop ) {
-			// alpha is included in more than one space
-			if ( color.fn[ key ] ) {
-				return;
-			}
-			color.fn[ key ] = function( value ) {
-				var vtype = jQuery.type( value ),
-					fn = ( key === 'alpha' ? ( this._hsla ? 'hsla' : 'rgba' ) : spaceName ),
-					local = this[ fn ](),
-					cur = local[ prop.idx ],
-					match;
-
-				if ( vtype === "undefined" ) {
-					return cur;
-				}
-
-				if ( vtype === "function" ) {
-					value = value.call( this, cur );
-					vtype = jQuery.type( value );
-				}
-				if ( value == null && prop.empty ) {
-					return this;
-				}
-				if ( vtype === "string" ) {
-					match = rplusequals.exec( value );
-					if ( match ) {
-						value = cur + parseFloat( match[ 2 ] ) * ( match[ 1 ] === "+" ? 1 : -1 );
-					}
-				}
-				local[ prop.idx ] = value;
-				return this[ fn ]( local );
-			};
-		});
-	});
-
-	// add .fx.step functions
-	each( stepHooks, function( i, hook ) {
-		jQuery.cssHooks[ hook ] = {
-			set: function( elem, value ) {
-				var parsed;
-
-				if ( jQuery.type( value ) !== 'string' || ( parsed = stringParse( value ) ) )
-				{
-					value = color( parsed || value );
-					if ( !support.rgba && value._rgba[ 3 ] !== 1 ) {
-						var backgroundColor,
-							curElem = hook === "backgroundColor" ? elem.parentNode : elem;
-						do {
-							backgroundColor = jQuery.curCSS( curElem, "backgroundColor" );
-						} while (
-							( backgroundColor === "" || backgroundColor === "transparent" ) &&
-							( curElem = curElem.parentNode ) &&
-							curElem.style
-						);
-
-						value = value.blend( backgroundColor && backgroundColor !== "transparent" ?
-							backgroundColor :
-							"_default" );
-					}
-
-					value = value.toRgbaString();
-				}
-				elem.style[ hook ] = value;
-			}
-		};
-		jQuery.fx.step[ hook ] = function( fx ) {
-			if ( !fx.colorInit ) {
-				fx.start = color( fx.elem, hook );
-				fx.end = color( fx.end );
-				fx.colorInit = true;
-			}
-			jQuery.cssHooks[ hook ].set( fx.elem, fx.start.transition( fx.end, fx.pos ) );
-		};
-	});
-
-	// detect rgba support
-	jQuery(function() {
-		var div = document.createElement( "div" ),
-			div_style = div.style;
-
-		div_style.cssText = "background-color:rgba(1,1,1,.5)";
-		support.rgba = div_style.backgroundColor.indexOf( "rgba" ) > -1;
-	});
-
-	// Some named colors to work with
-	// From Interface by Stefan Petre
-	// http://interface.eyecon.ro/
-	colors = jQuery.Color.names = {
-		aqua: "#00ffff",
-		azure: "#f0ffff",
-		beige: "#f5f5dc",
-		black: "#000000",
-		blue: "#0000ff",
-		brown: "#a52a2a",
-		cyan: "#00ffff",
-		darkblue: "#00008b",
-		darkcyan: "#008b8b",
-		darkgrey: "#a9a9a9",
-		darkgreen: "#006400",
-		darkkhaki: "#bdb76b",
-		darkmagenta: "#8b008b",
-		darkolivegreen: "#556b2f",
-		darkorange: "#ff8c00",
-		darkorchid: "#9932cc",
-		darkred: "#8b0000",
-		darksalmon: "#e9967a",
-		darkviolet: "#9400d3",
-		fuchsia: "#ff00ff",
-		gold: "#ffd700",
-		green: "#008000",
-		indigo: "#4b0082",
-		khaki: "#f0e68c",
-		lightblue: "#add8e6",
-		lightcyan: "#e0ffff",
-		lightgreen: "#90ee90",
-		lightgrey: "#d3d3d3",
-		lightpink: "#ffb6c1",
-		lightyellow: "#ffffe0",
-		lime: "#00ff00",
-		magenta: "#ff00ff",
-		maroon: "#800000",
-		navy: "#000080",
-		olive: "#808000",
-		orange: "#ffa500",
-		pink: "#ffc0cb",
-		purple: "#800080",
-		violet: "#800080",
-		red: "#ff0000",
-		silver: "#c0c0c0",
-		white: "#ffffff",
-		yellow: "#ffff00",
-		transparent: [ null, null, null, 0 ],
-		_default: "#ffffff"
-	};
-})( jQuery );
-
-});
-
 require.alias("br-jquery", "/node_modules/jquery");
 
 require.alias("backbone-browserify", "/node_modules/backbone");
 
-require.define("/notification.js", function (require, module, exports, __dirname, __filename) {
-    var $ = jQuery = require('jquery');
-var Msgboy = require('./msgboy.js').Msgboy;
+require.define("/debugger.js", function (require, module, exports, __dirname, __filename) {
+    var Msgboy = require('./msgboy.js').Msgboy;
+var Archive = require('./models/archive.js').Archive;
 var Message = require('./models/message.js').Message;
-var NotificationView = require('./views/notification-view.js').NotificationView;
 
+window.iterations = 0
+
+function more(archive, upperBound, lowerBound, toLoad) {
+    window.iterations = window.iterations + 1;
+    archive.next(toLoad, {
+        createdAt: [upperBound, lowerBound]
+    });
+}
 
 Msgboy.bind("loaded", function () {
+    var upperBound = new Date().getTime();
+    var lowerBound = 0;
+    var toLoad = 50;
     
-    var notificationView = new NotificationView({});
-
-    $("body").mouseover(function () {
-        notificationView.mouseOver = true;
+    window.start = new Date().getTime();
+    
+    var archive = new Archive();
+    
+    archive.bind('add', function(m) {
+        upperBound = m.attributes.createdAt;
     });
-
-    $("body").mouseout(function () {
-        notificationView.mouseOver = false;
-    });
-
-    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-        if (request.signature == "notify" && request.params) {
-            notificationView.showOrBuffer(new Message(request.params));
+    
+    archive.bind('reset', function() {
+        
+        console.log("->", new Date().getTime() - window.start);
+        window.start = new Date().getTime();
+        if(window.iterations < 20) {
+            more(archive, upperBound, lowerBound, toLoad);
         }
     });
+    more(archive, upperBound, lowerBound, toLoad);
     
-    // Tell everyone we're ready.
-    chrome.extension.sendRequest({
-        signature: "notificationReady",
-        params: {}
-    }, function () {
-        // Nothing to do.
-    });
 });
-
-
-
-
 });
-require("/notification.js");
+require("/debugger.js");

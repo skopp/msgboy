@@ -18317,7 +18317,8 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                 // Setup a handler for the cursor’s `success` event:
                 readCursor.onsuccess = function (e) {
                     var cursor = e.target.result;
-                    if (!cursor) {
+                    if (!cursor || (options.limit && processed >= options.limit)) {
+                        // If there is no cursor, or if we're done adding stuff.
                         if (options.addIndividually || options.clear) {
                             // nothing!
                             // We need to indicate that we're done. But, how?
@@ -18327,16 +18328,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
                         }
                     }
                     else {
-                        // Cursor is not over yet.
-                        if (options.limit && processed >= options.limit) {
-                            // Yet, we have processed enough elements. So, let's just skip.
-                            if (bounds && options.conditions[index.keyPath]) {
-                                cursor.continue(options.conditions[index.keyPath][1] + 1); /* We need to 'terminate' the cursor cleany, by moving to the end */
-                            } else {
-                                cursor.continue(); /* We need to 'terminate' the cursor cleany, by moving to the end */
-                            }
-                        }
-                        else if (options.offset && options.offset > skipped) {
+                        if (options.offset && options.offset > skipped) {
                             skipped++;
                             cursor.continue(); /* We need to Moving the cursor forward */
                         } else {
@@ -18364,20 +18356,19 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
         },
         close :function(){
             if(this.db){
-                this.db.close()
-;            }
+                this.db.close();
+            }
         }
     };
 
     // ExecutionQueue object
     // The execution queue is an abstraction to buffer up requests to the database.
     // It holds a "driver". When the driver is ready, it just fires up the queue and executes in sync.
-    function ExecutionQueue(schema,next) {
+    function ExecutionQueue(schema) {
         this.driver     = new Driver(schema, this.ready.bind(this));
         this.started    = false;
         this.stack      = [];
         this.version    = _.last(schema.migrations).version;
-        this.next = next;
     }
 
     // ExecutionQueue Prototype
@@ -18389,7 +18380,6 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
             _.each(this.stack, function (message) {
                 this.execute(message);
             }.bind(this));
-            this.next();
         },
 
         // Executes a given command on the driver. If not started, just stacks up one more element.
@@ -18432,17 +18422,12 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
         }
 
         var next = function(){
-            Databases[schema.id].execute([method, object, options]);
         };
 
         if (!Databases[schema.id]) {
-              Databases[schema.id] = new ExecutionQueue(schema,next);
-            }else
-        {
-            next();
+            Databases[schema.id] = new ExecutionQueue(schema,next);
         }
-
-
+        Databases[schema.id].execute([method, object, options]);
     };
 
     if(typeof exports == 'undefined'){
@@ -18453,7 +18438,7 @@ require.define("/node_modules/backbone-indexeddb/backbone-indexeddb.js", functio
         exports.sync = sync;
         exports.debugLog = debugLog;
     }
-    
+
     //window.addEventListener("unload",function(){Backbone.sync("closeall")})
 })();
 });
