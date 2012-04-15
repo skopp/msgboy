@@ -12280,7 +12280,6 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 
 if (typeof Msgboy === "undefined") {
@@ -12447,8 +12446,7 @@ require.alias("br-jquery", "/node_modules/jquery");
 require.alias("backbone-browserify", "/node_modules/backbone");
 
 require.define("/subscribe.js", function (require, module, exports, __dirname, __filename) {
-    var $ = jQuery = require('jquery');
-var Msgboy = require('./msgboy.js').Msgboy;
+    var Msgboy = require('./msgboy.js').Msgboy;
 var Feediscovery = require('./feediscovery.js').Feediscovery;
 
 

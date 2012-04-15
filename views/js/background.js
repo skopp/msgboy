@@ -13121,7 +13121,6 @@ function lastBraceInKey(str) {
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 
 if (typeof Msgboy === "undefined") {
@@ -13345,7 +13344,6 @@ var Plugin = function () {
 });
 
 require.define("/models/inbox.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -14021,7 +14019,6 @@ exports.msgboyDatabase = msgboyDatabase
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var UrlParser = require('url');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -14280,7 +14277,6 @@ exports.relevanceMath = relevanceMath;
 });
 
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -14862,7 +14858,6 @@ exports.MessageTrigger = MessageTrigger;
 });
 
 require.define("/models/subscription.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;

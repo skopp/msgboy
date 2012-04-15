@@ -1,4 +1,3 @@
-var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
 var Feediscovery = require('./feediscovery.js').Feediscovery;
 
