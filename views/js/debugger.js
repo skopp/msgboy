@@ -12280,7 +12280,6 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
 
 require.define("/msgboy.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 
 if (typeof Msgboy === "undefined") {
@@ -12399,7 +12398,6 @@ if(typeof window !== "undefined") {
 });
 
 require.define("/models/archive.js", function (require, module, exports, __dirname, __filename) {
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;
@@ -13051,7 +13049,6 @@ exports.msgboyDatabase = msgboyDatabase
 require.define("/models/message.js", function (require, module, exports, __dirname, __filename) {
 var _ = require('underscore');
 var UrlParser = require('url');
-var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var msgboyDatabase = require('./database.js').msgboyDatabase;

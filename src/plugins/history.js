@@ -1,4 +1,3 @@
-var Feediscovery = require('../feediscovery.js').Feediscovery;
 var Maths = require("../maths.js").Maths;
 
 var History = function (Plugins) {
@@ -38,17 +37,9 @@ var History = function (Plugins) {
                     if (item.visitCount > this.visitsToBePopular) {
                         this.visitsRegularly(item.url, function (result) {
                             if (result) {
-                                Feediscovery.get(item.url, function (links) {
-                                    for(var i = 0; i < links.length; i++) {
-                                        var link = links[i];
-                                        if (seen.indexOf(link.href) === -1) {
-                                            totalFeeds++;
-                                            callback({title: link.title || "", url: link.href});
-                                            seen.push(link.href);
-                                        }
-                                    }
-                                    processNext(items);
-                                });
+                                totalFeeds++;
+                                callback({title: link.title || "", url: item.url, doDiscovery: true});
+                                processNext(items);
                             }
                             else {
                                 processNext(items); // Not visited regularly.

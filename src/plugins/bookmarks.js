@@ -1,5 +1,3 @@
-var Feediscovery = require('../feediscovery.js').Feediscovery;
-
 var Bookmarks = function (Plugins) {
     // Let's register
     Plugins.register(this);
@@ -16,7 +14,6 @@ var Bookmarks = function (Plugins) {
     };
 
     this.listSubscriptions = function (callback, done) {
-        var seen = [];
         var totalFeeds = 0;
         chrome.bookmarks.getRecent(1000,
             function (bookmarks) {
@@ -28,17 +25,8 @@ var Bookmarks = function (Plugins) {
                     var processNext = function(bookmarks) {
                         var bookmark = bookmarks.pop();
                         if(bookmark) {
-                            Feediscovery.get(bookmark.url, function (links) {
-                                for(var j = 0; j < links.length; j++) {
-                                    var link = links[j];
-                                    totalFeeds++;
-                                    if (seen.indexOf(link.href) === -1) {
-                                        callback({title: link.title || "", url: link.href})
-                                        seen.push(link.href);
-                                    }
-                                }
-                                processNext(bookmarks);
-                            });
+                            callback({title: "", url: bookmark.url, doDiscovery: true});
+                            totalFeeds++;
                         } else {
                             done(totalFeeds);
                         }

@@ -424,6 +424,20 @@ Msgboy.bind("loaded", function () {
 
     Msgboy.bind('subscribe', function (params, _sendResponse) {
         Msgboy.log.debug("request", "subscribe", params.url);
+        // We first need to look at params and see if the doDiscovery flag is set. If so, we first need to perform discovery
+        if(params.doDiscovery) {
+            Feediscovery.get(params.url, function (links) {
+                for(var i = 0; i < links.length; i++) {
+                    var link = links[i];
+                    subscribe(link.href, params.force || false, function (result) {
+                        _sendResponse({
+                            value: result
+                        });
+                    });
+                }
+                processNext(items);
+            });
+        }
         subscribe(params.url, params.force || false, function (result) {
             _sendResponse({
                 value: result

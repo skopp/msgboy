@@ -17876,8 +17876,6 @@ exports.Blogger = Blogger;
 });
 
 require.define("/plugins/bookmarks.js", function (require, module, exports, __dirname, __filename) {
-var Feediscovery = require('../feediscovery.js').Feediscovery;
-
 var Bookmarks = function (Plugins) {
     // Let's register
     Plugins.register(this);
@@ -17894,7 +17892,6 @@ var Bookmarks = function (Plugins) {
     };
 
     this.listSubscriptions = function (callback, done) {
-        var seen = [];
         var totalFeeds = 0;
         chrome.bookmarks.getRecent(1000,
             function (bookmarks) {
@@ -17906,17 +17903,8 @@ var Bookmarks = function (Plugins) {
                     var processNext = function(bookmarks) {
                         var bookmark = bookmarks.pop();
                         if(bookmark) {
-                            Feediscovery.get(bookmark.url, function (links) {
-                                for(var j = 0; j < links.length; j++) {
-                                    var link = links[j];
-                                    totalFeeds++;
-                                    if (seen.indexOf(link.href) === -1) {
-                                        callback({title: link.title || "", url: link.href})
-                                        seen.push(link.href);
-                                    }
-                                }
-                                processNext(bookmarks);
-                            });
+                            callback({title: "", url: bookmark.url, doDiscovery: true});
+                            totalFeeds++;
                         } else {
                             done(totalFeeds);
                         }
@@ -17939,50 +17927,6 @@ var Bookmarks = function (Plugins) {
 };
 
 exports.Bookmarks = Bookmarks;
-});
-
-require.define("/feediscovery.js", function (require, module, exports, __dirname, __filename) {
-// Feediscovery module. The only API that needs to be used is the Feediscovery.get
-Feediscovery = {};
-Feediscovery.stack = [];
-Feediscovery.running = false;
-
-Feediscovery.get = function (_url, _callback) {
-    // Let's first do some verifications on the url to avoid wasting resources.
-    if(_url.match(/chrome-extension:/)) {
-        // No feediscovery lookup for chrome extensions.
-        _callback([]);
-    }
-    else {
-        Feediscovery.stack.push([_url, _callback]);
-        if(!Feediscovery.running) {
-            Feediscovery.running = true;
-            Feediscovery.run();
-        }
-    }
-    
-};
-Feediscovery.run = function () {
-    var next = Feediscovery.stack.shift();
-    if (next) {
-        var client = new XMLHttpRequest(); 
-        client.onreadystatechange = function() {
-            if(this.readyState == this.DONE) {
-                next[1](JSON.parse(client.responseText));
-                Feediscovery.run();
-            }
-        };
-        client.open("GET", "http://feediscovery.appspot.com/?url=" + encodeURI(next[0]) , true); // Open up the connection
-        client.send( null ); // Send the request
-    } else {
-        setTimeout(function () {
-            Feediscovery.run();
-        }, 1000);
-    }
-};
-
-exports.Feediscovery = Feediscovery;
-
 });
 
 require.define("/plugins/disqus.js", function (require, module, exports, __dirname, __filename) {
@@ -18107,7 +18051,6 @@ exports.GoogleReader = GoogleReader;
 });
 
 require.define("/plugins/history.js", function (require, module, exports, __dirname, __filename) {
-var Feediscovery = require('../feediscovery.js').Feediscovery;
 var Maths = require("../maths.js").Maths;
 
 var History = function (Plugins) {
@@ -18147,17 +18090,9 @@ var History = function (Plugins) {
                     if (item.visitCount > this.visitsToBePopular) {
                         this.visitsRegularly(item.url, function (result) {
                             if (result) {
-                                Feediscovery.get(item.url, function (links) {
-                                    for(var i = 0; i < links.length; i++) {
-                                        var link = links[i];
-                                        if (seen.indexOf(link.href) === -1) {
-                                            totalFeeds++;
-                                            callback({title: link.title || "", url: link.href});
-                                            seen.push(link.href);
-                                        }
-                                    }
-                                    processNext(items);
-                                });
+                                totalFeeds++;
+                                callback({title: link.title || "", url: item.url, doDiscovery: true});
+                                processNext(items);
                             }
                             else {
                                 processNext(items); // Not visited regularly.
@@ -18935,6 +18870,20 @@ Msgboy.bind("loaded", function () {
 
     Msgboy.bind('subscribe', function (params, _sendResponse) {
         Msgboy.log.debug("request", "subscribe", params.url);
+        // We first need to look at params and see if the doDiscovery flag is set. If so, we first need to perform discovery
+        if(params.doDiscovery) {
+            Feediscovery.get(params.url, function (links) {
+                for(var i = 0; i < links.length; i++) {
+                    var link = links[i];
+                    subscribe(link.href, params.force || false, function (result) {
+                        _sendResponse({
+                            value: result
+                        });
+                    });
+                }
+                processNext(items);
+            });
+        }
         subscribe(params.url, params.force || false, function (result) {
             _sendResponse({
                 value: result
