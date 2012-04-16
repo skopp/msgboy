@@ -13,25 +13,25 @@ var Bookmarks = function (Plugins) {
         // Hum. What?
     };
 
+    this.processNext = function(bookmarks, callback, done, totalFeeds) {
+        var bookmark = bookmarks.pop();
+        if(bookmark) {
+            callback({title: "", url: bookmark.url, doDiscovery: true});
+            totalFeeds++;
+            this.processNext(bookmarks, callback, done, totalFeeds);
+        } else {
+            done(totalFeeds);
+        }
+    };
+
     this.listSubscriptions = function (callback, done) {
-        var totalFeeds = 0;
         chrome.bookmarks.getRecent(1000,
             function (bookmarks) {
                 if (bookmarks.length === 0) {
-                    done(totalFeeds);
+                    done(0);
                 }
                 else {
-
-                    var processNext = function(bookmarks) {
-                        var bookmark = bookmarks.pop();
-                        if(bookmark) {
-                            callback({title: "", url: bookmark.url, doDiscovery: true});
-                            totalFeeds++;
-                        } else {
-                            done(totalFeeds);
-                        }
-                    };
-                    processNext(bookmarks);
+                    this.processNext(bookmarks, callback, done, 0);
                 }
             }.bind(this)
         );
@@ -39,11 +39,7 @@ var Bookmarks = function (Plugins) {
 
     this.subscribeInBackground = function (callback) {
         chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
-            Feediscovery.get(bookmark.url, function (links) {
-                _.each(links, function (link) {
-                    callback(link);
-                });
-            });
+            callback({url: bookmark.url, doDiscovery: true})
         }.bind(this));
     };
 };

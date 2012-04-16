@@ -12,10 +12,7 @@ var Plugins = {
             var plugin = plugins[idx];
             if(plugin) {
                 plugin.listSubscriptions(function (subscription) {
-                    callback({
-                        url: subscription.url,
-                        title: subscription.title
-                    });
+                    callback(subscription);
                 }, function (count) {
                     doneOne(plugin, count);
                     subscriptionsCount += count;

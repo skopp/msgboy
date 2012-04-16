@@ -15,47 +15,41 @@ var History = function (Plugins) {
     this.hijack = function (doc, follow, unfollow) {
         // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
     };
+    
+    this.processNext = function(items, callback, done, totalFeeds) {
+        var item = items.pop();
+        if(item) {
+            if (item.visitCount > this.visitsToBePopular) {
+                this.visitsRegularly(item.url, function (result) {
+                    if (result) {
+                        totalFeeds++;
+                        callback({title: "", url: item.url, doDiscovery: true});
+                        this.processNext(items, callback, done, totalFeeds);
+                    }
+                    else {
+                        this.processNext(items, callback, done, totalFeeds); // Not visited regularly.
+                    }
+                }.bind(this));
+            }
+            else {
+                this.processNext(items, callback, done, totalFeeds); // Not visited often enough
+            }
+        }
+        else {
+            done(totalFeeds);
+        }
+    };
+    
     this.listSubscriptions = function (callback, done) {
-        var seen = [];
-        var totalFeeds = 0;
-
         chrome.history.search({
-            'text': '',
-            // Return every history item....
-            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 15),
-            // that was accessed less than 15 days ago, up to 10000 pages.
+            'text': '', // Return every history item....
+            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 15), // that was accessed less than 15 days ago, up to 10000 pages.
             'maxResults': 10000
         }, function (historyItems) {
             if (historyItems.length === 0) {
                 done(0);
             }
-            
-            // Synchrounous 
-            var processNext = function(items) {
-                var item = items.pop();
-                if(item) {
-                    if (item.visitCount > this.visitsToBePopular) {
-                        this.visitsRegularly(item.url, function (result) {
-                            if (result) {
-                                totalFeeds++;
-                                callback({title: link.title || "", url: item.url, doDiscovery: true});
-                                processNext(items);
-                            }
-                            else {
-                                processNext(items); // Not visited regularly.
-                            }
-                        });
-                    }
-                    else {
-                        processNext(items); // Not visited often enough
-                    }
-                }
-                else {
-                    done(totalFeeds);
-                }
-            }.bind(this);
-            // Let's go.
-            processNext(historyItems);
+            this.processNext(historyItems, callback, done, 0);
         }.bind(this));
     };
     this.visitsRegularly = function (url, callback) {
@@ -83,11 +77,7 @@ var History = function (Plugins) {
         chrome.history.onVisited.addListener(function (historyItem) {
             if (historyItem.visitCount > this.visitsToBePopular) {
                 this.visitsRegularly(historyItem.url, function (result) {
-                    Feediscovery.get(historyItem.url, function (links) {
-                        for(var i = 0; i < links.length; i++) {
-                            callback(links[i]);
-                        }
-                    });
+                    callback({url: historyItem.url, doDiscovery: true})
                 });
             }
         }.bind(this));

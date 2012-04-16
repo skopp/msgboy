@@ -1,6 +1,5 @@
 var _ = require('underscore');
 var should = require('chai').should();
-var Plugins = require('../feediscovery.js').Plugins;
 
 
 describe('Feediscovery', function(){

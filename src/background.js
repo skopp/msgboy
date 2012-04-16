@@ -8,8 +8,9 @@ var Message         = require('./models/message.js').Message;
 var MessageTrigger  = require('./models/triggered-messages.js').MessageTrigger;
 var Subscriptions   = require('./models/subscription.js').Subscriptions;
 var Subscription    = require('./models/subscription.js').Subscription;
-var Strophe         = require('./strophejs/core.js').Strophe
-var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin
+var Strophe         = require('./strophejs/core.js').Strophe;
+var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin;
+var Feediscovery    = require('./feediscovery.js').Feediscovery;
 Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
 
 var Blogger = require('./plugins/blogger.js').Blogger;
@@ -124,30 +125,42 @@ var notify = function (message, popup) {
 exports.notify = notify;
 
 // Subscribes to a feed.
-var subscribe = function (url, force, callback) {
-    // First, let's check if we have a subscription for this.
-    var subscription = new Subscription({id: url});
+var subscribe = function (url, doDiscovery, force, callback) {
+    // First, let's check if we need to perform discovery on that. 
+    if(doDiscovery) {
+        // Well let's do disco and then recurse!
+        Feediscovery.get(url, function (links) {
+            for(var i = 0; i < links.length; i++) {
+                var link = links[i];
+                subscribe(link.href, false, force, callback);
+            }
+        });
+    }
+    else {
+        // First, let's check if we have a subscription for this.
+        var subscription = new Subscription({id: url});
 
-    subscription.fetchOrCreate(function () {
-        // Looks like there is a subscription.
-        if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
-            subscription.setState("subscribing");
-            subscription.bind("subscribing", function () {
-                Msgboy.log.debug("subscribing to", url);
-                xmppConnection.superfeedr.subscribe(url, function (result, feed) {
-                    Msgboy.log.debug("subscribed to", url);
-                    subscription.setState("subscribed");
+        subscription.fetchOrCreate(function () {
+            // Looks like there is a subscription.
+            if ((subscription.needsRefresh() && subscription.attributes.state === "unsubscribed") || force) {
+                subscription.setState("subscribing");
+                subscription.bind("subscribing", function () {
+                    Msgboy.log.debug("subscribing to", url);
+                    xmppConnection.superfeedr.subscribe(url, function (result, feed) {
+                        Msgboy.log.debug("subscribed to", url);
+                        subscription.setState("subscribed");
+                    });
                 });
-            });
-            subscription.bind("subscribed", function () {
-                callback(true);
-            });
-        }
-        else {
-            Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
-            callback(false);
-        }
-    });
+                subscription.bind("subscribed", function () {
+                    callback(true);
+                });
+            }
+            else {
+                Msgboy.log.debug("Nothing to do for", url, "(", subscription.attributes.state , ")");
+                callback(false);
+            }
+        });
+    }
 };
 exports.subscribe = subscribe;
 
@@ -370,7 +383,7 @@ Msgboy.bind("loaded", function () {
         Msgboy.bind("connected", function(){
             // And import all plugins.
             Plugins.importSubscriptions(function (subs) {
-                subscribe(subs.url, false, function () {
+                subscribe(subs.url, subs.doDiscovery, false, function () {
                     // Cool. Not much to do.
                 });
             }, 
@@ -425,20 +438,7 @@ Msgboy.bind("loaded", function () {
     Msgboy.bind('subscribe', function (params, _sendResponse) {
         Msgboy.log.debug("request", "subscribe", params.url);
         // We first need to look at params and see if the doDiscovery flag is set. If so, we first need to perform discovery
-        if(params.doDiscovery) {
-            Feediscovery.get(params.url, function (links) {
-                for(var i = 0; i < links.length; i++) {
-                    var link = links[i];
-                    subscribe(link.href, params.force || false, function (result) {
-                        _sendResponse({
-                            value: result
-                        });
-                    });
-                }
-                processNext(items);
-            });
-        }
-        subscribe(params.url, params.force || false, function (result) {
+        subscribe(params.url, params.doDiscovery, params.force || false, function (result) {
             _sendResponse({
                 value: result
             });
@@ -505,7 +505,7 @@ Msgboy.bind("loaded", function () {
     Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
         Msgboy.log.debug("request", "resetRusbcriptions");
         Plugins.importSubscriptions(function (subs) {
-            subscribe(subs.url, false, function () {
+            subscribe(subs.url, subs.doDiscovery, false, function () {
                 // Cool. Not much to do.
             });
         }, 
@@ -523,8 +523,8 @@ Msgboy.bind("loaded", function () {
     for(var j = 0; j < Plugins.all.length; j++) {
         var plugin = Plugins.all[j];
         if (typeof (plugin.subscribeInBackground) != "undefined") {
-            plugin.subscribeInBackground(function (feed) {
-                Msgboy.trigger('subscribe', {url: feed.href}, function() {
+            plugin.subscribeInBackground(function (subscription) {
+                Msgboy.trigger('subscribe', subscription, function() {
                     // Nothing.
                 });
             });

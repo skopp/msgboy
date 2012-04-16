@@ -5,7 +5,7 @@ Feediscovery.running = false;
 
 Feediscovery.get = function (_url, _callback) {
     // Let's first do some verifications on the url to avoid wasting resources.
-    if(_url.match(/chrome-extension:/)) {
+    if(_url.match(/chrome-extension:/) || _url.match(/javascript:/)) {
         // No feediscovery lookup for chrome extensions.
         _callback([]);
     }
