@@ -2,4 +2,4 @@
 s3.json
 *.pem
 build/
-views/js/
+views/js/.js
