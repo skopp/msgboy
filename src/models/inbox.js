@@ -10,7 +10,7 @@ var Inbox = Backbone.Model.extend({
         id: "1",
         options: {
             relevance: 1.0,
-            pinMsgboy: false
+            pinMsgboy: true
         }
     },
     initialize: function () {
