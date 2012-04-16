@@ -1,5 +1,4 @@
 var Msgboy = require('./msgboy.js').Msgboy;
-var Feediscovery = require('./feediscovery.js').Feediscovery;
 
 
 Msgboy.bind("loaded", function () {
