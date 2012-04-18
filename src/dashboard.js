@@ -108,8 +108,12 @@ Msgboy.bind('loaded', function () {
     });
     
     $("#newMessages").click(function () {
-        stacked = showStack(stacked);
-        setNewMessagesBar(stacked);
+        $('body,html').animate({
+			scrollTop: 0
+		}, 500, null, function() {
+            stacked = showStack(stacked);
+            setNewMessagesBar(stacked);
+		});
     });
 
     // Listening to the events from the background page.
