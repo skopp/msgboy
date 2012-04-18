@@ -15,7 +15,8 @@ GoogleReader = function (Plugins) {
             var quickadd = doc.getElementById("quickadd");
             follow({
                 url: quickadd.value,
-                title: quickadd.value
+                title: quickadd.value,
+                doDiscovery: true
             }, function () {
                 // Done
             });
