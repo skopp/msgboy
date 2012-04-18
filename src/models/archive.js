@@ -19,7 +19,7 @@ var Archive = Backbone.Collection.extend({
             var relevances = this.pluck('relevance').sort();
             this.percentiles = [
                 relevances[parseInt(relevances.length/8) - 1], 
-                relevances[parseInt(relevances.length/2) - 1], 
+                relevances[parseInt(relevances.length*2/3) + 1], 
                 relevances[parseInt(relevances.length*7/8)]
             ]; 
         });

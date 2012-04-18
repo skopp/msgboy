@@ -134,22 +134,23 @@ var MessageView = Backbone.View.extend({
         var res, state = this.model.get('state');
             
         if (state === 'down-ed') {
-            res = 1;
+            res = '1';
         } else if (state === 'up-ed') {
-            res = 4;
+            res = '4';
         } else {
             if(this.model.collection && this.model.collection.percentiles) {
                 if(this.model.get('relevance') < this.model.collection.percentiles[0]) {
-                    res = 1;
+                    res = '1';
                 }
                 else if (this.model.get('relevance') < this.model.collection.percentiles[1]) {
-                    res = 2;
+                    res = '2';
                 }
                 else if (this.model.get('relevance') < this.model.collection.percentiles[2]) {
-                    res = 3;
+                    // This brick has 2 versions!
+                    res = '3';
                 }
                 else {
-                    res = 4;
+                    res = '4';
                 }
             }
             else {

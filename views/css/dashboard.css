@@ -153,24 +153,21 @@
 }
 
 .brick-2  {
-    font-size:0.8em;
-    width: 90px;
-    height: 90px;
-    font-weight: normal;
-}
-
-.brick-2 .controls {
-    height: 30px;
-}
-
-.brick-2 .controls button {
-    background-size: 50%;
+    font-size:1.0em;
+    width: 200px;
+    height: 200px;
 }
 
 .brick-3  {
     font-size:1.0em;
-    width: 200px;
+    width: 420px;
     height: 200px;
+}
+
+.brick-3v  {
+    font-size:1.0em;
+    width: 200px;
+    height: 420px;
 }
 
 .brick-4 {
@@ -196,19 +193,19 @@ p {
     background-color: #11232C;
 }
 
-.brick-2 p, .brick-1 p {
-    font-size: 0.9em;
-    line-height: 12px;
-}
-
-.brick-3 p {
+.brick-2 p {
     font-size: 1.0em;
     line-height: 20px;
 }
 
+.brick-3 p {
+    font-size: 1.2em;
+    line-height: 24px;
+}
+
 .brick-4 p {
     font-size: 1.5em;
-    line-height: 26px;
+    line-height: 30px;
 }
 
 
