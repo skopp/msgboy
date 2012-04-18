@@ -6,54 +6,110 @@ var Inbox = require('./models/inbox.js').Inbox;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
+var readyToLoadNext = true;
+var currentArchiveView = null;
+var modalShareView = new ModalShareView({el: '#modal-share'});
 
-Msgboy.bind("loaded", function () {
-    
-    Msgboy.inbox = new Inbox();
-    Msgboy.inbox.fetch();
-    
-    // Bam. Msgboy loaded
-    var archive = new Archive();
-    var stacked = new Archive();
-    
-    // The archiveView Object
+function prepareArchiveView(archive) {
     var archiveView = new ArchiveView({
-        el: $("#archive"),
+        el: $('#archive'),
         collection: archive,
     });
-
-    // The modalShareView Object.
-    var modalShareView = new ModalShareView({
-        el: "#modal-share"
-    });
-
     // When a message is shared
     archive.bind('share', function (message) {
         modalShareView.showForMessage(message);
     });
-    
+
     // When a message is down-voted
     archive.bind('down-ed', function(message) {
-        if(message.attributes.sourceHost !== "msgboy.com") {
+        if(message.attributes.sourceHost !== 'msgboy.com') {
             chrome.extension.sendRequest({
-                signature: "down-ed",
+                signature: 'down-ed',
                 params: message
             }, function (response) {
                 // Nothing to do.
             });
         }
-    })
+    });
+    return archiveView;
+}
 
-    // Refresh the page! Maybe it would actually be fancier to add the elements to the archive and then push them in front. TODO
-    $("#new_messages").click(function () {
-        $("#new_messages").attr("data-unread", 0);
-        $("#new_messages").css("top","-36px");
-        $("#new_messages").text("");
-        stacked.forEach(function(m) {
-            archiveView.prependNew(m); // We should just hide this!
+function loadNextArchive(opts) {
+    readyToLoadNext = false;
+    var archive = new Archive(opts);
+    archiveView = prepareArchiveView(archive);
+
+    archive.bind('reset', function() {
+        archive.each(function(message) {
+            archiveView.appendNew(message)
         });
-        stacked.reset();
-        //window.location.reload(true);
+        // Ready to load next.
+        readyToLoadNext = true;
+        prepareNextLoadIfNeeded();
+    });
+    
+    archive.load(30);
+    return archiveView;
+}
+
+function prepareNextLoadIfNeeded() {
+    if(readyToLoadNext && $(window).scrollTop() + 2*$(window).height() > $(document).height()) {
+        var upperBound = currentArchiveView.collection.last().get('createdAt');
+        currentArchiveView = loadNextArchive({upperBound: upperBound, lowerBound: 0});
+    }
+}
+
+function showStack(stacked) {
+    var stackedView = prepareArchiveView(stacked);
+    stacked.each(function(message) {
+        stackedView.prependNew(message)
+    });
+    return new Archive(); // And prepare for the new stack!
+}
+
+function setNewMessagesBar(stack) {
+    if(stack.length === 0) {
+        $('#newMessages').attr("data-unread", 0);
+        $('#newMessages').css("top","-36px");
+        $('#newMessages').text("");
+    }
+    else {
+        $("#newMessages").css("top","0");
+        $("#newMessages").attr("data-unread", stack.length);
+        $("#newMessages").text("View " + stack.length + " new");
+        
+    }
+}
+
+Msgboy.bind('loaded', function () {
+    $('#container').masonry({itemSelector : '.message', columnWidth : 10, animationOptions: { duration: 1000 }});
+
+    Msgboy.inbox = new Inbox();
+    Msgboy.inbox.fetch();
+    var stacked = new Archive();
+    
+    // Completes the page by loading more messages.
+    $(document).scroll(prepareNextLoadIfNeeded);
+    
+    // Show the time indicator
+    $(document).scroll(function() {
+        var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
+        if(message && typeof(message.data('model')) !== "undefined") {
+            $("#timetracker").html("<p>" + new Date(message.data('model').attributes.createdAt).toRelativeTime() + "</p>");
+        }
+        if(this.fadeOutTimeout) {
+            clearTimeout(this.fadeOutTimeout);
+        }
+        $("#timetracker").fadeIn();
+        this.fadeOutTimeout = setTimeout(function() {
+            this.fadeOutTimeout = null;
+            $("#timetracker").fadeOut();
+        }, 300);
+    });
+    
+    $("#newMessages").click(function () {
+        stacked = showStack(stacked);
+        setNewMessagesBar(stacked);
     });
 
     // Listening to the events from the background page.
@@ -62,27 +118,19 @@ Msgboy.bind("loaded", function () {
             var m = new Message({id: request.params.id});
             m.fetch({
                 success: function() {
+                    stacked.unshift(m);
                     if(Msgboy.inbox.attributes.options.autoRefresh) {
-                        archiveView.prependNew(m); // We should just hide this!
+                        stacked = showStack(stacked);
                     }
                     else {
-                        stacked.add(m);
-                        // Cool, we have a new message. Let's see if we add it to the top, or reload the page.
-                        // Let's get the content of $("#new_messages")
-                        var count = parseInt($("#new_messages").attr("data-unread"));
-                        if (count) {
-                            $("#new_messages").attr("data-unread", count + 1);
-                            $("#new_messages").text("View " + (count + 1) + " new");
-                        } else {
-                            $("#new_messages").css("top","0");
-                            $("#new_messages").attr("data-unread", "1");
-                            $("#new_messages").text("View 1 new");
-                        }
+                        setNewMessagesBar(stacked);
                     }
                 }.bind(this)
             });
         }
     });
+    
+    currentArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
 });
 
 

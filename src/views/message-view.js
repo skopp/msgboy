@@ -131,15 +131,30 @@ var MessageView = Backbone.View.extend({
         return false;
     },
     getBrickClass: function () {
-        var res,
-            state = this.model.get('state');
+        var res, state = this.model.get('state');
             
         if (state === 'down-ed') {
             res = 1;
         } else if (state === 'up-ed') {
             res = 4;
         } else {
-            res = Math.ceil(this.model.attributes.relevance * 4); 
+            if(this.model.collection && this.model.collection.percentiles) {
+                if(this.model.get('relevance') < this.model.collection.percentiles[0]) {
+                    res = 1;
+                }
+                else if (this.model.get('relevance') < this.model.collection.percentiles[1]) {
+                    res = 2;
+                }
+                else if (this.model.get('relevance') < this.model.collection.percentiles[2]) {
+                    res = 3;
+                }
+                else {
+                    res = 4;
+                }
+            }
+            else {
+                res = Math.ceil(this.model.attributes.relevance * 4); 
+            }
         }
         return 'brick-' + res;
     }

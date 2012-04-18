@@ -7,162 +7,76 @@ var Archive = require('../models/archive.js').Archive;
 require("../date.extension.js");
 
 var ArchiveView = Backbone.View.extend({
-    upperBound: new Date().getTime(),
-    lowerBound: 0,
-    fadeOutTimeout: null,
-    loaded: 0,
-    toLoad: 50,
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'appendNew', 'completePage', 'prependNew');
-        
-        $('#container').masonry({
-            itemSelector : '.message',
-            columnWidth : 10,
-            animationOptions: {
-                duration: 1000
-            }
-        });
-        
-        // Completes the page by loading more messages.
-        $(document).scroll(this.completePage);
-        
-        // Show the time indicator
-        $(document).scroll(function() {
-            var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
-            if(message && typeof(message.data('model')) !== "undefined") {
-                $("#timetracker").html("<p>" + new Date(message.data('model').attributes.createdAt).toRelativeTime() + "</p>");
-            }
-            if(this.fadeOutTimeout) {
-                clearTimeout(this.fadeOutTimeout);
-            }
-            $("#timetracker").fadeIn();
-            this.fadeOutTimeout = setTimeout(function() {
-                this.fadeOutTimeout = null;
-                $("#timetracker").fadeOut();
-            }, 300);
-        });
-        
-        this.loadingTimes =[];
-        this.loaded = this.toLoad;
-        this.collection.bind('add', this.appendNew);
-        this.completePage();
+        _.bindAll(this, 'appendNew', 'prepareNew');        
     },
-    completePage: function () {
-        if (this.loaded === this.toLoad) {
-            if ($(window).scrollTop() > $(document).height() - 5 * $(window).height()) {
-                this.loaded = 0; // Reset the loaded counter!
-                this.collection.next(this.toLoad, {
-                    createdAt: [this.upperBound, this.lowerBound]
+    prepareNew: function (message) {
+        message.bind('up-ed', function() {
+            $('#container').masonry('reload');
+        });
+
+        message.bind('down-ed', function() {
+            $('#container').masonry('reload');
+        });
+
+        message.bind('expanded', function() {
+            $('#container').masonry('reload');
+        })
+
+        // This should be moved to the archive model as it's not a view thing.
+        message.bind('unsubscribed', function() {
+            // We have unsubscribed a feed. So we want to delete all of its brothers.
+            var brothers = new Archive(); 
+            brothers.bind('reset', function() {
+                var destroyedOne = _.after(brothers.models.length, function() {
+                    // Once all brothers have been destroyed, we can redraw
+                    $('#container').masonry('reload');
                 });
-            }
-        }
+
+                _.each(brothers.models, function(brother) {
+                    brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
+                    brother.destroy({silent: true, success: destroyedOne}); // Deletes the brothers 
+                }.bind(this));
+            }.bind(this));
+            brothers.forFeed(message.get('feed'));
+        }.bind(this));
+
+        var view = new MessageView({
+            model: message
+        });
+        return view;
     },
     prependNew: function (message) {
-        if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
-            message.bind('up-ed', function() {
-                $('#container').masonry('reload');
-            });
-
-            message.bind('down-ed', function() {
-                $('#container').masonry('reload');
-            });
-
-            message.bind('expanded', function() {
-                $('#container').masonry('reload');
-            })
-
-            message.bind('unsubscribed', function() {
-                // We have unsubscribed a feed. So we want to delete all of its brothers.
-                var brothers = new Archive(); 
-                brothers.bind('reset', function() {
-                    var destroyedOne = _.after(brothers.models.length, function() {
-                        // Once all brothers have been destroyed, we can redraw
-                        $('#container').masonry('reload');
-                    })
-                    
-                    _.each(brothers.models, function(brother) {
-                        brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
-                        brother.destroy({
-                            silent: true,
-                            success: destroyedOne
-                        }); // Deletes the brothers 
-                    }.bind(this));
-                }.bind(this));
-                brothers.forFeed(message.get('feed'));
-            }.bind(this));
-
-            var view = new MessageView({
-                model: message
-            });
-            
-            view.bind('rendered', function() {
-                $('#container').prepend($(view.el)).masonry( 'reload' ); // Adds the view in the document.
-                $(view.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
-                $(view.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
-            }.bind(this));
-            view.render(); 
-        }
+        var view = this.prepareNew(message);
+        
+        view.bind('rendered', function() {
+            $('#container').prepend($(view.el)).masonry( 'reload' ); // Adds the view in the document.
+            $(view.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
+            $(view.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
+        }.bind(this));
+        view.render();
     },
     appendNew: function (message) {
-        this.upperBound = message.attributes.createdAt;
-        this.loaded++;
-        if(message.attributes.state !== "down-ed" && Math.ceil(message.attributes.relevance * 4) > 1) {
-            message.bind('up-ed', function() {
-                $('#container').masonry('reload');
-            });
+        var view = this.prepareNew(message);
+        
+        view.bind('rendered', function() {
+            $('#container').append($(view.el)); // Adds the view in the document.
+            $('#container').masonry('appended', $(view.el));
+        }.bind(this));
 
-            message.bind('down-ed', function() {
-                $('#container').masonry('reload');
-            });
-
-            message.bind('expanded', function() {
-                $('#container').masonry('reload');
-            })
-
-            message.bind('unsubscribed', function() {
-                // We have unsubscribed a feed. So we want to delete all of its brothers.
-                var brothers = new Archive(); 
-                brothers.bind('reset', function() {
-                    var destroyedOne = _.after(brothers.models.length, function() {
-                        // Once all brothers have been destroyed, we can redraw
-                        $('#container').masonry('reload');
-                    })
-                    
-                    _.each(brothers.models, function(brother) {
-                        brother = this.collection.get(brother.id) || brother; // Rebinding to the right model.
-                        brother.destroy({
-                            silent: true,
-                            success: destroyedOne
-                        }); // Deletes the brothers 
-                    }.bind(this));
-                }.bind(this));
-                brothers.forFeed(message.get('feed'));
-            }.bind(this));
-
-            var view = new MessageView({
-                model: message
-            });
-            
-            view.bind('rendered', function() {
-                this.completePage();
-                $('#container').append($(view.el)); // Adds the view in the document.
-                $('#container').masonry('appended', $(view.el));
-            }.bind(this));
-
-            // Check if we can group the messages
-            if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
-                this.lastParentView.model.related.add(message);
-                $(view.el).addClass('brother'); // Let's show this has a brother!
-                view.render(); 
+        // Check if we can group the messages
+        if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
+            this.lastParentView.model.related.add(message);
+            $(view.el).addClass('brother'); // Let's show this has a brother!
+            view.render(); 
+        }
+        else {
+            if(this.lastParentView) {
+                this.lastParentView.render();
             }
-            else {
-                if(this.lastParentView) {
-                    this.lastParentView.render();
-                }
-                this.lastParentView = view;
-            }
+            this.lastParentView = view;
         }
     }
 });
