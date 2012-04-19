@@ -2,6 +2,7 @@ var $ = jQuery = require('jquery');
 var _ = require('underscore');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
+require('../bootstrap-modal.js');
 var Inbox = require('../models/inbox.js').Inbox;
 
 var OptionsView = Backbone.View.extend({
@@ -24,6 +25,7 @@ var OptionsView = Backbone.View.extend({
             });
         }.bind(this));
         this.model.fetch();
+        $('#modal-options').modal({});
     },
 
     render: function () {
@@ -46,11 +48,17 @@ var OptionsView = Backbone.View.extend({
     },
 
     resetRusbcriptions: function (event) {
+        $('#modal-options .modal-body').html("<p>Your subscriptions are being imported again. Please bear with us, as it may take a couple minutes.</p>");
+        $('#modal-options').modal({});
+        
         chrome.extension.sendRequest({
             signature: "resetRusbcriptions",
             params: {}
         }, function () {
+            console.log("Done!")
             // Nothing to do.
+            // Well actually... we should show something to the user.
+            // First, maybe lock the button.
         });
     },
     
