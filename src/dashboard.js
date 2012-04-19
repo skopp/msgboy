@@ -8,7 +8,7 @@ var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
 var readyToLoadNext = true;
 var currentArchiveView = null;
-var modalShareView = new ModalShareView({el: '#modal-share'});
+var modalShareView = null;
 
 function prepareArchiveView(archive) {
     var archiveView = new ArchiveView({
@@ -90,6 +90,10 @@ function setNewMessagesBar(stack) {
 }
 
 Msgboy.bind('loaded', function () {
+    
+    modalShareView = new ModalShareView({
+        el: $('#modal-share')
+    });
     $('#container').masonry({itemSelector : '.message', columnWidth : 10, animationOptions: { duration: 10 }});
 
     Msgboy.inbox = new Inbox();

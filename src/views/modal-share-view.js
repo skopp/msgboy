@@ -11,7 +11,6 @@ var ModalShareView = Backbone.View.extend({
         'keyup #comment': 'updateCountdown',
         'click .share-ext': 'sendShare'
     },
-    el: "#modal-share",
 
     initialize: function () {
         $(this.el).modal({});
