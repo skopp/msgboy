@@ -15,14 +15,15 @@ var Archive = Backbone.Collection.extend({
             this.lowerBound = opts.lowerBound;
         }
         this.model = require('./message.js').Message; // This avoids recursion in requires
-        this.bind('reset', function() {
-            var relevances = this.pluck('relevance').sort();
-            this.percentiles = [
-                relevances[parseInt(relevances.length/8) - 1], 
-                relevances[parseInt(relevances.length*2/3) + 1], 
-                relevances[parseInt(relevances.length*7/8)]
-            ]; 
-        });
+        this.bind('reset', this.computeRelevance);
+    },
+    computeRelevance: function() {
+        var relevances = this.pluck('relevance').sort();
+        this.percentiles = [
+            relevances[parseInt(relevances.length/8) - 1], 
+            relevances[parseInt(relevances.length*2/3) + 1], 
+            relevances[parseInt(relevances.length*7/8)]
+        ]; 
     },
     comparator: function (message) {
         return - (message.get('createdAt'));

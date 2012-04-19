@@ -60,6 +60,11 @@ function prepareNextLoadIfNeeded() {
 }
 
 function showStack(stacked) {
+    stacked.computeRelevance();
+    stacked.comparator = function (message) {
+        return (message.get('createdAt'));
+    }; // We need to reverse the stack since we'll prepend (instead of append)
+    stacked.sort({silent: true}); // Re-sort
     var stackedView = prepareArchiveView(stacked);
     stacked.each(function(message) {
         stackedView.prependNew(message)
