@@ -49,13 +49,12 @@ var OptionsView = Backbone.View.extend({
 
     resetRusbcriptions: function (event) {
         $('#modal-options .modal-body').html("<p>Your subscriptions are being imported again. Please bear with us, as it may take a couple minutes.</p>");
-        $('#modal-options').modal({});
+        $('#modal-options').modal('show');
         
         chrome.extension.sendRequest({
             signature: "resetRusbcriptions",
             params: {}
         }, function () {
-            console.log("Done!")
             // Nothing to do.
             // Well actually... we should show something to the user.
             // First, maybe lock the button.

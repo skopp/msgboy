@@ -23,7 +23,9 @@
             var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
           })();
 
-          Msgboy.run();
+          window.onload = function () {
+              Msgboy.run();
+          };
         </script>
         
     </head>

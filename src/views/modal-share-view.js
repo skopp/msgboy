@@ -14,6 +14,7 @@ var ModalShareView = Backbone.View.extend({
     el: "#modal-share",
 
     initialize: function () {
+        $(this.el).modal({});
     },
     
     showForMessage: function(message) {
