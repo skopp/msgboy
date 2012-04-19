@@ -10,7 +10,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'appendNew', 'prepareNew');        
+        _.bindAll(this, 'appendNew', 'prepareNew', 'render');        
     },
     prepareNew: function (message) {
         message.bind('up-ed', function() {
@@ -50,7 +50,6 @@ var ArchiveView = Backbone.View.extend({
     },
     prependNew: function (message) {
         var view = this.prepareNew(message);
-        
         view.bind('rendered', function() {
             $('#container').prepend($(view.el)).masonry( 'reload' ); // Adds the view in the document.
             $(view.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
@@ -62,22 +61,25 @@ var ArchiveView = Backbone.View.extend({
         var view = this.prepareNew(message);
         
         view.bind('rendered', function() {
+            $(view.el).addClass('archive-' + this.cid);
             $('#container').append($(view.el)); // Adds the view in the document.
-            $('#container').masonry('appended', $(view.el));
         }.bind(this));
 
         // Check if we can group the messages
-        if (this.lastParentView && this.lastParentView.model.get('sourceLink') === message.get('sourceLink') && !message.get('ungroup')) {
+        if (this.lastParentView && !message.get('ungroup') && this.lastParentView.model.get('sourceLink') === message.get('sourceLink')) {
             this.lastParentView.model.related.add(message);
             $(view.el).addClass('brother'); // Let's show this has a brother!
+            this.lastParentView.render(); // re-render the parent
             view.render(); 
         }
         else {
-            if(this.lastParentView) {
-                this.lastParentView.render();
-            }
             this.lastParentView = view;
         }
+        view.render(); 
+    },
+    render: function() {
+        // Do the Masonry magic
+        $('#container').masonry('appended', $('.archive-' + this.cid));
     }
 });
 

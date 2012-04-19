@@ -99,12 +99,10 @@ if(Msgboy.environment() === "development") {
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
 Msgboy.run =  function () {
-    window.onload = function () {
-        chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
-            Msgboy.infos = extension_infos;
-            Msgboy.trigger("loaded");
-        });
-    }
+    chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+        Msgboy.infos = extension_infos;
+        Msgboy.trigger("loaded");
+    });
 };
 
 exports.Msgboy = Msgboy;

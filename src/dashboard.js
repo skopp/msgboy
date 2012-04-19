@@ -41,21 +41,24 @@ function loadNextArchive(opts) {
 
     archive.bind('reset', function() {
         archive.each(function(message) {
-            archiveView.appendNew(message)
+            archiveView.appendNew(message);
         });
+        archiveView.render();
         // Ready to load next.
         readyToLoadNext = true;
         prepareNextLoadIfNeeded();
     });
     
-    archive.load(30);
+    archive.load(50);
     return archiveView;
 }
 
 function prepareNextLoadIfNeeded() {
-    if(readyToLoadNext && $(window).scrollTop() + 2*$(window).height() > $(document).height()) {
-        var upperBound = currentArchiveView.collection.last().get('createdAt');
-        currentArchiveView = loadNextArchive({upperBound: upperBound, lowerBound: 0});
+    if(readyToLoadNext) {
+        if($(window).scrollTop() + 2*$(window).height() > $(document).height()) {
+            var upperBound = currentArchiveView.collection.last().get('createdAt');
+            currentArchiveView = loadNextArchive({upperBound: upperBound, lowerBound: 0});
+        }
     }
 }
 
@@ -87,7 +90,7 @@ function setNewMessagesBar(stack) {
 }
 
 Msgboy.bind('loaded', function () {
-    $('#container').masonry({itemSelector : '.message', columnWidth : 10, animationOptions: { duration: 1000 }});
+    $('#container').masonry({itemSelector : '.message', columnWidth : 10, animationOptions: { duration: 10 }});
 
     Msgboy.inbox = new Inbox();
     Msgboy.inbox.fetch();

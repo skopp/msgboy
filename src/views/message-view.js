@@ -58,7 +58,7 @@ var MessageView = Backbone.View.extend({
     },
     layout: function() {
         var el = $(this.el), 
-        isGroup = this.model.related && this.model.related.length > 1;
+        isGroup = this.model.related && this.model.related.length >= 1;
         
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
@@ -70,7 +70,7 @@ var MessageView = Backbone.View.extend({
         // render our compiled template
         if (isGroup) {
             el.addClass('stack');
-            el.prepend($('<div class="ribbon">' + (this.model.related.length + 1) + ' others</div>'));
+            el.prepend($('<div class="ribbon">' + (this.model.related.length) + ' others</div>'));
         }
         if(typeof this.model.get('image') !== "undefined") {
             $(this.el).css("background", "url(" + this.model.get('image') + ")");
@@ -82,7 +82,7 @@ var MessageView = Backbone.View.extend({
     // Browser event handlers
     handleClick: function (evt) {
         var el = $(this.el),
-                isGroup = this.model.related.length > 1;
+                isGroup = this.model.related.length >= 1;
         if (isGroup) {
             this.handleExpand();
         }
