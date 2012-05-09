@@ -7,6 +7,7 @@ var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
 
 var readyToLoadNext = true;
+var firstArchiveView = null;
 var currentArchiveView = null;
 var modalShareView = null;
 
@@ -119,6 +120,7 @@ Msgboy.bind('loaded', function () {
         }, 300);
     });
     
+    // New message bar
     $("#newMessages").click(function () {
         $('body,html').animate({
 			scrollTop: 0
@@ -134,11 +136,16 @@ Msgboy.bind('loaded', function () {
             var m = new Message({id: request.params.id});
             m.fetch({
                 success: function() {
-                    stacked.unshift(m);
                     if(Msgboy.inbox.attributes.options.autoRefresh) {
-                        stacked = showStack(stacked);
+                        // We need to append this message to the first archive...
+                        firstArchiveView.collection.unshift(m);
+                        // Recompute the relevance
+                        firstArchiveView.collection.computeRelevance();
+                        // Appnd the new message
+                        firstArchiveView.prependNew(m);
                     }
                     else {
+                        stacked.unshift(m);
                         setNewMessagesBar(stacked);
                     }
                 }.bind(this)
@@ -146,7 +153,7 @@ Msgboy.bind('loaded', function () {
         }
     });
     
-    currentArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
+    currentArchiveView = firstArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
 });
 
 
