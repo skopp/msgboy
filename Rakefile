@@ -9,6 +9,10 @@ require 'json'
 require 'net/http'
 require 'git'
 
+s3 = {} # S3 params.
+if FileTest.exist?("s3.json")
+  s3 = JSON.load(File.read("s3.json"))
+end
 
 def version
   doc = Nokogiri::XML(File.open("updates.xml"))
@@ -193,8 +197,6 @@ namespace :publish do
   task :upload => [:'upload:crx', :'upload:updates_xml', :'airbrake:track', :'upload:push_git']
 
   namespace :upload do
-    s3 = JSON.load(File.read("s3.json"))
-    
     desc "Uploads the extension"
     task :crx do
       AWS::S3::Base.establish_connection!(
@@ -236,6 +238,7 @@ namespace :publish do
       res = g.push("origin", "master", true)
       puts res
     end
+    
   end
   
   namespace :airbrake do
