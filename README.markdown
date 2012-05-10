@@ -10,7 +10,7 @@ You can get the msgboy from [http://msgboy.com](http://msgboy.com). However, we'
 
 ## Developers
 
-The msgboy aims at using a lot of *open web protocols* and techniques to interact better with more online services and providing a universal notification service, without requiring them adapt to the msgboy. Of course, developers can _always_ decide to provide deeper integration with the msgboy.
+The msgboy aims at using a lot of *open web protocols* and techniques to interact better with more online services and providing a universal notification service, without requiring them adapt to the msgboy. 
 
 The msgboy is open source. We use git for source versioning and [github to host it](https://github.com/superfeedr/msgboy). Please, fork it, and feel free to change anything that doesn't suit your needs. Also, tell us about the changes so that we can maybe make the msgboy better for everyone using it!
 
@@ -18,18 +18,22 @@ The msgboy is open source. We use git for source versioning and [github to host 
 
 Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org/TR/IndexedDB/), [Websockets](http://dev.w3.org/html5/websockets/), [PubSubHubbub](http://code.google.com/p/pubsubhubbub/), [XMPP](http://xmpp.org/), [StropheJS](http://strophe.im/), [Backbone.js](http://documentcloud.github.com/backbone/), [jQuery](http://jquery.com/), [Node.js](http://nodejs.org/) and [Browserify](https://github.com/substack/node-browserify). If you're into 3 or more of these technologies, feel free to get in touch, *we're hiring*!
 
-### Debugging and Inspecting
-
-The msgboy is a [Chrome application](http://code.google.com/chrome/extensions/index.html). If you'd like to dive into the code, you need to [checkout the source code](https://github.com/superfeedr/msgboy). Then, open Chrome and go to <code>[chrome://extensions/](chrome://extensions/)</code> in a new tab. Check the <code>Developer Mode</code> checkbox. Now, hit the <code>Load Unpacked extension</code> button and select the msgboy source directory.
-If you expand the Msgboy section, you will then see the list of active views. Clicking on <code>/views/html/background.html</code> will let you inspect the background HTML page for the msgboy which runs continuously.
-
-If you submit bug reports, please provide as much content as possible (Chrome version, as well as the logs from the background page).
-
 ### Building the Msgboy
 
-The msgboy is a javascript application. We use node.js for a lot of things, including tests, and when you modify the code, you need to rebuild the application using the following command:
+The msgboy is a javascript application. We use node.js for a lot of things, including tests, and when you modify the code, you need to rebuild the application using the following steps.
 
-    rake build
+First make sure you have [ruby](http://www.ruby-lang.org/en/), as well as [node.js](http://nodejs.org/) installed:
+
+    $ npm install // This will install all the dependencies
+    $ rake build
+    
+### Debugging
+
+Open Chrome and go to <code>[chrome://extensions/](chrome://extensions/)</code> in a new tab. Check the <code>Developer Mode</code> checkbox. Now, hit the <code>Load Unpacked extension</code> button and select the msgboy source directory.
+
+If you expand the Msgboy section, you will then see the list of active views. Clicking on <code>/views/html/background.html</code> will let you inspect the background HTML page for the msgboy which runs continuously.
+
+When you submit bug reports, please provide as much content as possible (Chrome version, as well as the logs from the background page).
 
 ### Plugins
 
@@ -37,9 +41,9 @@ When installing the msgboy, it will look at several existing services where the 
 
 Similarly, when the user continues to use his favorite web services, he may subscribe/follow/watch additional resources. The msgboy then maps these new subscriptions and subscribes to the corresponding feeds.
 
-All this is done with the help of the *plugins*. We have already implemented [several plugins](https://github.com/superfeedr/msgboy/tree/master/controllers/plugins) for some well known services. There is one for [Tumblr](https://github.com/superfeedr/msgboy/blob/master/controllers/plugins/tumblr.js), or [Google Reader](https://github.com/superfeedr/msgboy/blob/master/controllers/plugins/google-reader.js), but also for the [browser bookmarks](https://github.com/superfeedr/msgboy/blob/master/controllers/plugins/bookmarks.js), the [browser history](https://github.com/superfeedr/msgboy/blob/master/controllers/plugins/history.js)... etc.
+All this is done with the help of the *plugins*. We have already implemented [several plugins](https://github.com/superfeedr/msgboy/tree/master/src/plugins) for some well known services. There is one for [Tumblr](https://github.com/superfeedr/msgboy/blob/master/src/plugins/tumblr.js), or [Google Reader](https://github.com/superfeedr/msgboy/blob/master/src/plugins/google-reader.js), but also for the [browser bookmarks](https://github.com/superfeedr/msgboy/blob/master/src/plugins/bookmarks.js), the [browser history](https://github.com/superfeedr/msgboy/blob/master/src/plugins/history.js)... etc.
 
-We have also implemented a [generic](https://github.com/superfeedr/msgboy/blob/master/controllers/plugins/generic.js) bookmark that uses HTML5's data attributes to add a source to the msgboy when the user interacts with a page element. For example, if you have the msgboy installed and <a href="" class="msgboy-follow" data-msgboy-url="http://blog.msgboy.com/rss" >click on this link</a>, your msgboy will have a subscription for our blog.
+We have also implemented a [generic](https://github.com/superfeedr/msgboy/blob/master/src/plugins/generic.js) bookmark that uses HTML5's data attributes to add a source to the msgboy when the user interacts with a page element. For example, if you have the msgboy installed and <a href="" class="msgboy-follow" data-msgboy-url="http://blog.msgboy.com/rss" >click on this link</a>, your msgboy will have a subscription for our blog.
 
 The easiest way to integrate with the msgboy is to add the right HTML5 markup to your pages so that when one of your users does follows/subscribes/watches another resource, the msgboy can trigger a subscription on its own.
 

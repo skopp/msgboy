@@ -1,22 +1,10 @@
 # This is a rake file that packs and upload a new version 
-require 'crxmake'
-require 'nokogiri'
-require 'yajl' 
-require 'yajl/json_gem'
-require 'aws/s3'
-require 'selenium-webdriver'
 require 'json'
-require 'net/http'
-require 'git'
-
-s3 = {} # S3 params.
-if FileTest.exist?("s3.json")
-  s3 = JSON.load(File.read("s3.json"))
-end
+require 'rexml/document'
 
 def version
-  doc = Nokogiri::XML(File.open("updates.xml"))
-  version = doc.at("updatecheck")["version"]
+  doc = REXML::Document.new File.read( "updates.xml" )
+  version = REXML::XPath.each(doc, "/gupdate/app/updatecheck") { |element| element.to_s }.first.attributes['version']
 end
 
 def ignorefile
@@ -102,7 +90,6 @@ namespace :build do
   end
 end
 
-
 task :lint => [:'lint:validate']
 namespace :lint do 
   desc "Validates with jshint"
@@ -122,188 +109,150 @@ namespace :lint do
   end
 end
 
-namespace :test do 
-  desc "Run tests for models"
-  task :models do
-    Dir.glob(File.dirname(__FILE__) + '/tests/models/*.js.html').each { |f| 
-      puts f
-      driver = Selenium::WebDriver.for :chrome
-      driver.navigate.to "file://#{f}"
-      results = driver.find_element(:id, 'qunit-testresult')
-      puts results.text
-      driver.quit()
-    }
-    
-    # http://code.google.com/p/selenium/wiki/RubyBindings
-    # 
-    # driver = Selenium::WebDriver.for :chrome
-    # 
-    # puts driver.class
-    # 
-    # driver.navigate.to "file://localhost/Users/julien/repos/msgboy/tests/models/inbox.js.html"
-    # 
-    # w2 = driver.find_element(:id, 'qunit-testresult')
-    # driver.wait.until { w2.displayed? }
-    # driver.quit()
-    
-  end
-  
-  desc "Run tests for controllers"
-  task :controllers do
-  
-  end
-  
-end
-
 task :version => [:'version:current']
 
 namespace :version do
-  desc "Bumps version for the extension, both in the updates.xml and the manifest file."
-  task :bump, :version do |task, args|
-    # Rake::Task["lint:validate"].invoke # Let's lint before
-    # Makes sure we have no pending commits, and that we're on master
-    g = Git.open (".")
-    if (g.status.added.empty? and g.status.changed.empty? and g.status.deleted.empty?)
-      if (g.branch.name == "master")
-        # First, update the updates.xml
-        puts args.inspect
-        doc = Nokogiri::XML(File.open("updates.xml"))
-        doc.at("updatecheck")["version"] = args[:version]
-        File.open('updates.xml','w') { |f| 
-          doc.write_xml_to f
-        }
-        manifest() # Rewrite the manifest
-        # # Finally, let's tag the repo
-        g.commit("Version bump #{version}", { :add_all => true,  :allow_empty => true})
-        g.add_tag(version)
+  begin
+    require 'git'
+
+    desc "Bumps version for the extension, both in the updates.xml and the manifest file."
+    task :bump, :version do |task, args|
+      # Rake::Task["lint:validate"].invoke # Let's lint before
+      # Makes sure we have no pending commits, and that we're on master
+      g = Git.open (".")
+      if (g.status.added.empty? and g.status.changed.empty? and g.status.deleted.empty?)
+        if (g.branch.name == "master")
+          # First, update the updates.xml
+          doc = REXML::Document.new File.read( "updates.xml" )
+          REXML::XPath.each(doc, "/gupdate/app/updatecheck") { |element| element.to_s }.first.attributes['version'] = args[:version]
+          # puts doc.to_s
+          File.open('updates.xml','w') { |f| 
+            f.write doc.to_s
+          }
+          manifest() # Rewrite the manifest
+          # # Finally, let's tag the repo
+          g.commit("Version bump #{version}", { :add_all => true,  :allow_empty => true})
+          g.add_tag(version)
+        else 
+          puts "Please make sure you use the master branch to package new versions"
+        end
       else 
-        puts "Please make sure you use the master branch to package new versions"
+        puts "You have pending changed. Please commit them first."
       end
-    else 
-      puts "You have pending changed. Please commit them first."
     end
+
+  rescue LoadError
+    puts "Please install the git gem if you want to bump the version of the msgboy."
   end
 
   desc "Prints the version for the extension"
   task :current do
     puts "Current version #{version}"
   end
+
 end
 
 task :publish => [:'publish:chrome:pack', :'publish:upload']
 
 namespace :publish do
 
-  task :upload => [:'upload:crx', :'upload:updates_xml', :'airbrake:track', :'upload:push_git']
+  task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
 
   namespace :upload do
-    desc "Uploads the extension"
-    task :crx do
-      AWS::S3::Base.establish_connection!(
-      :access_key_id     => s3['access_key_id'],
-      :secret_access_key => s3['secret_access_key']
-      )
-      AWS::S3::S3Object.store(
-      'msgboy.crx', 
-      open('./build/msgboy.crx'), 
-      s3['bucket'], 
-      {
-        :content_type => 'application/x-chrome-extension',
-        :access => :public_read
-      }
-      )
-      puts "Extension #{version} uploaded"
-    end
-
-    desc "Uploads the updates.xml file"
-    task :updates_xml do
-      AWS::S3::Base.establish_connection!(
-      :access_key_id     => s3['access_key_id'],
-      :secret_access_key => s3['secret_access_key']
-      )
-      AWS::S3::S3Object.store(
-      'updates.xml', 
-      open('./updates.xml'), 
-      s3['bucket'], 
-      {
-        :access => :public_read
-      }
-      )
-      puts "Updates.xml #{version} uploaded"
-    end
-    
-    desc "Pushes to the git remotes"
-    task :push_git do
-      g = Git.open (".")
-      res = g.push("origin", "master", true)
-      puts res
-    end
-    
-  end
-  
-  namespace :airbrake do
-    desc "Tracks deploy in airbrake"
-    task :track do
-      commit = `git show`.split("\n")
-      scm_revision = commit.select() {|line|
-        line.match(/^commit .*/)}[0].match(/commit (.*)/)[1]
-      local_username = commit.select() {|line|
-        line.match(/Author: .*/)}[0].match(/Author: (.*)/)[1]
-      
-      response = Net::HTTP.post_form(URI.parse("http://hoptoadapp.com/deploys.txt"), {
-        :api_key => "47bdc2ad25b662cee947d0a1c353e974",
-        :'deploy[rails_env]' => "production",
-        :'deploy[scm_repository]' => "https://github.com/superfeedr/msgboy",
-        :'deploy[scm_revision]' => scm_revision,
-        :'deploy[local_username]' => local_username,
-      })
-      
-      if (response.is_a? Net::HTTPOK)
-        puts "Tracking changes for #{version}"
-      else
-        puts "Cannot track changes for #{version}"
+    begin
+      require 'aws/s3'
+      s3 = {} # S3 params.
+      if FileTest.exist?("s3.json")
+        s3 = JSON.load(File.read("s3.json"))
       end
-    end
+      desc "Uploads the extension"
+      task :crx do
+        AWS::S3::Base.establish_connection!(
+        :access_key_id     => s3['access_key_id'],
+        :secret_access_key => s3['secret_access_key']
+        )
+        AWS::S3::S3Object.store(
+        'msgboy.crx', 
+        open('./build/msgboy.crx'), 
+        s3['bucket'], 
+        {
+          :content_type => 'application/x-chrome-extension',
+          :access => :public_read
+        }
+        )
+        puts "Extension #{version} uploaded"
+      end
+
+      desc "Uploads the updates.xml file"
+      task :updates_xml do
+        AWS::S3::Base.establish_connection!(
+        :access_key_id     => s3['access_key_id'],
+        :secret_access_key => s3['secret_access_key']
+        )
+        AWS::S3::S3Object.store(
+        'updates.xml', 
+        open('./updates.xml'), 
+        s3['bucket'], 
+        {
+          :access => :public_read
+        }
+        )
+        puts "Updates.xml #{version} uploaded"
+      end
+
+      desc "Pushes to the git remotes"
+      task :push_git do
+        g = Git.open (".")
+        res = g.push("origin", "master", true)
+        puts res
+      end
+    rescue LoadError
+      puts "Please install the s3 gem if you want to upload the msgboy to s3."
+    end  
   end
 
-  namespace :chrome do
-    desc "Packs the extension"
-    task :pack do
-      manifest()
-      
-      FileUtils.remove("./build/msgboy.crx", :force => true)
-      CrxMake.make(
+  begin
+    require 'crxmake'
+    namespace :chrome do
+      desc "Packs the extension"
+      task :pack do
+        manifest()
+
+        FileUtils.remove("./build/msgboy.crx", :force => true)
+        CrxMake.make(
         :ex_dir       => ".",
         :pkey         => "key.pem",
         :crx_output   => "./build/msgboy.crx",
         :verbose      => true,
         :ignorefile   => ignorefile,
         :ignoredir    => ignoredir
-      )
-      puts "Extension #{version} packed"
-    end
-    
-    desc "Prepares a zip file for the Chorme Webstore" 
-    task :zip do
-      manifest('webstore')
-      # First, we need to create the right manifest.json
-      FileUtils.remove("./build/msgboy.zip", :force => true)
-      CrxMake.zip(
+        )
+        puts "Extension #{version} packed"
+      end
+
+      desc "Prepares a zip file for the Chorme Webstore" 
+      task :zip do
+        manifest('webstore')
+        # First, we need to create the right manifest.json
+        FileUtils.remove("./build/msgboy.zip", :force => true)
+        CrxMake.zip(
         :ex_dir       => ".",
         :pkey         => "key.pem",
         :zip_output   => "./build/msgboy.zip",
         :verbose      => true,
         :ignorefile   => ignorefile,
         :ignoredir    => ignoredir
-      )
-      puts "Extension #{version} zipped"
+        )
+        puts "Extension #{version} zipped"
+      end
+
+      desc "Creates the manifest file for the destination. If the destination is webstore, we remove the update_url" 
+      task :manifest, :destination do |task, args|
+        manifest(args[:destination])
+      end
     end
-    
-    desc "Creates the manifest file for the destination. If the destination is webstore, we remove the update_url" 
-    task :manifest, :destination do |task, args|
-      manifest(args[:destination])
-    end
-    
+  rescue LoadError
+    puts "Please install the crxmake gem if you want to package the msgboy gem"
+    # not installed
   end
- 
 end
