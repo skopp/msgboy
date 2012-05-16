@@ -73,7 +73,7 @@ var MessageView = Backbone.View.extend({
             el.prepend($('<div class="ribbon">' + (this.model.related.length) + ' others</div>'));
         }
         if(typeof this.model.get('image') !== "undefined") {
-            $(this.el).css("background", "url(" + this.model.get('image') + ")");
+            $(this.el).css("background-image", "url(" + this.model.get('image') + ")");
         }
         if(this.model.get('sourceHost') === "msgboy.com") {
             el.addClass('msgboy');
