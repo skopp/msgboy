@@ -29,8 +29,8 @@ body {
 }
 
 #download {
-    width: 264px;
-    height: 226px;
+    width: 261px;
+    height: 228px;
     background: url(../images/splash-download-bg.png) top left no-repeat;
     padding: 40px 45px;
     float: left;
@@ -77,13 +77,38 @@ h3 {
     position: relative;
     z-index: 20;
     top: -217px;
-    left: 353px;
+    left: 350px;
 }
 
 .splash #signal {
     top: -355px;
     left: 215px;
     position: relative;
+}
+
+.footer .span4:last-child p {
+    border-bottom: 1px solid #ababab;
+    padding-bottom: 30px;
+    margin-bottom: 0;
+}
+
+#chrome-store {
+    border-top: 1px solid #fff;
+    margin-top: 0;
+    position: relative;
+    padding-top: 20px;
+}
+
+#chrome-store a {
+    width: 164px;
+    height: 46px;
+    text-indent: -999em;
+    background-image: url(../images/chrome-web-store.jpg);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    display: block;
+    position: absolute;
+    right: 0;
 }
 
 .footer p {
