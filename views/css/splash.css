@@ -1,0 +1,33 @@
+html {
+    background: #000 url(../images/splash-city.jpg) 50% 0 no-repeat;
+}
+
+body {
+    background: none;
+}
+
+.container {
+    width: 960px;
+}
+
+.footer {
+    background-image: url(../images/splash-bottom-bg.png);
+    background-position: top left;
+    background-repeat: repeat-x;
+    height: 305px;
+}
+
+h1 {
+    width: 762px;
+    height: 449px;
+    background-image: url(../images/splash-logo.png);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    text-indent: -999em;
+    left: -220px;
+    position: relative;
+}
+
+.span4 {
+    width: 300px
+}
