@@ -10,11 +10,33 @@ body {
     width: 960px;
 }
 
+.row {
+    margin-left: -40px;
+}
+
+.span4 {
+    width: 280px;
+    margin-left: 40px;
+}
+
 .footer {
     background-image: url(../images/splash-bottom-bg.png);
     background-position: top left;
     background-repeat: repeat-x;
     height: 305px;
+    padding-top: 30px;
+    margin-top: -222px;
+}
+
+#download {
+    width: 264px;
+    height: 226px;
+    background: url(../images/splash-download-bg.png) top left no-repeat;
+    padding: 40px 45px;
+    float: left;
+    margin-top: -103px;
+    position: absolute;
+    z-index: 10;
 }
 
 h1 {
@@ -26,8 +48,44 @@ h1 {
     text-indent: -999em;
     left: -220px;
     position: relative;
+    z-index: 1
 }
 
-.span4 {
-    width: 300px
+#download h2 {
+    color: #fff;
+    font-size: 36px;
+}
+
+h3 {
+    font-size: 20px;
+    color: #1a4862;
+    text-shadow: 0 1px 0 #fff;
+}
+
+#install {
+    background: url(../images/splash-install.png) top left no-repeat;
+    width: 292px;
+    height: 92px;
+    text-indent: -999em;
+    display: block;
+    margin-top: 30px;
+    margin-left: -15px;
+    cursor: pointer;
+}
+
+#screenshot {
+    position: relative;
+    z-index: 20;
+    top: -217px;
+    left: 353px;
+}
+
+.splash #signal {
+    top: -355px;
+    left: 215px;
+    position: relative;
+}
+
+.footer p {
+    font-size: 14px;
 }
