@@ -25,7 +25,6 @@ var OptionsView = Backbone.View.extend({
             });
         }.bind(this));
         this.model.fetch();
-        $('#modal-options').modal({});
     },
 
     render: function () {
@@ -48,17 +47,25 @@ var OptionsView = Backbone.View.extend({
     },
 
     resetRusbcriptions: function (event) {
-        $('#modal-options .modal-body').html("<p>Your subscriptions are being imported again. Please bear with us, as it may take a couple minutes.</p>");
-        $('#modal-options').modal('show');
-        
-        chrome.extension.sendRequest({
-            signature: "resetRusbcriptions",
-            params: {}
-        }, function () {
-            // Nothing to do.
-            // Well actually... we should show something to the user.
-            // First, maybe lock the button.
+        var modalHtml = [
+        '<div id="modal-options" class="modal backdrop fade">',
+            '<div class="modal-header">',
+                '<button class="close" data-dismiss="modal">×</button>',
+                '<h3>Reset Subscriptions</h3>',
+            '</div>',
+            '<div class="modal-body">',
+                '<p>Your subscriptions are being imported again. Please bear with us, as it may take a couple minutes.</p>',
+            '</div>',
+            '<div class="modal-footer">',
+            '</div>',
+        '</div>'
+        ].join('');
+        var modal = $(modalHtml);
+        modal.appendTo(document.body);
+        modal.on('hidden', function () {
+            modal.remove();
         });
+        modal.modal('show');
     },
     
     pinMsgboy: function(event) {
