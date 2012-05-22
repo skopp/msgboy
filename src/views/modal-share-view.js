@@ -28,6 +28,7 @@ var ModalShareView = Backbone.View.extend({
             '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
             '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
             '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
+            '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">WebIntents</a>',
         '</div>',
         '<div class="modal-footer">',
         '</div>',
@@ -39,6 +40,17 @@ var ModalShareView = Backbone.View.extend({
             comment: args.message.get('title') + " - " + args.message.get('source').title, 
             title: args.message.get('title')
         }));
+        
+        $(document).bind('keypress', function() {
+            var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", this.message.get('mainLink'));
+            var onSuccess = function(data) { /* woot */ };
+            var onError = function(data) { /* boooo */ };
+
+            window.navigator.webkitStartActivity(intent, onSuccess, onError);
+            
+        }.bind(this));
+        
+        
         return this;
     },
     
@@ -59,17 +71,26 @@ var ModalShareView = Backbone.View.extend({
         var service = $(e.target).data('service');
         var comment = this.$('#comment').val();
         var title = this.$('h2').val();
-        var sharingUrl = UrlParser.parse("http://msgboy.com/share/prepare");
-        sharingUrl.query = {
-            service: service,
-            url: url,
-            title: title,
-            comment: comment
+        if(service === "webintents") {
+            var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", url);
+            var onSuccess = function(data) { /* woot */ };
+            var onError = function(data) { /* boooo */ };
+
+            window.navigator.webkitStartActivity(intent, onSuccess, onError);
         }
-        chrome.extension.sendRequest({
-            signature: "tab",
-            params: {url: UrlParser.format(sharingUrl), selected: true}
-        });
+        else {
+            var sharingUrl = UrlParser.parse("http://msgboy.com/share/prepare");
+            sharingUrl.query = {
+                service: service,
+                url: url,
+                title: title,
+                comment: comment
+            }
+            chrome.extension.sendRequest({
+                signature: "tab",
+                params: {url: UrlParser.format(sharingUrl), selected: true}
+            });
+        }
         $(this.el).modal('toggle');
     }
 });
