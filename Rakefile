@@ -59,6 +59,20 @@ def manifest(destination = "")
       128 => "views/icons/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
+    :intents => {
+     "http://webintents.org/subscribe" => [{
+       :title => "Subscribe with Msgboy",
+       :type => ["application/atom+xml", "application/rss+xml"],
+       :href => "/views/html/subscribe.html",
+       :disposition => "window"
+     }],
+     "http://webintents.org/view" => [{
+       :title => "View in Msgboy",
+       :type => ["application/atom+xml", "application/rss+xml"],
+       :href => "/views/html/subscribe.html",
+       :disposition => "window"
+     }]
+    }
   }
 
   case destination
