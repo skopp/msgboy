@@ -114,3 +114,41 @@ h3 {
 .footer p {
     font-size: 14px;
 }
+
+#installMsgboy {
+    width: 580px;
+    margin-left: -280px;
+}
+
+#installMsgboy .modal-header {
+    border-bottom: 0;
+}
+
+#installMsgboy .modal-header h3 {
+    padding-top: 10px;
+}
+
+#installMsgboy .modal-body img {
+    float: left;
+    margin-right: 20px;
+    box-shadow: 0 2px 4px #ccc;
+}
+
+#installMsgboy .modal-footer {
+    text-align: center;
+}
+
+#installMsgboy .modal-footer a {
+    width: 292px;
+    height: 82px;
+    display: block;
+    text-indent: -999em;
+    margin: 0 auto 10px;
+    background-image: url(../images/splash-install-lg.png);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+}
+
+#installMsgboy .modal-footer p {
+    font-style: italic;
+}

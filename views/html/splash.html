@@ -7,7 +7,13 @@
         <link rel="stylesheet" href="../css/bootstrap.min.css" />
         <link rel="stylesheet" href="../css/full.css" />
         <link rel="stylesheet" href="../css/splash.css" />
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
         <script type="text/javascript" src="../../src/bootstrap-modal.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                //$("#installMsgboy").modal({show:false});
+            });
+        </script>
 
         <script type="text/javascript">
 
@@ -28,7 +34,7 @@
                 <h1><a href="http://msg.by">msgboy</a></h1>
                 <div id="download">
                     <h2>A live stream of the stories you want</h2>
-                    <a id="install">install msgboy for Google Chrome</a>
+                    <a id="install" data-toggle="modal" href="#installMsgboy">install msgboy for Google Chrome</a>
                 </div>
                 <img id="screenshot" src="../images/splash-screenshot.png" />
                 <img id="signal" src="../images/mb-signal.png" />
@@ -38,7 +44,7 @@
                     <div class="row">
                         <div class="span4">
                             <h3>Smart + Customizable</h3>
-                            <p>Msgboy is a Google ChromeTM application that builds a custom feed of stories for you based on the websites you visit most and the ones you’ve bookmarked, and delivers them in realtime.</p>
+                            <p>Msgboy is a Google Chrome&trade; application that builds a custom feed of stories for you based on the websites you visit most and the ones you’ve bookmarked, and delivers them in realtime.</p>
                             <p>Msgboy also gives you the contols allowing you customize your feed so that you are seeing more of the stories you want and less of the ones that you don’t.</p>
                         </div>
                         <div class="span4">
@@ -54,6 +60,22 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="modal hide" id="installMsgboy">
+                <div class="modal-header">
+                    <button class="close" data-dismiss="modal">×</button>
+                    <h3>A quick note</h3>
+                </div>
+                <div class="modal-body">
+                    <img src="../images/splash-warning.jpg" />
+                    <p>When you install Msgboy, Google Chrome&trade; will ask if Msgboy can access  some of your user data.</p>
+                    <p>Msgboy stores your data locally, on your own machine. So while the app uses this information, <strong>it never sends it to anyone else.</strong></p>
+                    <p><strong>Rest easy. Your information is secure.</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <a id="install-lg" href="#">install msgboy</a>
+                    <p>Install Msgboy using Google Chrome&trade;</p>
                 </div>
             </div>
         </body>
