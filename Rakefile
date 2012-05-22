@@ -12,7 +12,7 @@ def ignorefile
 end
 
 def ignoredir
-  /\.(?:git)|build|tests|tmp|node_module|src/
+  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html/
 end
 
 def manifest(destination = "")
