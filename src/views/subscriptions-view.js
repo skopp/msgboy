@@ -5,7 +5,6 @@ Backbone.sync = require('backbone-indexeddb').sync;
 var Msgboy = require('../msgboy.js').Msgboy;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
 var Plugins = require('../plugins.js').Plugins;
-require('../bootstrap-modal.js');
 
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
