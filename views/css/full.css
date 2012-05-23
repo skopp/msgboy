@@ -133,12 +133,9 @@ html,body{
 }
 
 #options label {
-    text-align:left;
-    margin-left: 20px;
-    width: 200px;
-    font-size: 1.2em;
-    display: block;
-    font-weight: bold;
+    display: inline;
+    font-size: 1.1em;
+    margin-left: 10px;
     color: #EEE;
 } 
 
@@ -154,7 +151,7 @@ html,body{
 .scale {
     padding:0px;
     margin:0px;
-    margin-left: 220px;
+    margin-left: 20px;
 }
 
 .scale div {
