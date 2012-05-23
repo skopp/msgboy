@@ -92,6 +92,7 @@ var ModalShareView = Backbone.View.extend({
             });
         }
         $(this.el).modal('toggle');
+        return false;
     }
 });
 
