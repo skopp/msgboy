@@ -4,17 +4,11 @@
         <meta charset="UTF-8">
         <title>Msgboy</title>
         <meta name="application-name" content="Msgboy"/>
-        <link rel="stylesheet" href="../css/bootstrap.min.css" />
-        <link rel="stylesheet" href="../css/full.css" />
-        <link rel="stylesheet" href="../css/splash.css" />
+        <link rel="stylesheet" href="./views/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="./views/css/full.css" />
+        <link rel="stylesheet" href="./views/css/splash.css" />
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-        <script type="text/javascript" src="../../src/bootstrap-modal.js"></script>
-        <script type="text/javascript">
-            $(document).ready(function(){
-                //$("#installMsgboy").modal({show:false});
-            });
-        </script>
-
+        <script type="text/javascript" src="./src/bootstrap-modal.js"></script>
         <script type="text/javascript">
 
           var _gaq = _gaq || [];
@@ -31,32 +25,32 @@
     <body>
         <body class="splash">
             <div class="container">
-                <h1><a href="http://msg.by">msgboy</a></h1>
+                <h1><a href="http://msgboy.com">msgboy</a></h1>
                 <div id="download">
                     <h2>A live stream of the stories you want</h2>
                     <a id="install" data-toggle="modal" href="#installMsgboy">install msgboy for Google Chrome</a>
                 </div>
-                <img id="screenshot" src="../images/splash-screenshot.png" />
-                <img id="signal" src="../images/mb-signal.png" />
+                <img id="screenshot" src="./views/images/splash/splash-screenshot.png" />
+                <img id="signal" src="./views/images/mb-signal.png" />
             </div>
             <div class="footer">
                 <div class="container">
                     <div class="row">
                         <div class="span4">
                             <h3>Smart + Customizable</h3>
-                            <p>Msgboy is a Google Chrome&trade; application that builds a custom feed of stories for you based on the websites you visit most and the ones you’ve bookmarked, and delivers them in realtime.</p>
-                            <p>Msgboy also gives you the contols allowing you customize your feed so that you are seeing more of the stories you want and less of the ones that you don’t.</p>
+                            <p>Msgboy is a Google Chrome&trade; application that builds a <em>custom feed of stories</em> for you based on the websites you visit most and the ones you've bookmarked, and delivers them in realtime.</p>
+                            <p>Msgboy also gives you the controls allowing you customize your feed so that you are seeing more of the stories you want and less of the ones that you don't.</p>
                         </div>
                         <div class="span4">
                             <h3>Private + Secure</h3>
-                            <p>We take your privacy extremely seriously and we do not store any information about msgboy’s users. Msgboy runs locally.</p>
+                            <p>We take <em>your privacy</em> extremely seriously and we do not store any information about msgboy's users. Msgboy runs locally.</p>
                             <p>Your data stays with you, on your computer and is never sent to any server.</p>
                         </div>
                         <div class="span4">
                             <h3>Open Source</h3>
-                            <p>We are strong believers in the open source movement, and Msgboy is open source. You can help make it better by improving its code, by reporting errors and by asking questions.</p>
+                            <p><a href="http://superfeedr.com/">We</a> are strong believers in the <em>open source</em> movement, and Msgboy is <a href="https://github.com/superfeedr/msgboy">open source</a>. You can help make it better by improving its code, by <a href="https://github.com/superfeedr/msgboy/issues">reporting errors</a> and by asking questions.</p>
                             <div id="chrome-store">
-                                <a href="">Available in the chrome web store</a>
+                                <a href="https://chrome.google.com/webstore">Available in the chrome web store</a>
                             </div>
                         </div>
                     </div>
@@ -68,7 +62,7 @@
                     <h3>A quick note</h3>
                 </div>
                 <div class="modal-body">
-                    <img src="../images/splash-warning.jpg" />
+                    <img src="./views/images/splash/splash-warning.jpg" />
                     <p>When you install Msgboy, Google Chrome&trade; will ask if Msgboy can access  some of your user data.</p>
                     <p>Msgboy stores your data locally, on your own machine. So while the app uses this information, <strong>it never sends it to anyone else.</strong></p>
                     <p><strong>Rest easy. Your information is secure.</strong></p>

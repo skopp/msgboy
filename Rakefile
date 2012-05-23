@@ -8,11 +8,11 @@ def version
 end
 
 def ignorefile
-  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*/
+  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*|splash.*/
 end
 
 def ignoredir
-  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html/
+  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html|splash/
 end
 
 def manifest(destination = "")
