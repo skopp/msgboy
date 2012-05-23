@@ -9,12 +9,6 @@
     z-index: 500;
 }
 
-#msgboy-nav {
-    height: 13px;
-    line-height: 13px;
-    cursor: pointer;
-}
-
 #newMessages {
     background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59A1CD), to(#3284b5));
     color: white;

@@ -136,7 +136,7 @@ Msgboy.bind('loaded', function () {
     });
     
     // Going back to top when clicked!
-    $("#msgboy-nav").click(function () {
+    $("header").click(function () {
         $('body,html').animate({
 			scrollTop: 0
 		}, 500, null, function() {
