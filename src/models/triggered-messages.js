@@ -129,7 +129,7 @@ var MessageTrigger = {
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:welcome",
-                "title": "Welcome to msgboy! He will show you the web you care about.",
+                "title": "Welcome to msgboy! He will show you the web you care about in messages like this ones.",
                 "ungroup": true,
                 "summary": 'Welcome to msgboy! He will show you the web you care about.',
                 "image": 'http://download.msgboy.com/resources/triggered/welcome_to_msgboy1.png',
