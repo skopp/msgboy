@@ -11,18 +11,41 @@ var ModalShareView = Backbone.View.extend({
         'keyup #comment': 'updateCountdown',
         'click .share-ext': 'sendShare'
     },
+    
+    tagName: "div",
+    className: 'modal backdrop fade modal-share',
+    
+    template: _.template([
+        '<div class="modal-header">',
+            '<button class="close" data-dismiss="modal">×</button>',
+            '<h3>Share</h3>',
+        '</div>',
+        '<div class="modal-body">',
+            '<label for="comment">Comment</label>',
+            '<h2 style="display:none"><%= title %> </h2>',
+            '<textarea class="xxlarge" id="comment" name="comment" rows="3"><%= comment %></textarea>',
+            '<span class="help-block" id="character-count">0 character</span>',
+            '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
+            '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
+            '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
+        '</div>',
+        '<div class="modal-footer">',
+        '</div>',
+    ].join('')),
 
-    initialize: function () {
-        $(this.el).modal({});
+    initialize: function (args) {
+        this.message = args.message;
+        $(this.el).html(this.template({
+            comment: args.message.get('title') + " - " + args.message.get('source').title, 
+            title: args.message.get('title')
+        }));
+        return this;
     },
     
-    showForMessage: function(message) {
-        $(this.el).data('url', message.get('mainLink'));
-        this.$('#comment').val(message.get('title') + " - " + message.get('source').title);
-        this.$('h2').val(message.get('title'));
-        $(this.el).modal('show');
+    toggle: function() {
+        $(this.el).modal('toggle');
     },
-    
+        
     updateCountdown: function() {
         var lngth = this.$("#comment").val().length;
         this.$("#character-count").text(lngth + " characters");
@@ -32,7 +55,7 @@ var ModalShareView = Backbone.View.extend({
     },
     
     sendShare: function(e) {
-        var url = $('#modal-share').data('url');
+        var url = this.message.get('mainLink');
         var service = $(e.target).data('service');
         var comment = this.$('#comment').val();
         var title = this.$('h2').val();
@@ -43,12 +66,11 @@ var ModalShareView = Backbone.View.extend({
             title: title,
             comment: comment
         }
-        console.log(UrlParser.format(sharingUrl));
         chrome.extension.sendRequest({
             signature: "tab",
             params: {url: UrlParser.format(sharingUrl), selected: true}
         });
-        $('#modal-share').modal('hide');
+        $(this.el).modal('toggle');
     }
 });
 

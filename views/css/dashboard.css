@@ -210,7 +210,7 @@ p {
 
 
 
-#modal-share .btn {
+.modal-share .btn {
     margin: 5px;
     float: right;
 }
@@ -228,16 +228,16 @@ p {
     width: 460px;
 }
 
-#modal-share label {
+.modal-share label {
     width:60px;
     margin-right: 10px;
 }
 
-#modal-share textarea {
+.modal-share textarea {
     width: 445px;
 }
 
-#modal-share .help-block {
+.modal-share .help-block {
     margin-left: 70px;
 }
 

@@ -8,11 +8,11 @@ def version
 end
 
 def ignorefile
-  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc/
+  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*/
 end
 
 def ignoredir
-  /\.(?:git)|build|tests|tmp|node_module|src/
+  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html/
 end
 
 def manifest(destination = "")
@@ -59,6 +59,20 @@ def manifest(destination = "")
       128 => "views/icons/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
+    :intents => {
+     "http://webintents.org/subscribe" => [{
+       :title => "Subscribe with Msgboy",
+       :type => ["application/atom+xml", "application/rss+xml"],
+       :href => "/views/html/subscribe.html",
+       :disposition => "window"
+     }],
+     "http://webintents.org/view" => [{
+       :title => "View in Msgboy",
+       :type => ["application/atom+xml", "application/rss+xml"],
+       :href => "/views/html/subscribe.html",
+       :disposition => "window"
+     }]
+    }
   }
 
   case destination
