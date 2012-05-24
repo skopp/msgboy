@@ -1,7 +1,7 @@
 var Msgboy = require('./msgboy.js').Msgboy;
 var $ = require('jquery');
 
-Msgboy.bind("loaded", function () {
+Msgboy.bind("loaded:signup", function () {
     if(window.location.search.match(/\?denied/)) {
         // The user denied access!
         $("#intro").html("<h1>Signup</h1>\

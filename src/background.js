@@ -341,7 +341,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
     }
 }
 
-Msgboy.bind("loaded", function () {
+Msgboy.bind("loaded:background", function () {
     MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
     
     Msgboy.inbox = new Inbox();
