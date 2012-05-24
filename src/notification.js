@@ -4,7 +4,7 @@ var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;
 
 
-Msgboy.bind("loaded", function () {
+Msgboy.bind("loaded:notification", function () {
     
     var notificationView = new NotificationView({});
 
