@@ -1,5 +1,5 @@
 html {
-    background: #000 url(../images/splash/splash-city.jpg) 50% 0 no-repeat;
+    background: #000 url(../images/splash/splash-city.jpg) 50% -50px no-repeat;
 }
 
 body {
@@ -25,7 +25,7 @@ body {
     background-repeat: repeat-x;
     height: 305px;
     padding-top: 30px;
-    margin-top: -222px;
+    margin-top: -337px;
 }
 
 #download {
@@ -34,7 +34,7 @@ body {
     background: url(../images/splash/splash-download-bg.png) top left no-repeat;
     padding: 40px 45px;
     float: left;
-    margin-top: -103px;
+    margin-top: -203px;
     position: absolute;
     z-index: 10;
 }
@@ -46,7 +46,7 @@ h1 {
     background-position: 0 0;
     background-repeat: no-repeat;
     text-indent: -999em;
-    left: -220px;
+    left: -100px;
     position: relative;
     z-index: 1
 }
@@ -76,12 +76,12 @@ h3 {
 #screenshot {
     position: relative;
     z-index: 20;
-    top: -217px;
+    top: -317px;
     left: 350px;
 }
 
 .splash #signal {
-    top: -355px;
+    top: -385px;
     left: 215px;
     position: relative;
 }
