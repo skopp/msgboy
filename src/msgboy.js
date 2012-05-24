@@ -98,10 +98,10 @@ if(Msgboy.environment() === "development") {
 }
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
-Msgboy.run =  function () {
+Msgboy.run =  function (page) {
     chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
         Msgboy.infos = extension_infos;
-        Msgboy.trigger("loaded");
+        Msgboy.trigger("loaded:" + page);
     });
 };
 
@@ -110,4 +110,6 @@ exports.Msgboy = Msgboy;
 if(typeof window !== "undefined") {
     window.Msgboy = Msgboy;
 }
+
+require('./dashboard.js');
 
