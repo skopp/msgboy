@@ -12,6 +12,11 @@
     z-index: 1000;
 }
 
+ul.nav li {
+    display: inline;
+}
+
+
 .topbar .container {
     width: 100%;
     margin-left: auto;
@@ -44,16 +49,27 @@ header a {
 
 header a.options {
     background: top left no-repeat url(../images/gear-help.png);
-    text-indent: -999em;
+    text-indent: -9999px;
     top: 5px;
+    width: 20px;
+}
+
+header a.options:hover {
+    background: top left no-repeat url(../images/gear-help.png);
 }
 
 header a.help {
     background: top left no-repeat url(../images/gear-help.png);
-    text-indent: -999em;
+    text-indent: -9999px;
     top: 5px;
     background-position: -20px 0;
     margin-left: 5px;
+    width: 20px;
+}
+
+header a.help:hover {
+    background: top left no-repeat url(../images/gear-help.png);
+    background-position: -20px 0;
 }
 
 header .nav li {

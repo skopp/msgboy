@@ -1,0 +1,154 @@
+html {
+    background: #000 url(../images/splash/splash-city.jpg) 50% -50px no-repeat;
+}
+
+body {
+    background: none;
+}
+
+.container {
+    width: 960px;
+}
+
+.row {
+    margin-left: -40px;
+}
+
+.span4 {
+    width: 280px;
+    margin-left: 40px;
+}
+
+.footer {
+    background-image: url(../images/splash/splash-bottom-bg.png);
+    background-position: top left;
+    background-repeat: repeat-x;
+    height: 305px;
+    padding-top: 30px;
+    margin-top: -337px;
+}
+
+#download {
+    width: 261px;
+    height: 228px;
+    background: url(../images/splash/splash-download-bg.png) top left no-repeat;
+    padding: 40px 45px;
+    float: left;
+    margin-top: -203px;
+    position: absolute;
+    z-index: 10;
+}
+
+h1 {
+    width: 762px;
+    height: 449px;
+    background-image: url(../images/splash/splash-logo.png);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    text-indent: -999em;
+    left: -100px;
+    position: relative;
+    z-index: 1
+}
+
+#download h2 {
+    color: #fff;
+    font-size: 36px;
+}
+
+h3 {
+    font-size: 20px;
+    color: #1a4862;
+    text-shadow: 0 1px 0 #fff;
+}
+
+#install {
+    background: url(../images/splash/splash-install.png) top left no-repeat;
+    width: 292px;
+    height: 92px;
+    text-indent: -999em;
+    display: block;
+    margin-top: 30px;
+    margin-left: -15px;
+    cursor: pointer;
+}
+
+#screenshot {
+    position: relative;
+    z-index: 20;
+    top: -317px;
+    left: 350px;
+}
+
+.splash #signal {
+    top: -385px;
+    left: 215px;
+    position: relative;
+}
+
+.footer .span4:last-child p {
+    border-bottom: 1px solid #ababab;
+    padding-bottom: 30px;
+    margin-bottom: 0;
+}
+
+#chrome-store {
+    border-top: 1px solid #fff;
+    margin-top: 0;
+    position: relative;
+    padding-top: 20px;
+}
+
+#chrome-store a {
+    width: 164px;
+    height: 46px;
+    text-indent: -999em;
+    background-image: url(../images/splash/chrome-web-store.jpg);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    display: block;
+    position: absolute;
+    right: 0;
+}
+
+.footer p {
+    font-size: 14px;
+}
+
+#installMsgboy {
+    width: 580px;
+    margin-left: -280px;
+}
+
+#installMsgboy .modal-header {
+    border-bottom: 0;
+}
+
+#installMsgboy .modal-header h3 {
+    padding-top: 10px;
+}
+
+#installMsgboy .modal-body img {
+    float: left;
+    margin-right: 20px;
+    box-shadow: 0 2px 4px #ccc;
+}
+
+#installMsgboy .modal-footer {
+    text-align: center;
+}
+
+#installMsgboy .modal-footer a {
+    width: 292px;
+    height: 82px;
+    display: block;
+    text-indent: -999em;
+    margin: 0 auto 10px;
+    background-image: url(../images/splash/splash-install-lg.png);
+    background-position: 0 0;
+    background-repeat: no-repeat;
+}
+
+#installMsgboy .modal-footer p {
+    font-style: italic;
+}

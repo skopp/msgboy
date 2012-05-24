@@ -8,11 +8,11 @@ def version
 end
 
 def ignorefile
-  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*/
+  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*|splash.*/
 end
 
 def ignoredir
-  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html/
+  /\.(?:git)|build|tests|tmp|node_module|src|.sass-cache|tmp.html|splash/
 end
 
 def manifest(destination = "")
@@ -181,19 +181,8 @@ namespace :publish do
       end
       desc "Uploads the extension"
       task :crx do
-        AWS::S3::Base.establish_connection!(
-        :access_key_id     => s3['access_key_id'],
-        :secret_access_key => s3['secret_access_key']
-        )
-        AWS::S3::S3Object.store(
-        'msgboy.crx', 
-        open('./build/msgboy.crx'), 
-        s3['bucket'], 
-        {
-          :content_type => 'application/x-chrome-extension',
-          :access => :public_read
-        }
-        )
+        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+        AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
         puts "Extension #{version} uploaded"
       end
 
@@ -220,6 +209,29 @@ namespace :publish do
         res = g.push("origin", "master", true)
         puts res
       end
+    
+      desc "Deploys the splash page"
+      task :splash do
+        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+        AWS::S3::S3Object.store('index.html', open('./splash.html'), s3['splash-bucket'], {:access => :public_read})
+        FileList['views/css/*.css'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.png'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.jpg'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.gif'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/splash/*'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
+      end
+      
     rescue LoadError
       puts "Please install the s3 gem if you want to upload the msgboy to s3."
     end  

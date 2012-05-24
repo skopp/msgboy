@@ -31,7 +31,7 @@ var MessageTrigger = {
         Msgboy.bind('down-ed', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:first-downvote",
-                "title": "This was your first downvote",
+                "title": "This was your first down-vote",
                 "ungroup": true,
                 "summary": 'Click this box to learn more about what happens when you down-vote!',
                 "image": 'http://download.msgboy.com/resources/triggered/down_voting.png',
@@ -80,7 +80,7 @@ var MessageTrigger = {
         Msgboy.bind('plugins:imported', function(count) {
             saveMessage({
                 "id": "tag:msgboy.com,2012:plugins",
-                "title": "We successfuly found " + count + " site for you!",
+                "title": "We successfuly found " + count + " sites for you!",
                 "ungroup": true,
                 "summary": 'When looking at your <em>browsing habits</em>, we found ' + count + ' sites you seem to care about.',
                 "image": 'http://download.msgboy.com/resources/triggered/subcriptionmanagement.png',
@@ -129,9 +129,9 @@ var MessageTrigger = {
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:welcome",
-                "title": "Welcome to msgboy! He will show you the web you care about.",
+                "title": "Welcome to msgboy! He will show you the web you care about in messages like this ones.",
                 "ungroup": true,
-                "summary": 'Welcome to msgboy! It will show you the web you care about.',
+                "summary": 'Welcome to msgboy! He will show you the web you care about.',
                 "image": 'http://download.msgboy.com/resources/triggered/welcome_to_msgboy1.png',
                 "content": null,
                 "links": {
@@ -179,7 +179,7 @@ var MessageTrigger = {
                 "title": "Bookmark or come back to sites you love.",
                 "ungroup": true,
                 "image": "http://download.msgboy.com/resources/triggered/bookmark_sites_you_love.png",
-                "summary": "Bookmark sites you love. The msgboy will show you messages when they update",
+                "summary": "Bookmark sites you love. The msgboy will show you messages when they update!",
                 "content": null,
                 "links": {
                     "alternate": {
@@ -225,7 +225,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:real-time",
                 "title": "Newly posted stories appear in realtime.",
                 "ungroup": true,
-                "summary": "Newly posted stories appear in realtime, so you're always aware the first to know",
+                "summary": "Newly posted stories appear in realtime, so you're always the first to know!",
                 "image": "http://download.msgboy.com/resources/triggered/realtime.png",
                 "content": null,
                 "links": {
@@ -271,7 +271,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:train",
                 "title": "Train msgboy to give you what you want.",
                 "ungroup": true,
-                "summary": "The msgboy gets better when you use it more. Vote stuff up and down",
+                "summary": "The msgboy gets better when you use him more. Vote stuff up and down to tell him what you like.",
                 "image": "http://download.msgboy.com/resources/triggered/train_it.png",
                 "content": null,
                 "links": {
@@ -317,7 +317,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:vote-up",
                 "title": "Click '+' for more like this.",
                 "ungroup": true,
-                "summary": "Vote stories up if you want more like them",
+                "summary": "Vote stories up if you want more like them.",
                 "image": "http://download.msgboy.com/resources/triggered/vote_up.png",
                 "content": null,
                 "links": {
@@ -363,7 +363,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:vote-down",
                 "title": "Click '-' if you're not interested.",
                 "ungroup": true,
-                "summary": "Vote stories down if you want less stories like that. The msgboy will also unsubscribe from those unwanted sources",
+                "summary": "Vote a story down if you want less stories like it. The msgboy will also unsubscribe from those unwanted sources.",
                 "image": "http://download.msgboy.com/resources/triggered/vote_down.png",
                 "content": null,
                 "links": {
@@ -409,7 +409,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:notifications",
                 "title": "Follow and rate stories with notifications.",
                 "ungroup": true,
-                "summary": "Get notifications... so that even if you are now looking at the msgboy, you know about stuff!",
+                "summary": "Get notifications... so that even if you aren't looking at the msgboy, you can see what's coming in!",
                 "image": "http://download.msgboy.com/resources/triggered/notifications.png",
                 "content": null,
                 "links": {
@@ -501,7 +501,7 @@ var MessageTrigger = {
                 "id": "tag:msgboy.com,2012:your-data-protected",
                 "title": "Your data is safe and protected.",
                 "ungroup": true,
-                "summary": "The msgboy runs locally. All your browsing data stays local.",
+                "summary": "The msgboy runs locally; all your browsing data stays local.",
                 "image": "http://download.msgboy.com/resources/triggered/your_data_is_protected.png",
                 "content": null,
                 "links": {

@@ -61,9 +61,9 @@
         <p id="plugins">
         </p>
  -->
-        <span href="#" class="btn large primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
+        <span href="#" class="btn btn-large btn-primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
-        <table id="subscriptions" class="border-free-table">
+        <table id="subscriptions" class="table-condensed">
             <thead>
                 <tr>
                     <th>URL</th>
@@ -83,7 +83,7 @@
     <script type="text/template" id="subscription-template">
     <td class="truncate"><%= id %></td>
     <td><%= state %></td>
-    <td><button class="btn small action"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
+    <td><button class="btn btn-mini"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
     </script>
 
 </body>

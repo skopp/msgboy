@@ -114,6 +114,7 @@
     font-weight: bold;
     font-family: "Impact";
     cursor: pointer;
+    border:none;
 }
 
 .controls button:hover {
@@ -225,7 +226,7 @@ p {
 }
 
 .xxlarge {
-    width: 460px;
+    width: 518px;
 }
 
 .modal-share label {
@@ -233,12 +234,9 @@ p {
     margin-right: 10px;
 }
 
-.modal-share textarea {
-    width: 445px;
-}
 
 .modal-share .help-block {
-    margin-left: 70px;
+    float: left;
 }
 
 .twitter:before {

@@ -19,6 +19,7 @@ var ModalShareView = Backbone.View.extend({
         '<div class="modal-header">',
             '<button class="close" data-dismiss="modal">×</button>',
             '<h3>Share</h3>',
+            '<h4><%= title %></h4>',
         '</div>',
         '<div class="modal-body">',
             '<label for="comment">Comment</label>',
