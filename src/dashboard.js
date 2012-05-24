@@ -62,10 +62,7 @@ function loadNextArchive(opts) {
 function prepareNextLoadIfNeeded() {
     if(readyToLoadNext) {
         if($(window).scrollTop() + 2*$(window).height() > $(document).height()) {
-            var upperBound = new Date().getTime()
-            if(currentArchiveView.collection.last()) {
-                upperBound = currentArchiveView.collection.last().get('createdAt');
-            }
+            var upperBound = currentArchiveView.collection.last().get('createdAt');
             currentArchiveView = loadNextArchive({upperBound: upperBound, lowerBound: 0});
         }
     }
