@@ -28,7 +28,14 @@
                 <h1><a href="http://msgboy.com">msgboy</a></h1>
                 <div id="download">
                     <h2>A live stream of the stories you want</h2>
-                    <a id="install" data-toggle="modal" href="#installMsgboy">install msgboy for Google Chrome</a>
+                    <script>
+                        if( navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
+                            $('<a id="install" data-toggle="modal" href="#installMsgboy">install msgboy for Google Chrome</a>').appendTo($('#download'))
+                        }
+                        else {
+                            $('<a id="no-install" target="_blank" href="https://www.google.com/chrome">use Google Chrome to install</a>').appendTo($('#download'))
+                        }
+                    </script>
                 </div>
                 <img id="screenshot" src="./views/images/splash/splash-screenshot.png" />
                 <img id="signal" src="./views/images/mb-signal.png" />

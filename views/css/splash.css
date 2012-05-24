@@ -73,6 +73,17 @@ h3 {
     cursor: pointer;
 }
 
+#no-install {
+    background: url(../images/splash/splash-install-gray.png) top left no-repeat;
+    width: 292px;
+    height: 92px;
+    text-indent: -999em;
+    display: block;
+    margin-top: 30px;
+    margin-left: -15px;
+    cursor: pointer;
+}
+
 #screenshot {
     position: relative;
     z-index: 20;
