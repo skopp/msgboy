@@ -163,3 +163,15 @@ h3 {
 #installMsgboy .modal-footer p {
     font-style: italic;
 }
+
+.social-share-btns {
+    right: 0px;
+    padding: 20px;
+    display:block;
+    position: absolute;
+}
+
+.fb-like {
+    margin:0px;
+    border:none;
+}

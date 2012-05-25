@@ -172,6 +172,12 @@ var Message = Backbone.Model.extend({
                 relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
             }
             // Keywords [TODO]
+            
+            // Bonus if there is an image!
+            if(this.get('image')) {
+                relevance = (2-relevance) * relevance // The smaller the relevance, the greater the bonus!
+            }
+            
             // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
             if (typeof(callback) !== "undefined" && callback) {
                 callback(relevance);

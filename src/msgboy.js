@@ -98,10 +98,23 @@ if(Msgboy.environment() === "development") {
 }
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
-Msgboy.run =  function () {
+Msgboy.run =  function (page) {
+    
+    // Google Analytics
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-22746593-1']);
+    _gaq.push(['_setAllowLinker', true]);
+    _gaq.push(['_trackPageview']);
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    
+    // Load the extension data!
     chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
         Msgboy.infos = extension_infos;
-        Msgboy.trigger("loaded");
+        Msgboy.trigger("loaded:" + page);
     });
 };
 
@@ -110,4 +123,6 @@ exports.Msgboy = Msgboy;
 if(typeof window !== "undefined") {
     window.Msgboy = Msgboy;
 }
+
+require('./dashboard.js');
 

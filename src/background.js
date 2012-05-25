@@ -316,7 +316,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
             var attributes = {};
 
             if(largestImg) {
-                attributes.image = largestImg;
+                message.set({image: largestImg});
             }
 
             message.calculateRelevance(function (_relevance) {
@@ -341,7 +341,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
     }
 }
 
-Msgboy.bind("loaded", function () {
+Msgboy.bind("loaded:background", function () {
     MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
     
     Msgboy.inbox = new Inbox();
