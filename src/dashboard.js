@@ -95,8 +95,7 @@ function setNewMessagesBar(stack) {
     }
 }
 
-Msgboy.bind('loaded', function () {
-    
+Msgboy.bind('loaded:dashboard', function (page) {
     $('#container').masonry({itemSelector : '.message', columnWidth : 10, animationOptions: { duration: 10 }});
 
     Msgboy.inbox = new Inbox();
