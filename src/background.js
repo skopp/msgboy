@@ -316,7 +316,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
             var attributes = {};
 
             if(largestImg) {
-                attributes.image = largestImg;
+                message.set({image: largestImg});
             }
 
             message.calculateRelevance(function (_relevance) {
