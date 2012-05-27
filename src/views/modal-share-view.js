@@ -73,7 +73,10 @@ var ModalShareView = Backbone.View.extend({
         var service = $(e.target).data('service');
         var comment = this.$('#comment').val();
         var title = this.$('h2').val();
-        if(service === "webintents") {
+        
+        
+        switch(service) {
+            case "webintents": 
             var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", this.urlToShare);
             var onSuccess = function(data) {
                 $(this.el).modal('toggle');
@@ -82,20 +85,45 @@ var ModalShareView = Backbone.View.extend({
                 $(this.el).modal('toggle');
             };
             window.navigator.webkitStartActivity(intent, onSuccess, onError);
-        }
-        else {
-            var sharingUrl = UrlParser.parse("http://msgboy.com/share/prepare");
-            sharingUrl.query = {
-                service: service,
+            break;
+            case "twitter":
+            var u = UrlParser.parse('https://twitter.com/intent/tweet');
+            u.query = {
+                source: 'msgboy',
+                text: comment,
                 url: this.urlToShare,
-                title: title,
-                comment: comment
+                via: 'themsgboy'
             }
             chrome.extension.sendRequest({
                 signature: "tab",
-                params: {url: UrlParser.format(sharingUrl), selected: true}
+                params: {url: UrlParser.format(u), selected: true}
             });
-            $(this.el).modal('toggle');
+            break;
+            case "facebook":
+            var u = UrlParser.parse('https://facebook.com/sharer/sharer.php');
+            u.query = {
+                u: this.urlToShare,
+                t: comment
+            }
+            chrome.extension.sendRequest({
+                signature: "tab",
+                params: {url: UrlParser.format(u), selected: true}
+            });
+            break;
+            case "instapaper":
+            var u = UrlParser.parse('https://www.instapaper.com/hello2');
+            u.query = {
+                url: this.urlToShare,
+                title: title,
+                description: comment
+            }
+            chrome.extension.sendRequest({
+                signature: "tab",
+                params: {url: UrlParser.format(u), selected: true}
+            });
+            break;
+            default:
+            // Nothing!
         }
         return false;
     }
