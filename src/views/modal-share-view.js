@@ -26,10 +26,10 @@ var ModalShareView = Backbone.View.extend({
             '<h2 style="display:none"><%= title %> </h2>',
             '<textarea class="xxlarge" id="comment" name="comment" rows="3"><%= comment %></textarea>',
             '<span class="help-block" id="character-count">0 character</span>',
+            '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
             '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
             '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
             '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
-            '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">WebIntents</a>',
         '</div>',
         '<div class="modal-footer">',
         '</div>',
@@ -37,20 +37,22 @@ var ModalShareView = Backbone.View.extend({
 
     initialize: function (args) {
         this.message = args.message;
+        
+        this.urlToShare = this.message.get('mainLink'); // By default, we share the mainLink Url.
+        // Let's shorten that link in the back.
+        var shortenerUrl = UrlParser.parse("http://msgboy.com/share/shorten");
+        shortenerUrl.query = {
+            url: this.urlToShare
+        }
+        $.get(UrlParser.format(shortenerUrl), null, function(data) {
+            // On successful shortening, we use that short url!
+            this.urlToShare = data;
+        }.bind(this));   
+             
         $(this.el).html(this.template({
             comment: args.message.get('title') + " - " + args.message.get('source').title, 
             title: args.message.get('title')
         }));
-        
-        $(document).bind('keypress', function() {
-            var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", this.message.get('mainLink'));
-            var onSuccess = function(data) { /* woot */ };
-            var onError = function(data) { /* boooo */ };
-
-            window.navigator.webkitStartActivity(intent, onSuccess, onError);
-            
-        }.bind(this));
-        
         
         return this;
     },
@@ -68,22 +70,24 @@ var ModalShareView = Backbone.View.extend({
     },
     
     sendShare: function(e) {
-        var url = this.message.get('mainLink');
         var service = $(e.target).data('service');
         var comment = this.$('#comment').val();
         var title = this.$('h2').val();
         if(service === "webintents") {
-            var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", url);
-            var onSuccess = function(data) { /* woot */ };
-            var onError = function(data) { /* boooo */ };
-
+            var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", this.urlToShare);
+            var onSuccess = function(data) {
+                $(this.el).modal('toggle');
+            };
+            var onError = function(data) { 
+                $(this.el).modal('toggle');
+            };
             window.navigator.webkitStartActivity(intent, onSuccess, onError);
         }
         else {
             var sharingUrl = UrlParser.parse("http://msgboy.com/share/prepare");
             sharingUrl.query = {
                 service: service,
-                url: url,
+                url: this.urlToShare,
                 title: title,
                 comment: comment
             }
@@ -91,8 +95,8 @@ var ModalShareView = Backbone.View.extend({
                 signature: "tab",
                 params: {url: UrlParser.format(sharingUrl), selected: true}
             });
+            $(this.el).modal('toggle');
         }
-        $(this.el).modal('toggle');
         return false;
     }
 });
