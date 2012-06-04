@@ -37,7 +37,7 @@ new Wordpress(Plugins);
 var currentNotification = null;
 var messageStack = [];
 var connection = new Connection();
-var endpoint = "ws://0.0.0.0:9876";
+var endpoint = "http://stream.msgboy.com";
 
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
