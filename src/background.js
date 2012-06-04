@@ -8,10 +8,8 @@ var Message         = require('./models/message.js').Message;
 var MessageTrigger  = require('./models/triggered-messages.js').MessageTrigger;
 var Subscriptions   = require('./models/subscription.js').Subscriptions;
 var Subscription    = require('./models/subscription.js').Subscription;
-var Strophe         = require('./strophejs/core.js').Strophe;
-var SuperfeedrPlugin= require('./strophejs/strophe.superfeedr.js').SuperfeedrPlugin;
 var Feediscovery    = require('./feediscovery.js').Feediscovery;
-Strophe.addConnectionPlugin('superfeedr', SuperfeedrPlugin);
+var Connection      = require('./connection.js').Connection;
 
 var Blogger = require('./plugins/blogger.js').Blogger;
 new Blogger(Plugins);
@@ -38,63 +36,15 @@ new Wordpress(Plugins);
 
 var currentNotification = null;
 var messageStack = [];
-var reconnectDelay = 1;
-var reconnectionTimeout = null;
-var xmppConnection = new Strophe.Connection({
-    protocol: new Strophe.Websocket('ws://ws.msgboy.com')
-});
-
-// Handles XMPP Connections
-var onConnect = function (status) {
-    var msg = '';
-    if (status === Strophe.Status.CONNECTING) {
-        msg = 'Msgboy is connecting.';
-    } else if (status === Strophe.Status.CONNFAIL) {
-        msg = 'Msgboy failed to connect.';
-        reconnectDelay = 1;
-        reconnect();
-    } else if (status === Strophe.Status.AUTHFAIL) {
-        // This should never happen since we register with Msgboy for an account.
-    } else if (status === Strophe.Status.DISCONNECTING) {
-        msg = 'Msgboy is disconnecting.'; // We may want to time this out.
-    } else if (status === Strophe.Status.DISCONNECTED) {
-        reconnect();
-        msg = 'Msgboy is disconnected. Reconnect in ' + Math.pow(reconnectDelay, 2) + ' seconds.';
-    } else if (status === Strophe.Status.CONNECTED) {
-        msg = 'Msgboy is connected.';
-        reconnectDelay = 1;
-        xmppConnection.send($pres().tree()); // Send presence!
-        Msgboy.trigger('connected');
-    }
-    Msgboy.log.debug(msg);
-};
-exports.onConnect = onConnect;
-
-// Reconnects the Msgboy
-var reconnect = function () {
-    reconnectDelay = Math.min(reconnectDelay + 1, 10); // We max at one attempt every minute.
-    if (!reconnectionTimeout) {
-        reconnectionTimeout = setTimeout(function () {
-            reconnectionTimeout = null;
-            xmppConnection.reset();
-            connect();
-        }, Math.pow(reconnectDelay, 2) * 1000);
-    }
-};
-exports.reconnect = reconnect;
+var connection = new Connection();
+var endpoint = "ws://0.0.0.0:9876";
 
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
 var connect = function () {
-    xmppConnection.rawInput = function (data) {
-        Msgboy.log.debug('Received', data);
-    };
-    xmppConnection.rawOutput = function (data) {
-        Msgboy.log.debug('Sent', data);
-    };
     var password = Msgboy.inbox.attributes.password;
-    var jid = Msgboy.inbox.attributes.jid + "@msgboy.com/" + Msgboy.infos.version;
-    xmppConnection.connect(jid, password, onConnect);
+    var jid = Msgboy.inbox.attributes.jid
+    connection.connect(endpoint, jid, password);
 };
 exports.connect = connect;
 
@@ -146,7 +96,7 @@ var subscribe = function (url, doDiscovery, force, callback) {
                 subscription.setState("subscribing");
                 subscription.bind("subscribing", function () {
                     Msgboy.log.debug("subscribing to", url);
-                    xmppConnection.superfeedr.subscribe(url, function (result, feed) {
+                    connection.subscribe(url, function (result, feed) {
                         Msgboy.log.debug("subscribed to", url);
                         subscription.setState("subscribed");
                     });
@@ -171,7 +121,7 @@ var unsubscribe = function (url, callback) {
         subscription.setState("unsubscribing");
         subscription.bind("unsubscribing", function () {
             Msgboy.log.debug("unsubscribing from", url);
-            xmppConnection.superfeedr.unsubscribe(url, function (result) {
+            connection.unsubscribe(url, function (result) {
                 Msgboy.log.debug("unsubscribed", url);
                 subscription.setState("unsubscribed");
             });
@@ -188,7 +138,7 @@ var resumeSubscriptions = function () {
     var subscriptions = new Subscriptions();
     subscriptions.bind("add", function (subs) {
         Msgboy.log.debug("subscribing to", subs.id);
-        xmppConnection.superfeedr.subscribe(subs.id, function (result, feed) {
+        connection.subscribe(subs.id, function (result, feed) {
             Msgboy.log.debug("subscribed to", subs.id);
             subs.setState("subscribed");
         });
@@ -303,7 +253,7 @@ var rewriteOutboundUrl = function(url) {
 }
 exports.rewriteOutboundUrl = rewriteOutboundUrl;
 
-SuperfeedrPlugin.onNotificationReceived = function (notification) {
+connection.on('notification', function (notification) {
     Msgboy.log.debug("Notification received from " + notification.source.url);
     if(notification.payload) {
         var msg = notification.payload;
@@ -339,7 +289,7 @@ SuperfeedrPlugin.onNotificationReceived = function (notification) {
             Msgboy.log.debug("Unsubscribed from ", notification.source.url);
         });
     }
-}
+});
 
 Msgboy.bind("loaded:background", function () {
     MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
