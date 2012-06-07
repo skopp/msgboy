@@ -16,7 +16,7 @@ The msgboy is open source. We use git for source versioning and [github to host 
 
 ### Technology used
 
-Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org/TR/IndexedDB/), [Websockets](http://dev.w3.org/html5/websockets/), [PubSubHubbub](http://code.google.com/p/pubsubhubbub/), [XMPP](http://xmpp.org/), [StropheJS](http://strophe.im/), [Backbone.js](http://documentcloud.github.com/backbone/), [jQuery](http://jquery.com/), [Node.js](http://nodejs.org/) and [Browserify](https://github.com/substack/node-browserify). If you're into 3 or more of these technologies, feel free to get in touch, *we're hiring*!
+Browsers API (Chrome, Firefox and Safari to come), [IndexedDB](http://www.w3.org/TR/IndexedDB/), [Websockets](http://dev.w3.org/html5/websockets/), [PubSubHubbub](http://code.google.com/p/pubsubhubbub/), [Backbone.js](http://documentcloud.github.com/backbone/), [jQuery](http://jquery.com/), [Node.js](http://nodejs.org/) and [Browserify](https://github.com/substack/node-browserify). If you're into 3 or more of these technologies, feel free to get in touch, *we're hiring*!
 
 ### Building the Msgboy
 
