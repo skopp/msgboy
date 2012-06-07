@@ -4,6 +4,7 @@ var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 require('../bootstrap-modal.js');
 var Inbox = require('../models/inbox.js').Inbox;
+var browser = require('../browsers.js').browser;
 
 var OptionsView = Backbone.View.extend({
     events: {
@@ -19,7 +20,7 @@ var OptionsView = Backbone.View.extend({
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: "reload",
                 params: {}
             });
@@ -76,10 +77,8 @@ var OptionsView = Backbone.View.extend({
             this.$("#pinMsgboy").val("unpinned");
         }
         this.saveModel();
-        chrome.tabs.getCurrent(function(tab) {
-            chrome.tabs.update(tab.id, {pinned: this.$("#pinMsgboy").val() === "pinned"}, function() {
-                // Done
-            }.bind(this))
+        browser.getCurrentTab(function(tab) {
+            browser.pinTab(tab.id, this.$("#pinMsgboy").val() === "pinned");
         }.bind(this));
     },
     
@@ -95,7 +94,7 @@ var OptionsView = Backbone.View.extend({
     
     registerHandler: function() {
         // Protocol Handler Registration
-        var u =  chrome.extension.getURL("/views/html/subscribe.html?uri=%s");
+        var u = browser.getUrl("/views/html/subscribe.html?uri=%s");
         var res = window.navigator.registerProtocolHandler("web+subscribe", u, "Msgboy");
     },
     

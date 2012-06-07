@@ -3,6 +3,7 @@ var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
 Backbone.sync = require('backbone-indexeddb').sync;
 var Msgboy = require('../msgboy.js').Msgboy;
+var browser = require('../browsers.js').browser;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
 var Plugins = require('../plugins.js').Plugins;
 
@@ -32,7 +33,7 @@ var SubscriptionView = Backbone.View.extend({
         }
     },
     subscribe: function() {
-        chrome.extension.sendRequest({
+        browser.emit({
             signature: "subscribe",
             params: {
                 title: "", // TODO : Add support for title 
@@ -44,7 +45,7 @@ var SubscriptionView = Backbone.View.extend({
         }.bind(this));
     },
     unsubscribe: function() {
-        chrome.extension.sendRequest({
+        browser.emit({
             signature: "unsubscribe",
             params: {
                 title: "", // TODO : Add support for title 
@@ -76,7 +77,7 @@ var SubscriptionsView = Backbone.View.extend({
             btn.click(function() {
                 plugin.listSubscriptions(function (subscriptions) {
                     _.each(subscriptions, function (feed) {
-                        chrome.extension.sendRequest({
+                        browser.emit({
                             signature: "subscribe",
                             params: feed
                         }, function (response) {

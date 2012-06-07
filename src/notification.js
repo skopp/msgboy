@@ -1,5 +1,6 @@
 var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
+var browser = require('./browsers.js').browser;
 var Message = require('./models/message.js').Message;
 var NotificationView = require('./views/notification-view.js').NotificationView;
 
@@ -16,14 +17,14 @@ Msgboy.bind("loaded:notification", function () {
         notificationView.mouseOver = false;
     });
 
-    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+    browser.listen(function (request, sender, sendResponse) {
         if (request.signature == "notify" && request.params) {
             notificationView.showOrBuffer(new Message(request.params));
         }
     });
     
     // Tell everyone we're ready.
-    chrome.extension.sendRequest({
+    browser.emit({
         signature: "notificationReady",
         params: {}
     }, function () {

@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var Backbone = require('backbone');
+var browser = require('./browsers.js').browser;
 
 if (typeof Msgboy === "undefined") {
     var Msgboy = {};
@@ -85,7 +86,7 @@ Msgboy.inbox = null;
 
 // Returns the environment in which this msgboy is running
 Msgboy.environment = function () {
-    if (chrome.i18n.getMessage("@@extension_id") === "ligglcbjgpiljeoenbhnnfdipkealakb") {
+    if (browser.msgboyId() === browser.productionId) {
         return "production";
     }
     else {
@@ -112,7 +113,7 @@ Msgboy.run =  function (page) {
     })();
     
     // Load the extension data!
-    chrome.management.get(chrome.i18n.getMessage("@@extension_id"), function (extension_infos) {
+    browser.loadProperties(function(extension_infos) {
         Msgboy.infos = extension_infos;
         Msgboy.trigger("loaded:" + page);
     });

@@ -2,6 +2,7 @@ var _ = require('underscore');
 var $ = jQuery = require('jquery');
 require('../jquery.color.js');
 var Backbone = require('backbone');
+var browser = require('../browsers.js').browser;
 
 var MessageView = Backbone.View.extend({
     tagName: "div",
@@ -46,7 +47,7 @@ var MessageView = Backbone.View.extend({
                 },
                 force: true
             };
-            chrome.extension.sendRequest(request, function (response) {
+            browser.emit(request, function (response) {
                 // Unsubscribed... We need to delete all the brothas and sistas!
                 this.model.trigger('unsubscribed');
             }.bind(this));
@@ -89,21 +90,23 @@ var MessageView = Backbone.View.extend({
         else {
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
-                    chrome.extension.sendRequest({
+                    browser.emit({
                         signature: "notify",
                         params: this.model.toJSON()
                     });
                 } else {
                     // User wants to open a tab.
                     // We need to open a tab right after this one.
-                    chrome.tabs.getCurrent(function(tab) {
+                    browser.getCurrentTab(function(tab) {
                         var tabParams = {url: this.model.get('mainLink'), selected: false};
                         if(tab) {
                             tabParams['index'] = tab.index + 1;
                         }
-                        chrome.extension.sendRequest({
+                        browser.emit({
                             signature: 'tab',
                             params: tabParams
+                        }, function() {
+                            // Not much to do when the tab is open
                         });
                         this.model.trigger('clicked');
                     }.bind(this));

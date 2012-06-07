@@ -1,4 +1,5 @@
 var Maths = require("../maths.js").Maths;
+var browser = require('../browsers.js').browser;
 
 var History = function (Plugins) {
     // Let's register
@@ -13,7 +14,7 @@ var History = function (Plugins) {
         return true;
     };
     this.hijack = function (doc, follow, unfollow) {
-        // Hum. Nothing to do as we can't use the chrome.* apis from content scripts
+        // Hum. Nothing to do.
     };
     
     this.processNext = function(items, callback, done, totalFeeds) {
@@ -41,19 +42,16 @@ var History = function (Plugins) {
     };
     
     this.listSubscriptions = function (callback, done) {
-        chrome.history.search({
-            'text': '', // Return every history item....
-            'startTime': ((new Date()).getTime() - 1000 * 60 * 60 * 24 * 15), // that was accessed less than 15 days ago, up to 10000 pages.
-            'maxResults': 10000
-        }, function (historyItems) {
+        browser.getRecentVisits(10000, function (historyItems) {
             if (historyItems.length === 0) {
                 done(0);
             }
             this.processNext(historyItems, callback, done, 0);
         }.bind(this));
     };
+    
     this.visitsRegularly = function (url, callback) {
-        chrome.history.getVisits({url: url}, function (visits) {
+        browser.getVisitsForUrl(url, function (visits) {
             var visitTimes = new Array();
             for(var j = 0; j < visits.length; j++) {
                 visitTimes.push(visits[j].visitTime);
@@ -74,7 +72,7 @@ var History = function (Plugins) {
         }.bind(this));
     };
     this.subscribeInBackground = function (callback) {
-        chrome.history.onVisited.addListener(function (historyItem) {
+        browser.listenToNewVisit(function (historyItem) {
             if (historyItem.visitCount > this.visitsToBePopular) {
                 this.visitsRegularly(historyItem.url, function (result) {
                     callback({url: historyItem.url, doDiscovery: true})
