@@ -22,7 +22,7 @@ var chromeWrapper = {
             }
             else {
                 params.windowId = windows[0].id;
-                callback(chrome.tabs.create(params));
+                chrome.tabs.create(params, callback);
             }
         });
     },
@@ -132,6 +132,12 @@ var chromeWrapper = {
         chrome.tabs.update(id, {pinned: pin}, function() {
             // Done
         });
+    },
+    
+    inject: function(tabId, file, callback) {
+        chrome.tabs.executeScript(tabId, {
+            file: file
+        }, callback);
     }
 };
 

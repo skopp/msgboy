@@ -364,6 +364,8 @@ Msgboy.bind("loaded:background", function () {
                 url: browser.getUrl('/views/html/dashboard.html'),
                 selected: true,
                 pinned: true
+            }, function(tab) {
+                // Ok, the msgboy dashboard is open now.
             });
         }
     });
@@ -468,7 +470,10 @@ Msgboy.bind("loaded:background", function () {
         Msgboy.log.debug("request", "tab", params.url);
         params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
         browser.openNewTab(params, function(tab) {
-            // tab is open!
+            // tab is open! We need to inject some JS in it so that messages can be voted up and down, as well as shared.
+            browser.inject(tab.id, '/views/js/clicked.js', function() {
+                console.log("Code executed")
+            });
         });
     });
 

@@ -159,6 +159,8 @@ Msgboy.bind('loaded:dashboard', function (page) {
                         stacked.unshift(m);
                         setNewMessagesBar(stacked);
                     }
+                    // No matter what, we highligjt the dashboard
+                    // browser.highlightTab(); TODO
                 }.bind(this)
             });
         }
