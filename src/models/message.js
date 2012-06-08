@@ -9,7 +9,7 @@ var Message = Backbone.Model.extend({
     storeName: "messages",
     database: msgboyDatabase,
     defaults: {
-        "url":          "",
+        "mainLink":     "",
         "title":        null,
         "atomId":       null,
         "summary":      null,

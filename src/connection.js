@@ -3,6 +3,7 @@ var util = require('util'),
     EventEmitter = require('events').EventEmitter;
 
 Connection = function() { 
+    EventEmitter.call(this);
     this.reconnectDelay = 0;
     this.reconnectionTimeout = null;
     this._requests = {};
@@ -39,9 +40,25 @@ Connection.prototype.connect = function(endpoint, login, password) {
 	}.bind(this));
 	
     // Message from the server!
-    this._socket.on('notification', function(message) {
-        console.log("Notification!");
-        console.log(message)
+    this._socket.on('notification', function(string) {
+        var message  = JSON.parse(string);
+        for( var i = 0; i < message.items.length; i++ ) {
+            var item = message.items[i];
+            var m = {
+                title: item.title,
+                atomId: item.id,
+                summary: item.summary,
+                content: item.content,
+                source: {
+                    title: message.title,
+                    url: message.status.feed,
+                    links: message.standardLinks
+                },
+                feed: message.status.feed,
+                mainLink: item.permalinkUrl
+            };
+            this.emit('notification', m);
+        }
 	}.bind(this));
 	
 	// We're ready!

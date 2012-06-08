@@ -12,6 +12,14 @@ var SubscriptionView = Backbone.View.extend({
         "click .btn": "toggleSubscription"
     },
     initialize: function () {
+        
+        /*
+            A Re-subscribe hack.
+        */
+        if(this.model.get('state') === "subscribing") {
+            this.subscribe();
+        }
+        
         this.template = _.template($('#subscription-template').html());
         this.model.bind('subscribing', this.subscribe, this);
         this.model.bind('unsubscribing', this.unsubscribe, this);

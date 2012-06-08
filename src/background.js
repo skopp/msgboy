@@ -253,41 +253,28 @@ var rewriteOutboundUrl = function(url) {
 exports.rewriteOutboundUrl = rewriteOutboundUrl;
 
 connection.on('notification', function (notification) {
-    Msgboy.log.debug("Notification received from " + notification.source.url);
-    if(notification.payload) {
-        var msg = notification.payload;
-        msg.source = notification.source;
-        msg.feed = notification.source.url;
+    Msgboy.log.debug("Notification received " + notification.source.url);
+    var message = new Message(notification);
+    extractLargestImage(message.get('text'), message.get('mainLink'), function(largestImg) {
+        var attributes = {};
 
-        var message = new Message(msg);
+        if(largestImg) {
+            message.set({image: largestImg});
+        }
 
-        extractLargestImage(message.get('text'), message.get('mainLink'), function(largestImg) {
-            var attributes = {};
-
-            if(largestImg) {
-                message.set({image: largestImg});
-            }
-
-            message.calculateRelevance(function (_relevance) {
-                attributes.relevance = _relevance;
-                message.create(attributes, {
-                    success: function() {
-                        Msgboy.log.debug("Saved message", msg.id);
-                        Msgboy.inbox.trigger("messages:added", message);
-                    }.bind(this),
-                    error: function(error) {
-                        Msgboy.log.debug("Could not save message", JSON.stringify(msg), error);
-                    }.bind(this)
-                }); 
-            }.bind(this));
+        message.calculateRelevance(function (_relevance) {
+            attributes.relevance = _relevance;
+            message.create(attributes, {
+                success: function() {
+                    Msgboy.log.debug("Saved message", message.id);
+                    Msgboy.inbox.trigger("messages:added", message);
+                }.bind(this),
+                error: function(error) {
+                    Msgboy.log.debug("Could not save message", error);
+                }.bind(this)
+            }); 
         }.bind(this));
-    }
-    else {
-        // Notification with no payload. Not good. We should unsubscribe as it's useless!
-        unsubscribe(notification.source.url, function (result) {
-            Msgboy.log.debug("Unsubscribed from ", notification.source.url);
-        });
-    }
+    }.bind(this));
 });
 
 Msgboy.bind("loaded:background", function () {
