@@ -1,6 +1,6 @@
 // Ok. Here, we need to require all the plugins!
 var Plugins         = require('./plugins.js').Plugins;
-
+var browser         = require('./browsers.js').browser;
 var Blogger = require('./plugins/blogger.js').Blogger;
 new Blogger(Plugins);
 var Disqus = require('./plugins/disqus.js').Disqus;
@@ -25,7 +25,7 @@ for (var i = 0; i < Plugins.all.length; i++) {
     var plugin = Plugins.all[i];
     if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
         plugin.hijack(document, function (feed, done) {
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: "subscribe",
                 params: feed
             }, function (response) {

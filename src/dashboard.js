@@ -1,5 +1,6 @@
 var $ = jQuery = require('jquery');
 var Msgboy = require('./msgboy.js').Msgboy;
+var browser = require('./browsers.js').browser;
 var Archive = require('./models/archive.js').Archive;
 var Message = require('./models/message.js').Message;
 var Inbox = require('./models/inbox.js').Inbox;
@@ -29,7 +30,7 @@ function prepareArchiveView(archive) {
     // When a message is down-voted
     archive.bind('down-ed', function(message) {
         if(message.attributes.sourceHost !== 'msgboy.com') {
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: 'down-ed',
                 params: message
             }, function (response) {
@@ -141,7 +142,7 @@ Msgboy.bind('loaded:dashboard', function (page) {
     });
 
     // Listening to the events from the background page.
-    chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+    browser.listen(function (request, sender, sendResponse) {
         if (request.signature == "notify" && request.params) {
             var m = new Message({id: request.params.id});
             m.fetch({
@@ -158,6 +159,8 @@ Msgboy.bind('loaded:dashboard', function (page) {
                         stacked.unshift(m);
                         setNewMessagesBar(stacked);
                     }
+                    // No matter what, we highligjt the dashboard
+                    // browser.highlightTab(); TODO
                 }.bind(this)
             });
         }

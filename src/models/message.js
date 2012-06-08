@@ -39,15 +39,23 @@ var Message = Backbone.Model.extend({
     },
     /* Initializes the messages */
     initialize: function (params) {
+        // Default params
         if(typeof params === "undefined") {
-            params = {}; // Default params
+            params = {}; 
         }
+        
         // Setting up the source attributes
-        if (params.source && params.source.links) {
-            if(params.source.links.alternate) {
-                if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
-                    params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
-                    params.sourceHost = params.sourceHost || UrlParser.parse(params.sourceLink).hostname;
+        if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined') {
+            if (params.source && params.source.links) {
+                if(params.source.links.alternate) {
+                    if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
+                        params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
+                        params.sourceHost = params.sourceHost || UrlParser.parse(params.sourceLink).hostname;
+                    }
+                    else {
+                        params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                        params.sourceHost = params.sourceHost || "";
+                    }
                 }
                 else {
                     params.sourceLink = params.sourceLink || ""; // Dang. What is it?
@@ -59,45 +67,44 @@ var Message = Backbone.Model.extend({
                 params.sourceHost = params.sourceHost || "";
             }
         }
-        else {
-            params.sourceLink = params.sourceLink || ""; // Dang. What is it?
-            params.sourceHost = params.sourceHost || "";
-        }
         
         // Setting up the createdAt
-        if (!params.createdAt) {
+        if (typeof(params.createdAt) === 'undefined') {
             params.createdAt = new Date().getTime();
         }
         
-        
         // Setting up the mainLink
-        if (params.links && params.links.alternate) {
-            if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
-                params.mainLink = params.links.alternate["text/html"][0].href;
+        if (typeof(params.mainLink) === 'undefined') {
+            if (params.links && params.links.alternate) {
+                if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
+                    params.mainLink = params.links.alternate["text/html"][0].href;
+                }
+                else {
+                    // Hum, let's see what other types we have!
+                    params.mainLink = "";
+                }
             }
             else {
-                // Hum, let's see what other types we have!
                 params.mainLink = "";
             }
         }
-        else {
-            params.mainLink = "";
-        }
         
         // Setting up the text, as the longest between the summary and the content.
-        if (params.content) {
-            if (params.summary && params.summary.length > params.content.length) {
+        if (typeof(params.text) === 'undefined') {
+            if (params.content) {
+                if (params.summary && params.summary.length > params.content.length) {
+                    params.text =  params.summary;
+                }
+                else {
+                    params.text =  params.content;
+                }
+            }
+            else if (params.summary) {
                 params.text =  params.summary;
             }
             else {
-                params.text =  params.content;
+                params.text = "";
             }
-        }
-        else if (params.summary) {
-            params.text =  params.summary;
-        }
-        else {
-            params.text = "";
         }
         
         // Setting up the params

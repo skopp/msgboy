@@ -9,6 +9,7 @@ var Subscriptions   = require('./models/subscription.js').Subscriptions;
 var Subscription    = require('./models/subscription.js').Subscription;
 var Feediscovery    = require('./feediscovery.js').Feediscovery;
 var Connection      = require('./connection.js').Connection;
+var browser         = require('./browsers.js').browser;
 
 var Blogger = require('./plugins/blogger.js').Blogger;
 new Blogger(Plugins);
@@ -53,7 +54,7 @@ var notify = function (message, popup) {
     if ((!currentNotification || !currentNotification.ready) && popup) {
         if(!currentNotification) {
             // there is no window.
-            currentNotification = window.webkitNotifications.createHTMLNotification(chrome.extension.getURL('/views/html/notification.html'));
+            currentNotification = window.webkitNotifications.createHTMLNotification(browser.getUrl('/views/html/notification.html'));
             currentNotification.ready = false;
             currentNotification.onclose = function () {
                 currentNotification = null;
@@ -63,7 +64,7 @@ var notify = function (message, popup) {
         messageStack.push(message);
     }
     else {
-        chrome.extension.sendRequest({
+        browser.emit({
             signature: "notify",
             params: message
         }, function (response) {
@@ -294,19 +295,12 @@ Msgboy.bind("loaded:background", function () {
         connect(Msgboy.inbox);
         // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
         if(Msgboy.inbox.attributes.options.pinMsgboy) {
-            chrome.tabs.getAllInWindow(undefined, function(tabs) {
-                for (var i = 0, tab; tab = tabs[i]; i++) {
-                    if (tab.url && tab.url.match(new RegExp("chrome-extension://" + chrome.i18n.getMessage("@@extension_id") + ""))) {
-                        // Fine, the tab is opened. No need to do much more.
-                        return;
-                    }
-                }
-                chrome.tabs.create({
-                    url: chrome.extension.getURL('/views/html/dashboard.html'),
-                    selected: true,
-                    pinned: true
-                });
-
+            browser.openNewTab({
+                url: browser.getUrl('/views/html/dashboard.html'),
+                selected: true,
+                pinned: true
+            }, function(tab) {
+                // Ok, the msgboy dashboard is open now.
             });
         }
     });
@@ -339,7 +333,7 @@ Msgboy.bind("loaded:background", function () {
     // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
         // Ok, no such inbox... So we need to create an account!
-        window.open("http://msgboy.com/session/new?ext=" + chrome.i18n.getMessage("@@extension_id"));
+        window.open("http://msgboy.com/session/new?ext=" + browser.msgboyId());
     });
     
     // Triggered when connected
@@ -349,16 +343,13 @@ Msgboy.bind("loaded:background", function () {
     });
 
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
-    chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
+    browser.listen(function (_request, _sender, _sendResponse) {
         Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
 
     // Chrome specific. Listens to external requests from other extensions!
-    chrome.extension.onRequestExternal.addListener(function (_request, _sender, _sendResponse) {
-        // For now, we only allow the Msgboy Button Extension, but later we'll open that up.
-        if(_sender.id === "conpgobjdgiggknoomfoemablbgkecga") {
-            Msgboy.trigger(_request.signature, _request.params, _sendResponse);
-        }
+    browser.externalListen(function (_request, _sender, _sendResponse) {
+        Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
     
     Msgboy.bind('register', function (params, _sendResponse) {
@@ -401,7 +392,7 @@ Msgboy.bind("loaded:background", function () {
         currentNotification.ready = true;
         // We should then start sending all notifications.
         while (messageStack.length > 0) {
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature:"notify",
                 params: messageStack.pop()
             }, function (response) {
@@ -412,22 +403,12 @@ Msgboy.bind("loaded:background", function () {
 
     Msgboy.bind('tab', function (params, _sendResponse) {
         Msgboy.log.debug("request", "tab", params.url);
-        var active_window = null;
         params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
-        chrome.windows.getAll({}, function (windows) {
-            windows = _.select(windows, function (win) {
-                return win.type ==="normal" && win.focused;
-            }, this);
-            // If no window is focused and"normal"
-            if (windows.length === 0) {
-                window.open(params.url); // Can't use Chrome's API as it's buggy :(
-            }
-            else {
-                // Just open an extra tab.
-                options = params;
-                options.windowId = windows[0].id;
-                chrome.tabs.create(options);
-            }
+        browser.openNewTab(params, function(tab) {
+            // tab is open! We need to inject some JS in it so that messages can be voted up and down, as well as shared.
+            browser.inject(tab.id, '/views/js/clicked.js', function() {
+                console.log("Code executed")
+            });
         });
     });
 

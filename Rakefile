@@ -89,7 +89,7 @@ end
 
 build_tasks = [:frontend, :background] #, :tests]
 
-task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins']
+task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked']
 namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
@@ -100,7 +100,13 @@ namespace :build do
   end
   desc "Building run_plugins.js"
   task :run_plugins do
+    puts "Building run_plugins.js"
     `browserify ./src/run_plugins.js -o ./views/js/run_plugins.js`
+  end
+  desc "Building clicked.js"
+  task :clicked do
+    puts "Building clicked.js"
+    `browserify ./src/clicked.js -o ./views/js/clicked.js`
   end
 end
 

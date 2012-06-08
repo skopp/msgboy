@@ -1,3 +1,5 @@
+var browser = require('../browsers.js').browser;
+
 var Bookmarks = function (Plugins) {
     // Let's register
     Plugins.register(this);
@@ -25,7 +27,7 @@ var Bookmarks = function (Plugins) {
     };
 
     this.listSubscriptions = function (callback, done) {
-        chrome.bookmarks.getRecent(1000,
+        browser.getRecentBookmarks(1000,
             function (bookmarks) {
                 if (bookmarks.length === 0) {
                     done(0);
@@ -38,7 +40,7 @@ var Bookmarks = function (Plugins) {
     };
 
     this.subscribeInBackground = function (callback) {
-        chrome.bookmarks.onCreated.addListener(function (id, bookmark) {
+        browser.listenToNewBookmark(function (id, bookmark) {
             callback({url: bookmark.url, doDiscovery: true})
         }.bind(this));
     };

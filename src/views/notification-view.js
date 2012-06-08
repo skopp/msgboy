@@ -1,6 +1,7 @@
 var _ = require('underscore');
 var $ = jQuery = require('jquery');
 var Backbone = require('backbone');
+var browser = require('../browsers.js').browser;
 var MessageView = require('./message-view.js').MessageView;
 
 var NotificationView = Backbone.View.extend({
@@ -34,7 +35,7 @@ var NotificationView = Backbone.View.extend({
                 // And show the next
                 this.showNext();
                 view.remove();
-                chrome.extension.sendRequest({
+                browser.emit({
                     signature: "tab",
                     params: {url: message.get('mainLink'), selected: true}
                 });

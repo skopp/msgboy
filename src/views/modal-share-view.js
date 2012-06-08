@@ -1,4 +1,5 @@
 var $ = jQuery = require('jquery');
+var browser = require('../browsers.js').browser;
 var Backbone = require('backbone');
 var UrlParser = require('url');
 var QueryString = require('querystring');
@@ -94,7 +95,7 @@ var ModalShareView = Backbone.View.extend({
                 url: this.urlToShare,
                 via: 'themsgboy'
             }
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: "tab",
                 params: {url: UrlParser.format(u), selected: true}
             });
@@ -105,7 +106,7 @@ var ModalShareView = Backbone.View.extend({
                 u: this.urlToShare,
                 t: comment
             }
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: "tab",
                 params: {url: UrlParser.format(u), selected: true}
             });
@@ -117,7 +118,7 @@ var ModalShareView = Backbone.View.extend({
                 title: title,
                 description: comment
             }
-            chrome.extension.sendRequest({
+            browser.emit({
                 signature: "tab",
                 params: {url: UrlParser.format(u), selected: true}
             });

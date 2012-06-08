@@ -36,7 +36,7 @@ Msgboy.bind("loaded:subscribe", function () {
                     });
                     $("#subscribeBtn").click(function() {
                         $("#subscribeBtn").button('loading');
-                        chrome.extension.sendRequest({
+                        browser.emit({
                             signature: "subscribe",
                             params: {
                                 title: link.title,
