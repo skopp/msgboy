@@ -45,8 +45,9 @@ Connection.prototype.connect = function(endpoint, login, password) {
         for( var i = 0; i < message.items.length; i++ ) {
             var item = message.items[i];
             var m = {
+                id: item.id,
+                createdAt: new Date().getTime(),
                 title: item.title,
-                atomId: item.id,
                 summary: item.summary,
                 content: item.content,
                 source: {
@@ -66,9 +67,12 @@ Connection.prototype.connect = function(endpoint, login, password) {
 	this._socket.on('ready', function(data) {
         console.log("Ready");
         this._ready = true;
-        while(m = this._stack.shift()) {
-		    this._socket.emit(m[0], m[1]);
-        }
+        // Let's start processing requests. We do it with 5 loops.
+        this.nextRequest();
+        this.nextRequest();
+        this.nextRequest();
+        this.nextRequest();
+        this.nextRequest();
     }.bind(this));
     
     // Successfuly subscribed
@@ -76,6 +80,7 @@ Connection.prototype.connect = function(endpoint, login, password) {
         if(this._requests[subs.id]) {
             this._requests[subs.id](true, subs.url);
             delete this._requests[subs.id];
+            this.nextRequest();
         }
     }.bind(this));
     
@@ -84,31 +89,33 @@ Connection.prototype.connect = function(endpoint, login, password) {
         if(this._requests[subs.id]) {
             this._requests[subs.id](true, subs.url);
             delete this._requests[subs.id];
+            this.nextRequest();
         }
     }.bind(this));
+}
+
+Connection.prototype.nextRequest = function() {
+    if(m = this._stack.shift()) {
+	    this._socket.emit(m[0], m[1]);
+    }
+    else {
+        setTimeout(function () {
+            this.nextRequest();
+        }.bind(this), 3000);
+    }
 }
 
 
 Connection.prototype.subscribe = function(url, callback) {
     var requestId = btoa(url).substring(10,20);
     this._requests[requestId] = callback;
-    if(this._ready) {
-        this._socket.emit('subscribe', {url: url, id: requestId});
-    }
-    else {
-        this._stack.push(['subscribe', {url: url, id: requestId}]);
-    }
+    this._stack.push(['subscribe', {url: url, id: requestId}]);
 }
 
 Connection.prototype.unsubscribe = function(url, callback) {
     var requestId = btoa(url).substring(10,20); 
     this._requests[requestId] = callback;
-    if(this._ready) {
-        this._socket.emit('unsubscribe', {url: url, id: requestId});
-    }
-    else {
-        this._stack.push(['unsubscribe', {url: url, id: requestId}]);
-    }
+    this._stack.push(['unsubscribe', {url: url, id: requestId}]);
 }
 
 

@@ -11,7 +11,6 @@ var Message = Backbone.Model.extend({
     defaults: {
         "mainLink":     "",
         "title":        null,
-        "atomId":       null,
         "summary":      null,
         "content":      null,
         "links":        {},
@@ -19,6 +18,7 @@ var Message = Backbone.Model.extend({
         "source":       {},
         "sourceHost":   "",
         "sourceLink":   "",
+        "text":         "",
         "state":        "new",
         "feed":         "",
         "relevance":    0.6
@@ -45,7 +45,7 @@ var Message = Backbone.Model.extend({
         }
         
         // Setting up the source attributes
-        if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined') {
+        if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined' || params.sourceHost === "" || params.sourceLink === "") {
             if (params.source && params.source.links) {
                 if(params.source.links.alternate) {
                     if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
@@ -69,12 +69,12 @@ var Message = Backbone.Model.extend({
         }
         
         // Setting up the createdAt
-        if (typeof(params.createdAt) === 'undefined') {
+        if (typeof(params.createdAt) === 'undefined' || params.createdAt === 0) {
             params.createdAt = new Date().getTime();
         }
         
         // Setting up the mainLink
-        if (typeof(params.mainLink) === 'undefined') {
+        if (typeof(params.mainLink) === 'undefined' || params.mainLink === "" || !params.mainLink) {
             if (params.links && params.links.alternate) {
                 if (params.links.alternate["text/html"] && params.links.alternate["text/html"][0]) {
                     params.mainLink = params.links.alternate["text/html"][0].href;
@@ -90,7 +90,7 @@ var Message = Backbone.Model.extend({
         }
         
         // Setting up the text, as the longest between the summary and the content.
-        if (typeof(params.text) === 'undefined') {
+        if (typeof(params.text) === 'undefined' || params.text === "" || !params.text) {
             if (params.content) {
                 if (params.summary && params.summary.length > params.content.length) {
                     params.text =  params.summary;

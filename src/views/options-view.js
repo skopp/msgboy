@@ -67,6 +67,13 @@ var OptionsView = Backbone.View.extend({
             modal.remove();
         });
         modal.modal('show');
+        browser.emit({
+            signature:"resetRusbcriptions",
+            params: []
+        }, function (response) {
+            // Nothing to do.
+        });
+        
     },
     
     pinMsgboy: function(event) {
