@@ -44,17 +44,20 @@ var Message = Backbone.Model.extend({
             params = {}; 
         }
         
-        // Setting up the source attributes
+        
+        // Setting up the source attributes 
         if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined' || params.sourceHost === "" || params.sourceLink === "") {
             if (params.source && params.source.links) {
                 if(params.source.links.alternate) {
-                    if(params.source.links.alternate["text/html"] && params.source.links.alternate["text/html"][0]) {
-                        params.sourceLink = params.sourceLink || params.source.links.alternate["text/html"][0].href;
-                        params.sourceHost = params.sourceHost || UrlParser.parse(params.sourceLink).hostname;
-                    }
-                    else {
-                        params.sourceLink = params.sourceLink || ""; // Dang. What is it?
-                        params.sourceHost = params.sourceHost || "";
+                    // dEfaults
+                    params.sourceLink = params.sourceLink || ""; // Dang. What is it?
+                    params.sourceHost = params.sourceHost || "";
+                    for(j = 0; j < params.source.links.alternate.length; j++) {
+                        var l = params.source.links.alternate[j];
+                        if(l.type === "text/html") {
+                            params.sourceLink = l.href;
+                            params.sourceHost = UrlParser.parse(params.sourceLink).hostname;
+                        }
                     }
                 }
                 else {

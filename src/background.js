@@ -253,6 +253,18 @@ var rewriteOutboundUrl = function(url) {
 }
 exports.rewriteOutboundUrl = rewriteOutboundUrl;
 
+connection.on('connected', function() {
+    console.log('Connected');
+});
+
+connection.on('disconnected', function() {
+    console.log('Disconnected');
+});
+
+connection.on('ready', function() {
+    console.log('Ready');
+});
+
 connection.on('notification', function (notification) {
     Msgboy.log.debug("Notification received " + notification.source.url);
     var message = new Message(notification);

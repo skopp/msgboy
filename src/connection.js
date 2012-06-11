@@ -1,12 +1,17 @@
 /* This is the connection object, wrapped around a WS object */
-var util = require('util'),
-    EventEmitter = require('events').EventEmitter;
+var util = require('util')
+  // , io = require('socket.io-client') // We need to wait for browserify and socket.io to be fixed to do that :()
+  , EventEmitter = require('events').EventEmitter;
+
+
+var ioOptions ={
+    'force new connection': true
+};
 
 Connection = function() { 
     EventEmitter.call(this);
     this.reconnectDelay = 0;
     this.reconnectionTimeout = null;
-    this._requests = {};
     this._stack = [];
     this._ready = false;
 }
@@ -14,23 +19,23 @@ Connection = function() {
 util.inherits(Connection, EventEmitter);
 
 Connection.prototype.connect = function(endpoint, login, password) {
-    console.log("Connecting");
-    this._socket = io.connect(endpoint);
+    this._socket = io.connect(endpoint, ioOptions);
     
     // Socket Open!
     this._socket.on('connect', function() {
+        this.emit('connected');
         clearTimeout( this.reconnectionTimeout );
         this.reconnectionTimeout = null;
-        console.log("Connected");
         this._socket.emit('auth', { login: login, password: password });
     }.bind(this));
     
     // Socket Closed
     this._socket.on('disconnect', function() {
+        this.emit('disconnected');
+        this._socket = null; // Delete the previous io object...
         this._ready = false;
         this.reconnectDelay = Math.min(this.reconnectDelay + 1, 10); // We max at one attempt every minute. 
         var delay = Math.pow(this.reconnectDelay, 2) * 1000;
-        console.log("Disconnected. Retrying in", delay, "ms.");
         if (!this.reconnectionTimeout) {
             this.reconnectionTimeout = setTimeout(function () {
                 this.reconnectionTimeout = null;
@@ -65,7 +70,7 @@ Connection.prototype.connect = function(endpoint, login, password) {
 	// We're ready!
     // And we need to process the stack!
 	this._socket.on('ready', function(data) {
-        console.log("Ready");
+	    this.emit('ready');
         this._ready = true;
         // Let's start processing requests. We do it with 5 loops.
         this.nextRequest();
@@ -74,48 +79,33 @@ Connection.prototype.connect = function(endpoint, login, password) {
         this.nextRequest();
         this.nextRequest();
     }.bind(this));
-    
-    // Successfuly subscribed
-    this._socket.on('subscribed', function(subs) {
-        if(this._requests[subs.id]) {
-            this._requests[subs.id](true, subs.url);
-            delete this._requests[subs.id];
-            this.nextRequest();
-        }
-    }.bind(this));
-    
-    // Successfuly unsubscribed
-    this._socket.on('unsubscribed', function(subs) {
-        if(this._requests[subs.id]) {
-            this._requests[subs.id](true, subs.url);
-            delete this._requests[subs.id];
-            this.nextRequest();
-        }
-    }.bind(this));
 }
 
 Connection.prototype.nextRequest = function() {
-    if(m = this._stack.shift()) {
-	    this._socket.emit(m[0], m[1]);
+    var m = this._stack.shift();
+    if(m) {
+	    this._socket.emit(m[0], m[1], function(result) {
+	        this.nextRequest(); // Let's process the next request!
+	        m[2](result);
+	    }.bind(this));
     }
     else {
         setTimeout(function () {
-            this.nextRequest();
+            this.nextRequest(); // Let's come back in a couple seconds!
         }.bind(this), 3000);
     }
 }
 
+Connection.prototype.disconnect = function() {
+    this._socket.disconnect();
+}
 
 Connection.prototype.subscribe = function(url, callback) {
-    var requestId = btoa(url).substring(10,20);
-    this._requests[requestId] = callback;
-    this._stack.push(['subscribe', {url: url, id: requestId}]);
+    this._stack.push(['subscribe', url, callback]);
 }
 
 Connection.prototype.unsubscribe = function(url, callback) {
-    var requestId = btoa(url).substring(10,20); 
-    this._requests[requestId] = callback;
-    this._stack.push(['unsubscribe', {url: url, id: requestId}]);
+    this._stack.push(['unsubscribe', url, callback]);
 }
 
 
