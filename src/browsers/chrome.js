@@ -138,6 +138,25 @@ var chromeWrapper = {
         chrome.tabs.executeScript(tabId, {
             file: file
         }, callback);
+    },
+    
+    /*
+        This function yields true if the dashboard is open.
+    */
+    isDashboardOpen: function(fn) {
+        var open = false;
+        chrome.windows.getAll({populate: true}, function(windows) {
+            for( var j = 0, w; w = windows[j]; j++) {
+                for (var i = 0, tab; tab = w.tabs[i]; i++) {
+                    if (tab.url && tab.url.match(new RegExp("chrome-extension://" + chrome.i18n.getMessage("@@extension_id") + ""))) {
+                        // Fine, the tab is opened. No need to do much more.
+                        open = true;
+                        break;
+                    }
+                }
+            }
+            fn(open);
+        });
     }
 };
 

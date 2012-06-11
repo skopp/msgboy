@@ -307,12 +307,16 @@ Msgboy.bind("loaded:background", function () {
         connect(Msgboy.inbox);
         // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
         if(Msgboy.inbox.attributes.options.pinMsgboy) {
-            browser.openNewTab({
-                url: browser.getUrl('/views/html/dashboard.html'),
-                selected: true,
-                pinned: true
-            }, function(tab) {
-                // Ok, the msgboy dashboard is open now.
+            browser.isDashboardOpen(function(open) {
+                if(!open) {
+                    browser.openNewTab({
+                        url: browser.getUrl('/views/html/dashboard.html'),
+                        selected: true,
+                        pinned: true
+                    }, function(tab) {
+                        // Ok, the msgboy dashboard is open now.
+                    });
+                }
             });
         }
     });
