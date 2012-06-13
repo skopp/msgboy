@@ -89,7 +89,7 @@ end
 
 build_tasks = [:frontend, :background] #, :tests]
 
-task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked']
+task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked'] + [:'build:sass']
 namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
@@ -107,6 +107,11 @@ namespace :build do
   task :clicked do
     puts "Building clicked.js"
     `browserify ./src/clicked.js -o ./views/js/clicked.js`
+  end
+  desc "Compile SASS files into CSS"
+  task :sass do
+    puts "Compiling SASS"
+    `compass compile`
   end
 end
 
