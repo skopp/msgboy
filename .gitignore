@@ -2,3 +2,7 @@
 s3.json
 *.pem
 build/
+views/js/*.js
+views/css/*.css
+.sass-cache/*
+node_modules/*
