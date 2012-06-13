@@ -34,30 +34,9 @@
   overflow: hidden
   min-height: 50px
   color: #E6E6E6
-
-.message-image
-  top: 0
-  bottom: 0
-  left: 0
-  right: 0
-  position: absolute
-  background-size: cover
-
-.msgboy
-  .message-image
-    opacity: .25
   &:hover
-    .message-image
-      opacity: .5
-    h1
-      display: block
-  h1
-    display: none
-  p
-    background-color: #dae7ea
-    color: #11232c
-
-.message
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.9)
+    cursor: pointer
   h1
     padding: 0px 0px 0px 23px
     margin: 0px
@@ -76,9 +55,30 @@
     top: 0
     left: 0
     right: 0
-  &:hover
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.9)
-    cursor: pointer
+  .message-image
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+    position: absolute
+    background-size: cover
+  &.msgboy
+    .message-image
+      opacity: .25
+    &:hover
+      .message-image
+        opacity: .5
+      h1
+        display: block
+    h1
+      display: none
+    p
+      background-color: #dae7ea
+      color: #11232c
+
+
+
+
 
 .ribbon
   font-size: 0.9em
