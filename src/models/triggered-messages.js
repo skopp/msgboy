@@ -50,7 +50,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime(),
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -99,7 +99,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime(),
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -148,7 +148,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime(),
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -195,7 +195,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 1000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -220,7 +220,7 @@ var MessageTrigger = {
             });
         });
         
-        Msgboy.bind('inbox:new', function() {
+        Msgboy.bind('messages:added', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:real-time",
                 "title": "Newly posted stories appear in realtime.",
@@ -242,7 +242,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 2000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -288,7 +288,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 3000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -334,7 +334,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 4000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -380,7 +380,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 5000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -404,12 +404,12 @@ var MessageTrigger = {
             });
         });
         
-        Msgboy.bind('inbox:new', function() {
+        Msgboy.bind('later', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:notifications",
-                "title": "Follow and rate stories with notifications.",
+                "title": "Have you tried notifications?",
                 "ungroup": true,
-                "summary": "Get notifications... so that even if you aren't looking at the msgboy, you can see what's coming in!",
+                "summary": "Click to go to the settings and enable them!",
                 "image": "http://download.msgboy.com/resources/triggered/notifications.png",
                 "content": null,
                 "links": {
@@ -426,7 +426,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 6000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -472,7 +472,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 7000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {
@@ -496,7 +496,7 @@ var MessageTrigger = {
             });
         });
         
-        Msgboy.bind('inbox:new', function() {
+        Msgboy.bind('never', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:your-data-protected",
                 "title": "Your data is safe and protected.",
@@ -518,7 +518,7 @@ var MessageTrigger = {
                 },
                 "createdAt": new Date().getTime() - 7000,
                 "source": {
-                    "title": "Msgboy",
+                    "title": "Msgboy Tips",
                     "url": "http://blog.msgboy.com/",
                     "links": {
                         "alternate": {

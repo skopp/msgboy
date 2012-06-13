@@ -1,6 +1,6 @@
 /* This is the connection object, wrapped around a WS object */
 var util = require('util')
-  , io = require('socket.io-client') // We need to wait for browserify and socket.io to be fixed to do that :()
+  // , io = require('socket.io-client') // We need to wait for browserify and socket.io to be fixed to do that :()
   , EventEmitter = require('events').EventEmitter;
 
 
