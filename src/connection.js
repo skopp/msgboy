@@ -1,11 +1,12 @@
 /* This is the connection object, wrapped around a WS object */
 var util = require('util')
-  // , io = require('socket.io-client') // We need to wait for browserify and socket.io to be fixed to do that :()
+  , io = require('socket.io-client') // We need to wait for browserify and socket.io to be fixed to do that :()
   , EventEmitter = require('events').EventEmitter;
 
 
 var ioOptions ={
-    'force new connection': true
+    'force new connection': true,
+    'reconnect': false
 };
 
 Connection = function() { 
@@ -41,7 +42,7 @@ Connection.prototype.connect = function(endpoint, login, password) {
                 this.reconnectionTimeout = null;
                 this.connect(endpoint, login, password);
             }.bind(this), delay);
-        }   
+        }
 	}.bind(this));
 	
     // Message from the server!
