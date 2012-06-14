@@ -291,9 +291,9 @@ connection.on('notification', function (notification) {
 });
 
 Msgboy.bind("loaded:background", function () {
-    MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
-    
     Msgboy.inbox = new Inbox();
+    
+    MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
     
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
@@ -318,6 +318,31 @@ Msgboy.bind("loaded:background", function () {
                     });
                 }
             });
+        }
+        
+        // Check for migrations?
+        if(typeof(Msgboy.inbox.attributes.version) === "undefined" || Msgboy.inbox.attributes.version < 100) {
+          // Version 100 requires a switch from XMPP to PubSubHubbub based subscriptions
+          var subscriptions = new Subscriptions();
+
+          subscriptions.bind("reset", function (subs) {
+            var total = subs.length;
+            for(var i = 0; i < subs.length; i++ ) {
+              subscribe(subs.models[i].id, false, true, function () {
+                  total --;
+                  if(total === 0) {
+                    Msgboy.inbox.save({
+                      version: 100
+                    });
+                  }
+                  console.log(total);
+              });
+            }
+          });
+          
+          subscriptions.fetch({
+              conditions: {state: "subscribed"},
+          });
         }
     });
 
