@@ -61,15 +61,18 @@ var SubscriptionView = Backbone.View.extend({
 
 var SubscriptionsView = Backbone.View.extend({
     events: {
-        "click #opml": "opmlExport"
+        "click #opml": "opmlExport",
+        'click #showall': "showAll"
     },
 
     initialize: function () {
-        _.bindAll(this, 'showOne', 'render', 'opmlExport');
+        _.bindAll(this, 'showOne', 'render', 'opmlExport', 'showAll');
         // Loading the subscriptions.
         this.collection = new Subscriptions();
         this.collection.bind('reset', this.render, this);
-        this.collection.fetch();
+        this.collection.fetch( {
+          conditions: {state: "subscribed"},
+        });
         
         // Also loads all the plugins.
         _.each(Plugins.all, function(plugin) {
@@ -109,8 +112,14 @@ var SubscriptionsView = Backbone.View.extend({
         });
         opml += '</body></opml>';
         window.location = "data:application/xml;base64," + window.btoa(opml);   
-    }
+    },
     
+    showAll: function() {
+      this.collection.reset();
+      this.collection.fetch( {
+        conditions: {state: "unsubscribed"},
+      });
+    }
 });
 
 exports.SubscriptionsView = SubscriptionsView;
