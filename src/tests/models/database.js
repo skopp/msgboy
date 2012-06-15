@@ -1,4 +1,5 @@
 var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
+var assert = require('assert');
 
 describe('Database', function(){
     before(function() {
@@ -12,13 +13,13 @@ describe('Database', function(){
 
     describe('shema', function() {
         it('should have the right id', function() {
-            msgboyDatabase.id.should.equal("msgboy-database-test");
+            assert.equal(msgboyDatabase.id, "msgboy-database-test");
         });
         it('should have the right description', function() {
-            msgboyDatabase.description.should.equal("The database for the msgboy");
+            assert.equal(msgboyDatabase.description, "The database for the msgboy");
         });
         it('should have 7 versions', function() {
-            msgboyDatabase.migrations.should.have.length(7);
+            assert.equal(msgboyDatabase.migrations.length, 7);
         });
     });
 });
