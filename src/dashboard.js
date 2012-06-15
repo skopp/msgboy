@@ -87,7 +87,7 @@ function prepareNextLoadIfNeeded() {
 }
 
 function showStack(stacked) {
-    stacked.computeRelevance();
+    stacked.computePercentiles();
     stacked.comparator = function (message) {
         return (message.get('createdAt'));
     }; // We need to reverse the stack since we'll prepend (instead of append)
@@ -168,7 +168,7 @@ Msgboy.bind('loaded:dashboard', function (page) {
                         // We need to append this message to the first archive...
                         firstArchiveView.collection.unshift(m);
                         // Recompute the relevance
-                        firstArchiveView.collection.computeRelevance();
+                        firstArchiveView.collection.computePercentiles();
                         // Appnd the new message
                         firstArchiveView.prependNew(m);
                     }
