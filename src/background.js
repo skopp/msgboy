@@ -40,6 +40,8 @@ var messageStack = [];
 var connection = new Connection();
 var endpoint = "http://stream.msgboy.com";
 var imageExtractor = new imageExtractor();
+var feediscovery = require('./feediscovery.js').Feediscovery;
+
 
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
@@ -81,7 +83,7 @@ var subscribe = function (url, doDiscovery, force, callback) {
     // First, let's check if we need to perform discovery on that. 
     if(doDiscovery) {
         // Well let's do disco and then recurse!
-        Feediscovery.get(url, function (links) {
+        feediscovery.get(url, function (links) {
             for(var i = 0; i < links.length; i++) {
                 var link = links[i];
                 subscribe(link.href, false, force, callback);
@@ -388,6 +390,14 @@ Msgboy.bind("loaded:background", function () {
             // Called when done with all plugins
             Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
         });
+    });
+    
+    // When one of the clients asks for discovery on a feed.
+    Msgboy.bind('feediscovery', function(params, _sendResponse) {
+      Msgboy.log.debug("request", "feediscovery");
+      feediscovery.get(params.url, function (links) {
+        _sendResponse(links);
+      });
     });
     
     // Plugins management for those who use the Chrome API to subscribe in background.

@@ -6,6 +6,7 @@
     ,"jquery": "*"
     ,"br-jquery": "*"
     ,"backbone": "*"
+    ,"feediscovery": "*"
     ,"backbone-browserify": "*"
     ,"backbone-indexeddb": "*"
     ,"socket.io-client": "*"
