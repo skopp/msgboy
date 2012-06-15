@@ -80,7 +80,7 @@ describe('Archive', function(){
     });
     
     describe('computePercentiles', function() {
-      it('should compute the percentiles for 12.5%, 66% and 87.5%', function(done) {
+      it('should compute the percentiles for 12.5%, 66% and 87.5%', function() {
         var archive =  new Archive();
         var m0 = new Message({relevance: 0.9});
         var m1 = new Message({relevance: 0.6});
@@ -104,7 +104,7 @@ describe('Archive', function(){
         archive.add(m9);
         
         archive.computePercentiles();
-        assert.deepEqual(archive.percentiles, [0.1, 0.7, 0.8])
+        assert.deepEqual(archive.percentiles, [0.1, 0.7, 0.8]);
       });
     });
 
