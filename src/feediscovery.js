@@ -43,10 +43,9 @@ Feediscovery.prototype.get = function (_url, _callback) {
 // Runs the feediscovery
 Feediscovery.prototype.run = function () {
   var next = this.stack.shift();
-  if (next) {
-    
+  if (next) {    
     feediscovery(next[0], function(err, feeds) {
-      next[1](feeds)
+      next[1](feeds),
       this.run(); 
     }.bind(this));
   } else {

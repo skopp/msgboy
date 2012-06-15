@@ -5,7 +5,7 @@ require('./bootstrap-button.js');
 
 Msgboy.bind("loaded:subscribe", function () {
   // console.log(window.webkitIntent.action); // We need to check that and differentiate between "subscribe" and "view". Do we?
-  var feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
+  var feedUrl = 'http://www.apple.com/' //window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
   browser.emit({
     signature: "feediscovery",
     params: {
@@ -26,31 +26,30 @@ Msgboy.bind("loaded:subscribe", function () {
     else {
       for(var i = 0; i < links.length; i++) {
         var link = links[i];
-        if(link.rel == "self") {
-          var inner = '<h2>' + link.title + '</h2> \
-          <p>Once subscribed, new messages from <em>' + link.title + '</em> will be added to your dashboard. </p>\
-          <p style="text-align:center; width:80%">\
-          <button class="btn btn-large" id="cancelBtn">Close</button>&nbsp;\
-          <button class="btn btn-primary btn-large" id="subscribeBtn" data-loading-text="Subscribing...">Subscribe</button>\
-          </p>';
-          $("#subscribe").html(inner);
-          $('.btn').button();
-          $("#cancelBtn").click(function() {
-            window.close(); 
+        console.log(link);
+        var inner = '<h2>' + link.title + '</h2> \
+        <p>Once subscribed, new messages from <em>' + link.title + '</em> will be added to your dashboard. </p>\
+        <p style="text-align:center; width:80%">\
+        <button class="btn btn-large" id="cancelBtn">Close</button>&nbsp;\
+        <button class="btn btn-primary btn-large" id="subscribeBtn" data-loading-text="Subscribing...">Subscribe</button>\
+        </p>';
+        $("#subscribe").html(inner);
+        $('.btn').button();
+        $("#cancelBtn").click(function() {
+          window.close(); 
+        });
+        $("#subscribeBtn").click(function() {
+          $("#subscribeBtn").button('loading');
+          browser.emit({
+            signature: "subscribe",
+            params: {
+              title: link.title,
+              url: feedUrl
+            }
+          }, function (response) {
+            $("#subscribeBtn").html('<i class="icon-ok icon-white"></i> Subscribed');
           });
-          $("#subscribeBtn").click(function() {
-            $("#subscribeBtn").button('loading');
-            browser.emit({
-              signature: "subscribe",
-              params: {
-                title: link.title,
-                url: feedUrl
-              }
-            }, function (response) {
-              $("#subscribeBtn").html('<i class="icon-ok icon-white"></i> Subscribed');
-            });
-          });
-        }
+        });
       }
     }
   });

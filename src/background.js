@@ -40,7 +40,7 @@ var messageStack = [];
 var connection = new Connection();
 var endpoint = "http://stream.msgboy.com";
 var imageExtractor = new imageExtractor();
-var feediscovery = require('./feediscovery.js').Feediscovery;
+var feediscovery = new Feediscovery();
 
 
 // Connects the XMPP Client
