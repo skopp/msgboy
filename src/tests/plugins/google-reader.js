@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var GoogleReader = require('../../plugins/google-reader.js').GoogleReader;
 

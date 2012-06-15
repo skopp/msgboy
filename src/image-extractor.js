@@ -1,8 +1,15 @@
 var Url = require('url');
+var querystring = require('querystring');
 var _ = require('underscore');
+var http = require('http');
 
 var imageExtractor = function() {
-  
+  this.options = {
+    host: 'image-extrator.appspot.com',
+    port: 80,
+    path: '/?',
+    method: 'GET'
+  };
 }
 
 // Gets the size of an image based on src
@@ -93,9 +100,17 @@ imageExtractor.prototype.extractLargestImageFromBlob = function(blob, base, call
     }
 }
 
-
 imageExtractor.prototype.extractImageFromLink = function(link, callback) {
-  callback(null);
+  this.options.path += querystring.stringify({url: link});
+  http.get(this.options, function (res) {
+    var data = "";
+    res.on('data', function (buf) {
+      data += buf;
+    });
+    res.on('end', function () {
+      callback(data)
+    });
+  });
 }
 
 imageExtractor.prototype.extract = function(blob, link, callback) {

@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var Typepad = require('../../plugins/typepad.js').Typepad;
 

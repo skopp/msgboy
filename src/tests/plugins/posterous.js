@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var Posterous = require('../../plugins/posterous.js').Posterous;
 

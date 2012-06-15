@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var Tumblr = require('../../plugins/tumblr.js').Tumblr;
 

@@ -2,7 +2,6 @@ var _ = require('underscore');
 var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
 var Message = require('../../models/message.js').Message;
 var Archive = require('../../models/archive.js').Archive;
-var should = require('chai').should();
 
 describe('Archive', function(){
     before(function(done) {

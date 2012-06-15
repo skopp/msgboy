@@ -1,5 +1,4 @@
 var Message = require('../../models/message.js').Message;
-var should = require('chai').should();
 
 describe('Message', function(){
     before(function() {

@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var Disqus = require('../../plugins/disqus.js').Disqus;
 

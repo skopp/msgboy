@@ -1,5 +1,4 @@
 var _ = require('underscore');
-var should = require('chai').should();
 var Plugins = require('../plugins.js').Plugins;
 
 describe('Plugins', function(){

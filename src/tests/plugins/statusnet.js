@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Plugins = require('../../plugins.js').Plugins;
 var Statusnet = require('../../plugins/statusnet.js').Statusnet;
 

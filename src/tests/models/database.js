@@ -1,5 +1,4 @@
 var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
-var should = require('chai').should();
 
 describe('Database', function(){
     before(function() {

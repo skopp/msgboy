@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
 var Subscription = require('../../models/subscription.js').Subscription;
 var Subscriptions = require('../../models/subscription.js').Subscriptions;
