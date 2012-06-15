@@ -6,6 +6,8 @@ var Message = require('./models/message.js').Message;
 var Inbox = require('./models/inbox.js').Inbox;
 var ArchiveView = require('./views/archive-view.js').ArchiveView;
 var ModalShareView = require('./views/modal-share-view.js').ModalShareView;
+var queryString = require('querystring');
+var url = require('url');
 
 var readyToLoadNext = true;
 var firstArchiveView = null;
@@ -46,17 +48,32 @@ function loadNextArchive(opts) {
     var archive = new Archive(opts);
     archiveView = prepareArchiveView(archive);
 
+    var q = queryString.parse(url.parse(location.href).query);
+
+    console.log(q);
+
     archive.bind('reset', function() {
+      if(q.format === "json") {
+        // We export a JSON file!
+        window.location = "data:application/json;base64," + window.btoa(JSON.stringify(archive.toJSON()));   
+      }   
+      else {
         archive.each(function(message) {
-            archiveView.appendNew(message);
+          archiveView.appendNew(message);
         });
         archiveView.render();
         // Ready to load next.
         readyToLoadNext = true;
         prepareNextLoadIfNeeded();
+      }  
     });
     
-    archive.load(50);
+    if(q.n) {
+      archive.load(parseInt(q.n));      
+    }
+    else {
+      archive.load(50);
+    }
     return archiveView;
 }
 
