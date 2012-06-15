@@ -1,3 +1,4 @@
+var assert = require('assert');
 var Plugins = require('../../plugins.js').Plugins;
 var Generic = require('../../plugins/generic.js').Generic;
 
@@ -14,7 +15,7 @@ describe('Generic', function(){
         it('should return true', function() {
             var docStub = {};
             var b = new Generic(Plugins);
-            b.onSubscriptionPage(docStub).should.be.true;
+            assert(b.onSubscriptionPage(docStub));
         });
     });
     describe('hijack', function() {
@@ -25,10 +26,10 @@ describe('Generic', function(){
             var d = new Generic(Plugins);
             d.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                true.should.be.false; // Generic plugin does not have a way to list subscriptions
+                assert(false); // Generic plugin does not have a way to list subscriptions
             }, function(count) {
                 // Called when subscribed to many feeds.
-                count.should.equal(0);
+                assert(count === 0);
                 done();
             });
         });

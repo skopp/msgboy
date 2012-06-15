@@ -1,3 +1,4 @@
+var assert = require('assert');
 var Plugins = require('../../plugins.js').Plugins;
 var History = require('../../plugins/history.js').History;
 
@@ -14,7 +15,7 @@ describe('History', function(){
         it('should return true', function() {
             var docStub = {};
             var b = new History(Plugins);
-            b.onSubscriptionPage(docStub).should.be.true;
+            assert(b.onSubscriptionPage(docStub));
         });
     });
     describe('hijack', function() {
@@ -26,11 +27,11 @@ describe('History', function(){
             var b = new History(Plugins);
             b.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
+                assert(feed.url);
+                assert(feed.title !== null);
             }, function(count) {
                 // Called when subscribed to many feeds.
-                count.should.not.equal(0);
+                assert(count > 0);
                 done();
             });
         });

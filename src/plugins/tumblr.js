@@ -24,12 +24,11 @@ Tumblr = function (Plugins) {
 
 
     this.listSubscriptions = function (callback, done) {
-        this.listSubscriptionsPage(1, 0, callback, done);
+        this.listSubscriptionsPage(0, 0, callback, done);
     };
 
     this.listSubscriptionsPage = function (page, subscriptions, callback, done) {
-        
-        Plugins.httpGet("http://www.tumblr.com/following/page/" + page, function(data) {
+        Plugins.httpGet("http://www.tumblr.com/following/" + page, function(data) {
             // That was successful!
             var fragment = Plugins.buildFragmentDocument(data);
             var links = fragment.querySelectorAll(".follower .name a");
@@ -41,8 +40,9 @@ Tumblr = function (Plugins) {
                 });
                 subscriptions += 1;
             }
-            if (links.length > 0) {
-                this.listSubscriptionsPage(page + 1, subscriptions, callback, done);
+            
+            if (links.length >= 25) {
+                this.listSubscriptionsPage(page + links.length, subscriptions, callback, done);
             } else {
                 done(subscriptions);
             }

@@ -6,7 +6,7 @@ require('./tests/models/database.js');
 require('./tests/models/inbox.js');
 require('./tests/models/message.js');
 require('./tests/feediscovery.js');
-// require('./tests/plugins.js');
+require('./tests/plugins.js');
 // require('./tests/views/.js');
 
 describe('Tests', function(){

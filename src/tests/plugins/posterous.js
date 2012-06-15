@@ -1,3 +1,4 @@
+var assert = require('assert');
 var Plugins = require('../../plugins.js').Plugins;
 var Posterous = require('../../plugins/posterous.js').Posterous;
 
@@ -18,7 +19,7 @@ describe('Posterous', function(){
                 }
             };
             var b = new Posterous(Plugins);
-            b.onSubscriptionPage(docStub).should.be.true;
+            assert(b.onSubscriptionPage(docStub));
         });
     });
     describe('hijack', function() {
@@ -30,11 +31,11 @@ describe('Posterous', function(){
             var b = new Posterous(Plugins);
             b.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
-                feed.url.should.exist;
-                feed.title.should.exist;
+                assert(feed.url);
+                assert(feed.title !== null);
             }, function(count) {
                 // Called when subscribed to many feeds.
-                count.should.not.equal(0);
+                assert(count > 0);
                 done();
             });
         });

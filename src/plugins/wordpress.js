@@ -27,8 +27,21 @@ var Wordpress = function (Plugins) {
     };
 
     this.listSubscriptions = function (callback, done) {
-        // Looks like WP doesn't allow us to export the list of followed blogs. Boooh.
-        done(0);
+      var subscriptions = 0;
+      Plugins.httpGet('http://wordpress.com/wp-admin/admin-ajax.php?action=wpcom_load_template&template=subscriptions.manage.blogs', function(data) {
+        var fragment = Plugins.buildFragmentDocument(JSON.parse(data).content);
+        var links = fragment.querySelectorAll(".blogurl");
+        for(var i = 0; i < links.length; i++) {
+            var link = links[i];
+            callback({
+                url: link.getAttribute("href") + "?feed=atom",
+                title: link.innerText
+            });
+            subscriptions += 1;
+        }
+        done(subscriptions);
+        
+      });
     };
 };
 
