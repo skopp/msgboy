@@ -250,7 +250,6 @@ Msgboy.bind("loaded:background", function () {
                       version: 100
                     });
                   }
-                  console.log(total);
               });
             }
           });
@@ -394,12 +393,42 @@ Msgboy.bind("loaded:background", function () {
     
     // When one of the clients asks for discovery on a feed.
     Msgboy.bind('feediscovery', function(params, _sendResponse) {
-      Msgboy.log.debug("request", "feediscovery");
+      Msgboy.log.debug("request", "feediscovery", params);
       feediscovery.get(params.url, function (links) {
-        _sendResponse(links);
+        if(params.checkSubscription && links.length !== 0) {
+          
+          var done = _.after(links.length, function() {
+            console.log(links);
+            _sendResponse(links);
+          }.bind(this));
+
+          // For each Link, we need to check if there is a subscription
+          _.each(links, function(l){
+            var subscription = new Subscription({id: l.href});
+            subscription.fetch({
+              success: function() {
+                if(subscription.get('state') === "subscribed") {
+                  l.subscribed = true;
+                  done();
+                }
+                else {
+                  l.subscribed = false;
+                  done();
+                }
+              },
+              error: function() {
+                l.subscribed = false;
+                done();
+              }
+            });
+          });
+        }
+        else {
+          _sendResponse(links);
+        }
       });
     });
-    
+
     // Plugins management for those who use the Chrome API to subscribe in background.
     for(var j = 0; j < Plugins.all.length; j++) {
         var plugin = Plugins.all[j];
