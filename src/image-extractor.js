@@ -101,7 +101,8 @@ imageExtractor.prototype.extractLargestImageFromBlob = function(blob, base, call
 }
 
 imageExtractor.prototype.extractImageFromLink = function(link, callback) {
-  this.options.path += querystring.stringify({url: link});
+  this.options.path = "/?" + querystring.stringify({url: link});
+  console.log(this.options.path);
   http.get(this.options, function (res) {
     var data = "";
     res.on('data', function (buf) {
@@ -116,12 +117,14 @@ imageExtractor.prototype.extractImageFromLink = function(link, callback) {
 imageExtractor.prototype.extract = function(blob, link, callback) {
   // We first try to extract from the Blob,
   this.extractLargestImageFromBlob(blob, link, function(img){
+    console.log("Extracting image for", link, "with blob and found", img);
     if(img) {
       callback(img);
     }
     else {
       // And if we can't, we use http://image-extrator.appspot.com/ 
       this.extractImageFromLink(link, function(img) {
+        console.log("Extracting image for", link, "with url and found", img);
         callback(img);
       })
     }
