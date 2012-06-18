@@ -10,7 +10,7 @@ var ArchiveView = Backbone.View.extend({
     events: {
     },
     initialize: function () {
-        _.bindAll(this, 'appendNew', 'prepareNew', 'render');        
+        _.bindAll(this, 'appendNew', 'prepareNew', 'render');   
     },
     prepareNew: function (message) {
         message.bind('up-ed', function() {

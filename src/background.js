@@ -10,6 +10,7 @@ var Subscription    = require('./models/subscription.js').Subscription;
 var Feediscovery    = require('./feediscovery.js').Feediscovery;
 var Connection      = require('./connection.js').Connection;
 var browser         = require('./browsers.js').browser;
+var imageExtractor  = require('./image-extractor.js').imageExtractor;
 
 var Blogger = require('./plugins/blogger.js').Blogger;
 new Blogger(Plugins);
@@ -38,6 +39,9 @@ var currentNotification = null;
 var messageStack = [];
 var connection = new Connection();
 var endpoint = "http://stream.msgboy.com";
+var imageExtractor = new imageExtractor();
+var feediscovery = new Feediscovery();
+
 
 // Connects the XMPP Client
 // It also includes a timeout that tries to reconnect when we could not connect in less than 1 minute.
@@ -79,7 +83,7 @@ var subscribe = function (url, doDiscovery, force, callback) {
     // First, let's check if we need to perform discovery on that. 
     if(doDiscovery) {
         // Well let's do disco and then recurse!
-        Feediscovery.get(url, function (links) {
+        feediscovery.get(url, function (links) {
             for(var i = 0; i < links.length; i++) {
                 var link = links[i];
                 subscribe(link.href, false, force, callback);
@@ -150,95 +154,6 @@ var resumeSubscriptions = function () {
 };
 exports.resumeSubscriptions = resumeSubscriptions;
 
-// Gets the size of an image based on src
-var imgSize = function(src, mainLink, callback) {
-    var height = 0, width = 0, img = null;
-    var done = null, timeout = null, loadImg = null;
-    var parsed = Url.parse(src);
-    var here = Url.parse(window.location.toString());
-    var base = Url.parse(mainLink);
-    
-    done = function(s, height, width) {
-        img = null;
-        clearTimeout(timeout);
-        callback(s, height, width);
-    }
-    
-    timeout = setTimeout(function() {
-        done(src, 0, 0);
-    }, 3000); // We allow for 3 seconds to extract the image.
-    
-    loadImg = function(s) {
-        img = new Image();
-        img.onload = function() {
-            done(s, img.height, img.width);
-        }
-        img.src = s;
-    }
-    
-    if(typeof parsed.host === "undefined" || (parsed.host === here.host && parsed.protocol === here.protocol)) {
-        if(typeof base.host === "undefined") {
-            done(src, 0, 0);
-        } 
-        else {
-            var abs = Url.resolve(base, parsed.path);
-            loadImg(abs);
-        }
-    } 
-    else {
-        loadImg(src);
-    }
-}
-exports.imgSize = imgSize;
-
-// Extracts the largest image of an HTML content
-var extractLargestImage = function(blob, mainLink, callback) {
-    var container = document.createElement("div");
-    var largestImg = null;
-    var largestImgSize = null;
-    var content = null;
-    var imgLoaded = null;
-    var images = [];
-    var done = function() {
-        container.innerHTML = "";
-        imgLoaded = null;
-        images.length = 0;
-        callback(largestImg);
-    } 
-
-    container.innerHTML = blob;
-    images = container.getElementsByTagName("img");
-
-    if(images.length > 0) {
-        // Let's try to extract the image for this message.
-        imgLoaded = _.after(images.length, function() {
-            done();
-        });
-
-        _.each(images, function(image) {
-            if(typeof image.src === "undefined" || image.src === "") {
-                imgLoaded();
-            }
-            else {
-                imgSize(image.src, mainLink || "", function(src, height, width) {
-                    if((!largestImgSize || largestImgSize < height * width) && 
-                    !(height === 250 && width === 300) && 
-                    !(height < 100  || width < 100) &&
-                    !src.match('/doubleclick.net/')) {
-                        largestImgSize = height * width;
-                        largestImg = src;
-                    }
-                    imgLoaded();
-                });
-            }
-        });
-    }
-    else {
-        // No image!
-        done();
-    }
-}
-exports.extractLargestImage = extractLargestImage;
 
 // Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
 var rewriteOutboundUrl = function(url) {
@@ -268,7 +183,7 @@ connection.on('ready', function() {
 connection.on('notification', function (notification) {
     Msgboy.log.debug("Notification received " + notification.source.url);
     var message = new Message(notification);
-    extractLargestImage(message.get('text'), message.get('mainLink'), function(largestImg) {
+    imageExtractor.extract(message.get('text'), message.get('mainLink'), function(largestImg) {
         var attributes = {};
 
         if(largestImg) {
@@ -335,7 +250,6 @@ Msgboy.bind("loaded:background", function () {
                       version: 100
                     });
                   }
-                  console.log(total);
               });
             }
           });
@@ -477,6 +391,44 @@ Msgboy.bind("loaded:background", function () {
         });
     });
     
+    // When one of the clients asks for discovery on a feed.
+    Msgboy.bind('feediscovery', function(params, _sendResponse) {
+      Msgboy.log.debug("request", "feediscovery", params);
+      feediscovery.get(params.url, function (links) {
+        if(params.checkSubscription && links.length !== 0) {
+          
+          var done = _.after(links.length, function() {
+            console.log(links);
+            _sendResponse(links);
+          }.bind(this));
+
+          // For each Link, we need to check if there is a subscription
+          _.each(links, function(l){
+            var subscription = new Subscription({id: l.href});
+            subscription.fetch({
+              success: function() {
+                if(subscription.get('state') === "subscribed") {
+                  l.subscribed = true;
+                  done();
+                }
+                else {
+                  l.subscribed = false;
+                  done();
+                }
+              },
+              error: function() {
+                l.subscribed = false;
+                done();
+              }
+            });
+          });
+        }
+        else {
+          _sendResponse(links);
+        }
+      });
+    });
+
     // Plugins management for those who use the Chrome API to subscribe in background.
     for(var j = 0; j < Plugins.all.length; j++) {
         var plugin = Plugins.all[j];

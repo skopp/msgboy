@@ -1,4 +1,4 @@
-var should = require('chai').should();
+var assert = require('assert');
 var Plugins = require('../../plugins.js').Plugins;
 var Wordpress = require('../../plugins/wordpress.js').Wordpress;
 
@@ -19,7 +19,7 @@ describe('Wordpress', function(){
                 }
             }
             var w = new Wordpress(Plugins);
-            w.onSubscriptionPage(docStub).should.equal(true);
+            assert(w.onSubscriptionPage(docStub));
         });
     });
     describe('hijack', function() {
@@ -30,9 +30,11 @@ describe('Wordpress', function(){
             var w = new Wordpress(Plugins);
             w.listSubscriptions(function(feed) {
                 // This is the susbcribe function. We should check that each feed has a url and a title that are not empty.
+                assert(feed.url);
+                assert(feed.title !== null);
             }, function(count) {
                 // Called when subscribed to many feeds.
-                count.should.not.equal(0);
+                assert(count > 0);
                 done();
             });
         });

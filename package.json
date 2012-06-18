@@ -2,16 +2,16 @@
 ,"version": "0.0.0"
 ,"dependencies": {
      "underscore": "*"
-    ,"jquery": "*"
-    ,"backbone": "*"
     ,"browserify": "*"
+    ,"jquery": "*"
     ,"br-jquery": "*"
-    ,"socket.io-client": "*"
-    ,"backbone-indexeddb": "*"
+    ,"backbone": "*"
+    ,"feediscovery": "*"
     ,"backbone-browserify": "*"
-    ,"sanitizer": "*"
+    ,"backbone-indexeddb": "*"
+    ,"socket.io-client": "*"
+    ,"http-browserify": "*"
     ,"mocha": "*"
-    ,"chai": "*"
 }
 ,"engine": "node >=0.4.0"
 ,"scripts": {"test": "mocha"}

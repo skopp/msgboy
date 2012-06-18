@@ -15,9 +15,9 @@ var Archive = Backbone.Collection.extend({
             this.lowerBound = opts.lowerBound;
         }
         this.model = require('./message.js').Message; // This avoids recursion in requires
-        this.bind('reset', this.computeRelevance);
+        this.bind('reset', this.computePercentiles);
     },
-    computeRelevance: function() {
+    computePercentiles: function() {
         var relevances = this.pluck('relevance').sort();
         this.percentiles = [
             relevances[parseInt(relevances.length/8) - 1], 

@@ -29,24 +29,40 @@ GoogleReader = function (Plugins) {
     };
 
     this.listSubscriptions = function (callback, done) {
-        var feedCount = 0;
         Plugins.httpGet("http://www.google.com/reader/subscriptions/export", function(data) {
             // That was successful!
             var fragment = Plugins.buildFragmentDocument(data);
-            var outlines = fragment.querySelectorAll("outline");
-            for(var i = 0; i < outlines.length; i++) {
-                var line = outlines[i];
-                feedCount += 1;
-                callback({
-                    url:  line.getAttribute("xmlUrl"),
-                    title: line.getAttribute("title")
-                });
-            }
-            done(feedCount);
-        }, function() {
+            var feedCount = 0;
+            this.findUrlsInFragment(fragment, function(feed) {
+              feedCount += 1;
+              callback(feed);
+            }, function() {
+              done(feedCount);
+            });
+        }.bind(this), function() {
             // That was a fail :()
         });
     };
+    
+    this.findUrlsInFragment = function(fragment, callback, done) {
+      var outlines = fragment.querySelectorAll("outline");
+      for(var i = 0; i < outlines.length; i++) {
+          var line = outlines[i];
+          if(line.getAttribute("xmlUrl")) {
+            callback({
+                url:  line.getAttribute("xmlUrl"),
+                title: line.getAttribute("title")
+            });
+          }
+          else {
+            this.findUrlsInFragment(line, callback, function() {
+              // Not much
+            });
+          }
+      }
+      done();
+    }
+    
 };
 
 exports.GoogleReader = GoogleReader;

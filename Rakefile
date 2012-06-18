@@ -87,7 +87,7 @@ def manifest(destination = "")
   end
 end
 
-build_tasks = [:frontend, :background] #, :tests]
+build_tasks = [:frontend, :background, :tests]
 
 task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked'] + [:'build:sass']
 namespace :build do
@@ -95,7 +95,7 @@ namespace :build do
     desc "Building #{k}.js"
     task k do
       puts "Building #{k}.js"
-      `browserify --require 'br-jquery' --require 'backbone-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
+      `browserify --require 'http-browserify' --require 'br-jquery' --require 'backbone-browserify' --alias 'http:http-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
     end
   end
   desc "Building run_plugins.js"

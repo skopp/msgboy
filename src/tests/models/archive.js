@@ -1,8 +1,8 @@
+var assert =  require('assert');
 var _ = require('underscore');
 var msgboyDatabase = require('../../models/database.js').msgboyDatabase;
 var Message = require('../../models/message.js').Message;
 var Archive = require('../../models/archive.js').Archive;
-var should = require('chai').should();
 
 describe('Archive', function(){
     before(function(done) {
@@ -35,9 +35,6 @@ describe('Archive', function(){
         m1.save();
     });
 
-    beforeEach(function() {
-    });
-
     describe('comparator', function() {
         it('should sort all the messages by createdAt', function(done) {
             var archive =  new Archive();
@@ -56,60 +53,59 @@ describe('Archive', function(){
             var prev = null;
             archive.each(function(m) {
                 if(prev) {
-                    m.get('createdAt').should.be.below(prev.get('createdAt'));
+                    assert(m.get('createdAt') <= prev.get('createdAt'));
                 }
                 prev = m;
             });
             done();
         });
-    })
-
-    describe('next', function() {
-        it('should add messages one by one', function(done) {
-            var archive =  new Archive();
-            archive.model = Message;
-            var count = 0;
-            var limit = 3;
-            archive.bind('add', function(message) {
-                count += 1;
-                if(count === limit) {
-                    done();
-                }
-            })
-            archive.next(limit);
-        });
-
-        it('should stick to the conditions on messages added', function(done) {
-            var archive =  new Archive();
-            archive.model = Message;
-            var count = 0;
-            var limit = 3;
-            archive.bind('add', function(message) {
-                count += 1;
-                if(count === limit) {
-                    _.each(archive.pluck('sourceHost'), function(h) {
-                        h.should.equal('superfeedr.com');
-                    });
-                    done();
-                }
-            })
-            archive.next(limit, {sourceHost: "superfeedr.com"});
-        });
     });
-
+    
     describe('forFeed', function() {
         it('should return all the messages for a given feed when called with forFeed', function(done) {
             var archive =  new Archive();
-            archive.model = Message;
             archive.bind('reset', function() {
-                archive.length.should.equal(3);
-                archive.at(0).get('title').should.equal("Fourth Message");
-                archive.at(1).get('title').should.equal("Third Message");
-                archive.at(2).get('title').should.equal("First Message");
+                assert.equal(archive.length, 3);
+                assert.equal(archive.at(0).get('title'), "Fourth Message");
+                assert.equal(archive.at(1).get('title'), "Third Message");
+                assert.equal(archive.at(2).get('title'), "First Message");
                 done();
             })
             archive.forFeed('http://superfedr.com/dummy.xml');
         });
+    });
+
+    describe('load', function() {
+      it('should fetch the right number of messages in the range')
+    });
+    
+    describe('computePercentiles', function() {
+      it('should compute the percentiles for 12.5%, 66% and 87.5%', function() {
+        var archive =  new Archive();
+        var m0 = new Message({relevance: 0.9});
+        var m1 = new Message({relevance: 0.6});
+        var m2 = new Message({relevance: 0.8});
+        var m3 = new Message({relevance: 0.3});
+        var m4 = new Message({relevance: 0.1});
+        var m5 = new Message({relevance: 0.7});
+        var m6 = new Message({relevance: 0.4});
+        var m7 = new Message({relevance: 0.4});
+        var m8 = new Message({relevance: 0.2});
+        var m9 = new Message({relevance: 0.1});
+        archive.add(m0);
+        archive.add(m1);
+        archive.add(m2);
+        archive.add(m3);
+        archive.add(m4);
+        archive.add(m5);
+        archive.add(m6);
+        archive.add(m7);
+        archive.add(m8);
+        archive.add(m9);
+        
+        archive.computePercentiles();
+        assert.deepEqual(archive.percentiles, [0.1, 0.7, 0.8]);
+      });
     });
 
 });

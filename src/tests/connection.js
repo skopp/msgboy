@@ -1,4 +1,3 @@
-var should = require('chai').should();
 var Connection = require('../connection.js').Connection;
 var endpoint = "http://stream.msgboy.com";
 

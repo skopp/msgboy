@@ -52,7 +52,7 @@ var Message = Backbone.Model.extend({
                     // dEfaults
                     params.sourceLink = params.sourceLink || ""; // Dang. What is it?
                     params.sourceHost = params.sourceHost || "";
-                    for(j = 0; j < params.source.links.alternate.length; j++) {
+                    for(var j = 0; j < params.source.links.alternate.length; j++) {
                         var l = params.source.links.alternate[j];
                         if(l.type === "text/html") {
                             params.sourceLink = l.href;
