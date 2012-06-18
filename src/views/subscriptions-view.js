@@ -9,6 +9,7 @@ var Plugins = require('../plugins.js').Plugins;
 
 var SubscriptionView = Backbone.View.extend({
     tagName:  "tr",
+    className: "subscription",
     events: {
         "click .btn": "toggleSubscription"
     },
@@ -61,12 +62,12 @@ var SubscriptionView = Backbone.View.extend({
 
 var SubscriptionsView = Backbone.View.extend({
     events: {
-        "click #opml": "opmlExport",
-        'click #showall': "showAll"
+        'click #opml': 'opmlExport',
+        'change #selectState': 'select'
     },
 
     initialize: function () {
-        _.bindAll(this, 'showOne', 'render', 'opmlExport', 'showAll');
+        _.bindAll(this, 'showOne', 'render', 'opmlExport', 'select');
         // Loading the subscriptions.
         this.collection = new Subscriptions();
         this.collection.bind('reset', this.render, this);
@@ -102,7 +103,8 @@ var SubscriptionsView = Backbone.View.extend({
     },
     
     render: function() {
-        this.collection.each(this.showOne);
+      this.$('#subscriptions tr.subscription').empty();
+      this.collection.each(this.showOne);
     },
     
     opmlExport: function() {
@@ -114,10 +116,10 @@ var SubscriptionsView = Backbone.View.extend({
         window.location = "data:application/xml;base64," + window.btoa(opml);   
     },
     
-    showAll: function() {
+    select: function(evt) {
       this.collection.reset();
       this.collection.fetch( {
-        conditions: {state: "unsubscribed"},
+        conditions: {state: this.$('#selectState').val()},
       });
     }
 });
