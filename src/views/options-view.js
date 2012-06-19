@@ -9,14 +9,14 @@ var browser = require('../browsers.js').browser;
 var OptionsView = Backbone.View.extend({
     events: {
         "change #relevance": "adjustRelevance",
-        "click #resetRusbcriptions": "resetRusbcriptions",
+        "click #resetSubscriptions": "resetSubscriptions",
         "click #pinMsgboy": "pinMsgboy",
         "click #msgboySubscribeHandler": "registerHandler",
         "change #autoRefresh": "setAutoRefresh"
     },
 
     initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetRusbcriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh");
+        _.bindAll(this, "render", "adjustRelevance", "resetSubscriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -47,7 +47,7 @@ var OptionsView = Backbone.View.extend({
         this.saveModel();
     },
 
-    resetRusbcriptions: function (event) {
+    resetSubscriptions: function (event) {
         var modalHtml = [
         '<div id="modal-options" class="modal backdrop fade">',
             '<div class="modal-header">',
@@ -68,7 +68,7 @@ var OptionsView = Backbone.View.extend({
         });
         modal.modal('show');
         browser.emit({
-            signature:"resetRusbcriptions",
+            signature:"resetSubscriptions",
             params: []
         }, function (response) {
             // Nothing to do.

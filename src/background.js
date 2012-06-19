@@ -154,7 +154,6 @@ var resumeSubscriptions = function () {
 };
 exports.resumeSubscriptions = resumeSubscriptions;
 
-
 // Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
 var rewriteOutboundUrl = function(url) {
     var parsed = Url.parse(url);
@@ -307,6 +306,7 @@ Msgboy.bind("loaded:background", function () {
         Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
     
+    // Registers a new user
     Msgboy.bind('register', function (params, _sendResponse) {
         Msgboy.log.debug("request", "register", params.username);
         Msgboy.inbox.bind("new", function() {
@@ -317,6 +317,7 @@ Msgboy.bind("loaded:background", function () {
         Msgboy.inbox.setup(params.username, params.token);
     });
 
+    // Subscribe to a feed.
     Msgboy.bind('subscribe', function (params, _sendResponse) {
         Msgboy.log.debug("request", "subscribe", params.url);
         // We first need to look at params and see if the doDiscovery flag is set. If so, we first need to perform discovery
@@ -327,6 +328,7 @@ Msgboy.bind("loaded:background", function () {
         });
     });
 
+    // Unsubscribe from a feed.
     Msgboy.bind('unsubscribe', function (params, _sendResponse) {
         Msgboy.log.debug("request", "unsubscribe", params.url);
         unsubscribe(params.url, function (result) {
@@ -336,12 +338,14 @@ Msgboy.bind("loaded:background", function () {
         });
     });
 
+    // Show a notification
     Msgboy.bind('notify', function (params, _sendResponse) {
         Msgboy.log.debug("request", "notify", params);
         notify(params, true);
         // Nothing to do.
     });
 
+    // Notifications are ready to be displayed
     Msgboy.bind('notificationReady', function (params, _sendResponse) {
         Msgboy.log.debug("request", "notificationReady");
         currentNotification.ready = true;
@@ -356,6 +360,7 @@ Msgboy.bind("loaded:background", function () {
         }
     });
 
+    // Open a new tab.
     Msgboy.bind('tab', function (params, _sendResponse) {
         Msgboy.log.debug("request", "tab", params.url);
         params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
@@ -374,8 +379,8 @@ Msgboy.bind("loaded:background", function () {
     });
 
     // When reloading the inbox is needed (after a change in settings eg)
-    Msgboy.bind('resetRusbcriptions', function (params, _sendResponse) {
-        Msgboy.log.debug("request", "resetRusbcriptions");
+    Msgboy.bind('resetSubscriptions', function (params, _sendResponse) {
+        Msgboy.log.debug("request", "resetSubscriptions");
         Plugins.importSubscriptions(function (subs) {
             subscribe(subs.url, subs.doDiscovery, false, function () {
                 // Cool. Not much to do.
