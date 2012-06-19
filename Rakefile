@@ -83,7 +83,7 @@ def manifest(destination = "")
   manifest[:version] = version # Adds the version
   # Now, write the manifest.json
   File.open("manifest.json","w") do |f|
-    f.write(JSON.generate(manifest))
+    f.write(JSON.pretty_generate(manifest))
   end
 end
 
