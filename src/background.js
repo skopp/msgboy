@@ -185,14 +185,6 @@ var rewriteOutboundUrl = function(url) {
 }
 exports.rewriteOutboundUrl = rewriteOutboundUrl;
 
-connection.on('connected', function() {
-    console.log('Connected');
-});
-
-connection.on('disconnected', function() {
-    console.log('Disconnected');
-});
-
 connection.on('ready', function() {
   resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
 });

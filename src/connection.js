@@ -5,10 +5,9 @@ var util = require('util')
 
 
 var ioOptions ={
-  'force new connection': true,
-  'reconnect': true,
-  'reconnection limit': 1000 * 60 * 10,
-  'max reconnection attempts': 100
+  'max reconnection attempts' : 100000,
+  'reconnection limit'        : 1000 * 60 * 10,
+  'reconnect'                 : true,
 };
 
 Connection = function() { 
@@ -21,16 +20,17 @@ util.inherits(Connection, EventEmitter);
 
 Connection.prototype.connect = function(endpoint, login, password) {
   this._socket = io.connect(endpoint, ioOptions);
+  window.socket = this._socket;
 
   // Socket Open!
   this._socket.on('connect', function() {
-    this.emit('connected');
+    console.log('connect');
     this._socket.emit('auth', { login: login, password: password });
   }.bind(this));
 
   // Socket Closed
-  this._socket.on('disconnect', function() {
-    this.emit('disconnected');
+  this._socket.on('disconnect', function(e) {
+    console.log('disconnect', e);
     this._ready = false;
   }.bind(this));
 
@@ -69,6 +69,37 @@ Connection.prototype.connect = function(endpoint, login, password) {
     this.nextRequest();
     this.nextRequest();
   }.bind(this));
+
+  // Socket connecting
+  this._socket.on('connecting', function(transport) {
+    console.log('connecting', transport);
+  }.bind(this));
+
+  // Socket connecting
+  this._socket.on('connect_failed', function() {
+    console.log('connect_failed');
+  }.bind(this));
+
+  // Socket closed
+  this._socket.on('close', function() {
+    console.log('close');
+  }.bind(this));
+  
+  // Socket reconnect
+  this._socket.on('reconnect', function(transport_type, reconnectionAttempts) {
+    console.log('reconnect', transport_type, reconnectionAttempts);
+  }.bind(this));
+
+  // Socket reconnect
+  this._socket.on('reconnecting', function(reconnectionDelay, reconnectionAttempts) {
+    console.log('reconnecting', reconnectionDelay, reconnectionAttempts);
+  }.bind(this));
+
+  // Socket reconnect
+  this._socket.on('reconnect_failed', function() {
+    console.log(reconnect_failed);
+  }.bind(this));
+
 }
 
 Connection.prototype.nextRequest = function() {
