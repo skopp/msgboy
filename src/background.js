@@ -139,20 +139,38 @@ exports.unsubscribe = unsubscribe;
 
 // Makes sure there is no 'pending' susbcriptions.
 var resumeSubscriptions = function () {
-    var subscriptions = new Subscriptions();
-    subscriptions.bind("add", function (subs) {
-        Msgboy.log.debug("subscribing to", subs.id);
-        connection.subscribe(subs.id, function (result, feed) {
+  // And let's check the regular subscriptions.
+  var subscriptions = new Subscriptions();
+  subscriptions.bind("reset", function (subs) {
+    if(subs.length === 0) {
+      // No subscriptions! Let's try to find some...
+      Msgboy.trigger("resetSubscriptions");
+      setTimeout(function () {
+        resumeSubscriptions(); // Let's retry in 10 minutes.
+        }, 1000 * 60 * 10);
+      }
+      else {
+        // Great, we have subscriptions... Let's just check if some need to be resumed, because they're pending
+        // Let's check the pending subscriptions.
+        var pending = new Subscriptions();
+        pending.bind("add", function (subs) {
+          Msgboy.log.debug("subscribing to", subs.id);
+          connection.subscribe(subs.id, function (result, feed) {
             Msgboy.log.debug("subscribed to", subs.id);
             subs.setState("subscribed");
+          });
         });
-    });
-    subscriptions.pending();
-    setTimeout(function () {
-        resumeSubscriptions(); // Let's retry in 10 minutes.
-    }, 1000 * 60 * 10);
-};
-exports.resumeSubscriptions = resumeSubscriptions;
+        pending.pending();
+        setTimeout(function () {
+          resumeSubscriptions(); // Let's retry in 10 minutes.
+          }, 1000 * 60 * 10);
+        }
+      });
+      // Go fetch them now.
+      subscriptions.fetch({
+        conditions: {state: "subscribed"},
+      });
+    };
 
 // Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
 var rewriteOutboundUrl = function(url) {
@@ -176,7 +194,7 @@ connection.on('disconnected', function() {
 });
 
 connection.on('ready', function() {
-    console.log('Ready');
+  resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
 });
 
 connection.on('notification', function (notification) {
@@ -237,9 +255,9 @@ Msgboy.bind("loaded:background", function () {
         // Check for migrations?
         if(typeof(Msgboy.inbox.attributes.version) === "undefined" || Msgboy.inbox.attributes.version < 100) {
           // Version 100 requires a switch from XMPP to PubSubHubbub based subscriptions
-          var subscriptions = new Subscriptions();
+          var currentSubscriptions = new Subscriptions();
 
-          subscriptions.bind("reset", function (subs) {
+          currentSubscriptions.bind("reset", function (subs) {
             var total = subs.length;
             for(var i = 0; i < subs.length; i++ ) {
               subscribe(subs.models[i].id, false, true, function () {
@@ -253,35 +271,10 @@ Msgboy.bind("loaded:background", function () {
             }
           });
           
-          subscriptions.fetch({
+          currentSubscriptions.fetch({
               conditions: {state: "subscribed"},
           });
         }
-    });
-
-    // When the inbox is new.
-    Msgboy.inbox.bind("new", function () {
-        Msgboy.log.debug("New Inbox");
-        Msgboy.trigger("inbox:new"); // Let's indicate all msgboy susbcribers that it's the case!
-        
-        Msgboy.bind("connected", function(){
-            // And import all plugins.
-            Plugins.importSubscriptions(function (subs) {
-                subscribe(subs.url, subs.doDiscovery, false, function () {
-                    // Cool. Not much to do.
-                });
-            }, 
-            function(plugin, subscriptionsCount) {
-                // Called when done with one plugin
-                Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
-                Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
-            },
-            function(subscriptionsCount) {
-                // Called when done with all plugins
-                Msgboy.trigger("plugins:imported", subscriptionsCount); // Let's indicate all msgboy susbcribers that it's the case!
-                Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-            });
-        });
     });
     
     // When there is no such inbox there.
@@ -290,12 +283,6 @@ Msgboy.bind("loaded:background", function () {
         window.open("http://msgboy.com/session/new?ext=" + browser.msgboyId());
     });
     
-    // Triggered when connected
-    Msgboy.bind("connected", function() {
-        // When a new notification was received from XMPP line.
-        resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
-    });
-
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     browser.listen(function (_request, _sender, _sendResponse) {
         Msgboy.trigger(_request.signature, _request.params, _sendResponse);
@@ -388,10 +375,12 @@ Msgboy.bind("loaded:background", function () {
         }, 
         function(plugin, subscriptionsCount) {
             // Called when done with one plugin
+            Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
             Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
         },
         function(subscriptionsCount) {
             // Called when done with all plugins
+            Msgboy.trigger("plugins:imported", subscriptionsCount); // Let's indicate all msgboy susbcribers that it's the case!
             Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
         });
     });
