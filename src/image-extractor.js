@@ -102,14 +102,18 @@ imageExtractor.prototype.extractLargestImageFromBlob = function(blob, base, call
 
 imageExtractor.prototype.extractImageFromLink = function(link, callback) {
   this.options.path = "/?" + querystring.stringify({url: link});
-  console.log(this.options.path);
   http.get(this.options, function (res) {
     var data = "";
     res.on('data', function (buf) {
       data += buf;
     });
     res.on('end', function () {
-      callback(data)
+      if(res.statusCode === 200) {
+        callback(data); //
+      }
+      else {
+        callback(""); // Nope. Probably out of quota!
+      }
     });
   });
 }
