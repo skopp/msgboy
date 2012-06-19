@@ -277,6 +277,12 @@ Msgboy.bind("loaded:background", function () {
         }
     });
     
+    // When the inbox is new.
+    Msgboy.inbox.bind("new", function () {
+      Msgboy.log.debug("New Inbox");
+      Msgboy.trigger("inbox:new"); // Let's indicate all msgboy susbcribers that it's the case!
+    });
+    
     // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
         // Ok, no such inbox... So we need to create an account!
@@ -392,7 +398,6 @@ Msgboy.bind("loaded:background", function () {
         if(params.checkSubscription && links.length !== 0) {
           
           var done = _.after(links.length, function() {
-            console.log(links);
             _sendResponse(links);
           }.bind(this));
 
