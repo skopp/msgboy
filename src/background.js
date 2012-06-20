@@ -216,6 +216,7 @@ connection.on('notification', function (notification) {
 
 Msgboy.bind("loaded:background", function () {
     Msgboy.inbox = new Inbox();
+    Msgboy.connection = connection;
     
     MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
     
