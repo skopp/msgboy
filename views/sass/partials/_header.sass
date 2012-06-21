@@ -40,23 +40,22 @@ header
     position: relative
     margin-left: 10px
     z-index: 1000
-    &.options
-      background: top left no-repeat url(../images/gear-help.png)
+  .nav 
+    li
+      width: 28px
+      height: 26px
+    a
+      background-color: red
       text-indent: -9999px
       top: 5px
       width: 20px
-      &:hover
+      &.subscriptions
+        background: top left no-repeat url(../images/subscriptions.png)
+        &:hover
+          background: top left no-repeat url(../images/subscriptions.png)
+      &.options
         background: top left no-repeat url(../images/gear-help.png)
-    &.help
-      background: top left no-repeat url(../images/gear-help.png)
-      text-indent: -9999px
-      top: 5px
-      background-position: -20px 0
-      margin-left: 5px
-      width: 20px
-      &:hover
-        background: top left no-repeat url(../images/gear-help.png)
-        background-position: -20px 0
-  .nav li
-    width: 28px
-    height: 26px
+        &:hover
+          background: top left no-repeat url(../images/gear-help.png)
+      
+    

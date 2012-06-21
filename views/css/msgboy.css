@@ -4486,30 +4486,27 @@ header a {
   margin-left: 10px;
   z-index: 1000;
 }
-header a.options {
-  background: top left no-repeat url(../images/gear-help.png);
-  text-indent: -9999px;
-  top: 5px;
-  width: 20px;
-}
-header a.options:hover {
-  background: top left no-repeat url(../images/gear-help.png);
-}
-header a.help {
-  background: top left no-repeat url(../images/gear-help.png);
-  text-indent: -9999px;
-  top: 5px;
-  background-position: -20px 0;
-  margin-left: 5px;
-  width: 20px;
-}
-header a.help:hover {
-  background: top left no-repeat url(../images/gear-help.png);
-  background-position: -20px 0;
-}
 header .nav li {
   width: 28px;
   height: 26px;
+}
+header .nav a {
+  background-color: red;
+  text-indent: -9999px;
+  top: 5px;
+  width: 20px;
+}
+header .nav a.subscriptions {
+  background: top left no-repeat url(../images/subscriptions.png);
+}
+header .nav a.subscriptions:hover {
+  background: top left no-repeat url(../images/subscriptions.png);
+}
+header .nav a.options {
+  background: top left no-repeat url(../images/gear-help.png);
+}
+header .nav a.options:hover {
+  background: top left no-repeat url(../images/gear-help.png);
 }
 
 #container {
