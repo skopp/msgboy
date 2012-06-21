@@ -118,9 +118,14 @@ var SubscriptionsView = Backbone.View.extend({
     
     select: function(evt) {
       this.collection.reset();
-      this.collection.fetch( {
-        conditions: {state: this.$('#selectState').val()},
-      });
+      if(this.$('#selectState').val() === "all") {
+        this.collection.fetch();
+      }
+      else {
+        this.collection.fetch( {
+          conditions: {state: this.$('#selectState').val()},
+        });
+      }
     }
 });
 
