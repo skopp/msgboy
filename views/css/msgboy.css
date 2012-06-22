@@ -4491,22 +4491,21 @@ header .nav li {
   height: 26px;
 }
 header .nav a {
-  background-color: red;
   text-indent: -9999px;
   top: 5px;
-  width: 20px;
+  width: 15px;
 }
 header .nav a.subscriptions {
-  background: top left no-repeat url(../images/subscriptions.png);
+  background: -20px 0px no-repeat url(../images/msgboy-header-icons.png);
 }
 header .nav a.subscriptions:hover {
-  background: top left no-repeat url(../images/subscriptions.png);
+  background: -20px 0px no-repeat url(../images/msgboy-header-icons.png);
 }
 header .nav a.options {
-  background: top left no-repeat url(../images/gear-help.png);
+  background: 0px 0px no-repeat url(../images/msgboy-header-icons.png);
 }
 header .nav a.options:hover {
-  background: top left no-repeat url(../images/gear-help.png);
+  background: 0px 0px no-repeat url(../images/msgboy-header-icons.png);
 }
 
 #container {
