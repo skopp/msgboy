@@ -4,7 +4,7 @@ var util = require('util')
 , EventEmitter = require('events').EventEmitter;
 
 
-var ioOptions ={
+var ioOptions = {
   'max reconnection attempts' : 100000,
   'reconnection limit'        : 1000 * 60 * 10,
   'reconnect'                 : true,
@@ -14,6 +14,7 @@ Connection = function() {
   EventEmitter.call(this);
   this._stack = [];
   this._ready = false;
+  this.state = 'disconnected';
 }
 
 util.inherits(Connection, EventEmitter);
@@ -22,15 +23,20 @@ Connection.prototype.connect = function(endpoint, login, password) {
   this._socket = io.connect(endpoint, ioOptions);
   window.socket = this._socket;
 
+  // Update the status.
+  this.on('status', function(status) {
+    this.state = status;
+  }.bind(this));
+
   // Socket Open!
   this._socket.on('connect', function() {
-    console.log('connect');
+    this.emit('status', 'connected');
     this._socket.emit('auth', { login: login, password: password });
   }.bind(this));
 
   // Socket Closed
   this._socket.on('disconnect', function(e) {
-    console.log('disconnect', e);
+    this.emit('status', 'disconnected');
     this._ready = false;
   }.bind(this));
 
@@ -72,32 +78,32 @@ Connection.prototype.connect = function(endpoint, login, password) {
 
   // Socket connecting
   this._socket.on('connecting', function(transport) {
-    console.log('connecting', transport);
+    this.emit('status', 'connecting', transport);
   }.bind(this));
 
   // Socket connecting
   this._socket.on('connect_failed', function() {
-    console.log('connect_failed');
+    this.emit('status', 'connect_failed');
   }.bind(this));
 
   // Socket closed
   this._socket.on('close', function() {
-    console.log('close');
+    this.emit('status', 'close');
   }.bind(this));
   
   // Socket reconnect
   this._socket.on('reconnect', function(transport_type, reconnectionAttempts) {
-    console.log('reconnect', transport_type, reconnectionAttempts);
+    this.emit('status', 'reconnect', transport_type, reconnectionAttempts);
   }.bind(this));
 
   // Socket reconnect
   this._socket.on('reconnecting', function(reconnectionDelay, reconnectionAttempts) {
-    console.log('reconnecting', reconnectionDelay, reconnectionAttempts);
+    this.emit('status', 'reconnecting', reconnectionDelay, reconnectionAttempts);
   }.bind(this));
 
   // Socket reconnect
   this._socket.on('reconnect_failed', function() {
-    console.log(reconnect_failed);
+    this.emit('status', 'reconnect_failed');
   }.bind(this));
 
 }

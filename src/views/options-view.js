@@ -11,12 +11,13 @@ var OptionsView = Backbone.View.extend({
         "change #relevance": "adjustRelevance",
         "click #resetSubscriptions": "resetSubscriptions",
         "click #pinMsgboy": "pinMsgboy",
+        "click #checkConnection": "checkConnection",
         "click #msgboySubscribeHandler": "registerHandler",
         "change #autoRefresh": "setAutoRefresh"
     },
 
     initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetSubscriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh");
+        _.bindAll(this, "render", "adjustRelevance", "resetSubscriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh", "checkConnection");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -87,6 +88,33 @@ var OptionsView = Backbone.View.extend({
         browser.getCurrentTab(function(tab) {
             browser.pinTab(tab.id, this.$("#pinMsgboy").val() === "pinned");
         }.bind(this));
+    },
+    
+    checkConnection: function(event) {
+      browser.emit({
+        signature: "checkConnection",
+        params: {}
+      }, function(status) {
+        var modalHtml = [
+        '<div id="modal-options" class="modal backdrop fade">',
+            '<div class="modal-header">',
+                '<button class="close" data-dismiss="modal">×</button>',
+                '<h3>Check Connection</h3>',
+            '</div>',
+            '<div class="modal-body">',
+                '<p><strong>Current Status</strong>: ' + status + '.</p>',
+            '</div>',
+            '<div class="modal-footer">',
+            '</div>',
+        '</div>'
+        ].join('');
+        var modal = $(modalHtml);
+        modal.appendTo(document.body);
+        modal.on('hidden', function () {
+            modal.remove();
+        });
+        modal.modal('show');
+      });
     },
     
     saveModel: function() {

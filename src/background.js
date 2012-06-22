@@ -214,6 +214,15 @@ connection.on('notification', function (notification) {
     }.bind(this));
 });
 
+connection.on('status', function(status) {
+  browser.emit({
+    signature: "status",
+    params: {
+      state: status
+    }
+  });
+});
+
 Msgboy.bind("loaded:background", function () {
     Msgboy.inbox = new Inbox();
     Msgboy.connection = connection;
@@ -419,6 +428,10 @@ Msgboy.bind("loaded:background", function () {
           _sendResponse(links);
         }
       });
+    });
+
+    Msgboy.bind('checkConnection', function(params, _sendResponse) {
+      _sendResponse(Msgboy.connection.state);
     });
 
     // Plugins management for those who use the Chrome API to subscribe in background.
