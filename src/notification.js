@@ -17,10 +17,8 @@ Msgboy.bind("loaded:notification", function () {
         notificationView.mouseOver = false;
     });
 
-    browser.listen(function (request, sender, sendResponse) {
-        if (request.signature == "notify" && request.params) {
-            notificationView.showOrBuffer(new Message(request.params));
-        }
+    browser.on('notify', function(params, fn) {
+      notificationView.showOrBuffer(new Message(params));
     });
     
     // Tell everyone we're ready.

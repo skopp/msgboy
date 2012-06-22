@@ -49,6 +49,17 @@ var chromeWrapper = {
         });
     },
     
+    /*
+      Only listens to a specific signal.
+    */
+    on: function(signal, callback) {
+      chrome.extension.onRequest.addListener(function (_request, _sender, _sendResponse) {
+        if (_request.signature == signal && _request.params) {
+          callback(_request.params, _sendResponse);
+        }
+      });
+    },
+    
     /* 
         *DEPRECATED* Adding this for compatibilty reasons but we should favor webintents in the future.
         As soon as they can work from 'buttons' like extensions, we will get rid of that.

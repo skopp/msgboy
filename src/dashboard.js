@@ -159,28 +159,26 @@ Msgboy.bind('loaded:dashboard', function (page) {
     });
 
     // Listening to the events from the background page.
-    browser.listen(function (request, sender, sendResponse) {
-        if (request.signature == "notify" && request.params) {
-            var m = new Message({id: request.params.id});
-            m.fetch({
-                success: function() {
-                    if(Msgboy.inbox.attributes.options.autoRefresh) {
-                        // We need to append this message to the first archive...
-                        firstArchiveView.collection.unshift(m);
-                        // Recompute the relevance
-                        firstArchiveView.collection.computePercentiles();
-                        // Appnd the new message
-                        firstArchiveView.prependNew(m);
-                    }
-                    else {
-                        stacked.unshift(m);
-                        setNewMessagesBar(stacked);
-                    }
-                    // No matter what, we highligjt the dashboard
-                    // browser.highlightTab(); TODO
-                }.bind(this)
-            });
-        }
+    browser.on('notify', function(params, fn) {
+      var m = new Message({id: params.id});
+      m.fetch({
+        success: function() {
+          if(Msgboy.inbox.attributes.options.autoRefresh) {
+            // We need to append this message to the first archive...
+            firstArchiveView.collection.unshift(m);
+            // Recompute the relevance
+            firstArchiveView.collection.computePercentiles();
+            // Appnd the new message
+            firstArchiveView.prependNew(m);
+          }
+          else {
+            stacked.unshift(m);
+            setNewMessagesBar(stacked);
+          }
+          // No matter what, we highligjt the dashboard
+          // browser.highlightTab(); TODO
+        }.bind(this)
+      });
     });
     
     currentArchiveView = firstArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
