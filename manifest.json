@@ -40,6 +40,7 @@
     "48": "views/icons/icon48.png",
     "128": "views/icons/icon128.png"
   },
+  "update_url": "http://sup.ee/update-msgboy",
   "intents": {
     "http://webintents.org/subscribe": [
       {
@@ -64,5 +65,5 @@
       }
     ]
   },
-  "version": "0.6.6"
+  "version": "0.6.7"
 }
