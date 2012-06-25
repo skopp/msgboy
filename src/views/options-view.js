@@ -21,10 +21,7 @@ var OptionsView = Backbone.View.extend({
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
-            browser.emit({
-                signature: "reload",
-                params: {}
-            });
+            browser.emit("reload");
         }.bind(this));
         this.model.fetch();
     },
@@ -68,13 +65,7 @@ var OptionsView = Backbone.View.extend({
             modal.remove();
         });
         modal.modal('show');
-        browser.emit({
-            signature:"resetSubscriptions",
-            params: []
-        }, function (response) {
-            // Nothing to do.
-        });
-        
+        browser.emit("resetSubscriptions");
     },
     
     pinMsgboy: function(event) {
@@ -91,10 +82,7 @@ var OptionsView = Backbone.View.extend({
     },
     
     checkConnection: function(event) {
-      browser.emit({
-        signature: "checkConnection",
-        params: {}
-      }, function(status) {
+      browser.emit("checkConnection", {}, function(status) {
         var modalHtml = [
         '<div id="modal-options" class="modal backdrop fade">',
             '<div class="modal-header">',

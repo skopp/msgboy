@@ -6,13 +6,7 @@ require('./bootstrap-button.js');
 
 Msgboy.bind("loaded:subscribe", function () {
   var feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
-  browser.emit({
-    signature: "feediscovery",
-    params: {
-      url: feedUrl,
-      checkSubscription: true
-    }
-  }, function (links) {
+  browser.emit("feediscovery", { url: feedUrl, checkSubscription: true }, function (links) {
     if(links.length == 0) {
       var inner = '<h2>No feed</h2> \
       <p>We couldn\'t find any feed to which the msgboy could subscribe. Sorry about that.</p>\
@@ -36,13 +30,10 @@ Msgboy.bind("loaded:subscribe", function () {
           btn.button();
           btn.click(function() {
             btn.button('loading');
-            browser.emit({
-              signature: "subscribe",
-              params: {
-                force: true,
-                title: link.title,
-                url: link.href
-              }
+            browser.emit("subscribe", {
+              force: true,
+              title: link.title,
+              url: link.href
             }, function (response) {
               btn.html('<i class="icon-ok icon-white"></i> Subscribed');
             });
@@ -59,13 +50,10 @@ Msgboy.bind("loaded:subscribe", function () {
           btn.button();
           btn.click(function() {
             btn.button('loading');
-            browser.emit({
-              signature: "unsubscribe",
-              params: {
-                force: true,
-                title: link.title,
-                url: link.href
-              }
+            browser.emit("unsubscribe", {
+              force: true,
+              title: link.title,
+              url: link.href
             }, function (response) {
               btn.html('<i class="icon-ok icon-white"></i> Unsubscribed');
             });
@@ -76,3 +64,4 @@ Msgboy.bind("loaded:subscribe", function () {
     }
   });
 });
+

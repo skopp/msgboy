@@ -31,13 +31,16 @@ var chromeWrapper = {
         Emits a signal inside the browser which should hopefully be caught by 
         one of the tabs.
     */
-    emit: function(message, callback) {
+    emit: function(signal, args, callback) {
         if(typeof(callback) === 'undefined') {
             callback = function() {
                 // Not doing anything.
-            }
+            };
         }
-        chrome.extension.sendRequest(message, callback);
+        chrome.extension.sendRequest({
+          signature: signal,
+          params: args, 
+        }, callback);
     },
     
     /*

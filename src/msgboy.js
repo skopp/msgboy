@@ -124,6 +124,3 @@ exports.Msgboy = Msgboy;
 if(typeof window !== "undefined") {
     window.Msgboy = Msgboy;
 }
-
-require('./dashboard.js');
-

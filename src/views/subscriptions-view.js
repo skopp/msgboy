@@ -34,25 +34,19 @@ var SubscriptionView = Backbone.View.extend({
         }
     },
     subscribe: function() {
-        browser.emit({
-            signature: "subscribe",
-            params: {
-                title: "", // TODO : Add support for title 
-                url: this.model.get('id'),
-                force: true
-            }
+        browser.emit("subscribe", {
+          title: "", // TODO : Add support for title 
+          url: this.model.get('id'),
+          force: true
         }, function (response) {
             this.model.setState("subscribed");
         }.bind(this));
     },
     unsubscribe: function() {
-        browser.emit({
-            signature: "unsubscribe",
-            params: {
-                title: "", // TODO : Add support for title 
-                url: this.model.get('id'),
-                force: true
-            }
+        browser.emit("unsubscribe", {
+          title: "", // TODO : Add support for title 
+          url: this.model.get('id'),
+          force: true
         }, function (response) {
             this.model.setState("unsubscribed");
         }.bind(this));
@@ -81,12 +75,7 @@ var SubscriptionsView = Backbone.View.extend({
             btn.click(function() {
                 plugin.listSubscriptions(function (subscriptions) {
                     _.each(subscriptions, function (feed) {
-                        browser.emit({
-                            signature: "subscribe",
-                            params: feed
-                        }, function (response) {
-                            // Done!
-                        });
+                        browser.emit("subscribe", feed);
                     }.bind(this));
                 }.bind(this), function (count) {
                     console.log("Done with", plugin.name, "and subscribed to", count);

@@ -22,12 +22,7 @@ Msgboy.bind("loaded:notification", function () {
     });
     
     // Tell everyone we're ready.
-    browser.emit({
-        signature: "notificationReady",
-        params: {}
-    }, function () {
-        // Nothing to do.
-    });
+    browser.emit("notificationReady");
 });
 
 

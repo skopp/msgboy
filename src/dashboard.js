@@ -32,12 +32,7 @@ function prepareArchiveView(archive) {
     // When a message is down-voted
     archive.bind('down-ed', function(message) {
         if(message.attributes.sourceHost !== 'msgboy.com') {
-            browser.emit({
-                signature: 'down-ed',
-                params: message
-            }, function (response) {
-                // Nothing to do.
-            });
+            browser.emit('down-ed', message);
         }
     });
     return archiveView;
@@ -142,20 +137,20 @@ Msgboy.bind('loaded:dashboard', function (page) {
     // New message bar
     $("#newMessages").click(function () {
         $('body,html').animate({
-			scrollTop: 0
-		}, 500, null, function() {
+     scrollTop: 0
+   }, 500, null, function() {
             stacked = showStack(stacked);
             setNewMessagesBar(stacked);
-		});
+   });
     });
     
     // Going back to top when clicked!
     $("header").click(function () {
         $('body,html').animate({
-			scrollTop: 0
-		}, 500, null, function() {
-		    // Back to top
-		});
+     scrollTop: 0
+   }, 500, null, function() {
+       // Back to top
+   });
     });
 
     // Listening to the events from the background page.

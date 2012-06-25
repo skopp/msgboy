@@ -68,12 +68,7 @@ var notify = function (message, popup) {
         messageStack.push(message);
     }
     else {
-        browser.emit({
-            signature: "notify",
-            params: message
-        }, function (response) {
-            // Nothing to do.
-        });
+        browser.emit("notify", message);
     }
 };
 exports.notify = notify;
@@ -215,12 +210,7 @@ connection.on('notification', function (notification) {
 });
 
 connection.on('status', function(status) {
-  browser.emit({
-    signature: "status",
-    params: {
-      state: status
-    }
-  });
+  browser.emit("status", status);
 });
 
 Msgboy.bind("loaded:background", function () {
@@ -346,12 +336,7 @@ Msgboy.bind("loaded:background", function () {
         currentNotification.ready = true;
         // We should then start sending all notifications.
         while (messageStack.length > 0) {
-            browser.emit({
-                signature:"notify",
-                params: messageStack.pop()
-            }, function (response) {
-                // Nothing to do.
-            });
+            browser.emit("notify", messageStack.pop());
         }
     });
 

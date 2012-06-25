@@ -35,10 +35,7 @@ var NotificationView = Backbone.View.extend({
                 // And show the next
                 this.showNext();
                 view.remove();
-                browser.emit({
-                    signature: "tab",
-                    params: {url: message.get('mainLink'), selected: true}
-                });
+                browser.emit("tab", {url: message.get('mainLink'), selected: true});
             }.bind(this));
 
             message.bind('down-ed', function () {

@@ -38,16 +38,11 @@ var MessageView = Backbone.View.extend({
             $(this.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
         }.bind(this)); 
         this.model.bind('unsubscribe', function () {
-            var request = {
-                signature: "unsubscribe",
-                params: {
-                    title: "", // TODO : Add support for title 
-                    url: this.model.get('feed'),
-                    force: true
-                },
+            browser.emit('unsubscribe', {
+                title: "", // TODO : Add support for title 
+                url: this.model.get('feed'),
                 force: true
-            };
-            browser.emit(request, function (response) {
+            },function (response) {
                 // Unsubscribed... We need to delete all the brothas and sistas!
                 this.model.trigger('unsubscribed');
             }.bind(this));
@@ -92,10 +87,7 @@ var MessageView = Backbone.View.extend({
         else {
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
-                    browser.emit({
-                        signature: "notify",
-                        params: this.model.toJSON()
-                    });
+                    browser.emit("notify", this.model.toJSON());
                 } else {
                     // User wants to open a tab.
                     // We need to open a tab right after this one.
@@ -104,12 +96,7 @@ var MessageView = Backbone.View.extend({
                         if(tab) {
                             tabParams['index'] = tab.index + 1;
                         }
-                        browser.emit({
-                            signature: 'tab',
-                            params: tabParams
-                        }, function() {
-                            // Not much to do when the tab is open
-                        });
+                        browser.emit('tab', tabParams);
                         this.model.trigger('clicked');
                     }.bind(this));
                 }
