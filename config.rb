@@ -4,7 +4,7 @@
 http_path = "/"
 css_dir = "build/lib/css"
 sass_dir = "views/sass"
-images_dir = "build/lib/images"
+images_dir = "build/lib/img"
 javascripts_dir = "build/lib/js"
 
 # You can select your preferred output style here (can be overridden via the command line):

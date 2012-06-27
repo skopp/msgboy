@@ -117,7 +117,7 @@ var OptionsView = Backbone.View.extend({
     
     registerHandler: function() {
         // Protocol Handler Registration
-        var u = browser.getUrl("/views/html/subscribe.html?uri=%s");
+        var u = browser.getUrl("/lib/html/subscribe.html?uri=%s");
         var res = window.navigator.registerProtocolHandler("web+subscribe", u, "Msgboy");
     },
     

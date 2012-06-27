@@ -19,7 +19,7 @@ Msgboy.bind("loaded:signup", function () {
     else {
         var matches = window.location.search.match(/\?u=(.*)\&t=(.*)/);
         browser.emit("register", {username: matches[1], token: matches[2]}, function (response) {
-            window.location = browser.getUrl('/views/html/dashboard.html');
+            window.location = browser.getUrl('/lib/html/dashboard.html');
         });
     }
 });

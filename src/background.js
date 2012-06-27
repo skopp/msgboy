@@ -58,7 +58,7 @@ var notify = function (message, popup) {
     if ((!currentNotification || !currentNotification.ready) && popup) {
         if(!currentNotification) {
             // there is no window.
-            currentNotification = window.webkitNotifications.createHTMLNotification(browser.getUrl('/views/html/notification.html'));
+            currentNotification = window.webkitNotifications.createHTMLNotification(browser.getUrl('/lib/html/notification.html'));
             currentNotification.ready = false;
             currentNotification.onclose = function () {
                 currentNotification = null;
@@ -234,7 +234,7 @@ Msgboy.bind("loaded:background", function () {
             browser.isDashboardOpen(function(open) {
                 if(!open) {
                     browser.openNewTab({
-                        url: browser.getUrl('/views/html/dashboard.html'),
+                        url: browser.getUrl('/lib/html/dashboard.html'),
                         selected: true,
                         pinned: true
                     }, function(tab) {
@@ -346,7 +346,7 @@ Msgboy.bind("loaded:background", function () {
         params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
         browser.openNewTab(params, function(tab) {
             // tab is open! We need to inject some JS in it so that messages can be voted up and down, as well as shared.
-            browser.inject(tab.id, '/views/js/clicked.js', function() {
+            browser.inject(tab.id, '/lib/js/clicked.js', function() {
                 console.log("Code executed")
             });
         });

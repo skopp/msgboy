@@ -55,9 +55,9 @@ def manifest(destination = "chrome")
     ],
     :background_page => "/lib/html/background.html",
     :icons => {
-      16 => "lib/icons/icon16.png",
-      48 => "lib/icons/icon48.png",
-      128 => "lib/icons/icon128.png"
+      16 => "lib/img/icon16.png",
+      48 => "lib/img/icon48.png",
+      128 => "lib/img/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
     :intents => {
@@ -157,10 +157,9 @@ namespace :build do
   desc "Copies over the assets"
   task :assets do
     `cp -R ./views/html ./build/lib/.`
-    `cp -R ./views/icons ./build/lib/.`
-    `cp -R ./views/images ./build/lib/.`
     `cp -R ./views/img ./build/lib/.`
     `mkdir ./build/lib/js/`
+    `cp src/socket.io.js ./build/lib/js/.`
     `mkdir ./build/lib/css/`
   end
 end
