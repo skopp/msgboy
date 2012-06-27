@@ -23,10 +23,10 @@ def manifest(destination = "chrome")
     :minimum_chrome_version => "19.0.1084.56",
     :description => "Msgboy is a smart reader that pushes your web. You can train it so that eventually it will show only the most relevant content.",
     :homepage_url => "http://msgboy.com/",
-    :options_page => "/lib/html/options.html",
+    :options_page => "/data/html/options.html",
     :app => {
       :launch => {
-        :local_path => "/lib/html/dashboard.html"
+        :local_path => "/data/html/dashboard.html"
       }
     },
     :permissions => [
@@ -43,7 +43,7 @@ def manifest(destination = "chrome")
     :content_scripts => [
       {
         :js => [
-          "/lib/js/run_plugins.js"
+          "/lib/run_plugins.js"
         ],
         :css => [
         ],
@@ -53,24 +53,24 @@ def manifest(destination = "chrome")
         :all_frames => true,
       }
     ],
-    :background_page => "/lib/html/background.html",
+    :background_page => "/data/html/background.html",
     :icons => {
-      16 => "lib/img/icon16.png",
-      48 => "lib/img/icon48.png",
-      128 => "lib/img/icon128.png"
+      16 => "data/img/icon16.png",
+      48 => "data/img/icon48.png",
+      128 => "data/img/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
     :intents => {
      "http://webintents.org/subscribe" => [{
        :title => "Subscribe with Msgboy",
        :type => ["application/atom+xml", "application/rss+xml"],
-       :href => "/lib/html/subscribe.html",
+       :href => "/data/html/subscribe.html",
        :disposition => "window"
      }],
      "http://webintents.org/view" => [{
        :title => "View in Msgboy",
        :type => ["application/atom+xml", "application/rss+xml"],
-       :href => "/lib/html/subscribe.html",
+       :href => "/data/html/subscribe.html",
        :disposition => "window"
      }]
     }
@@ -119,18 +119,18 @@ namespace :build do
     desc "Building #{k}.js"
     task k do
       puts "Building #{k}.js"
-      `browserify --require 'http-browserify' --require 'br-jquery' --require 'backbone-browserify' --alias 'http:http-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./build/lib/js/#{k}.js`
+      `browserify --require 'http-browserify' --require 'br-jquery' --require 'backbone-browserify' --alias 'http:http-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./build/lib/#{k}.js`
     end
   end
   desc "Building run_plugins.js"
   task :run_plugins do
     puts "Building run_plugins.js"
-    `browserify ./src/run_plugins.js -o ./build/lib/js/run_plugins.js`
+    `browserify ./src/run_plugins.js -o ./build/lib/run_plugins.js`
   end
   desc "Building clicked.js"
   task :clicked do
     puts "Building clicked.js"
-    `browserify ./src/clicked.js -o ./build/lib/js/clicked.js`
+    `browserify ./src/clicked.js -o ./build/lib/clicked.js`
   end
   desc "Compile SASS files into CSS"
   task :sass do
@@ -159,11 +159,11 @@ namespace :build do
   
   desc "Copies over the assets"
   task :assets do
-    `cp -R ./views/html ./build/lib/.`
-    `cp -R ./views/img ./build/lib/.`
-    `mkdir ./build/lib/js/`
-    `cp src/socket.io.js ./build/lib/js/.`
-    `mkdir ./build/lib/css/`
+    `cp -R ./views/html ./build/data/.`
+    `cp -R ./views/img ./build/data/.`
+    `mkdir ./build/lib/`
+    `cp src/socket.io.js ./build/lib/.`
+    `mkdir ./build/data/css/`
   end
 end
 
