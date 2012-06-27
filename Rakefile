@@ -161,7 +161,6 @@ namespace :build do
   task :assets do
     `cp -R ./views/html ./build/data/.`
     `cp -R ./views/img ./build/data/.`
-    `mkdir ./build/lib/`
     `cp src/socket.io.js ./build/lib/.`
     `mkdir ./build/data/css/`
   end
