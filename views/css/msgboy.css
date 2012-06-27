@@ -4440,7 +4440,13 @@ a.label:hover, a.badge:hover {
   visibility: hidden;
 }
 
-.topbar .fill {
+header.topbar .container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  zoom: 1;
+}
+header.topbar .fill {
   background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0d1c22), to(#11242d));
   color: #dddddd;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -4453,18 +4459,6 @@ a.label:hover, a.badge:hover {
   width: 100%;
   z-index: 1000;
 }
-
-ul.nav li {
-  display: inline;
-}
-
-.topbar .container {
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-  zoom: 1;
-}
-
 header h1 {
   background-image: url(../icons/icon48.png);
   background-position: center middle;
@@ -4956,17 +4950,6 @@ body.splash-page {
 }
 
 /*options page stuff */
-#options {
-  margin: 20px 0px 20px 0px;
-  text-align: left;
-}
-#options label {
-  display: inline;
-  font-size: 1.1em;
-  margin-left: 10px;
-  color: #eeeeee;
-}
-
 .option {
   margin-bottom: 30px;
   margin-top: 10px;

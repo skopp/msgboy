@@ -4568,17 +4568,6 @@ body.splash-page {
 }
 
 /*options page stuff */
-#options {
-  margin: 20px 0px 20px 0px;
-  text-align: left;
-}
-#options label {
-  display: inline;
-  font-size: 1.1em;
-  margin-left: 10px;
-  color: #eeeeee;
-}
-
 .option {
   margin-bottom: 30px;
   margin-top: 10px;
