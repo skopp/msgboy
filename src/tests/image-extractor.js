@@ -42,7 +42,7 @@ describe('imageExtractor', function(){
     it('should be able to extract the right image from http://www.msgboy.com/', function(done) {
       this.timeout(10000);
       imageExtractor.extractImageFromLink('http://www.msgboy.com/', function(image) {
-        assert.equal(image, 'http://www.msgboy.com/views/images/splash/splash-screenshot.png');
+        assert.equal(image, 'http://www.msgboy.com/views/img/splash/splash-screenshot.png');
         done();
       });
     })
