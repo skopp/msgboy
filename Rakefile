@@ -19,7 +19,7 @@ def manifest(destination = "chrome")
   manifest_file =  'manifest.json'
   manifest_path = './build/'
   manifest = {
-    :name => "Msgboy",
+    :name => "msgboy",
     :minimum_chrome_version => "19.0.1084.56",
     :description => "Msgboy is a smart reader that pushes your web. You can train it so that eventually it will show only the most relevant content.",
     :homepage_url => "http://msgboy.com/",
@@ -80,6 +80,9 @@ def manifest(destination = "chrome")
   when "webstore"
     manifest.delete(:update_url)
   when "firefox"
+    manifest[:icon] = manifest[:icons][48]
+    manifest[:homepage] = manifest[:homepage_url]
+    manifest[:id] = "msgboy"
     manifest.delete(:minimum_chrome_version)
     manifest.delete(:homepage_url)
     manifest.delete(:options_page)
@@ -94,7 +97,7 @@ def manifest(destination = "chrome")
     manifest.delete(:background_page)
     
     
-    manifest[:main] = 'lib/js/main.js'
+    manifest[:main] = 'lib/main.js'
     manifest_file =  'package.json'
   when 'chrome'
     
@@ -110,7 +113,7 @@ end
 
 build_tasks = [:frontend, :background, :tests]
 
-task :build => build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked'] + [:'build:sass']
+task :build => [:'build:assets'] + build_tasks.map() { |t| :"build:#{t}"  } + [:'build:run_plugins'] + [:'build:clicked'] + [:'build:sass']
 namespace :build do
   build_tasks.each do |k|
     desc "Building #{k}.js"
