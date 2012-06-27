@@ -1,5 +1,5 @@
-var Url = require('url');
-var QueryString = require('querystring');
+var Url             = require('url');
+var QueryString     = require('querystring');
 var Msgboy          = require('./msgboy.js').Msgboy;
 var Plugins         = require('./plugins.js').Plugins;
 var Inbox           = require('./models/inbox.js').Inbox;
@@ -434,4 +434,3 @@ Msgboy.bind("loaded:background", function () {
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
  });
-
