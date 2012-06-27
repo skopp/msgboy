@@ -1,0 +1,108 @@
+body
+  background:  #0d1d23 url(../img/page-bg.png) top left repeat-x fixed
+  &.dashboard-page
+    background: none
+  &.splash-page
+    background: black url(../img/splash/splash-city.jpg) 50% -50px no-repeat
+
+#buildings, #clouds, #signal
+  position: fixed
+
+#buildings
+  bottom: 0
+  left: 400px
+  z-index: 1
+
+#clouds
+  top: 0
+  left: 300px
+  z-index: 2
+
+#signal
+  top: 150px
+  left: 550px
+  z-index: 3
+  -webkit-animation-name: signalOn
+  -webkit-animation-iteration-count: 1
+  -webkit-animation-duration: 2.5s
+  -webkit-animation-timing-function: ease-out
+  -webkit-animation-delay: .6s
+
+@-webkit-keyframes signalOn
+  from
+    opacity: 0
+  5%
+    opacity: .2
+  7%
+    opacity: 0
+  17%
+    opacity: .4
+  19%
+    opacity: 0
+  to
+    opacity: 1
+
+#archive
+  border: none
+  padding: 5px
+  margin-top: 50px
+
+#newMessages
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#59a1cd), to(#3284b5))
+  color: white
+  cursor: pointer
+  height: 13px
+  line-height: 13px
+  margin: 0 auto
+  padding: 10px 0
+  position: absolute
+  text-align: center
+  top: -36px
+  width: 100%
+  z-index: 500
+  text-shadow: 0 1px 0 color
+  -webkit-transition: top 0.3s ease-out
+
+
+
+#info
+  color: #EEE
+  background-color: #11232c
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.8)
+  font-weight: normal
+  min-height: 100%
+  padding: 0
+  position: absolute
+  left: 40px
+  text-shadow: #333 0px 1px 3px
+  top: 80px
+  width: 600px
+  z-index: 10
+  overflow: auto
+  padding-bottom: 20px
+  h1
+    color: #EEE
+    padding: 20px 20px 10px
+    font-size: 2.2em
+  h2
+    color: #EEE
+    margin: 50px 20px 20px 20px
+    font-size: 1.6em
+  h3
+    color: #EEE
+    margin: 30px 20px 10px 20px
+    font-size: 1.4em
+  p
+    line-height: 20px
+    margin: 20px
+    font-size: 1.2em
+  ul
+    line-height: 20px
+    margin: 20px 20px 20px 40px
+  img
+    float: right
+    border: 4px solid #fff
+    margin-left: 20px
+  a
+    color: #358DC2
+
