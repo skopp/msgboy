@@ -15,17 +15,18 @@ def ignoredir
   /\.(?:git)|build|tests|tmp|node_module|.sass-cache|tmp.html|splash/
 end
 
-def manifest(destination = "")
-  FileUtils.remove("./manifest.json", :force => true)
+def manifest(destination = "chrome")
+  manifest_file =  'manifest.json'
+  manifest_path = './build/'
   manifest = {
     :name => "Msgboy",
     :minimum_chrome_version => "19.0.1084.56",
     :description => "Msgboy is a smart reader that pushes your web. You can train it so that eventually it will show only the most relevant content.",
     :homepage_url => "http://msgboy.com/",
-    :options_page => "/views/html/options.html",
+    :options_page => "/lib/html/options.html",
     :app => {
       :launch => {
-        :local_path => "/views/html/dashboard.html"
+        :local_path => "/lib/html/dashboard.html"
       }
     },
     :permissions => [
@@ -42,7 +43,7 @@ def manifest(destination = "")
     :content_scripts => [
       {
         :js => [
-          "/views/js/run_plugins.js"
+          "/lib/js/run_plugins.js"
         ],
         :css => [
         ],
@@ -52,24 +53,24 @@ def manifest(destination = "")
         :all_frames => true,
       }
     ],
-    :background_page => "/views/html/background.html",
+    :background_page => "/lib/html/background.html",
     :icons => {
-      16 => "views/icons/icon16.png",
-      48 => "views/icons/icon48.png",
-      128 => "views/icons/icon128.png"
+      16 => "lib/icons/icon16.png",
+      48 => "lib/icons/icon48.png",
+      128 => "lib/icons/icon128.png"
     },
     :update_url => "http://sup.ee/update-msgboy",
     :intents => {
      "http://webintents.org/subscribe" => [{
        :title => "Subscribe with Msgboy",
        :type => ["application/atom+xml", "application/rss+xml"],
-       :href => "/views/html/subscribe.html",
+       :href => "/lib/html/subscribe.html",
        :disposition => "window"
      }],
      "http://webintents.org/view" => [{
        :title => "View in Msgboy",
        :type => ["application/atom+xml", "application/rss+xml"],
-       :href => "/views/html/subscribe.html",
+       :href => "/lib/html/subscribe.html",
        :disposition => "window"
      }]
     }
@@ -78,14 +79,34 @@ def manifest(destination = "")
   case destination
   when "webstore"
     manifest.delete(:update_url)
+  when "firefox"
+    manifest.delete(:minimum_chrome_version)
+    manifest.delete(:homepage_url)
+    manifest.delete(:options_page)
+    manifest.delete(:app)
+    manifest.delete(:permissions)
+    manifest.delete(:content_scripts)
+    manifest.delete(:background_page)
+    manifest.delete(:icons)
+    manifest.delete(:update_url)
+    manifest.delete(:intents)
+    manifest.delete(:background_page)
+    manifest.delete(:background_page)
+    
+    
+    manifest[:main] = 'lib/js/main.js'
+    manifest_file =  'package.json'
+  when 'chrome'
+    
   end
-
   manifest[:version] = version # Adds the version
   # Now, write the manifest.json
-  File.open("manifest.json","w") do |f|
+  FileUtils.remove(manifest_path + manifest_file, :force => true)
+  File.open(manifest_path + manifest_file,"w") do |f|
     f.write(JSON.pretty_generate(manifest))
   end
 end
+
 
 build_tasks = [:frontend, :background, :tests]
 
@@ -95,42 +116,52 @@ namespace :build do
     desc "Building #{k}.js"
     task k do
       puts "Building #{k}.js"
-      `browserify --require 'http-browserify' --require 'br-jquery' --require 'backbone-browserify' --alias 'http:http-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./views/js/#{k}.js`
+      `browserify --require 'http-browserify' --require 'br-jquery' --require 'backbone-browserify' --alias 'http:http-browserify' --alias 'jquery:br-jquery' --alias 'backbone:backbone-browserify' ./src/#{k}.js -o ./build/lib/js/#{k}.js`
     end
   end
   desc "Building run_plugins.js"
   task :run_plugins do
     puts "Building run_plugins.js"
-    `browserify ./src/run_plugins.js -o ./views/js/run_plugins.js`
+    `browserify ./src/run_plugins.js -o ./build/lib/js/run_plugins.js`
   end
   desc "Building clicked.js"
   task :clicked do
     puts "Building clicked.js"
-    `browserify ./src/clicked.js -o ./views/js/clicked.js`
+    `browserify ./src/clicked.js -o ./build/lib/js/clicked.js`
   end
   desc "Compile SASS files into CSS"
   task :sass do
     puts "Compiling SASS"
     `compass compile`
   end
-end
-
-task :lint => [:'lint:validate']
-namespace :lint do 
-  desc "Validates with jshint"
-  task :validate do
-    dirs = ["controllers", "models", "views"]
-    dirs.each do |dir|
-      Dir.glob(File.dirname(__FILE__) + "/#{dir}/**/*.js").each { |f| 
-        # And now run jshint
-        lint = `jshint #{f}`
-        if (lint != "Lint Free!\n" )
-          puts "\n--\nCouldn't validate : #{f}"
-          puts lint
-          # raise ArgumentError, "We couldn't lint your code" 
-        end
-      }
+  
+  desc "Creates the manifest file for the destination. If the destination is webstore, we remove the update_url" 
+  task :manifest, :destination do |task, args|
+    manifest(args[:destination])
+  end
+  
+  
+  desc "Building Msgboy"
+  task :init, :platform do |task, args|
+    if args[:platform] == "firefox"
+      `rm -rf build/* && cd build && cfx init`
+      # And write the manifest.
+    elsif args[:platform] == "chromedev"
+      `rm -rf build/* && cd build && cfx init`
+      `rm ./build/package.json`
+      `rm ./build/lib/main.js`
     end
+    manifest( args[:platform])
+  end
+  
+  desc "Copies over the assets"
+  task :assets do
+    `cp -R ./views/html ./build/lib/.`
+    `cp -R ./views/icons ./build/lib/.`
+    `cp -R ./views/images ./build/lib/.`
+    `cp -R ./views/img ./build/lib/.`
+    `mkdir ./build/lib/js/`
+    `mkdir ./build/lib/css/`
   end
 end
 
@@ -281,11 +312,6 @@ namespace :publish do
         :ignoredir    => ignoredir
         )
         puts "Extension #{version} zipped"
-      end
-
-      desc "Creates the manifest file for the destination. If the destination is webstore, we remove the update_url" 
-      task :manifest, :destination do |task, args|
-        manifest(args[:destination])
       end
     end
   rescue LoadError
