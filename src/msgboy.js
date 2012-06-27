@@ -22,33 +22,28 @@ Msgboy.log =  {
         WARN: 30,
         ERROR: 40,
     },
-    _log: Function.prototype.bind.call(console._log, console),
-    _debug: Function.prototype.bind.call(console._debug, console),
-    _info: Function.prototype.bind.call(console._info, console),
-    _warn: Function.prototype.bind.call(console._warn, console),
-    _error: Function.prototype.bind.call(console._error, console),
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
             var args = Array.prototype.slice.call(arguments);  
-            this._debug.apply(console, args);
+            console._debug(args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
             var args = Array.prototype.slice.call(arguments);  
-            this._info.apply(console, args);
+            console._info(args);
         }
     },
     warn: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
             var args = Array.prototype.slice.call(arguments);  
-            this._warn.apply(console, args);
+            console._warn(args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
             var args = Array.prototype.slice.call(arguments);  
-            this._error.apply(console, args);
+            console._error(args);
         }
     },
 }
