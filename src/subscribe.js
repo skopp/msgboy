@@ -5,7 +5,14 @@ var $       = require('jquery');
 require('./bootstrap-button.js');
 
 Msgboy.bind("loaded:subscribe", function () {
-  var feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
+  var feedUrl = ""
+  if(window.webkitIntent.getExtra("url")) {
+    feedUrl = window.webkitIntent.getExtra("url")
+  }
+  else {
+    feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!  
+  }
+  
   browser.emit("feediscovery", { url: feedUrl, checkSubscription: true }, function (links) {
     if(links.length == 0) {
       var inner = '<h2>No feed</h2> \
