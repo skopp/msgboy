@@ -8,11 +8,11 @@ def version
 end
 
 def ignorefile
-  /\.(?:pem|gitignore|DS_Store)|Rakefile|updates.xml|package.json|s3.json|.jshintrc|debugger.*|splash.*/
+  /\.(?:pem|gitignore|DS_Store)|README.md/
 end
 
 def ignoredir
-  /\.(?:git)|build|tests|tmp|node_module|.sass-cache|tmp.html|splash/
+  /\.(?:git)|test/
 end
 
 def manifest(destination = "chrome")
@@ -138,14 +138,17 @@ namespace :build do
     `compass compile`
   end
   
-  desc "Creates the manifest file for the destination. If the destination is webstore, we remove the update_url" 
-  task :manifest, :destination do |task, args|
-    manifest(args[:destination])
+  desc "Creates the manifest file for the platform (chromedev, chromestore, firefox)." 
+  task :manifest, :platform do |task, args|
+    args.with_defaults :platform => "chromedev"
+    manifest(args[:platform])
   end
   
   
-  desc "Building Msgboy"
+  desc "Scaffolding Msgboy for the right platform (chromedev, chromestore, firefox)."
   task :init, :platform do |task, args|
+    args.with_defaults :platform => "chromedev"
+    puts "Building scaffold for #{args[:platform]}"
     if args[:platform] == "firefox"
       `rm -rf build/* && cd build && cfx init`
       # And write the manifest.
@@ -159,6 +162,7 @@ namespace :build do
   
   desc "Copies over the assets"
   task :assets do
+    puts "Copying assets"
     `cp -R ./views/html ./build/data/.`
     `cp -R ./views/img ./build/data/.`
     `cp src/socket.io.js ./build/lib/.`
@@ -209,114 +213,124 @@ namespace :version do
 
 end
 
-task :publish => [:'publish:chrome:pack', :'publish:upload']
 
-namespace :publish do
-
-  task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
-
-  namespace :upload do
-    begin
-      require 'aws/s3'
-      s3 = {} # S3 params.
-      if FileTest.exist?("s3.json")
-        s3 = JSON.load(File.read("s3.json"))
-      end
-      desc "Uploads the extension"
-      task :crx do
-        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
-        AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
-        puts "Extension #{version} uploaded"
-      end
-
-      desc "Uploads the updates.xml file"
-      task :updates_xml do
-        AWS::S3::Base.establish_connection!(
-        :access_key_id     => s3['access_key_id'],
-        :secret_access_key => s3['secret_access_key']
-        )
-        AWS::S3::S3Object.store(
-        'updates.xml', 
-        open('./updates.xml'), 
-        s3['bucket'], 
-        {
-          :access => :public_read
-        }
-        )
-        puts "Updates.xml #{version} uploaded"
-      end
-
-      desc "Pushes to the git remotes"
-      task :push_git do
-        g = Git.open (".")
-        res = g.push("origin", "master", true)
-        puts res
-      end
+##
+begin
+  require 'crxmake'
+  desc "Packs msgboy, for chrome"
+  task :pack, [:platform] => [:'build:init', :'build'] do |tasks, args|
+    args.with_defaults :platform => "chromedev"
     
-      desc "Deploys the splash page"
-      task :splash do
-        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
-        AWS::S3::S3Object.store('index.html', open('./splash.html'), s3['splash-bucket'], {:access => :public_read})
-        FileList['views/css/*.css'].each do |f|
-          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-        end
-        FileList['views/images/*.png'].each do |f|
-          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-        end
-        FileList['views/images/*.jpg'].each do |f|
-          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-        end
-        FileList['views/images/*.gif'].each do |f|
-          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-        end
-        FileList['views/images/splash/*'].each do |f|
-          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-        end
-        AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
-      end
-      
-    rescue LoadError
-      puts "Please install the s3 gem if you want to upload the msgboy to s3."
-    end  
-  end
-
-  begin
-    require 'crxmake'
-    namespace :chrome do
-      desc "Packs the extension"
-      task :pack do
-        manifest()
-
-        FileUtils.remove("./build/msgboy.crx", :force => true)
-        CrxMake.make(
-        :ex_dir       => ".",
-        :pkey         => "key.pem",
-        :crx_output   => "./build/msgboy.crx",
-        :verbose      => true,
-        :ignorefile   => ignorefile,
-        :ignoredir    => ignoredir
-        )
-        puts "Extension #{version} packed"
-      end
-
-      desc "Prepares a zip file for the Chorme Webstore" 
-      task :zip do
-        manifest('webstore')
-        # First, we need to create the right manifest.json
-        FileUtils.remove("./build/msgboy.zip", :force => true)
-        CrxMake.zip(
-        :ex_dir       => ".",
-        :pkey         => "key.pem",
-        :zip_output   => "./build/msgboy.zip",
-        :verbose      => true,
-        :ignorefile   => ignorefile,
-        :ignoredir    => ignoredir
-        )
-        puts "Extension #{version} zipped"
-      end
+    `mkdir ./pkg/`
+    
+    if args[:platform] == "chromedev"
+      FileUtils.remove("./pkg/msgboy.crx", :force => true)
+      CrxMake.make(
+      :ex_dir       => "./build",
+      :pkey         => "key.pem",
+      :crx_output   => "./pkg/msgboy.crx",
+      :verbose      => true,
+      :ignorefile   => ignorefile,
+      :ignoredir    => ignoredir
+      )
+    elsif args[:platform] == "chromestore"
+      FileUtils.remove("./pkg/msgboy.zip", :force => true)
+      CrxMake.zip(
+      :ex_dir       => "./build",
+      :pkey         => "key.pem",
+      :zip_output   => "./pkg/msgboy.zip",
+      :verbose      => true,
+      :ignorefile   => ignorefile,
+      :ignoredir    => ignoredir
+      )
     end
-  rescue LoadError
-    puts "Please install the crxmake gem if you want to package the msgboy gem"
-    # not installed
+    puts "Extension #{version} packed for #{args[:platform]}"
   end
+rescue LoadError
+  puts "Please install the crxmake gem if you want to package the msgboy gem"
+  # not installed
 end
+
+
+
+namespace :upload do
+  
+  desc "Uploads a crx to S3"
+  task :s3 do |tasks, args|
+  end
+  
+end
+
+
+# namespace :publish do
+# 
+#   task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
+# 
+#   namespace :upload do
+#     begin
+#       require 'aws/s3'
+#       s3 = {} # S3 params.
+#       if FileTest.exist?("s3.json")
+#         s3 = JSON.load(File.read("s3.json"))
+#       end
+#       desc "Uploads the extension"
+#       task :crx do
+#         AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+#         AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
+#         puts "Extension #{version} uploaded"
+#       end
+# 
+#       desc "Uploads the updates.xml file"
+#       task :updates_xml do
+#         AWS::S3::Base.establish_connection!(
+#         :access_key_id     => s3['access_key_id'],
+#         :secret_access_key => s3['secret_access_key']
+#         )
+#         AWS::S3::S3Object.store(
+#         'updates.xml', 
+#         open('./updates.xml'), 
+#         s3['bucket'], 
+#         {
+#           :access => :public_read
+#         }
+#         )
+#         puts "Updates.xml #{version} uploaded"
+#       end
+# 
+#       desc "Pushes to the git remotes"
+#       task :push_git do
+#         g = Git.open (".")
+#         res = g.push("origin", "master", true)
+#         puts res
+#       end
+#     
+#       desc "Deploys the splash page"
+#       task :splash do
+#         AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+#         AWS::S3::S3Object.store('index.html', open('./splash.html'), s3['splash-bucket'], {:access => :public_read})
+#         FileList['views/css/*.css'].each do |f|
+#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+#         end
+#         FileList['views/images/*.png'].each do |f|
+#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+#         end
+#         FileList['views/images/*.jpg'].each do |f|
+#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+#         end
+#         FileList['views/images/*.gif'].each do |f|
+#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+#         end
+#         FileList['views/images/splash/*'].each do |f|
+#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+#         end
+#         AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
+#       end
+#       
+#     rescue LoadError
+#       puts "Please install the s3 gem if you want to upload the msgboy to s3."
+#     end  
+#   end
+# 
+# end
+# 
+
