@@ -45,8 +45,6 @@ function loadNextArchive(opts) {
 
     var q = queryString.parse(url.parse(location.href).query);
 
-    console.log(q);
-
     archive.bind('reset', function() {
       if(q.format === "json") {
         // We export a JSON file!

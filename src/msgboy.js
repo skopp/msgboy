@@ -25,25 +25,25 @@ Msgboy.log =  {
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
             var args = Array.prototype.slice.call(arguments);  
-            console._debug(args);
+            console['_debug'].apply(window.console,args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
             var args = Array.prototype.slice.call(arguments);  
-            console._info(args);
+            console['_info'].apply(window.console,args);
         }
     },
     warn: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
             var args = Array.prototype.slice.call(arguments);  
-            console._warn(args);
+            console['_warn'].apply(window.console,args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
             var args = Array.prototype.slice.call(arguments);  
-            console._error(args);
+            console['_error'].apply(window.console,args);
         }
     },
 }
