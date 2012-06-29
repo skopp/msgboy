@@ -77,7 +77,7 @@ def manifest(destination = "chrome")
   }
 
   case destination
-  when "webstore"
+  when "chromestore"
     manifest.delete(:update_url)
   when "firefox"
     manifest[:icon] = manifest[:icons][48]
@@ -95,12 +95,10 @@ def manifest(destination = "chrome")
     manifest.delete(:intents)
     manifest.delete(:background_page)
     manifest.delete(:background_page)
-    
-    
     manifest[:main] = 'lib/main.js'
     manifest_file =  'package.json'
-  when 'chrome'
-    
+  when 'chromedev'
+    # No
   end
   manifest[:version] = version # Adds the version
   # Now, write the manifest.json
@@ -153,6 +151,10 @@ namespace :build do
       `rm -rf build/* && cd build && cfx init`
       # And write the manifest.
     elsif args[:platform] == "chromedev"
+      `rm -rf build/* && cd build && cfx init`
+      `rm ./build/package.json`
+      `rm ./build/lib/main.js`
+    elsif args[:platform] == "chromestore"
       `rm -rf build/* && cd build && cfx init`
       `rm ./build/package.json`
       `rm ./build/lib/main.js`
@@ -218,7 +220,7 @@ end
 begin
   require 'crxmake'
   desc "Packs msgboy, for chrome"
-  task :pack, [:platform] => [:'build:init', :'build'] do |tasks, args|
+  task :pack, [:platform] => [:'build:init', :'build:manifest', :'build'] do |tasks, args|
     args.with_defaults :platform => "chromedev"
     
     `mkdir ./pkg/`
