@@ -10,9 +10,9 @@ Msgboy.bind("loaded:subscribe", function () {
     feedUrl = window.webkitIntent.getExtra("url")
   }
   else {
-    feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!  
+    feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
   }
-  
+
   browser.emit("feediscovery", { url: feedUrl, checkSubscription: true }, function (links) {
     if(links.length == 0) {
       var inner = '<h2>No feed</h2> \
@@ -22,7 +22,7 @@ Msgboy.bind("loaded:subscribe", function () {
       </p>';
       $("#subscribe").html(inner);
       $("#cancelBtn").click(function() {
-        window.close(); 
+        window.close();
       });
     }
     else {
@@ -32,7 +32,7 @@ Msgboy.bind("loaded:subscribe", function () {
           var inner = $('<p>Once subscribed, new messages from <em>' + link.title + '</em> will be added to your dashboard. </p>');
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
-          
+
           var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Subscribing...">Subscribe</button>')
           btn.button();
           btn.click(function() {
@@ -52,7 +52,7 @@ Msgboy.bind("loaded:subscribe", function () {
           var inner = $('<p>You are currently subscribed to <em>' + link.title + '</em>. Unsubscribe if you don\'t want to get messages from it anymore. </p>');
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
-          
+
           var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Unsubscribing...">Unsubscribe</button>')
           btn.button();
           btn.click(function() {

@@ -5,6 +5,7 @@ Backbone.sync = require('backbone-indexeddb').sync;
 require('../bootstrap-modal.js');
 var Inbox = require('../models/inbox.js').Inbox;
 var browser = require('../browsers.js').browser;
+require('./../bootstrap-button.js');
 
 var OptionsView = Backbone.View.extend({
     events: {
@@ -67,7 +68,7 @@ var OptionsView = Backbone.View.extend({
         modal.modal('show');
         browser.emit("resetSubscriptions");
     },
-    
+
     pinMsgboy: function(event) {
         if(this.$("#pinMsgboy").val() === "unpinned") {
             this.$("#pinMsgboy").val("pinned");
@@ -80,7 +81,7 @@ var OptionsView = Backbone.View.extend({
             browser.pinTab(tab.id, this.$("#pinMsgboy").val() === "pinned");
         }.bind(this));
     },
-    
+
     checkConnection: function(event) {
       browser.emit("checkConnection", {}, function(status) {
         var modalHtml = [
@@ -90,7 +91,13 @@ var OptionsView = Backbone.View.extend({
                 '<h3>Check Connection</h3>',
             '</div>',
             '<div class="modal-body">',
-                '<p><strong>Current Status</strong>: ' + status + '.</p>',
+                '<p>',
+                  '<strong>Current Status</strong>: ' + status + '. &nbsp;',
+                '</p>',
+                '<p>',
+                  '<button class="btn" data-loading-text="Pinging..." id="doPing">Ping</button>',
+                  '&nbsp; <span id="pingRes"></span>',
+                '</p>',
             '</div>',
             '<div class="modal-footer">',
             '</div>',
@@ -102,9 +109,18 @@ var OptionsView = Backbone.View.extend({
             modal.remove();
         });
         modal.modal('show');
+        var btn = $("#doPing");
+        btn.button();
+        btn.click(function() {
+          btn.button('reset');
+          browser.emit("ping", {}, function(status) {
+            btn.button('complete');
+            $("#pingRes").text(status.time + 'ms');
+          });
+        }.bind(this));
       });
     },
-    
+
     saveModel: function() {
         var attributes = {};
         attributes.options = {};
@@ -114,13 +130,13 @@ var OptionsView = Backbone.View.extend({
         this.model.set(attributes);
         this.model.save();
     },
-    
+
     registerHandler: function() {
         // Protocol Handler Registration
         var u = browser.getUrl("/data/html/subscribe.html?uri=%s");
         var res = window.navigator.registerProtocolHandler("web+subscribe", u, "Msgboy");
     },
-    
+
     setAutoRefresh: function() {
         this.saveModel();
     }
