@@ -6,14 +6,13 @@
     <meta name="application-name" content="Msgboy" />
     <link rel="stylesheet" href="../css/msgboy.css" />
 
-    <script src="../../src/socket.io.js" type="text/javascript"></script> 
-    <script src="../../lib/frontend.js" type="text/javascript"></script> 
+    <script src="../../lib/frontend.js" type="text/javascript"></script>
     <script type="text/javascript">
       window.onload = function () {
           Msgboy.run("options");
       };
     </script>
-    
+
 </head>
 <body>
     <header class="topbar">
@@ -27,7 +26,7 @@
             </div>
         </div>
     </header>
-    
+
     <div id="info">
         <div id="options">
             <div class="pane">
@@ -46,7 +45,7 @@
                     </p>
                     <p>New messages will be added at the top of the dashboard when they arrive.</p>
                 </div>
-                
+
             </div>
             <div class="pane">
                 <h2>Subscriptions</h2>
@@ -77,7 +76,7 @@
                     <p style="clear:both">Train the msgboy to see more accurate messages. <a href="help.html">See how here</a></p>
                 </div>
             </div>
-            
+
             <div class="pane">
                 <h2>Troubleshooting</h2>
                 <div class="option">
@@ -87,7 +86,7 @@
                     </p>
                     <p>Check if you can access Msgboy's server. Please report any trouble.</p>
                 </div>
-                
+
                 <div class="option">
                     <p>
                         <button class="btn btn-danger" id="resetSubscriptions" value="Reset" name="resetSubscriptions">Reset</button>
@@ -96,10 +95,10 @@
                     <p>Use with caution: you'll have to train the msgboy again.</p>
                 </div>
             </div>
-            
+
         </div>
     </div>
-    
+
     <img id="buildings" src="../img/buildings.png" />
     <img id="clouds" src="../img/clouds.png" />
     <img id="signal" src="../img/mb-signal.png" />
