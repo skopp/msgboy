@@ -75,7 +75,7 @@ exports.notify = notify;
 
 // Subscribes to a feed.
 var subscribe = function (url, doDiscovery, force, callback) {
-    // First, let's check if we need to perform discovery on that. 
+    // First, let's check if we need to perform discovery on that.
     if(doDiscovery) {
         // Well let's do disco and then recurse!
         feediscovery.get(url, function (links) {
@@ -204,7 +204,7 @@ connection.on('notification', function (notification) {
                 error: function(error) {
                     Msgboy.log.debug("Could not save message", error);
                 }.bind(this)
-            }); 
+            });
         }.bind(this));
     }.bind(this));
 });
@@ -216,9 +216,9 @@ connection.on('status', function(status) {
 Msgboy.bind("loaded:background", function () {
     Msgboy.inbox = new Inbox();
     Msgboy.connection = connection;
-    
+
     MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
-    
+
     // When a new message was added to the inbox
     Msgboy.inbox.bind("messages:added", function (message) {
         notify(message.toJSON(), message.attributes.relevance > Msgboy.inbox.attributes.options.relevance);
@@ -243,7 +243,7 @@ Msgboy.bind("loaded:background", function () {
                 }
             });
         }
-        
+
         // Check for migrations?
         if(typeof(Msgboy.inbox.attributes.version) === "undefined" || Msgboy.inbox.attributes.version < 100) {
           // Version 100 requires a switch from XMPP to PubSubHubbub based subscriptions
@@ -262,25 +262,25 @@ Msgboy.bind("loaded:background", function () {
               });
             }
           });
-          
+
           currentSubscriptions.fetch({
               conditions: {state: "subscribed"},
           });
         }
     });
-    
+
     // When the inbox is new.
     Msgboy.inbox.bind("new", function () {
       Msgboy.log.debug("New Inbox");
       Msgboy.trigger("inbox:new"); // Let's indicate all msgboy susbcribers that it's the case!
     });
-    
+
     // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
         // Ok, no such inbox... So we need to create an account!
         window.open("http://stream.msgboy.com/session/new?ext=" + browser.msgboyId());
     });
-    
+
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
     browser.listen(function (_request, _sender, _sendResponse) {
         Msgboy.trigger(_request.signature, _request.params, _sendResponse);
@@ -290,7 +290,7 @@ Msgboy.bind("loaded:background", function () {
     browser.externalListen(function (_request, _sender, _sendResponse) {
         Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
-    
+
     // Registers a new user
     Msgboy.bind('register', function (params, _sendResponse) {
         Msgboy.log.debug("request", "register", params.username);
@@ -365,7 +365,7 @@ Msgboy.bind("loaded:background", function () {
             subscribe(subs.url, subs.doDiscovery, false, function () {
                 // Cool. Not much to do.
             });
-        }, 
+        },
         function(plugin, subscriptionsCount) {
             // Called when done with one plugin
             Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
@@ -377,13 +377,13 @@ Msgboy.bind("loaded:background", function () {
             Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
         });
     });
-    
+
     // When one of the clients asks for discovery on a feed.
     Msgboy.bind('feediscovery', function(params, _sendResponse) {
       Msgboy.log.debug("request", "feediscovery", params);
       feediscovery.get(params.url, function (links) {
         if(params.checkSubscription && links.length !== 0) {
-          
+
           var done = _.after(links.length, function() {
             _sendResponse(links);
           }.bind(this));
@@ -419,6 +419,12 @@ Msgboy.bind("loaded:background", function () {
       _sendResponse(Msgboy.connection.state);
     });
 
+    Msgboy.bind('ping', function(params, _sendResponse) {
+      Msgboy.connection.ping(function(res) {
+        _sendResponse(res);
+      });
+    });
+
     // Plugins management for those who use the Chrome API to subscribe in background.
     for(var j = 0; j < Plugins.all.length; j++) {
         var plugin = Plugins.all[j];
@@ -430,7 +436,7 @@ Msgboy.bind("loaded:background", function () {
             });
         }
     }
-    
+
     // Let's go.
     Msgboy.inbox.fetchAndPrepare();
  });
