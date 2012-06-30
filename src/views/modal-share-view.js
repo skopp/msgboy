@@ -41,7 +41,7 @@ var ModalShareView = Backbone.View.extend({
 
     this.urlToShare = this.message.get('mainLink'); // By default, we share the mainLink Url.
     // Let's shorten that link in the back.
-    var shortenerUrl = UrlParser.parse("http://msgboy.com/share/shorten");
+    var shortenerUrl = UrlParser.parse("http://stream.msgboy.com/share/shorten");
     shortenerUrl.query = {
       url: this.urlToShare
     }

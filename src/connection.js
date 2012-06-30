@@ -25,6 +25,7 @@ Connection.prototype.connect = function(endpoint, login, password) {
 
   // Update the status.
   this.on('status', function(status) {
+    console.log(status);
     this.state = status;
   }.bind(this));
 

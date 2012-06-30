@@ -278,7 +278,7 @@ Msgboy.bind("loaded:background", function () {
     // When there is no such inbox there.
     Msgboy.inbox.bind("error", function (error) {
         // Ok, no such inbox... So we need to create an account!
-        window.open("http://msgboy.com/session/new?ext=" + browser.msgboyId());
+        window.open("http://stream.msgboy.com/session/new?ext=" + browser.msgboyId());
     });
     
     // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.

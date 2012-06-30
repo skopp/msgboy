@@ -14,7 +14,7 @@ Msgboy.bind("loaded:signup", function () {
         personal data</em>, and just get a unique identifier from \
         Google.</p> \
         <p><a class=\"btn\" id=\"retrySignup\" value=\"Retry\" \
-        href=\"http://msgboy.com/session/new?ext=" + browser.msgboyId() +"\">Authorize Msgboy</a></p>");
+        href=\"http://stream.msgboy.com/session/new?ext=" + browser.msgboyId() +"\">Authorize Msgboy</a></p>");
     }
     else {
         var matches = window.location.search.match(/\?u=(.*)\&t=(.*)/);
