@@ -10,11 +10,13 @@ var ioOptions = {
   'reconnect'                 : true,
 };
 
-Connection = function() { 
+Connection = function() {
   EventEmitter.call(this);
   this._stack = [];
   this._ready = false;
   this.state = 'disconnected';
+  this._concurrency = 5;
+  this._concurrent = 0;
 }
 
 util.inherits(Connection, EventEmitter);
@@ -70,11 +72,9 @@ Connection.prototype.connect = function(endpoint, login, password) {
     this.emit('ready');
     this._ready = true;
     // Let's start processing requests. We do it with 5 loops.
-    this.nextRequest();
-    this.nextRequest();
-    this.nextRequest();
-    this.nextRequest();
-    this.nextRequest();
+    for(var k = 0; k < this._concurrency; k++) {
+      this.nextRequest();
+    }
   }.bind(this));
 
   // Socket connecting
@@ -91,7 +91,7 @@ Connection.prototype.connect = function(endpoint, login, password) {
   this._socket.on('close', function() {
     this.emit('status', 'close');
   }.bind(this));
-  
+
   // Socket reconnect
   this._socket.on('reconnect', function(transport_type, reconnectionAttempts) {
     this.emit('status', 'reconnect', transport_type, reconnectionAttempts);
@@ -110,17 +110,26 @@ Connection.prototype.connect = function(endpoint, login, password) {
 }
 
 Connection.prototype.nextRequest = function() {
-  var m = this._stack.shift();
-  if(m) {
-    this._socket.emit(m[0], m[1], function(result) {
-      this.nextRequest(); // Let's process the next request!
-      m[2](result);
-    }.bind(this));
-  }
-  else {
-    setTimeout(function () {
-      this.nextRequest(); // Let's come back in a couple seconds!
-    }.bind(this), 3000);
+  if(this._concurrent <= this._concurrency) {
+    // Yay, we can process the next request.
+    var m = this._stack.shift();
+    if(m) {
+      this._concurrent += 1;
+      if(typeof(m[1]) === 'function') {
+        this._socket.emit(m[0], function(result) {
+          this._concurrent -= 1;
+          this.nextRequest(); // Let's process the next request!
+          m[1](result);
+        }.bind(this));
+      }
+      else {
+        this._socket.emit(m[0], m[1], function(result) {
+          this._concurrent -= 1;
+          this.nextRequest(); // Let's process the next request!
+          m[2](result);
+        }.bind(this));
+      }
+    }
   }
 }
 
@@ -130,10 +139,22 @@ Connection.prototype.disconnect = function() {
 
 Connection.prototype.subscribe = function(url, callback) {
   this._stack.push(['subscribe', url, callback]);
+  this.nextRequest();
 }
 
 Connection.prototype.unsubscribe = function(url, callback) {
   this._stack.push(['unsubscribe', url, callback]);
+  this.nextRequest();
+}
+
+Connection.prototype.ping = function(callback) {
+  var s = new Date().getTime();
+  var track = function() {
+    var e = new Date().getTime();
+    callback({time: e - s});
+  };
+  this._stack.push(['ping', track]);
+  this.nextRequest();
 }
 
 
