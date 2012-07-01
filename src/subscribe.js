@@ -6,7 +6,7 @@ require('./bootstrap-button.js');
 
 Msgboy.bind("loaded:subscribe", function () {
   var feedUrl = ""
-  if(window.webkitIntent.getExtra("url")) {
+  if(window.webkitIntent.getExtra && window.webkitIntent.getExtra("url")) {
     feedUrl = window.webkitIntent.getExtra("url")
   }
   else {
