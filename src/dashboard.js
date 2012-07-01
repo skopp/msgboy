@@ -18,7 +18,7 @@ function prepareArchiveView(archive) {
         el: $('#archive'),
         collection: archive,
     });
-    
+
     // When a message is shared
     archive.bind('share', function (message) {
         var modal = new ModalShareView({message: message});
@@ -48,8 +48,8 @@ function loadNextArchive(opts) {
     archive.bind('reset', function() {
       if(q.format === "json") {
         // We export a JSON file!
-        window.location = "data:application/json;base64," + window.btoa(JSON.stringify(archive.toJSON()));   
-      }   
+        window.location = "data:application/json;base64," + window.btoa(JSON.stringify(archive.toJSON()));
+      }
       else {
         archive.each(function(message) {
           archiveView.appendNew(message);
@@ -58,14 +58,14 @@ function loadNextArchive(opts) {
         // Ready to load next.
         readyToLoadNext = true;
         prepareNextLoadIfNeeded();
-      }  
+      }
     });
-    
+
     if(q.n) {
-      archive.load(parseInt(q.n));      
+      archive.load(parseInt(q.n));
     }
     else {
-      archive.load(50);
+      archive.load(10);
     }
     return archiveView;
 }
@@ -102,7 +102,7 @@ function setNewMessagesBar(stack) {
         $("#newMessages").css("top","0");
         $("#newMessages").attr("data-unread", stack.length);
         $("#newMessages").text("View " + stack.length + " new");
-        
+
     }
 }
 
@@ -112,10 +112,10 @@ Msgboy.bind('loaded:dashboard', function (page) {
     Msgboy.inbox = new Inbox();
     Msgboy.inbox.fetch();
     var stacked = new Archive();
-    
+
     // Completes the page by loading more messages.
     $(document).scroll(prepareNextLoadIfNeeded);
-    
+
     // Show the time indicator
     $(document).scroll(function() {
         var message = $(document.elementFromPoint(window.innerWidth/2, window.innerHeight - 10)).closest('.message');
@@ -131,7 +131,7 @@ Msgboy.bind('loaded:dashboard', function (page) {
             $("#timetracker").fadeOut();
         }, 300);
     });
-    
+
     // New message bar
     $("#newMessages").click(function () {
         $('body,html').animate({
@@ -141,7 +141,7 @@ Msgboy.bind('loaded:dashboard', function (page) {
             setNewMessagesBar(stacked);
    });
     });
-    
+
     // Going back to top when clicked!
     $("header").click(function () {
         $('body,html').animate({
@@ -173,7 +173,7 @@ Msgboy.bind('loaded:dashboard', function (page) {
         }.bind(this)
       });
     });
-    
+
     currentArchiveView = firstArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
 });
 
