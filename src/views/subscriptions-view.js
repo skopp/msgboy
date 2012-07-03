@@ -35,7 +35,7 @@ var SubscriptionView = Backbone.View.extend({
     },
     subscribe: function() {
         browser.emit("subscribe", {
-          title: "", // TODO : Add support for title 
+          title: "", // TODO : Add support for title
           url: this.model.get('id'),
           force: true
         }, function (response) {
@@ -44,7 +44,7 @@ var SubscriptionView = Backbone.View.extend({
     },
     unsubscribe: function() {
         browser.emit("unsubscribe", {
-          title: "", // TODO : Add support for title 
+          title: "", // TODO : Add support for title
           url: this.model.get('id'),
           force: true
         }, function (response) {
@@ -68,7 +68,7 @@ var SubscriptionsView = Backbone.View.extend({
         this.collection.fetch( {
           conditions: {state: "subscribed"},
         });
-        
+
         // Also loads all the plugins.
         _.each(Plugins.all, function(plugin) {
             var btn = $('<span href="#" class="btn plugin-reset" style="margin:10px" id="">'+ plugin.name + '</span>');
@@ -83,28 +83,28 @@ var SubscriptionsView = Backbone.View.extend({
             }.bind(this));
             this.$('#plugins').append(btn);
         }.bind(this));
-        
+
     },
-    
+
     showOne: function(subscription) {
         var view = new SubscriptionView({model: subscription});
         this.$('#subscriptions').append(view.render().el);
     },
-    
+
     render: function() {
       this.$('#subscriptions tr.subscription').empty();
       this.collection.each(this.showOne);
     },
-    
+
     opmlExport: function() {
         var opml = '<?xml version="1.0" encoding="UTF-8"?><opml version="1.0"><head><title>Your Msgboy Subscriptions</title></head><body>';
         this.collection.each(function(subscription) {
             opml += '<outline xmlUrl="' + escape(subscription.id) + '" />';
         });
         opml += '</body></opml>';
-        window.location = "data:application/xml;base64," + window.btoa(opml);   
+        window.location = "data:application/xml;base64," + window.btoa(opml);
     },
-    
+
     select: function(evt) {
       this.collection.reset();
       if(this.$('#selectState').val() === "all") {

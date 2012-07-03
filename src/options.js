@@ -4,7 +4,7 @@ var OptionsView = require('./views/options-view.js').OptionsView;
 
 Msgboy.bind("loaded:options", function () {
     new OptionsView({
-        el: $("#options")
+        el: $("#info")
     });
 });
 
