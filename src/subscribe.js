@@ -1,28 +1,41 @@
 var _       = require('underscore');
+var urlParser = require('url');
+var queryString = require('querystring');
 var Msgboy  = require('./msgboy.js').Msgboy;
 var browser = require('./browsers.js').browser;
 var $       = require('jquery');
 require('./bootstrap-button.js');
 
 Msgboy.bind("loaded:subscribe", function () {
-  var feedUrl = ""
-  if(window.webkitIntent.getExtra("url")) {
-    feedUrl = window.webkitIntent.getExtra("url")
+  var feedUrl = "";
+  if(window.webkitIntent) {
+    if(window.webkitIntent.getExtra && window.webkitIntent.getExtra("url")) {
+      feedUrl = window.webkitIntent.getExtra("url");
+    }
+    else {
+      feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!
+    }
   }
   else {
-    feedUrl = window.webkitIntent.data; // That is the url... We need to put it in feediscovery!  
+    userUrl = $.trim(queryString.parse(window.location.search.substr(1)).url);
+    var parsed = urlParser.parse(userUrl);
+    if(!parsed.protocol) {
+      userUrl = "http://" + userUrl;
+      parsed = urlParser.parse(userUrl);
+    }
+    feedUrl = urlParser.format(parsed);
   }
-  
+
   browser.emit("feediscovery", { url: feedUrl, checkSubscription: true }, function (links) {
     if(links.length == 0) {
       var inner = '<h2>No feed</h2> \
-      <p>We couldn\'t find any feed to which the msgboy could subscribe. Sorry about that.</p>\
+      <p>This website doesn\'t allow its users to subscribe to its content at this point :(</p>\
       <p style="text-align:center; width:80%">\
       <button class="btn btn-large" id="cancelBtn">Close</button>&nbsp;\
       </p>';
       $("#subscribe").html(inner);
       $("#cancelBtn").click(function() {
-        window.close(); 
+        window.close();
       });
     }
     else {
@@ -32,7 +45,7 @@ Msgboy.bind("loaded:subscribe", function () {
           var inner = $('<p>Once subscribed, new messages from <em>' + link.title + '</em> will be added to your dashboard. </p>');
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
-          
+
           var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Subscribing...">Subscribe</button>')
           btn.button();
           btn.click(function() {
@@ -52,7 +65,7 @@ Msgboy.bind("loaded:subscribe", function () {
           var inner = $('<p>You are currently subscribed to <em>' + link.title + '</em>. Unsubscribe if you don\'t want to get messages from it anymore. </p>');
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
-          
+
           var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Unsubscribing...">Unsubscribe</button>')
           btn.button();
           btn.click(function() {
