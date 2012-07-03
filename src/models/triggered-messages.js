@@ -22,12 +22,12 @@ var saveMessage = function(message, cb) {
 var MessageTrigger = {
     observe: function(msgboy) {
         Msgboy = msgboy;
-        
+
         // Template
         // Msgboy.bind('inbox:new', function() {
         //     saveMessage();
         // });
-        
+
         Msgboy.bind('down-ed', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:first-downvote",
@@ -89,7 +89,7 @@ var MessageTrigger = {
                     "alternate": {
                         "text/html": [
                         {
-                            "href": 'http://msg.by/HiC1pI',
+                            "href": '/data/html/subscriptions.html',
                             "rel": "alternate",
                             "title": "Msgboy plugins",
                             "type": "text/html"
@@ -125,11 +125,11 @@ var MessageTrigger = {
                 Msgboy.inbox.trigger("messages:added", message);
             });
         });
-        
+
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:welcome",
-                "title": "Welcome to msgboy! He will show you the web you care about in messages like this ones.",
+                "title": "Welcome to msgboy! He will show you the web you care about in boxes like this ones.",
                 "ungroup": true,
                 "summary": 'Welcome to msgboy! He will show you the web you care about.',
                 "image": 'http://download.msgboy.com/resources/triggered/welcome_to_msgboy1.png',
@@ -172,11 +172,11 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
+
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:bookmark-and-visit",
-                "title": "Bookmark or come back to sites you love.",
+                "title": "Bookmark or come back to sites you love",
                 "ungroup": true,
                 "image": "http://download.msgboy.com/resources/triggered/bookmark_sites_you_love.png",
                 "summary": "Bookmark sites you love. The msgboy will show you messages when they update!",
@@ -219,7 +219,7 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
+
         Msgboy.bind('messages:added', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:real-time",
@@ -265,53 +265,53 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
-        Msgboy.bind('inbox:new', function() {
-            saveMessage({
-                "id": "tag:msgboy.com,2012:train",
-                "title": "Train msgboy to give you what you want.",
-                "ungroup": true,
-                "summary": "The msgboy gets better when you use him more. Vote stuff up and down to tell him what you like.",
-                "image": "http://download.msgboy.com/resources/triggered/train_it.png",
-                "content": null,
-                "links": {
-                    "alternate": {
-                        "text/html": [
-                        {
-                            "href": 'http://msg.by/GPqQRH',
-                            "rel": "alternate",
-                            "title": "Train msgboy to give you what you want.",
-                            "type": "text/html"
-                        }
-                        ]
-                    }
-                },
-                "createdAt": new Date().getTime() - 3000,
-                "source": {
-                    "title": "Msgboy Tips",
-                    "url": "http://blog.msgboy.com/",
-                    "links": {
-                        "alternate": {
-                            "text/html": [
-                            {
-                                "href": "http://blog.msgboy.com/",
-                                "rel": "alternate",
-                                "title": "",
-                                "type": "text/html"
-                            }
-                            ]
-                        }
-                    }
-                },
-                "sourceHost": "msgboy.com",
-                "state": "new",
-                "feed": "http://blog.msgboy.com/rss",
-                "relevance": 0.6,
-                "published": new Date().toISOString(),
-                "updated": new Date().toISOString()
-            });
-        });
-        
+
+        // Msgboy.bind('inbox:new', function() {
+        //     saveMessage({
+        //         "id": "tag:msgboy.com,2012:train",
+        //         "title": "Train msgboy to give you what you want.",
+        //         "ungroup": true,
+        //         "summary": "The msgboy gets better when you use him more. Vote stuff up and down to tell him what you like.",
+        //         "image": "http://download.msgboy.com/resources/triggered/train_it.png",
+        //         "content": null,
+        //         "links": {
+        //             "alternate": {
+        //                 "text/html": [
+        //                 {
+        //                     "href": 'http://msg.by/GPqQRH',
+        //                     "rel": "alternate",
+        //                     "title": "Train msgboy to give you what you want.",
+        //                     "type": "text/html"
+        //                 }
+        //                 ]
+        //             }
+        //         },
+        //         "createdAt": new Date().getTime() - 3000,
+        //         "source": {
+        //             "title": "Msgboy Tips",
+        //             "url": "http://blog.msgboy.com/",
+        //             "links": {
+        //                 "alternate": {
+        //                     "text/html": [
+        //                     {
+        //                         "href": "http://blog.msgboy.com/",
+        //                         "rel": "alternate",
+        //                         "title": "",
+        //                         "type": "text/html"
+        //                     }
+        //                     ]
+        //                 }
+        //             }
+        //         },
+        //         "sourceHost": "msgboy.com",
+        //         "state": "new",
+        //         "feed": "http://blog.msgboy.com/rss",
+        //         "relevance": 0.6,
+        //         "published": new Date().toISOString(),
+        //         "updated": new Date().toISOString()
+        //     });
+        // });
+
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:vote-up",
@@ -357,7 +357,7 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
+
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:vote-down",
@@ -403,7 +403,7 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
+
         Msgboy.bind('later', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:notifications",
@@ -449,53 +449,53 @@ var MessageTrigger = {
                 "updated": new Date().toISOString()
             });
         });
-        
-        Msgboy.bind('inbox:new', function() {
-            saveMessage({
-                "id": "tag:msgboy.com,2012:use-settings",
-                "title": "You can throttle notifications in settings.",
-                "ungroup": true,
-                "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
-                "image": "http://download.msgboy.com/resources/triggered/msgboy_settings.png",
-                "content": null,
-                "links": {
-                    "alternate": {
-                        "text/html": [
-                        {
-                            "href": 'http://msg.by/GH1AhF',
-                            "rel": "alternate",
-                            "title": "You can throttle notifications in settings.",
-                            "type": "text/html"
-                        }
-                        ]
-                    }
-                },
-                "createdAt": new Date().getTime() - 7000,
-                "source": {
-                    "title": "Msgboy Tips",
-                    "url": "http://blog.msgboy.com/",
-                    "links": {
-                        "alternate": {
-                            "text/html": [
-                            {
-                                "href": "http://blog.msgboy.com/",
-                                "rel": "alternate",
-                                "title": "",
-                                "type": "text/html"
-                            }
-                            ]
-                        }
-                    }
-                },
-                "sourceHost": "msgboy.com",
-                "state": "new",
-                "feed": "http://blog.msgboy.com/rss",
-                "relevance": 0.6,
-                "published": new Date().toISOString(),
-                "updated": new Date().toISOString()
-            });
-        });
-        
+
+        // Msgboy.bind('inbox:new', function() {
+        //     saveMessage({
+        //         "id": "tag:msgboy.com,2012:use-settings",
+        //         "title": "You can throttle notifications in settings.",
+        //         "ungroup": true,
+        //         "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+        //         "image": "http://download.msgboy.com/resources/triggered/msgboy_settings.png",
+        //         "content": null,
+        //         "links": {
+        //             "alternate": {
+        //                 "text/html": [
+        //                 {
+        //                     "href": 'http://msg.by/GH1AhF',
+        //                     "rel": "alternate",
+        //                     "title": "You can throttle notifications in settings.",
+        //                     "type": "text/html"
+        //                 }
+        //                 ]
+        //             }
+        //         },
+        //         "createdAt": new Date().getTime() - 7000,
+        //         "source": {
+        //             "title": "Msgboy Tips",
+        //             "url": "http://blog.msgboy.com/",
+        //             "links": {
+        //                 "alternate": {
+        //                     "text/html": [
+        //                     {
+        //                         "href": "http://blog.msgboy.com/",
+        //                         "rel": "alternate",
+        //                         "title": "",
+        //                         "type": "text/html"
+        //                     }
+        //                     ]
+        //                 }
+        //             }
+        //         },
+        //         "sourceHost": "msgboy.com",
+        //         "state": "new",
+        //         "feed": "http://blog.msgboy.com/rss",
+        //         "relevance": 0.6,
+        //         "published": new Date().toISOString(),
+        //         "updated": new Date().toISOString()
+        //     });
+        // });
+
         Msgboy.bind('never', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:your-data-protected",

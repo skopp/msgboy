@@ -27,11 +27,12 @@ Msgboy.bind("loaded:subscribe", function () {
   }
 
   browser.emit("feediscovery", { url: feedUrl, checkSubscription: true }, function (links) {
+    $("#subscribe").empty();
     if(links.length == 0) {
       var inner = '<h2>No feed</h2> \
       <p>This website doesn\'t allow its users to subscribe to its content at this point :(</p>\
       <p style="text-align:center; width:80%">\
-      <button class="btn btn-large" id="cancelBtn">Close</button>&nbsp;\
+      <button class="btn" id="cancelBtn">Close</button>&nbsp;\
       </p>';
       $("#subscribe").html(inner);
       $("#cancelBtn").click(function() {
@@ -46,7 +47,7 @@ Msgboy.bind("loaded:subscribe", function () {
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
 
-          var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Subscribing...">Subscribe</button>')
+          var btn = $('<button class="btn btn-primary" data-loading-text="Subscribing...">Subscribe</button>')
           btn.button();
           btn.click(function() {
             btn.button('loading');
@@ -66,7 +67,7 @@ Msgboy.bind("loaded:subscribe", function () {
           title.appendTo($("#subscribe"));
           inner.appendTo($("#subscribe"));
 
-          var btn = $('<button class="btn btn-primary btn-large" data-loading-text="Unsubscribing...">Unsubscribe</button>')
+          var btn = $('<button class="btn btn-primary" data-loading-text="Unsubscribing...">Unsubscribe</button>')
           btn.button();
           btn.click(function() {
             btn.button('loading');
