@@ -5,7 +5,7 @@
     <title>Msgboy Options</title>
     <meta name="application-name" content="Msgboy" />
     <link rel="stylesheet" href="../css/msgboy.css" />
-    <script src="../../lib/frontend.js" type="text/javascript"></script> 
+    <script src="../../lib/frontend.js" type="text/javascript"></script>
     <script type="text/javascript">
       window.onload = function () {
           Msgboy.run("subscriptions");
@@ -28,26 +28,15 @@
 
     <div id="info">
 
-<!--         
-        <div id="modal-plugin" class="modal backdrop fade">
-            <div class="modal-header">
-                <a href="#" class="close">×</a>
-                <h3>Plugin</h3>
-            </div>
-            <div class="modal-body">
-                <p class="subscribingTo"></p>
-            </div>
-            <div class="modal-footer">
-            </div>
-        </div>
-
-        <h1>Plugins</h1>
-        <p>This allows you to re-import existing subscriptions on other well known webservices. </p>
-        <p id="plugins">
-        </p>
- -->
-        <span href="#" class="btn btn-large btn-primary" id="opml" style="float:right; margin:20px">Export as OPML</span>
+        <span href="#" class="btn btn-large" id="opml" style="float:right; margin:20px">Export as OPML</span>
         <h1>Subscriptions</h1>
+
+        <form id="addSubscription" method="get" action="./subscribe.html">
+          <p>
+            <input class="input-xlarge" type="text" name="url" id="urlTypeahead" style="vertical-align: baseline;"/>&nbsp;<input type="submit" class="btn btn-primary" value="Subscribe">
+          </p>
+        </form>
+
         <table id="subscriptions" class="table-condensed">
             <thead>
                 <tr>

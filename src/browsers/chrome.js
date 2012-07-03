@@ -7,7 +7,7 @@ var chromeWrapper = {
     getUrl: function(path) {
         return chrome.extension.getURL(path);
     },
-    
+
     /*
         Opens a new tab
     */
@@ -18,7 +18,7 @@ var chromeWrapper = {
             }, this);
             // If no window is focused and"normal"
             if (windows.length === 0) {
-                window.open(params.url); 
+                window.open(params.url);
             }
             else {
                 params.windowId = windows[0].id;
@@ -26,9 +26,9 @@ var chromeWrapper = {
             }
         });
     },
-    
+
     /*
-        Emits a signal inside the browser which should hopefully be caught by 
+        Emits a signal inside the browser which should hopefully be caught by
         one of the tabs.
     */
     emit: function(signal, args, callback) {
@@ -39,10 +39,10 @@ var chromeWrapper = {
         }
         chrome.extension.sendRequest({
           signature: signal,
-          params: args, 
+          params: args,
         }, callback);
     },
-    
+
     /*
         Listens to all messages in the browser
     */
@@ -51,7 +51,7 @@ var chromeWrapper = {
             callback(_request, _sender, _sendResponse);
         });
     },
-    
+
     /*
       Only listens to a specific signal.
     */
@@ -62,8 +62,8 @@ var chromeWrapper = {
         }
       });
     },
-    
-    /* 
+
+    /*
         *DEPRECATED* Adding this for compatibilty reasons but we should favor webintents in the future.
         As soon as they can work from 'buttons' like extensions, we will get rid of that.
         also, this won't be supported in FF ever.
@@ -76,38 +76,38 @@ var chromeWrapper = {
             }
         });
     },
-    
+
     /*
         Returns the id of the msgboy app.
     */
     msgboyId: function() {
         return chrome.i18n.getMessage("@@extension_id");
     },
-    
+
     productionId: 'ligglcbjgpiljeoenbhnnfdipkealakb',
-    
+
     /*
         Loads the extensions's properties.
     */
     loadProperties: function(callback) {
         chrome.management.get(this.msgboyId(), callback);
     },
-    
+
     /*
         Returns the `number` most recent bookmarks.
     */
     getRecentBookmarks: function(number, callback) {
         chrome.bookmarks.getRecent(number, callback);
     },
-    
+
     /*
         Listens to bookmark creation.
     */
     listenToNewBookmark: function(callback) {
         chrome.bookmarks.onCreated.addListener(callback);
     },
-    
-    /* 
+
+    /*
         Returns the `number` most recent visits.
     */
     getRecentVisits: function(number, callback) {
@@ -118,27 +118,27 @@ var chromeWrapper = {
         }, callback);
     },
 
-    /* 
+    /*
         Returns the most recent visits for a given URL
     */
     getVisitsForUrl: function(_url, callback) {
         chrome.history.getVisits({url: _url}, callback);
     },
-    
+
     /*
         Listens to bookmark creation.
     */
     listenToNewVisit: function(callback) {
         chrome.history.onVisited.addListener(callback);
     },
-    
-    /* 
+
+    /*
         Returns the current tab
     */
     getCurrentTab: function(callback) {
         chrome.tabs.getCurrent(callback);
     },
-    
+
     /*
         Pins a tab if pin is true. unpin if false.
     */
@@ -147,13 +147,13 @@ var chromeWrapper = {
             // Done
         });
     },
-    
+
     inject: function(tabId, file, callback) {
         chrome.tabs.executeScript(tabId, {
             file: file
         }, callback);
     },
-    
+
     /*
         This function yields true if the dashboard is open.
     */
@@ -171,6 +171,22 @@ var chromeWrapper = {
             }
             fn(open);
         });
+    },
+
+    /*
+      this function looks up urls in history that match the request
+    */
+    findUrlInHistory: function(q, fn) {
+      chrome.history.search({text: q}, function(visits) {
+        var sorted = _.sortBy(visits, function(visit) {
+          return -visit.visitCount;
+        });
+        var suggest = []
+        _.each(sorted,function(visit) {
+          suggest.push(visit.url);
+        });
+        fn(suggest);
+      });
     }
 };
 
