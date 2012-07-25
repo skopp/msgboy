@@ -23,7 +23,7 @@ var Message = Backbone.Model.extend({
         "feed":         "",
         "relevance":    0.6
     },
-    /* Creates a message (uses save but makes sure we do not overide an existing message.) 
+    /* Creates a message (uses save but makes sure we do not overide an existing message.)
        It also deletes some attributes that we will not use in the msgboy to make it lighter
     */
     create: function(attributes, options) {
@@ -41,11 +41,11 @@ var Message = Backbone.Model.extend({
     initialize: function (params) {
         // Default params
         if(typeof params === "undefined") {
-            params = {}; 
+            params = {};
         }
-        
-        
-        // Setting up the source attributes 
+
+
+        // Setting up the source attributes
         if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined' || params.sourceHost === "" || params.sourceLink === "") {
             if (params.source && params.source.links) {
                 if(params.source.links.alternate) {
@@ -70,12 +70,12 @@ var Message = Backbone.Model.extend({
                 params.sourceHost = params.sourceHost || "";
             }
         }
-        
+
         // Setting up the createdAt
         if (typeof(params.createdAt) === 'undefined' || params.createdAt === 0) {
             params.createdAt = new Date().getTime();
         }
-        
+
         // Setting up the mainLink
         if (typeof(params.mainLink) === 'undefined' || params.mainLink === "" || !params.mainLink) {
             if (params.links && params.links.alternate) {
@@ -91,7 +91,7 @@ var Message = Backbone.Model.extend({
                 params.mainLink = "";
             }
         }
-        
+
         // Setting up the text, as the longest between the summary and the content.
         if (typeof(params.text) === 'undefined' || params.text === "" || !params.text) {
             if (params.content) {
@@ -109,10 +109,10 @@ var Message = Backbone.Model.extend({
                 params.text = "";
             }
         }
-        
+
         // Setting up the params
         this.set(params);
-        
+
         this.related = new Backbone.Collection(); // create container for similar messages
         this.related.comparator = function(message) {
             return -message.get('createdAt');
@@ -129,7 +129,7 @@ var Message = Backbone.Model.extend({
             // We need to unsubscribe the feed if possible, but only if there is enough negative votes.
             var brothers = new Archive();
             brothers.forFeed(this.attributes.feed);
-            
+
             brothers.bind('reset', function () {
                 var states = relevanceMath.percentages(brothers.pluck("state"), ["new", "up-ed", "down-ed", "skipped"], function (member, index) {
                     return 1;
@@ -182,12 +182,15 @@ var Message = Backbone.Model.extend({
                 relevance =  this.relevanceBasedOnBrothers(brothers.pluck("state"));
             }
             // Keywords [TODO]
-            
+
             // Bonus if there is an image!
             if(this.get('image')) {
                 relevance = (2-relevance) * relevance // The smaller the relevance, the greater the bonus!
             }
-            
+
+            // Randomizer to avoid too many messages with the same rank. This should be deleted when we have keywords into account.
+            relevance = relevance * (1 + Math.random()/10);
+
             // Check when the feed was susbcribed. Add bonus if it's recent! [TODO].
             if (typeof(callback) !== "undefined" && callback) {
                 callback(relevance);
