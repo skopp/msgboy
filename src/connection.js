@@ -43,6 +43,11 @@ Connection.prototype.connect = function(endpoint, login, password) {
     this._ready = false;
   }.bind(this));
 
+  // Server asks for a reset of subscriptions
+  this._socket.on('resubscribe', function(e) {
+    this.emit('resubscribe');
+  }.bind(this));
+
   // Message from the server!
   this._socket.on('notification', function(string) {
     var message  = JSON.parse(string);

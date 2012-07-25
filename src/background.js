@@ -184,6 +184,26 @@ connection.on('ready', function() {
   resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
 });
 
+connection.on('resubscribe', function (notification) {
+  Msgboy.log.debug("Server asks that we resubscribe.");
+  var subscriptions = new Subscriptions();
+  subscriptions.bind('reset', function() {
+    subscriptions.each(function(subscription) {
+      subscription.setState("subscribing");
+      subscription.bind("subscribing", function () {
+        Msgboy.log.debug("subscribing to", subscription.id);
+        connection.subscribe(subscription.id, function (result, feed) {
+          Msgboy.log.debug("subscribed to", subscription.id);
+          subscription.setState("subscribed");
+        });
+      });
+    });
+  });
+  subscriptions.fetch( {
+    conditions: {state: "subscribed"},
+  });
+});
+
 connection.on('notification', function (notification) {
     Msgboy.log.debug("Notification received " + notification.source.url);
     var message = new Message(notification);
