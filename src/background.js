@@ -96,6 +96,7 @@ var subscribe = function (url, doDiscovery, force, callback) {
                 subscription.bind("subscribing", function () {
                     Msgboy.log.debug("subscribing to", url);
                     connection.subscribe(url, function (result, feed) {
+                        Msgboy.trigger("subscription:new");
                         Msgboy.log.debug("subscribed to", url);
                         subscription.setState("subscribed");
                     });
@@ -134,38 +135,21 @@ exports.unsubscribe = unsubscribe;
 
 // Makes sure there is no 'pending' susbcriptions.
 var resumeSubscriptions = function () {
-  // And let's check the regular subscriptions.
-  var subscriptions = new Subscriptions();
-  subscriptions.bind("reset", function (subs) {
-    if(subs.length === 0) {
-      // No subscriptions! Let's try to find some...
-      Msgboy.trigger("resetSubscriptions");
-      setTimeout(function () {
-        resumeSubscriptions(); // Let's retry in 10 minutes.
-        }, 1000 * 60 * 10);
-      }
-      else {
-        // Great, we have subscriptions... Let's just check if some need to be resumed, because they're pending
-        // Let's check the pending subscriptions.
-        var pending = new Subscriptions();
-        pending.bind("add", function (subs) {
-          Msgboy.log.debug("subscribing to", subs.id);
-          connection.subscribe(subs.id, function (result, feed) {
-            Msgboy.log.debug("subscribed to", subs.id);
-            subs.setState("subscribed");
-          });
-        });
-        pending.pending();
-        setTimeout(function () {
-          resumeSubscriptions(); // Let's retry in 10 minutes.
-          }, 1000 * 60 * 10);
-        }
-      });
-      // Go fetch them now.
-      subscriptions.fetch({
-        conditions: {state: "subscribed"},
-      });
-    };
+  // Great, we have subscriptions... Let's just check if some need to be resumed, because they're pending
+  // Let's check the pending subscriptions.
+  var pending = new Subscriptions();
+  pending.bind("add", function (subs) {
+    Msgboy.log.debug("subscribing to", subs.id);
+    connection.subscribe(subs.id, function (result, feed) {
+      Msgboy.log.debug("subscribed to", subs.id);
+      subs.setState("subscribed");
+    });
+  });
+  pending.pending();
+  setTimeout(function () {
+    resumeSubscriptions(); // Let's retry in 10 minutes.
+  }, 1000 * 60 * 10);
+};
 
 // Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
 var rewriteOutboundUrl = function(url) {
@@ -376,26 +360,6 @@ Msgboy.bind("loaded:background", function () {
     Msgboy.bind('reload', function (params, _sendResponse) {
         Msgboy.log.debug("request", "reload");
         Msgboy.inbox.fetch();
-    });
-
-    // When reloading the inbox is needed (after a change in settings eg)
-    Msgboy.bind('resetSubscriptions', function (params, _sendResponse) {
-        Msgboy.log.debug("request", "resetSubscriptions");
-        Plugins.importSubscriptions(function (subs) {
-            subscribe(subs.url, subs.doDiscovery, false, function () {
-                // Cool. Not much to do.
-            });
-        },
-        function(plugin, subscriptionsCount) {
-            // Called when done with one plugin
-            Msgboy.trigger("plugin:" + plugin.name + ":imported"); // Let's indicate all msgboy susbcribers that it's the case!
-            Msgboy.log.info("Done with", plugin.name, "and subscribed to", subscriptionsCount);
-        },
-        function(subscriptionsCount) {
-            // Called when done with all plugins
-            Msgboy.trigger("plugins:imported", subscriptionsCount); // Let's indicate all msgboy susbcribers that it's the case!
-            Msgboy.log.info("Done with all plugins and subscribed to", subscriptionsCount);
-        });
     });
 
     // When one of the clients asks for discovery on a feed.

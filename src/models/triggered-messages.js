@@ -28,104 +28,6 @@ var MessageTrigger = {
         //     saveMessage();
         // });
 
-        Msgboy.bind('down-ed', function() {
-            saveMessage({
-                "id": "tag:msgboy.com,2012:first-downvote",
-                "title": "This was your first down-vote",
-                "ungroup": true,
-                "summary": 'Click this box to learn more about what happens when you down-vote!',
-                "image": 'http://download.msgboy.com/resources/triggered/down_voting.png',
-                "content": null,
-                "links": {
-                    "alternate": {
-                        "text/html": [
-                        {
-                            "href": 'http://msg.by/HMQu9Q',
-                            "rel": "alternate",
-                            "title": "Down-voting",
-                            "type": "text/html"
-                        }
-                        ]
-                    }
-                },
-                "createdAt": new Date().getTime(),
-                "source": {
-                    "title": "Msgboy Tips",
-                    "url": "http://blog.msgboy.com/",
-                    "links": {
-                        "alternate": {
-                            "text/html": [
-                            {
-                                "href": "http://blog.msgboy.com/",
-                                "rel": "alternate",
-                                "title": "",
-                                "type": "text/html"
-                            }
-                            ]
-                        }
-                    }
-                },
-                "sourceHost": "msgboy.com",
-                "alternate": "http://msgboy.com/",
-                "state": "new",
-                "feed": "http://blog.msgboy.com/rss",
-                "relevance": 1.0,
-                "published": new Date().toISOString(),
-                "updated": new Date().toISOString()
-            }, function(message) {
-                Msgboy.inbox.trigger("messages:added", message);
-            });
-        });
-
-        Msgboy.bind('plugins:imported', function(count) {
-            saveMessage({
-                "id": "tag:msgboy.com,2012:plugins",
-                "title": "We successfuly found " + count + " sites for you!",
-                "ungroup": true,
-                "summary": 'When looking at your <em>browsing habits</em>, we found ' + count + ' sites you seem to care about.',
-                "image": 'http://download.msgboy.com/resources/triggered/subcriptionmanagement.png',
-                "content": null,
-                "links": {
-                    "alternate": {
-                        "text/html": [
-                        {
-                            "href": '/data/html/subscriptions.html',
-                            "rel": "alternate",
-                            "title": "Msgboy plugins",
-                            "type": "text/html"
-                        }
-                        ]
-                    }
-                },
-                "createdAt": new Date().getTime(),
-                "source": {
-                    "title": "Msgboy Tips",
-                    "url": "http://blog.msgboy.com/",
-                    "links": {
-                        "alternate": {
-                            "text/html": [
-                            {
-                                "href": "http://blog.msgboy.com/",
-                                "rel": "alternate",
-                                "title": "",
-                                "type": "text/html"
-                            }
-                            ]
-                        }
-                    }
-                },
-                "sourceHost": "msgboy.com",
-                "alternate": "http://msgboy.com/",
-                "state": "new",
-                "feed": "http://blog.msgboy.com/rss",
-                "relevance": 0.6,
-                "published": new Date().toISOString(),
-                "updated": new Date().toISOString()
-            }, function(message) {
-                Msgboy.inbox.trigger("messages:added", message);
-            });
-        });
-
         Msgboy.bind('inbox:new', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:welcome",
@@ -175,11 +77,58 @@ var MessageTrigger = {
 
         Msgboy.bind('inbox:new', function() {
             saveMessage({
+                "id": "tag:msgboy.com,2012:import-subscriptions",
+                "title": 'Click on this box to subscribe to new sites.',
+                "ungroup": true,
+                "summary": 'Click on this box to subscribe to new sites.',
+                "image": 'http://download.msgboy.com/resources/triggered/subcriptionmanagement.png',
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": '/data/html/import.html',
+                            "rel": "alternate",
+                            "title": "Import subscriptions to Msgboy",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime(),
+                "source": {
+                    "title": "Msgboy Tips",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "alternate": "http://msgboy.com/",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 0.5,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            });
+        });
+
+        Msgboy.bind('subscription:new', function() {
+            saveMessage({
                 "id": "tag:msgboy.com,2012:bookmark-and-visit",
-                "title": "Bookmark or come back to sites you love",
+                "title": "Bookmark sites you love to subscribe to them easily",
                 "ungroup": true,
                 "image": "http://download.msgboy.com/resources/triggered/bookmark_sites_you_love.png",
-                "summary": "Bookmark sites you love. The msgboy will show you messages when they update!",
+                "summary": "You can bookmark sites you love. The msgboy will show you messages when they update!",
                 "content": null,
                 "links": {
                     "alternate": {
@@ -220,7 +169,56 @@ var MessageTrigger = {
             });
         });
 
-        Msgboy.bind('messages:added', function() {
+        Msgboy.bind('down-ed', function() {
+            saveMessage({
+                "id": "tag:msgboy.com,2012:first-downvote",
+                "title": "This was your first down-vote",
+                "ungroup": true,
+                "summary": 'Click this box to learn more about what happens when you down-vote!',
+                "image": 'http://download.msgboy.com/resources/triggered/down_voting.png',
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": 'http://msg.by/HMQu9Q',
+                            "rel": "alternate",
+                            "title": "Down-voting",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime(),
+                "source": {
+                    "title": "Msgboy Tips",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "alternate": "http://msgboy.com/",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 1.0,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            }, function(message) {
+                Msgboy.inbox.trigger("messages:added", message);
+            });
+        });
+
+        Msgboy.bind('later', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:real-time",
                 "title": "Newly posted stories appear in realtime.",
@@ -266,53 +264,53 @@ var MessageTrigger = {
             });
         });
 
-        // Msgboy.bind('inbox:new', function() {
-        //     saveMessage({
-        //         "id": "tag:msgboy.com,2012:train",
-        //         "title": "Train msgboy to give you what you want.",
-        //         "ungroup": true,
-        //         "summary": "The msgboy gets better when you use him more. Vote stuff up and down to tell him what you like.",
-        //         "image": "http://download.msgboy.com/resources/triggered/train_it.png",
-        //         "content": null,
-        //         "links": {
-        //             "alternate": {
-        //                 "text/html": [
-        //                 {
-        //                     "href": 'http://msg.by/GPqQRH',
-        //                     "rel": "alternate",
-        //                     "title": "Train msgboy to give you what you want.",
-        //                     "type": "text/html"
-        //                 }
-        //                 ]
-        //             }
-        //         },
-        //         "createdAt": new Date().getTime() - 3000,
-        //         "source": {
-        //             "title": "Msgboy Tips",
-        //             "url": "http://blog.msgboy.com/",
-        //             "links": {
-        //                 "alternate": {
-        //                     "text/html": [
-        //                     {
-        //                         "href": "http://blog.msgboy.com/",
-        //                         "rel": "alternate",
-        //                         "title": "",
-        //                         "type": "text/html"
-        //                     }
-        //                     ]
-        //                 }
-        //             }
-        //         },
-        //         "sourceHost": "msgboy.com",
-        //         "state": "new",
-        //         "feed": "http://blog.msgboy.com/rss",
-        //         "relevance": 0.6,
-        //         "published": new Date().toISOString(),
-        //         "updated": new Date().toISOString()
-        //     });
-        // });
+        Msgboy.bind('messages:added', function() {
+            saveMessage({
+                "id": "tag:msgboy.com,2012:train",
+                "title": "Vote message up and down to train Msgboy.",
+                "ungroup": true,
+                "summary": "The msgboy gets better when you use him more. Vote stuff up and down to tell him what you like.",
+                "image": "http://download.msgboy.com/resources/triggered/train_it.png",
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": 'http://msg.by/GPqQRH',
+                            "rel": "alternate",
+                            "title": "Train msgboy to give you what you want.",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime() - 3000,
+                "source": {
+                    "title": "Msgboy Tips",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 0.6,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            });
+        });
 
-        Msgboy.bind('inbox:new', function() {
+        Msgboy.bind('anotherevent', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:vote-up",
                 "title": "Click '+' for more like this.",
@@ -358,7 +356,7 @@ var MessageTrigger = {
             });
         });
 
-        Msgboy.bind('inbox:new', function() {
+        Msgboy.bind('anotherevent', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:vote-down",
                 "title": "Click '-' if you're not interested.",
@@ -450,53 +448,53 @@ var MessageTrigger = {
             });
         });
 
-        // Msgboy.bind('inbox:new', function() {
-        //     saveMessage({
-        //         "id": "tag:msgboy.com,2012:use-settings",
-        //         "title": "You can throttle notifications in settings.",
-        //         "ungroup": true,
-        //         "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
-        //         "image": "http://download.msgboy.com/resources/triggered/msgboy_settings.png",
-        //         "content": null,
-        //         "links": {
-        //             "alternate": {
-        //                 "text/html": [
-        //                 {
-        //                     "href": 'http://msg.by/GH1AhF',
-        //                     "rel": "alternate",
-        //                     "title": "You can throttle notifications in settings.",
-        //                     "type": "text/html"
-        //                 }
-        //                 ]
-        //             }
-        //         },
-        //         "createdAt": new Date().getTime() - 7000,
-        //         "source": {
-        //             "title": "Msgboy Tips",
-        //             "url": "http://blog.msgboy.com/",
-        //             "links": {
-        //                 "alternate": {
-        //                     "text/html": [
-        //                     {
-        //                         "href": "http://blog.msgboy.com/",
-        //                         "rel": "alternate",
-        //                         "title": "",
-        //                         "type": "text/html"
-        //                     }
-        //                     ]
-        //                 }
-        //             }
-        //         },
-        //         "sourceHost": "msgboy.com",
-        //         "state": "new",
-        //         "feed": "http://blog.msgboy.com/rss",
-        //         "relevance": 0.6,
-        //         "published": new Date().toISOString(),
-        //         "updated": new Date().toISOString()
-        //     });
-        // });
+        Msgboy.bind('notification:shown', function() {
+            saveMessage({
+                "id": "tag:msgboy.com,2012:use-settings",
+                "title": "You can throttle notifications in settings.",
+                "ungroup": true,
+                "summary": "But don't forget that the msgboy is here to help, so he can also STFU!",
+                "image": "http://download.msgboy.com/resources/triggered/msgboy_settings.png",
+                "content": null,
+                "links": {
+                    "alternate": {
+                        "text/html": [
+                        {
+                            "href": 'http://msg.by/GH1AhF',
+                            "rel": "alternate",
+                            "title": "You can throttle notifications in settings.",
+                            "type": "text/html"
+                        }
+                        ]
+                    }
+                },
+                "createdAt": new Date().getTime() - 7000,
+                "source": {
+                    "title": "Msgboy Tips",
+                    "url": "http://blog.msgboy.com/",
+                    "links": {
+                        "alternate": {
+                            "text/html": [
+                            {
+                                "href": "http://blog.msgboy.com/",
+                                "rel": "alternate",
+                                "title": "",
+                                "type": "text/html"
+                            }
+                            ]
+                        }
+                    }
+                },
+                "sourceHost": "msgboy.com",
+                "state": "new",
+                "feed": "http://blog.msgboy.com/rss",
+                "relevance": 0.6,
+                "published": new Date().toISOString(),
+                "updated": new Date().toISOString()
+            });
+        });
 
-        Msgboy.bind('never', function() {
+        Msgboy.bind('later', function() {
             saveMessage({
                 "id": "tag:msgboy.com,2012:your-data-protected",
                 "title": "Your data is safe and protected.",

@@ -10,7 +10,6 @@ require('./../bootstrap-button.js');
 var OptionsView = Backbone.View.extend({
     events: {
         "change #relevance": "adjustRelevance",
-        "click #resetSubscriptions": "resetSubscriptions",
         "click #pinMsgboy": "pinMsgboy",
         "click #checkConnection": "checkConnection",
         "click #msgboySubscribeHandler": "registerHandler",
@@ -18,7 +17,7 @@ var OptionsView = Backbone.View.extend({
     },
 
     initialize: function () {
-        _.bindAll(this, "render", "adjustRelevance", "resetSubscriptions", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh", "checkConnection");
+        _.bindAll(this, "render", "adjustRelevance", "pinMsgboy", "saveModel", "registerHandler", "setAutoRefresh", "checkConnection");
         this.model = new Inbox();
         this.model.bind("change", function () {
             this.render();
@@ -44,29 +43,6 @@ var OptionsView = Backbone.View.extend({
 
     adjustRelevance: function (event) {
         this.saveModel();
-    },
-
-    resetSubscriptions: function (event) {
-        var modalHtml = [
-        '<div id="modal-options" class="modal backdrop fade">',
-            '<div class="modal-header">',
-                '<button class="close" data-dismiss="modal">×</button>',
-                '<h3>Reset Subscriptions</h3>',
-            '</div>',
-            '<div class="modal-body">',
-                '<p>Your subscriptions are being imported again. Please bear with us, as it may take a couple minutes.</p>',
-            '</div>',
-            '<div class="modal-footer">',
-            '</div>',
-        '</div>'
-        ].join('');
-        var modal = $(modalHtml);
-        modal.appendTo(document.body);
-        modal.on('hidden', function () {
-            modal.remove();
-        });
-        modal.modal('show');
-        browser.emit("resetSubscriptions");
     },
 
     pinMsgboy: function(event) {

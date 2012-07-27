@@ -14,7 +14,7 @@ var SubscriptionView = Backbone.View.extend({
         "click .btn": "toggleSubscription"
     },
     initialize: function () {
-        this.template = _.template('<td class="title"><% if (obj.alternate) { %><a target="_blank" href="<%= alternate %>"><%= title %></a><% } else { %><%= title %><%} %></td>\
+        this.template = _.template('<td class="title" data-feed-url="<%= id %>"><% if (obj.alternate) { %><a target="_blank" href="<%= alternate %>"><%= title %></a><% } else { %><%= title %><%} %></td>\
     <td class="state"><%= state %></td>\
     <td class="action"><button class="btn btn-mini"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>');
         this.model.bind('subscribing', this.subscribe, this);
