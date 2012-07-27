@@ -4,3 +4,4 @@ require('./signup.js');
 require('./subscriptions.js');
 require('./notification.js');
 require('./subscribe.js');
+require('./import.js');

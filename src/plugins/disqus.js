@@ -23,6 +23,9 @@ Disqus = function (Plugins) {
         });
     };
 
+    this.importable = false;
+    this.logurl = false;
+
     this.listSubscriptions = function (callback, done) {
         done(0);
     };

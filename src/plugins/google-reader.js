@@ -1,7 +1,7 @@
 GoogleReader = function (Plugins) {
     // Let's register
     Plugins.register(this);
-    
+
     this.name = 'Google Reader'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
     this.onSubscriptionPage = function (doc) {
@@ -23,13 +23,15 @@ GoogleReader = function (Plugins) {
         };
         var form = doc.getElementById('quick-add-form');
         form.addEventListener('submit', submitted);
-        
+
         var addButton = doc.querySelectorAll('#quick-add-form .goog-button-body')[0];
         addButton.addEventListener('click', submitted);
     };
 
+    this.logurl = "http://www.google.com/reader/subscriptions/export";
+    this.importable = true;
     this.listSubscriptions = function (callback, done) {
-        Plugins.httpGet("http://www.google.com/reader/subscriptions/export", function(data) {
+        Plugins.httpGet(this.logurl, function(data) {
             // That was successful!
             var fragment = Plugins.buildFragmentDocument(data);
             var feedCount = 0;
@@ -43,7 +45,7 @@ GoogleReader = function (Plugins) {
             // That was a fail :()
         });
     };
-    
+
     this.findUrlsInFragment = function(fragment, callback, done) {
       var outlines = fragment.querySelectorAll("outline");
       for(var i = 0; i < outlines.length; i++) {
@@ -51,7 +53,8 @@ GoogleReader = function (Plugins) {
           if(line.getAttribute("xmlUrl")) {
             callback({
                 url:  line.getAttribute("xmlUrl"),
-                title: line.getAttribute("title")
+                title: line.getAttribute("title"),
+                alternate: line.getAttribute("htmlUrl")
             });
           }
           else {
@@ -62,7 +65,7 @@ GoogleReader = function (Plugins) {
       }
       done();
     }
-    
+
 };
 
 exports.GoogleReader = GoogleReader;

@@ -14,14 +14,19 @@ var SubscriptionView = Backbone.View.extend({
         "click .btn": "toggleSubscription"
     },
     initialize: function () {
-        this.template = _.template($('#subscription-template').html());
+        this.template = _.template('<td class="title"><% if (obj.alternate) { %><a target="_blank" href="<%= alternate %>"><%= title %></a><% } else { %><%= title %><%} %></td>\
+    <td class="state"><%= state %></td>\
+    <td class="action"><button class="btn btn-mini"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>');
         this.model.bind('subscribing', this.subscribe, this);
         this.model.bind('unsubscribing', this.unsubscribe, this);
         this.model.bind('change', this.render, this);
     },
     render: function() {
-        $(this.el).html(this.template(this.model.toJSON()));
-        return this;
+      if(typeof(this.model.get('title')) === "undefined" || !this.model.get('title')) {
+        this.model.set('title', this.model.get('id'));
+      }
+      $(this.el).html(this.template(this.model.toJSON()));
+      return this;
     },
     toggleSubscription: function () {
         var currentState = this.model.get('state');
@@ -118,5 +123,6 @@ var SubscriptionsView = Backbone.View.extend({
     }
 });
 
+exports.SubscriptionView = SubscriptionView;
 exports.SubscriptionsView = SubscriptionsView;
 

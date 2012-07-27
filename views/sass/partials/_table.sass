@@ -5,10 +5,23 @@ table
     width: 85%
     margin-left: 20px
     margin-right: 20px
+    a
+      color: white
     tr
+      .title
+        max-width: 370px
+        min-width: 370px
+      .action
+        width: 100px
+        text-align: center
+      .state
+        width: 100px
+        text-align: center
+      th
+        .span2
+          width: 70px
       td
-        padding: 10px 0px 10px 0px
-        max-width: 330px
+        padding: 10px 5px 10px 5px
         white-space: nowrap
         overflow: hidden
         text-overflow: ellipsis
@@ -16,3 +29,7 @@ table
           &.small.action
             padding: 3px 9px 3px
             margin: 0px
+
+#plugins
+  float: right
+  margin-right: 20px

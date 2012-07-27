@@ -18,13 +18,16 @@ var Bookmarks = function (Plugins) {
     this.processNext = function(bookmarks, callback, done, totalFeeds) {
         var bookmark = bookmarks.pop();
         if(bookmark) {
-            callback({title: "", url: bookmark.url, doDiscovery: true});
+            callback({title: bookmark.title, url: bookmark.url, doDiscovery: true});
             totalFeeds++;
             this.processNext(bookmarks, callback, done, totalFeeds);
         } else {
             done(totalFeeds);
         }
     };
+
+    this.importable = true;
+    this.logurl = false;
 
     this.listSubscriptions = function (callback, done) {
         browser.getRecentBookmarks(1000,

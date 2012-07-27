@@ -1,12 +1,15 @@
 Generic = function (Plugins) {
     // Let's register
     Plugins.register(this);
-    
+
     this.name = 'Generic';
 
     this.onSubscriptionPage = function (doc) {
         return true;
     };
+
+    this.importable = false;
+    this.logurl = false;
 
     this.listSubscriptions = function (callback, done) {
         done(0);

@@ -2,7 +2,7 @@
 Posterous = function (Plugins) {
     // Let's register
     Plugins.register(this);
-    
+
 
     this.name = 'Posterous';
     this.hijacked = false;
@@ -31,14 +31,17 @@ Posterous = function (Plugins) {
         });
     };
 
+    this.importable = true;
+    this.logurl = "http://posterous.com/users/me/subscriptions";
+
     this.listSubscriptions = function (callback, done) {
         this.listSubscriptionsPage(1, 0, callback, done);
     };
 
     this.listSubscriptionsPage = function (page, count, callback, done) {
         var that = this;
-        
-        Plugins.httpGet("http://posterous.com/users/me/subscriptions?page=" + page, function(data) {
+
+        Plugins.httpGet(this.logurl + "?page=" + page, function(data) {
             // That was successful!
             var fragment = Plugins.buildFragmentDocument(data);
             var links = fragment.querySelectorAll("#subscriptions td.image a");
@@ -46,6 +49,7 @@ Posterous = function (Plugins) {
                 var link = links[i];
                 callback({
                     url: link.getAttribute("href") + "/rss.xml",
+                    alternate: link.getAttribute("href"),
                     title: link.getAttribute("title")
                 });
                 count += 1;

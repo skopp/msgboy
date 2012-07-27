@@ -26,21 +26,25 @@ var Wordpress = function (Plugins) {
         });
     };
 
+
+    this.importable = true;
+    this.logurl = "http://wordpress.com/wp-admin/";
+
     this.listSubscriptions = function (callback, done) {
       var subscriptions = 0;
-      Plugins.httpGet('http://wordpress.com/wp-admin/admin-ajax.php?action=wpcom_load_template&template=subscriptions.manage.blogs', function(data) {
-        var fragment = Plugins.buildFragmentDocument(JSON.parse(data).content);
+      Plugins.httpGet(this.logurl + 'admin-ajax.php?action=wpcom_load_template&template=reader%2Fedit-following.php', function(data) {
+        var fragment = Plugins.buildFragmentDocument(data);
         var links = fragment.querySelectorAll(".blogurl");
         for(var i = 0; i < links.length; i++) {
             var link = links[i];
             callback({
                 url: link.getAttribute("href") + "?feed=atom",
+                alternate: link.getAttribute("href"),
                 title: link.innerText
             });
             subscriptions += 1;
         }
         done(subscriptions);
-        
       });
     };
 };

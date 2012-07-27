@@ -27,15 +27,18 @@ Blogger = function (Plugins) {
         });
     };
 
+    this.importable = true;
+    this.logurl = "http://www.blogger.com/manage-blogs-following.g";
     this.listSubscriptions = function (callback, done) {
         var subscriptionsCount = 0;
-        Plugins.httpGet("http://www.blogger.com/manage-blogs-following.g", function (data) {
+        Plugins.httpGet(this.logurl, function (data) {
             var rex = /createSubscriptionInUi\(([\s\S]*?),[\s\S]*?,([\s\S]*?),[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?,[\s\S]*?\);/g;
             var match = rex.exec(data);
             while (match) {
                 subscriptionsCount += 1;
                 callback({
                     url: match[2].replace(/"/g, '').trim() + "feeds/posts/default",
+                    alternate: match[2].replace(/"/g, '').trim(),
                     title: match[1].replace(/"/g, '').trim()
                 });
                 match = rex.exec(data);

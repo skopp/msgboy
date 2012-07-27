@@ -4,7 +4,7 @@ var browser = require('../browsers.js').browser;
 var History = function (Plugins) {
     // Let's register
     Plugins.register(this);
-    
+
     this.name = 'Browsing History';
     this.visitsToBePopular = 3;
     this.deviation = 1;
@@ -16,7 +16,7 @@ var History = function (Plugins) {
     this.hijack = function (doc, follow, unfollow) {
         // Hum. Nothing to do.
     };
-    
+
     this.processNext = function(items, callback, done, totalFeeds) {
         var item = items.pop();
         if(item) {
@@ -40,7 +40,9 @@ var History = function (Plugins) {
             done(totalFeeds);
         }
     };
-    
+
+    this.importable = true;
+    this.logurl = false;
     this.listSubscriptions = function (callback, done) {
         browser.getRecentVisits(10000, function (historyItems) {
             if (historyItems.length === 0) {
@@ -49,7 +51,7 @@ var History = function (Plugins) {
             this.processNext(historyItems, callback, done, 0);
         }.bind(this));
     };
-    
+
     this.visitsRegularly = function (url, callback) {
         browser.getVisitsForUrl(url, function (visits) {
             var visitTimes = new Array();
@@ -61,7 +63,7 @@ var History = function (Plugins) {
             for (var i = 0; i < visitTimes.length - 1; i++) {
                 diffs[i] =  visitTimes[i + 1] - visitTimes[i];
             }
-            
+
             // Check the regularity and if it is regular + within a certain timeframe, then, we validate.
             if (Maths.normalizedDeviation(diffs) < this.deviation && (visitTimes.slice(-1)[0] -  visitTimes[0] > this.elapsed)) {
                 callback(true);

@@ -1,7 +1,7 @@
 var Typepad = function (Plugins) {
     // Let's register
     Plugins.register(this);
-    
+
 
     this.name = 'Typepad'; // Name for this plugin. The user will be asked which plugins he wants to use.
 
@@ -20,7 +20,7 @@ var Typepad = function (Plugins) {
                 // Done
             });
         });
-        
+
         var followAction = doc.getElementById('follow-action');
         followAction.addEventListener("click", function() {
             var feedLink = Plugins.getFeedLinkInDocWith(doc, "application/atom+xml");
@@ -32,6 +32,9 @@ var Typepad = function (Plugins) {
             });
         });
     };
+
+    this.importable = false;
+    this.logurl = false;
 
     this.listSubscriptions = function (callback, done) {
         done(0);

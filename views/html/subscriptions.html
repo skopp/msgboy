@@ -40,17 +40,17 @@
         <table id="subscriptions" class="table-condensed">
             <thead>
                 <tr>
-                    <th>
+                    <th class="title">
                         URL
                     </th>
-                    <th>
+                    <th class="state">
                         <select class="span2" id="selectState">
                             <option value='subscribed'>Subscribed</option>
                             <option value='unsubscribed'>Unsubscribed</option>
                             <option value='all'>All</option>
                         </select>
                     </th>
-                    <th></th>
+                    <th class="action"></th>
                 </tr>
             </thead>
         </table>
@@ -59,12 +59,6 @@
     <img id="buildings" src="../img/buildings.png" />
     <img id="clouds" src="../img/clouds.png" />
     <img id="signal" src="../img/mb-signal.png" />
-
-    <script type="text/template" id="subscription-template">
-    <td><%= id %></td>
-    <td><%= state %></td>
-    <td><button class="btn btn-mini"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>
-    </script>
 
 </body>
 </html>
