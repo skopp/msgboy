@@ -24,7 +24,7 @@ var History = function (Plugins) {
                 this.visitsRegularly(item.url, function (result) {
                     if (result) {
                         totalFeeds++;
-                        callback({title: "", url: item.url, doDiscovery: true});
+                        callback({title: item.title, url: item.url, doDiscovery: true});
                         this.processNext(items, callback, done, totalFeeds);
                     }
                     else {

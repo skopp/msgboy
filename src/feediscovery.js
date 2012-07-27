@@ -30,7 +30,7 @@ Feediscovery.prototype.get = function (_url, _callback) {
         }
         _callback(links);
       }.bind(this)]);
-      
+
       // Make sure we run!
       if(!this.running) {
         this.run();
@@ -43,10 +43,10 @@ Feediscovery.prototype.get = function (_url, _callback) {
 // Runs the feediscovery
 Feediscovery.prototype.run = function () {
   var next = this.stack.shift();
-  if (next) {    
+  if (next) {
     feediscovery(next[0], function(err, feeds) {
       next[1](feeds),
-      this.run(); 
+      this.run();
     }.bind(this));
   } else {
     this.running = false;

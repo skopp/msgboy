@@ -8,28 +8,29 @@ var Msgboy = require('../msgboy.js').Msgboy;
 var browser = require('../browsers.js').browser;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
 var Plugins = require('../plugins.js').Plugins;
-var Blogger = require('../plugins/blogger.js').Blogger;
-new Blogger(Plugins);
+
+var History = require('../plugins/history.js').History;
+new History(Plugins);
 var Bookmarks = require('../plugins/bookmarks.js').Bookmarks;
 new Bookmarks(Plugins);
+var GoogleReader = require('../plugins/google-reader.js').GoogleReader;
+new GoogleReader(Plugins);
+var Tumblr = require('../plugins/tumblr.js').Tumblr;
+new Tumblr(Plugins);
+var Wordpress = require('../plugins/wordpress.js').Wordpress;
+new Wordpress(Plugins);
+var Blogger = require('../plugins/blogger.js').Blogger;
+new Blogger(Plugins);
 var Disqus = require('../plugins/disqus.js').Disqus;
 new Disqus(Plugins);
 var Generic = require('../plugins/generic.js').Generic;
 new Generic(Plugins);
-var GoogleReader = require('../plugins/google-reader.js').GoogleReader;
-new GoogleReader(Plugins);
-var History = require('../plugins/history.js').History;
-new History(Plugins);
 var Posterous = require('../plugins/posterous.js').Posterous;
 new Posterous(Plugins);
 var Statusnet = require('../plugins/statusnet.js').Statusnet;
 new Statusnet(Plugins);
-var Tumblr = require('../plugins/tumblr.js').Tumblr;
-new Tumblr(Plugins);
 var Typepad = require('../plugins/typepad.js').Typepad;
 new Typepad(Plugins);
-var Wordpress = require('../plugins/wordpress.js').Wordpress;
-new Wordpress(Plugins);
 
 
 var ImportView = Backbone.View.extend({
@@ -38,8 +39,8 @@ var ImportView = Backbone.View.extend({
     el: "#info",
 
     initialize: function () {
-      _.bindAll(this, 'import', 'showOne', 'doneImporting', 'showLoader', 'hideLoader');
-      $(this.el).append($('<h1>Import</h1>'));
+      _.bindAll(this, 'import', 'showOne', 'doneImporting', 'showLoader', 'hideLoader', 'subscribeAll');
+      $(this.el).append($('<h1>Import Subscriptions</h1>'));
       var selector = $("<select id='plugins'>");
       Plugins.all.forEach(function(plugin, _id) {
         if(plugin.importable) {
@@ -50,26 +51,37 @@ var ImportView = Backbone.View.extend({
 
       $(this.el).append(selector);
       $(this.el).append($('<table id="subscriptions" class="table-condensed"><thead><tr><th></th><th></th><th></th></tr></thead></table>'));
+      $(this.el).append($('<span id="subscribe-all" class="btn" style="display:none; float:right; margin: 20px;">Subscribe All</span>'));
       $(this.el).append($('<p id="loader"><img src="../img/loader.gif"/><span>Loading</span></p>'));
       $(this.el).append($('<p id="message"><span></span></p>'));
+
       selector.change(function(v) {
         this.import(Plugins.all[$(selector).find(':selected')[0].id]);
       }.bind(this));
-      this.import(Plugins.all[$(selector).find(':selected')[0].id]);
-
+      this.subscriptions = new Backbone.Collection(); // create container for the subscriptions displayed
+      $('#subscribe-all').click(this.subscribeAll);
+      this.import(Plugins.all[$(selector).find(':selected')[0].id]); // Let's start importing
     },
 
     import: function(plugin) {
+      $("#subscribe-all").hide();
+      this.subscriptions.reset();
+      var imported = discovered = 0;
+      var doneImporting = false;
       this.showLoader("Loading more data from " + plugin.name);
       this.$('#subscriptions .subscription').remove();
       plugin.listSubscriptions(function(pair) {
         if(pair.doDiscovery) {
-          // this.showOne(pair);
+          imported += 1;
           browser.emit('feediscovery', pair, function(feeds) {
+            discovered += 1;
             if(feeds.length > 0) {
               // We only want to show the first feed.
               var feed = feeds[0];
               this.showOne({url: feed.href, title: pair.title, alternate: pair.url});
+            }
+            if(imported === discovered && doneImporting) {
+              this.doneImporting(plugin, discovered);
             }
           }.bind(this));
         }
@@ -77,12 +89,16 @@ var ImportView = Backbone.View.extend({
           this.showOne(pair);
         }
       }.bind(this), function(total) {
-        this.doneImporting(plugin, total)
+        doneImporting = true;
+        if(imported === discovered) {
+          this.doneImporting(plugin, total);
+        }
       }.bind(this));
     },
 
     showOne:function(subs) {
       var subscription = new Subscription({id: subs.url});
+      this.subscriptions.add(subscription);
       subscription.fetchOrCreate(function () {
         subscription.set('title', subs.title);
         subscription.set('alternate', subs.alternate);
@@ -101,6 +117,9 @@ var ImportView = Backbone.View.extend({
         }
         $("#message").show();
       }
+      else {
+        $("#subscribe-all").show();
+      }
       this.hideLoader();
     },
 
@@ -112,6 +131,12 @@ var ImportView = Backbone.View.extend({
 
     hideLoader: function() {
       $("#loader").hide();
+    },
+
+    subscribeAll: function() {
+      this.subscriptions.forEach(function(sub) {
+        sub.setState("subscribing");
+      });
     }
 
 });
