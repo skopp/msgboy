@@ -44,7 +44,6 @@ var Message = Backbone.Model.extend({
             params = {};
         }
 
-
         // Setting up the source attributes
         if(typeof(params.sourceLink) === 'undefined' || typeof(params.sourceHost) === 'undefined' || params.sourceHost === "" || params.sourceLink === "") {
             if (params.source && params.source.links) {

@@ -1,4 +1,4 @@
-var feediscovery = require('feediscovery');
+var feender = require('feender');
 
 // Feediscovery module. The only API that needs to be used is the Feediscovery.get
 Feediscovery = function() {
@@ -44,7 +44,7 @@ Feediscovery.prototype.get = function (_url, _callback) {
 Feediscovery.prototype.run = function () {
   var next = this.stack.shift();
   if (next) {
-    feediscovery(next[0], function(err, feeds) {
+    feender(next[0], function(err, feeds) {
       next[1](feeds),
       this.run();
     }.bind(this));

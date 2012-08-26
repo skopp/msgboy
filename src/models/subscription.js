@@ -76,13 +76,21 @@ var Subscriptions = Backbone.Collection.extend({
     storeName: "subscriptions",
     database: msgboyDatabase,
     model: Subscription,
-    pending: function () {
+    pendingSubscriptions: function () {
         this.fetch({
             conditions: {state: "subscribing"},
             addIndividually: true,
             limit: 100
         });
+    },
+    pendingUnsubscriptions: function () {
+        this.fetch({
+            conditions: {state: "unsubscribing"},
+            addIndividually: true,
+            limit: 100
+        });
     }
+
 });
 
 var Blacklist = [

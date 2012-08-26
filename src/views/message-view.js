@@ -26,9 +26,9 @@ var MessageView = Backbone.View.extend({
     initialize: function () {
         $(this.el).attr('title', this.model.get('mainLink'));
         $(this.el).data('model', this.model);
-        this.model.bind('change', this.layout.bind(this)); 
+        this.model.bind('change', this.layout.bind(this));
         this.model.bind('remove', this.remove.bind(this))
-        this.model.bind('destroy', this.remove.bind(this)); 
+        this.model.bind('destroy', this.remove.bind(this));
         this.model.bind('expand', function() {
             // Let's remember to never group these stories again.
             this.model.save({ungroup: true});
@@ -36,10 +36,10 @@ var MessageView = Backbone.View.extend({
             $(this.el).removeClass('brother'); // Let's show this bro!
             $(this.el).animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
             $(this.el).find('p.darkened').animate({ backgroundColor: "#3284b5" }, 300).animate({ backgroundColor: "#11232c" }, 1000);
-        }.bind(this)); 
+        }.bind(this));
         this.model.bind('unsubscribe', function () {
             browser.emit('unsubscribe', {
-                title: "", // TODO : Add support for title 
+                title: "", // TODO : Add support for title
                 url: this.model.get('feed'),
                 force: true
             },function (response) {
@@ -53,16 +53,16 @@ var MessageView = Backbone.View.extend({
         this.trigger('rendered');
     },
     layout: function() {
-        var el = $(this.el), 
+        var el = $(this.el),
         isGroup = this.model.related && this.model.related.length >= 1;
-        
+
         // remove all the brick classes, add new one
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
         el.addClass(this.getBrickClass());
 
         el.html(this.template({model: this.model}));
         el.addClass("text");
-        
+
         // render our compiled template
         if (isGroup) {
             el.addClass('stack');
@@ -88,7 +88,11 @@ var MessageView = Backbone.View.extend({
             if (!$(evt.target).hasClass("vote") && !$(evt.target).hasClass("share")) {
                 if (evt.shiftKey) {
                     browser.emit("notify", this.model.toJSON());
-                } else {
+                }
+                else if (evt.altKey) {
+                    this.model.destroy();
+                }
+                else {
                     // User wants to open a tab.
                     // We need to open a tab right after this one.
                     browser.getCurrentTab(function(tab) {
@@ -124,7 +128,7 @@ var MessageView = Backbone.View.extend({
     },
     getBrickClass: function () {
         var res, state = this.model.get('state');
-            
+
         if (state === 'down-ed') {
             res = '1';
         } else if (state === 'up-ed') {
@@ -146,7 +150,7 @@ var MessageView = Backbone.View.extend({
                 }
             }
             else {
-                res = Math.ceil(this.model.attributes.relevance * 4); 
+                res = Math.ceil(this.model.attributes.relevance * 4);
             }
         }
         return 'brick-' + res;
