@@ -9,10 +9,10 @@ var browser = require('../browsers.js').browser;
 var Subscriptions = require('../models/subscription.js').Subscriptions;
 var Plugins = require('../plugins.js').Plugins;
 
-var History = require('../plugins/history.js').History;
-new History(Plugins);
 var Bookmarks = require('../plugins/bookmarks.js').Bookmarks;
 new Bookmarks(Plugins);
+var History = require('../plugins/history.js').History;
+new History(Plugins);
 var GoogleReader = require('../plugins/google-reader.js').GoogleReader;
 new GoogleReader(Plugins);
 var Tumblr = require('../plugins/tumblr.js').Tumblr;
