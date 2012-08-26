@@ -25,7 +25,7 @@ for (var i = 0; i < Plugins.all.length; i++) {
     var plugin = Plugins.all[i];
     if (plugin.onSubscriptionPage(document)) { // Are we on the plugin's page?
         plugin.hijack(document, function (feed, done) {
-            browser.emit("subscribe", feed, done);
+            browser.emit("askSubscribe", feed, done);
         }, function (feed, done) {
             // Unfollow?
             // We should first check whether the user is subscribed, and if he is, then, ask whether he wants to unsubscribe from here as well.
