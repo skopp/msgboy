@@ -163,134 +163,130 @@ var resumeSubscriptions = function () {
 // Rewrites URL and adds tacking code. This will be useful for publishers who use Google Analytics to measure their traffic.
 var rewriteOutboundUrl = function(url) {
   var parsed = Url.parse(url);
-    parsed.href = parsed.search = ""; // Deletes the href and search, which are to be re-composed with the new qs.
-    var qs = QueryString.parse(parsed.query);
-    qs.utm_source = 'msgboy'; // Source is Msgboy
-    qs.utm_medium = 'feed'; // Medium is feed
-    qs.utm_campaign = qs.utm_campaign || 'msgboy'; // Campaign is persisted or msgboy
-    parsed.query = qs; // Re-assign the query
-    return Url.format(parsed);
-  }
-  exports.rewriteOutboundUrl = rewriteOutboundUrl;
-
-  connection.on('ready', function() {
-  resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
-});
+  parsed.href = parsed.search = "";
+  var qs = QueryString.parse(parsed.query);
+  qs.utm_source = 'msgboy';
+  qs.utm_medium = 'feed';
+  qs.utm_campaign = qs.utm_campaign || 'msgboy';
+  parsed.query = qs;
+  return Url.format(parsed);
+};
 
 var askForSubscription = function(feed, source) {
-    var m = {
-      "id": "tag:msgboy.com,2012:suggest-subscribe-" + feed.href + "-" + new Date().getTime(),
-      "ungroup": true,
-      "content": null,
-      "mainLink": "http://google.com",
-      "createdAt": new Date().getTime(),
-      "source": {
-        "title": "Msgboy Tips",
-        "url": "http://blog.msgboy.com/",
-        "links": {
-          "alternate": {
-            "text/html": [{
-              "href": "http://blog.msgboy.com/",
-              "rel": "alternate",
-              "title": "",
-              "type": "text/html"
-            }]
-          }
+  var m = {
+    "id": "tag:msgboy.com,2012:suggest-subscribe-" + feed.href + "-" + new Date().getTime(),
+    "ungroup": true,
+    "content": null,
+    "mainLink": "http://google.com",
+    "createdAt": new Date().getTime(),
+    "source": {
+      "title": "Msgboy Tips",
+      "url": "http://blog.msgboy.com/",
+      "links": {
+        "alternate": {
+          "text/html": [{
+            "href": "http://blog.msgboy.com/",
+            "rel": "alternate",
+            "title": "",
+            "type": "text/html"
+          }]
         }
-      },
-      "sourceHost": "msgboy.com",
-      "alternate": "http://msgboy.com/",
-      "state": "new",
-      "feed": "http://blog.msgboy.com/rss",
-      "relevance": 0.5,
-      "published": new Date().toISOString(),
-      "updated": new Date().toISOString()
-    };
-    if(typeof(source.title) !== 'undefined' && source.title && source.title !== "") {
-      m.title = "Do you want to subscribe to " + feed.title + ' from ' + source.title + '?';
-      m.mainLink = '/data/html/subscribe.html?url=' + encodeURI(feed.href) + '&title=' + encodeURI(feed.title + " from " + source.title);
-    }
-    else {
-      m.title = "Do you want to subscribe to " + feed.title + '?';
-      m.mainLink = '/data/html/subscribe.html?url=' + encodeURI(feed.href) + '&title=' + encodeURI(feed.title);
-    }
-    var msg = new Message(m);
-    msg.create({}, {
-      success: function () {
-        Msgboy.log.debug("Saved message " + msg.id);
+      }
+    },
+    "sourceHost": "msgboy.com",
+    "alternate": "http://msgboy.com/",
+    "state": "new",
+    "feed": "http://blog.msgboy.com/rss",
+    "relevance": 0.5,
+    "published": new Date().toISOString(),
+    "updated": new Date().toISOString()
+  };
+  if(typeof(source.title) !== 'undefined' && source.title && source.title !== "") {
+    m.title = "Do you want to subscribe to " + feed.title + ' from ' + source.title + '?';
+    m.mainLink = '/data/html/subscribe.html?url=' + encodeURI(feed.href) + '&title=' + encodeURI(feed.title + " from " + source.title);
+  }
+  else {
+    m.title = "Do you want to subscribe to " + feed.title + '?';
+    m.mainLink = '/data/html/subscribe.html?url=' + encodeURI(feed.href) + '&title=' + encodeURI(feed.title);
+  }
+  var msg = new Message(m);
+  msg.create({}, {
+    success: function () {
+      Msgboy.log.debug("Saved message " + msg.id);
         notify(msg.toJSON(), true); // We want to show the popup anyway!
       }.bind(this),
       error: function (object, error) {
       }.bind(this)
     });
-  }
+}
 
-  connection.on('resubscribe', function (notification) {
-    Msgboy.log.debug("Server asks that we resubscribe.");
-    var subscriptions = new Subscriptions();
-    subscriptions.bind('reset', function() {
-      subscriptions.each(function(subscription) {
-        subscription.setState("subscribing");
-        subscription.bind("subscribing", function () {
-          Msgboy.log.debug("subscribing to", subscription.id);
-          connection.subscribe(subscription.id, function (result, feed) {
-            Msgboy.log.debug("subscribed to", subscription.id);
-            subscription.setState("subscribed");
-          });
+connection.on('ready', function() {
+  resumeSubscriptions(); // Let's check the subscriptions and make sure there is nothing to be performed.
+});
+
+connection.on('resubscribe', function (notification) {
+  Msgboy.log.debug("Server asks that we resubscribe.");
+  var subscriptions = new Subscriptions();
+  subscriptions.bind('reset', function() {
+    subscriptions.each(function(subscription) {
+      subscription.setState("subscribing");
+      subscription.bind("subscribing", function () {
+        Msgboy.log.debug("subscribing to", subscription.id);
+        connection.subscribe(subscription.id, function (result, feed) {
+          Msgboy.log.debug("subscribed to", subscription.id);
+          subscription.setState("subscribed");
         });
       });
     });
-    subscriptions.fetch( {
-      conditions: {state: "subscribed"},
-    });
   });
+  subscriptions.fetch( {
+    conditions: {state: "subscribed"},
+  });
+});
 
-  connection.on('notification', function (notification) {
-    Msgboy.log.debug("Notification received " + notification.source.url);
-    var message = new Message(notification);
-    imageExtractor.extract(message.get('text'), message.get('mainLink'), function(largestImg) {
-      var attributes = {};
+connection.on('notification', function (notification) {
+  Msgboy.log.debug("Notification received " + notification.source.url);
+  var message = new Message(notification);
+  imageExtractor.extract(message.get('text'), message.get('mainLink'), function(largestImg) {
+    var attributes = {};
 
-      if(largestImg) {
-        message.set({image: largestImg});
-      }
+    if(largestImg) {
+      message.set({image: largestImg});
+    }
 
-      message.calculateRelevance(function (_relevance) {
-        attributes.relevance = _relevance;
-        message.create(attributes, {
-          success: function() {
-            Msgboy.log.debug("Saved message", message.id);
-            Msgboy.inbox.trigger("messages:added", message);
-          }.bind(this),
-          error: function(error) {
-            Msgboy.log.debug("Could not save message", error);
-          }.bind(this)
-        });
-      }.bind(this));
+    message.calculateRelevance(function (_relevance) {
+      attributes.relevance = _relevance;
+      message.create(attributes, {
+        success: function() {
+          Msgboy.log.debug("Saved message", message.id);
+          Msgboy.inbox.trigger("messages:added", message);
+        }.bind(this),
+        error: function(error) {
+          Msgboy.log.debug("Could not save message", error);
+        }.bind(this)
+      });
     }.bind(this));
+  }.bind(this));
+});
+
+connection.on('status', function(status) {
+  browser.emit('status', status);
+});
+
+Msgboy.bind("loaded:background", function () {
+  Msgboy.inbox = new Inbox();
+  Msgboy.connection = connection;
+
+  MessageTrigger.observe(Msgboy);
+
+  Msgboy.inbox.bind("messages:added", function (message) {
+    notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
   });
 
-  connection.on('status', function(status) {
-    browser.emit('status', status);
-  });
-
-  Msgboy.bind("loaded:background", function () {
-    Msgboy.inbox = new Inbox();
-    Msgboy.connection = connection;
-
-    MessageTrigger.observe(Msgboy); // Getting ready for incoming messages
-
-    // When a new message was added to the inbox
-    Msgboy.inbox.bind("messages:added", function (message) {
-      notify(message.toJSON(), message.attributes.relevance >= Msgboy.inbox.attributes.options.relevance);
-    });
-
-    // When the inbox is ready
-    Msgboy.inbox.bind("ready", function () {
-      Msgboy.trigger("inbox:ready");
-      Msgboy.log.debug("Inbox ready");
-      connect(Msgboy.inbox);
-        // Let's check here if the Msgboy pin is set to true. If so, let's keep it there :)
+  Msgboy.inbox.bind("ready", function () {
+    Msgboy.trigger("inbox:ready");
+    Msgboy.log.debug("Inbox ready");
+    connect(Msgboy.inbox);
     if(Msgboy.inbox.attributes.options.pinMsgboy) {
       browser.isDashboardOpen(function(open) {
         if(!open) {
@@ -305,178 +301,148 @@ var askForSubscription = function(feed, source) {
     }
   });
 
-    // When the inbox is new.
-    Msgboy.inbox.bind("new", function () {
-      Msgboy.log.debug("New Inbox");
-      Msgboy.trigger("inbox:new"); // Let's indicate all msgboy susbcribers that it's the case!
-    });
+  Msgboy.inbox.bind("new", function () {
+    Msgboy.log.debug("New Inbox");
+    Msgboy.trigger("inbox:new");
+  });
 
-    // When there is no such inbox there.
-    Msgboy.inbox.bind("error", function (error) {
-        // Ok, no such inbox... So we need to create an account!
-        window.open("http://stream.msgboy.com/session/new?ext=" + browser.msgboyId());
+  Msgboy.inbox.bind("error", function (error) {
+    window.open("http://stream.msgboy.com/session/new?ext=" + browser.msgboyId());
+  });
+
+  browser.listen(function (_request, _sender, _sendResponse) {
+    Msgboy.trigger(_request.signature, _request.params, _sendResponse);
+  });
+
+  browser.externalListen(function (_request, _sender, _sendResponse) {
+    Msgboy.trigger(_request.signature, _request.params, _sendResponse);
+  });
+
+  Msgboy.bind('register', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "register", params.username);
+    Msgboy.inbox.bind("new", function() {
+      _sendResponse({
+        value: true
       });
-
-    // Chrome specific. We want to turn any Chrome API callback into a DOM event. It will greatly improve portability.
-    browser.listen(function (_request, _sender, _sendResponse) {
-      Msgboy.trigger(_request.signature, _request.params, _sendResponse);
     });
+    Msgboy.inbox.setup(params.username, params.token);
+  });
 
-    // Chrome specific. Listens to external requests from other extensions!
-    browser.externalListen(function (_request, _sender, _sendResponse) {
-      Msgboy.trigger(_request.signature, _request.params, _sendResponse);
-    });
-
-    // Registers a new user
-    Msgboy.bind('register', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "register", params.username);
-      Msgboy.inbox.bind("new", function() {
-        _sendResponse({
-          value: true
+  Msgboy.bind('askSubscribe', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "askSubscribe", params.url);
+    feediscovery.get(params.url, function (links) {
+      links.forEach(function(l) {
+        var subscription = new Subscription({id: l.href});
+        subscription.fetchOrCreate(function() {
+          if(subscription.get('state') === 'unsubscribed' && subscription.needsRefresh()) {
+            subscription.setState('unsubscribed');
+            askForSubscription(l, params);
+          }
         });
       });
-      Msgboy.inbox.setup(params.username, params.token);
     });
+  });
 
-    // Subscribe to a feed.
-    Msgboy.bind('askSubscribe', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "askSubscribe", params.url);
-      // We should first do the feediscovery
-      // Then, for each feed, we should create the subscription
-      // Object and then, for the non subscribed feeds, ask the user whether he wants to subs
-      // cribe to it or not. That's that easy.
-      feediscovery.get(params.url, function (links) {
-        links.forEach(function(l) {
+  Msgboy.bind('subscribe', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "subscribe", params.url);
+    subscribe(params.url, params.doDiscovery, params.force || false, function (result) {
+      _sendResponse({
+        value: result
+      });
+    });
+  });
+
+  Msgboy.bind('unsubscribe', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "unsubscribe", params.url);
+    unsubscribe(params.url, function (result) {
+      _sendResponse({
+        value: result
+      });
+    });
+  });
+
+  Msgboy.bind('notify', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "notify", params);
+    notify(params, true);
+  });
+
+  Msgboy.bind('notificationReady', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "notificationReady");
+    currentNotification.ready = true;
+    while (messageStack.length > 0) {
+      browser.emit("notify", messageStack.pop());
+    }
+  });
+
+  Msgboy.bind('tab', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "tab", params.url);
+    params.url = rewriteOutboundUrl(params.url);
+    browser.openNewTab(params, function(tab) {
+      // tab is open! We need to inject some JS in it so that messages can be voted up and down, as well as shared.
+      // browser.inject(tab.id, '/lib/clicked.js', function() {
+      //   console.log("Code executed")
+      // });
+    });
+  });
+
+  Msgboy.bind('reload', function (params, _sendResponse) {
+    Msgboy.log.debug("request", "reload");
+    Msgboy.inbox.fetch();
+  });
+
+  Msgboy.bind('feediscovery', function(params, _sendResponse) {
+    Msgboy.log.debug("request", "feediscovery", params);
+    feediscovery.get(params.url, function (links) {
+      if(params.checkSubscription && links.length !== 0) {
+
+        var done = _.after(links.length, function() {
+          _sendResponse(links);
+        }.bind(this));
+
+        _.each(links, function(l){
           var subscription = new Subscription({id: l.href});
           subscription.fetch({
             success: function() {
-              if(subscription.get('state') === 'unsubscribed') {
-                askForSubscription(l, params);
+              if(subscription.get('state') === "subscribed") {
+                l.subscribed = true;
+                done();
               }
-            },
-            error: function() {
-              askForSubscription(l, params);
-            }
-          });
-        });
-      });
-    });
-
-    // Subscribe to a feed.
-    Msgboy.bind('subscribe', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "subscribe", params.url);
-        // We first need to look at params and see if the doDiscovery flag is set. If so, we first need to perform discovery
-        subscribe(params.url, params.doDiscovery, params.force || false, function (result) {
-          _sendResponse({
-            value: result
-          });
-        });
-      });
-
-    // Unsubscribe from a feed.
-    Msgboy.bind('unsubscribe', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "unsubscribe", params.url);
-      unsubscribe(params.url, function (result) {
-        _sendResponse({
-          value: result
-        });
-      });
-    });
-
-    // Show a notification
-    Msgboy.bind('notify', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "notify", params);
-      notify(params, true);
-        // Nothing to do.
-      });
-
-    // Notifications are ready to be displayed
-    Msgboy.bind('notificationReady', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "notificationReady");
-      currentNotification.ready = true;
-        // We should then start sending all notifications.
-        while (messageStack.length > 0) {
-          browser.emit("notify", messageStack.pop());
-        }
-      });
-
-    // Open a new tab.
-    Msgboy.bind('tab', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "tab", params.url);
-        params.url = rewriteOutboundUrl(params.url); // Rewritting the url to add msgboy tracking codes.
-        browser.openNewTab(params, function(tab) {
-            // tab is open! We need to inject some JS in it so that messages can be voted up and down, as well as shared.
-            // browser.inject(tab.id, '/lib/clicked.js', function() {
-            //   console.log("Code executed")
-            // });
-          });
-      });
-
-    // When reloading the inbox is needed (after a change in settings eg)
-    Msgboy.bind('reload', function (params, _sendResponse) {
-      Msgboy.log.debug("request", "reload");
-      Msgboy.inbox.fetch();
-    });
-
-    // When one of the clients asks for discovery on a feed.
-    Msgboy.bind('feediscovery', function(params, _sendResponse) {
-      Msgboy.log.debug("request", "feediscovery", params);
-      feediscovery.get(params.url, function (links) {
-        if(params.checkSubscription && links.length !== 0) {
-
-          var done = _.after(links.length, function() {
-            _sendResponse(links);
-          }.bind(this));
-
-          // For each Link, we need to check if there is a subscription
-          _.each(links, function(l){
-            var subscription = new Subscription({id: l.href});
-            subscription.fetch({
-              success: function() {
-                if(subscription.get('state') === "subscribed") {
-                  l.subscribed = true;
-                  done();
-                }
-                else {
-                  l.subscribed = false;
-                  done();
-                }
-              },
-              error: function() {
+              else {
                 l.subscribed = false;
                 done();
               }
-            });
+            },
+            error: function() {
+              l.subscribed = false;
+              done();
+            }
           });
-        }
-        else {
-          _sendResponse(links);
-        }
-      });
-    });
-
-Msgboy.bind('checkConnection', function(params, _sendResponse) {
-  _sendResponse(Msgboy.connection.state);
-});
-
-Msgboy.bind('ping', function(params, _sendResponse) {
-  Msgboy.connection.ping(function(res) {
-    _sendResponse(res);
-  });
-});
-
-    // Plugins management for those who use the Chrome API to subscribe in background.
-    for(var j = 0; j < Plugins.all.length; j++) {
-      var plugin = Plugins.all[j];
-      if (typeof (plugin.subscribeInBackground) != "undefined") {
-        plugin.subscribeInBackground(function (subscription) {
-          Msgboy.trigger('askSubscribe', subscription, function() {
-                    // Nothing.
-                  });
         });
       }
-    }
-
-    // Let's go.
-    Msgboy.inbox.fetchAndPrepare();
+      else {
+        _sendResponse(links);
+      }
+    });
   });
+
+  Msgboy.bind('checkConnection', function(params, _sendResponse) {
+    _sendResponse(Msgboy.connection.state);
+  });
+
+  Msgboy.bind('ping', function(params, _sendResponse) {
+    Msgboy.connection.ping(function(res) {
+      _sendResponse(res);
+    });
+  });
+
+  for(var j = 0; j < Plugins.all.length; j++) {
+    var plugin = Plugins.all[j];
+    if (typeof (plugin.subscribeInBackground) != "undefined") {
+      plugin.subscribeInBackground(function (subscription) {
+        Msgboy.trigger('askSubscribe', subscription);
+      });
+    }
+  }
+
+  Msgboy.inbox.fetchAndPrepare();
+});
