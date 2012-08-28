@@ -16,26 +16,29 @@ var ModalShareView = Backbone.View.extend({
   tagName: "div",
   className: 'modal backdrop fade modal-share',
 
-  template: _.template([
-    '<div class="modal-header">',
-    '<button class="close" data-dismiss="modal">×</button>',
-    '<h3>Share</h3>',
-    '<h4><%= title %></h4>',
-    '</div>',
-    '<div class="modal-body">',
-    '<label for="comment">Comment</label>',
-    '<h2 style="display:none"><%= title %> </h2>',
-    '<textarea class="xxlarge" id="comment" name="comment" rows="3"><%= comment %></textarea>',
-    '<span class="help-block" id="character-count">0 character</span>',
-    '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
-    '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
-    '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
-    '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
-    '</div>',
-    '<div class="modal-footer">',
-    '</div>',
-  ].join('')),
-
+  // template: _.template([
+  //   '<div class="modal-header">',
+  //   '<button class="close" data-dismiss="modal">×</button>',
+  //   '<h3>Share</h3>',
+  //   '<h4><%= title %></h4>',
+  //   '</div>',
+  //   '<div class="modal-body">',
+  //   '<label for="comment">Comment</label>',
+  //   '<h2 style="display:none"><%= title %> </h2>',
+  //   '<textarea class="xxlarge" id="comment" name="comment" rows="3"><%= comment %></textarea>',
+  //   '<span class="help-block" id="character-count">0 character</span>',
+  //   '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
+  //   '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
+  //   '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
+  //   '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
+  //   '</div>',
+  //   '<div class="modal-footer">',
+  //   '</div>',
+  // ].join('')),
+  template: function(message) {
+    var templ = $('<div></div>');
+    return templ;
+  },
   initialize: function (args) {
     this.message = args.message;
 
@@ -48,10 +51,10 @@ var ModalShareView = Backbone.View.extend({
     $.get(UrlParser.format(shortenerUrl), null, function(data) {
       // On successful shortening, we use that short url!
       this.urlToShare = data;
-    }.bind(this));   
+    }.bind(this));
 
     $(this.el).html(this.template({
-      comment: args.message.get('title') + " - " + args.message.get('source').title, 
+      comment: args.message.get('title') + " - " + args.message.get('source').title,
       title: args.message.get('title')
     }));
 
@@ -77,12 +80,12 @@ var ModalShareView = Backbone.View.extend({
 
 
     switch(service) {
-      case "webintents": 
+      case "webintents":
       var intent = new WebKitIntent("http://webintents.org/share", "text/uri-list", this.urlToShare);
       var onSuccess = function(data) {
         $(this.el).modal('toggle');
       };
-      var onError = function(data) { 
+      var onError = function(data) {
         $(this.el).modal('toggle');
       };
       window.navigator.webkitStartActivity(intent, onSuccess, onError);

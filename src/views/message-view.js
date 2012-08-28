@@ -14,15 +14,16 @@ var MessageView = Backbone.View.extend({
         "click": "handleClick"
     },
     // TODO: i'd prefer is we didn't set style attributes. Also, the favicon can be an img tag, just for cleanliness when writing to the template.
-    template: _.template([
-        '<span class="controls">',
+    template: function(message) {
+        var templ = $(['<span class="controls">',
             '<button title="Vote Down" class="vote down"></button>',
             '<button title="Share" class="share"></button>',
             '<button title="Vote Up" class="vote up"></button>',
         '</span>',
-        '<h1 style="background-image: url(<%= model.faviconUrl() %>)"><%= model.get("source").title %></h1>',
-        '<p><%= model.escape("title") %></p>'
-    ].join('')),
+        '<h1 style="background-image: url(' + message.faviconUrl() + ')">' + message.get("source").title+ '</h1>',
+        '<p>' + message.escape("title") + '</p>'].join(""));
+        return templ;
+    },
     initialize: function () {
         $(this.el).attr('title', this.model.get('mainLink'));
         $(this.el).data('model', this.model);
@@ -60,7 +61,7 @@ var MessageView = Backbone.View.extend({
         el.removeClass("brick-1 brick-2 brick-3 brick-4 text");
         el.addClass(this.getBrickClass());
 
-        el.html(this.template({model: this.model}));
+        el.html(this.template(this.model));
         el.addClass("text");
 
         // render our compiled template

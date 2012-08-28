@@ -5,6 +5,8 @@ Feediscovery = function() {
   this.stack = [];
   this.running = false;
   this.cache = {};
+  this.concurrent = 5;
+  this.tokens = 0;
   Feediscovery.cacheSize = 1000; // That's a random number. Maybe it should be lower or higher?
 }
 
@@ -31,25 +33,23 @@ Feediscovery.prototype.get = function (_url, _callback) {
         _callback(links);
       }.bind(this)]);
 
-      // Make sure we run!
-      if(!this.running) {
-        this.run();
-        this.running = true;
-      }
+      this.run();
     }
   }
 };
 
 // Runs the feediscovery
 Feediscovery.prototype.run = function () {
-  var next = this.stack.shift();
-  if (next) {
-    feender(next[0], function(err, feeds) {
-      next[1](feeds),
-      this.run();
-    }.bind(this));
-  } else {
-    this.running = false;
+  if(this.tokens < this.concurrent) {
+    var next = this.stack.shift();
+    if (next) {
+      this.tokens += 1;
+      feender(next[0], function(err, feeds) {
+        next[1](feeds);
+        this.tokens -= 1;
+        this.run();
+      }.bind(this));
+    }
   }
 };
 

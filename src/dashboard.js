@@ -177,4 +177,3 @@ Msgboy.bind('loaded:dashboard', function (page) {
     currentArchiveView = firstArchiveView = loadNextArchive({upperBound: new Date().getTime(), lowerBound: 0});
 });
 
-

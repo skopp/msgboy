@@ -4,6 +4,5 @@ var SubscriptionsView = require('./views/subscriptions-view.js').SubscriptionsVi
 var ImportView = require('./views/import-view.js').ImportView;
 
 Msgboy.bind("loaded:import", function () {
-  // Ok, from there we need
   var importView  = new ImportView();
 });

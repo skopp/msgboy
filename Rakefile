@@ -1,4 +1,4 @@
-# This is a rake file that packs and upload a new version 
+# This is a rake file that packs and upload a new version
 require 'json'
 require 'rexml/document'
 
@@ -20,6 +20,7 @@ def manifest(destination = "chrome")
   manifest_path = './build/'
   manifest = {
     :name => "msgboy",
+    :manifest_version => 2,
     :minimum_chrome_version => "19.0.1084.56",
     :description => "Msgboy is a smart reader that pushes your web. You can train it so that eventually it will show only the most relevant content.",
     :homepage_url => "http://msgboy.com/",
@@ -53,7 +54,10 @@ def manifest(destination = "chrome")
         :all_frames => true,
       }
     ],
-    :background_page => "/data/html/background.html",
+    :background =>  {
+      :page => "/data/html/background.html"
+    },
+    :content_security_policy => "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
     :icons => {
       16 => "data/img/icon16.png",
       48 => "data/img/icon48.png",
@@ -73,7 +77,10 @@ def manifest(destination = "chrome")
        :href => "/data/html/subscribe.html",
        :disposition => "window"
      }]
-    }
+    },
+    :web_accessible_resources => [
+      "/data/html/signup.html",
+    ]
   }
 
   case destination
@@ -89,7 +96,7 @@ def manifest(destination = "chrome")
     manifest.delete(:app)
     manifest.delete(:permissions)
     manifest.delete(:content_scripts)
-    manifest.delete(:background_page)
+    manifest.delete(:background)
     manifest.delete(:icons)
     manifest.delete(:update_url)
     manifest.delete(:intents)
@@ -135,14 +142,14 @@ namespace :build do
     puts "Compiling SASS"
     `compass compile`
   end
-  
-  desc "Creates the manifest file for the platform (chromedev, chromestore, firefox)." 
+
+  desc "Creates the manifest file for the platform (chromedev, chromestore, firefox)."
   task :manifest, :platform do |task, args|
     args.with_defaults :platform => "chromedev"
     manifest(args[:platform])
   end
-  
-  
+
+
   desc "Scaffolding Msgboy for the right platform (chromedev, chromestore, firefox)."
   task :init, :platform do |task, args|
     args.with_defaults :platform => "chromedev"
@@ -161,7 +168,7 @@ namespace :build do
     end
     manifest( args[:platform])
   end
-  
+
   desc "Copies over the assets"
   task :assets do
     puts "Copying assets"
@@ -189,17 +196,17 @@ namespace :version do
           doc = REXML::Document.new File.read( "updates.xml" )
           REXML::XPath.each(doc, "/gupdate/app/updatecheck") { |element| element.to_s }.first.attributes['version'] = args[:version]
           # puts doc.to_s
-          File.open('updates.xml','w') { |f| 
+          File.open('updates.xml','w') { |f|
             f.write doc.to_s
           }
           manifest() # Rewrite the manifest
           # # Finally, let's tag the repo
           g.commit("Version bump #{version}", { :add_all => true,  :allow_empty => true})
           g.add_tag(version)
-        else 
+        else
           puts "Please make sure you use the master branch to package new versions"
         end
-      else 
+      else
         puts "You have pending changed. Please commit them first."
       end
     end
@@ -222,9 +229,9 @@ begin
   desc "Packs msgboy, for chrome"
   task :pack, [:platform] => [:'build:init', :'build:manifest', :'build'] do |tasks, args|
     args.with_defaults :platform => "chromedev"
-    
+
     `mkdir ./pkg/`
-    
+
     if args[:platform] == "chromedev"
       FileUtils.remove("./pkg/msgboy.crx", :force => true)
       CrxMake.make(
@@ -256,18 +263,18 @@ end
 
 
 namespace :upload do
-  
+
   desc "Uploads a crx to S3"
   task :s3 do |tasks, args|
   end
-  
+
 end
 
 
 # namespace :publish do
-# 
+#
 #   task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
-# 
+#
 #   namespace :upload do
 #     begin
 #       require 'aws/s3'
@@ -281,7 +288,7 @@ end
 #         AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
 #         puts "Extension #{version} uploaded"
 #       end
-# 
+#
 #       desc "Uploads the updates.xml file"
 #       task :updates_xml do
 #         AWS::S3::Base.establish_connection!(
@@ -289,23 +296,23 @@ end
 #         :secret_access_key => s3['secret_access_key']
 #         )
 #         AWS::S3::S3Object.store(
-#         'updates.xml', 
-#         open('./updates.xml'), 
-#         s3['bucket'], 
+#         'updates.xml',
+#         open('./updates.xml'),
+#         s3['bucket'],
 #         {
 #           :access => :public_read
 #         }
 #         )
 #         puts "Updates.xml #{version} uploaded"
 #       end
-# 
+#
 #       desc "Pushes to the git remotes"
 #       task :push_git do
 #         g = Git.open (".")
 #         res = g.push("origin", "master", true)
 #         puts res
 #       end
-#     
+#
 #       desc "Deploys the splash page"
 #       task :splash do
 #         AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
@@ -327,12 +334,12 @@ end
 #         end
 #         AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
 #       end
-#       
+#
 #     rescue LoadError
 #       puts "Please install the s3 gem if you want to upload the msgboy to s3."
-#     end  
+#     end
 #   end
-# 
+#
 # end
-# 
+#
 

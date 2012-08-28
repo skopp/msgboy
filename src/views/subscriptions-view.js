@@ -13,10 +13,27 @@ var SubscriptionView = Backbone.View.extend({
     events: {
         "click .btn": "toggleSubscription"
     },
+    template: function(message) {
+        var templ = '<td class="title" data-feed-url="' + message.get('id') + '">';
+        if (message.get('alternate')) {
+            templ += '<a target="_blank" href="' + message.get('alternate') + '">' + message.get('title') + '</a>'
+        }
+        else {
+            templ += message.get('title');
+        }
+        templ += '</td>';
+        templ += '<td class="state">' + message.get('state') + '</td>';
+        templ += '<td class="action"><button class="btn btn-mini">';
+        if(['subscribed', 'subscribing'].indexOf(message.get('state')) >= 0) {
+            templ += "Unsubscribe";
+        }
+        else {
+            templ += "Subscribe";
+        }
+        templ += '</button></td>';
+        return $(templ);
+    },
     initialize: function () {
-        this.template = _.template('<td class="title" data-feed-url="<%= id %>"><% if (obj.alternate) { %><a target="_blank" href="<%= alternate %>"><%= title %></a><% } else { %><%= title %><%} %></td>\
-    <td class="state"><%= state %></td>\
-    <td class="action"><button class="btn btn-mini"><%= state === "subscribed" || state === "subscribing" ? "Unsubscribe" : "Subscribe"%></button></td>');
         this.model.bind('subscribing', this.subscribe, this);
         this.model.bind('unsubscribing', this.unsubscribe, this);
         this.model.bind('change', this.render, this);
@@ -25,7 +42,7 @@ var SubscriptionView = Backbone.View.extend({
       if(typeof(this.model.get('title')) === "undefined" || !this.model.get('title')) {
         this.model.set('title', this.model.get('id'));
       }
-      $(this.el).html(this.template(this.model.toJSON()));
+      $(this.el).html(this.template(this.model));
       return this;
     },
     toggleSubscription: function () {

@@ -24,25 +24,25 @@ Msgboy.log =  {
     },
     debug: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.DEBUG) {
-            var args = Array.prototype.slice.call(arguments);  
+            var args = Array.prototype.slice.call(arguments);
             console['_debug'].apply(window.console,args);
         }
     },
     info: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.INFO) {
-            var args = Array.prototype.slice.call(arguments);  
+            var args = Array.prototype.slice.call(arguments);
             console['_info'].apply(window.console,args);
         }
     },
     warn: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.WARN) {
-            var args = Array.prototype.slice.call(arguments);  
+            var args = Array.prototype.slice.call(arguments);
             console['_warn'].apply(window.console,args);
         }
     },
     error: function () {
         if (Msgboy.log.debugLevel <= Msgboy.log.levels.ERROR) {
-            var args = Array.prototype.slice.call(arguments);  
+            var args = Array.prototype.slice.call(arguments);
             console['_error'].apply(window.console,args);
         }
     },
@@ -50,27 +50,27 @@ Msgboy.log =  {
 
 // Also, hijack all console.log messages
 console.log = function() {
-    var args = Array.prototype.slice.call(arguments);  
+    var args = Array.prototype.slice.call(arguments);
     Msgboy.log.debug.apply(this, args);
 }
 
 console.debug = function() {
-    var args = Array.prototype.slice.call(arguments);  
+    var args = Array.prototype.slice.call(arguments);
     Msgboy.log.debug.apply(this, args);
 }
 
 console.info = function() {
-    var args = Array.prototype.slice.call(arguments);  
+    var args = Array.prototype.slice.call(arguments);
     Msgboy.log.info.apply(this, args);
 }
 
 console.warn = function() {
-    var args = Array.prototype.slice.call(arguments);  
+    var args = Array.prototype.slice.call(arguments);
     Msgboy.log.warn.apply(this, args);
 }
 
 console.error = function() {
-    var args = Array.prototype.slice.call(arguments);  
+    var args = Array.prototype.slice.call(arguments);
     Msgboy.log.error.apply(this, args);
 }
 
@@ -94,8 +94,9 @@ if(Msgboy.environment() === "development") {
 }
 
 // Runs the msgboy (when the document was loaded and when we were able to extract the msgboy's information)
-Msgboy.run =  function (page) {
-    
+Msgboy.run =  function () {
+    page = window.location.pathname.split("/").slice(-1)[0].split(".")[0]
+
     // Google Analytics
     var _gaq = _gaq || [];
     _gaq.push(['_setAccount', 'UA-22746593-1']);
@@ -103,10 +104,10 @@ Msgboy.run =  function (page) {
     _gaq.push(['_trackPageview']);
     (function() {
       var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      ga.src = 'https://ssl' + '.google-analytics.com/ga.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
-    
+
     // Load the extension data!
     browser.loadProperties(function(extension_infos) {
         Msgboy.infos = extension_infos;
@@ -119,3 +120,8 @@ exports.Msgboy = Msgboy;
 if(typeof window !== "undefined") {
     window.Msgboy = Msgboy;
 }
+
+window.onload = function () {
+    Msgboy.run();
+}
+
