@@ -16,28 +16,26 @@ var ModalShareView = Backbone.View.extend({
   tagName: "div",
   className: 'modal backdrop fade modal-share',
 
-  // template: _.template([
-  //   '<div class="modal-header">',
-  //   '<button class="close" data-dismiss="modal">×</button>',
-  //   '<h3>Share</h3>',
-  //   '<h4><%= title %></h4>',
-  //   '</div>',
-  //   '<div class="modal-body">',
-  //   '<label for="comment">Comment</label>',
-  //   '<h2 style="display:none"><%= title %> </h2>',
-  //   '<textarea class="xxlarge" id="comment" name="comment" rows="3"><%= comment %></textarea>',
-  //   '<span class="help-block" id="character-count">0 character</span>',
-  //   '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
-  //   '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
-  //   '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
-  //   '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
-  //   '</div>',
-  //   '<div class="modal-footer">',
-  //   '</div>',
-  // ].join('')),
-  template: function(message) {
-    var templ = $('<div></div>');
-    return templ;
+  template: function(obj) {
+    var tmpl = [
+      '<div class="modal-header">',
+      '<button class="close" data-dismiss="modal">×</button>',
+      '<h3>Share</h3>',
+      '<h4>' + obj.title + '</h4>',
+      '</div>',
+      '<div class="modal-body">',
+      '<label for="comment">Comment</label>',
+      '<h2 style="display:none">' + obj.title + '</h2>',
+      '<textarea class="xxlarge" id="comment" name="comment" rows="3">' + obj.comment + '</textarea>',
+      '<span class="help-block" id="character-count">0 character</span>',
+      '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
+      '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
+      '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
+      '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
+      '</div>',
+      '<div class="modal-footer"></div>'
+    ].join('')
+    return $(tmpl);
   },
   initialize: function (args) {
     this.message = args.message;
