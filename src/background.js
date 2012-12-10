@@ -445,4 +445,24 @@ Msgboy.bind("loaded:background", function () {
   }
 
   Msgboy.inbox.fetchAndPrepare();
+
+  // Loading the subtomeframe registration
+  var parsedUri = Url.parse(window.location.href);
+  parsedUri.pathname = '/data/html/subscribe.html';
+  parsedUri.href= '';
+  var iframe = document.createElement('iframe');
+  var iframeUrl = Url.format({
+    protocol: 'http',
+    host: 'www.subtome.com',
+    pathname: '/register.html',
+    query: {
+      name: 'Msgboy',
+      url: Url.format(parsedUri) + '?url={url}'
+    }
+  });
+  iframe.setAttribute('src', iframeUrl);
+  document.getElementsByTagName('body')[0].appendChild(iframe);
 });
+
+
+
