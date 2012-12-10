@@ -271,75 +271,75 @@ namespace :upload do
 end
 
 
-# namespace :publish do
-#
-#   task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
-#
-#   namespace :upload do
-#     begin
-#       require 'aws/s3'
-#       s3 = {} # S3 params.
-#       if FileTest.exist?("s3.json")
-#         s3 = JSON.load(File.read("s3.json"))
-#       end
-#       desc "Uploads the extension"
-#       task :crx do
-#         AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
-#         AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
-#         puts "Extension #{version} uploaded"
-#       end
-#
-#       desc "Uploads the updates.xml file"
-#       task :updates_xml do
-#         AWS::S3::Base.establish_connection!(
-#         :access_key_id     => s3['access_key_id'],
-#         :secret_access_key => s3['secret_access_key']
-#         )
-#         AWS::S3::S3Object.store(
-#         'updates.xml',
-#         open('./updates.xml'),
-#         s3['bucket'],
-#         {
-#           :access => :public_read
-#         }
-#         )
-#         puts "Updates.xml #{version} uploaded"
-#       end
-#
-#       desc "Pushes to the git remotes"
-#       task :push_git do
-#         g = Git.open (".")
-#         res = g.push("origin", "master", true)
-#         puts res
-#       end
-#
-#       desc "Deploys the splash page"
-#       task :splash do
-#         AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
-#         AWS::S3::S3Object.store('index.html', open('./splash.html'), s3['splash-bucket'], {:access => :public_read})
-#         FileList['views/css/*.css'].each do |f|
-#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-#         end
-#         FileList['views/images/*.png'].each do |f|
-#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-#         end
-#         FileList['views/images/*.jpg'].each do |f|
-#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-#         end
-#         FileList['views/images/*.gif'].each do |f|
-#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-#         end
-#         FileList['views/images/splash/*'].each do |f|
-#           AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
-#         end
-#         AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
-#       end
-#
-#     rescue LoadError
-#       puts "Please install the s3 gem if you want to upload the msgboy to s3."
-#     end
-#   end
-#
-# end
-#
+namespace :publish do
+
+  task :upload => [:'upload:crx', :'upload:updates_xml', :'upload:push_git']
+
+  namespace :upload do
+    begin
+      require 'aws/s3'
+      s3 = {} # S3 params.
+      if FileTest.exist?("s3.json")
+        s3 = JSON.load(File.read("s3.json"))
+      end
+      desc "Uploads the extension"
+      task :crx do
+        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+        AWS::S3::S3Object.store('msgboy.crx',  open('./build/msgboy.crx'), s3['bucket'], { :content_type => 'application/x-chrome-extension', :access => :public_read })
+        puts "Extension #{version} uploaded"
+      end
+
+      desc "Uploads the updates.xml file"
+      task :updates_xml do
+        AWS::S3::Base.establish_connection!(
+        :access_key_id     => s3['access_key_id'],
+        :secret_access_key => s3['secret_access_key']
+        )
+        AWS::S3::S3Object.store(
+        'updates.xml',
+        open('./updates.xml'),
+        s3['bucket'],
+        {
+          :access => :public_read
+        }
+        )
+        puts "Updates.xml #{version} uploaded"
+      end
+
+      desc "Pushes to the git remotes"
+      task :push_git do
+        g = Git.open (".")
+        res = g.push("origin", "master", true)
+        puts res
+      end
+
+      desc "Deploys the splash page"
+      task :splash do
+        AWS::S3::Base.establish_connection!(:access_key_id     => s3['access_key_id'], :secret_access_key => s3['secret_access_key'])
+        AWS::S3::S3Object.store('index.html', open('./splash.html'), s3['splash-bucket'], {:access => :public_read})
+        FileList['views/css/*.css'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.png'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.jpg'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/*.gif'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        FileList['views/images/splash/*'].each do |f|
+          AWS::S3::S3Object.store(f, open(f), s3['splash-bucket'], {:access => :public_read})
+        end
+        AWS::S3::S3Object.store('src/bootstrap-modal.js', open('src/bootstrap-modal.js'), s3['splash-bucket'], {:access => :public_read})
+      end
+
+    rescue LoadError
+      puts "Please install the s3 gem if you want to upload the msgboy to s3."
+    end
+  end
+
+end
+
 
