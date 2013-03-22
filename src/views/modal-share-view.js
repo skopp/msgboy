@@ -28,7 +28,6 @@ var ModalShareView = Backbone.View.extend({
       '<h2 style="display:none">' + obj.title + '</h2>',
       '<textarea class="xxlarge" id="comment" name="comment" rows="3">' + obj.comment + '</textarea>',
       '<span class="help-block" id="character-count">0 character</span>',
-      '<a href="#" class="btn secondary share-ext webintents" data-service="webintents">Other</a>',
       '<a href="#" class="btn secondary share-ext instapaper" data-service="instapaper">Instapaper</a>',
       '<a href="#" class="btn secondary share-ext twitter"    data-service="twitter">Twitter</a>',
       '<a href="#" class="btn secondary share-ext facebook"   data-service="facebook">Facebook</a>',
